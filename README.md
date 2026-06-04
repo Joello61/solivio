@@ -172,7 +172,7 @@ La documentation complete est dans le dossier [`docs/`](docs/) :
 
 ## Contribution
 
-Les contributions sont les bienvenues. Merci de lire les regles de code dans [`CLAUDE.md`](CLAUDE.md) avant de contribuer.
+Les contributions sont les bienvenues.
 
 1. Forker le projet
 2. Creer une branche (`git checkout -b feature/ma-fonctionnalite`)
@@ -197,5 +197,5 @@ Cela signifie que toute version modifiee proposee comme service en ligne doit eg
 **Timothee Joel Tchinda Tchoffo**
 Developpeur fullstack, etudiant en Master MIASHS a l'Universite Toulouse Jean Jaures.
 
-Profil : [gitlab.com/TON_USERNAME](https://gitlab.com/tchindajoel61)
+Profil : [gitlab.com/tchindajoel61](https://gitlab.com/tchindajoel61)
 Portfolio : [joeltech.dev](https://joeltech.dev)
