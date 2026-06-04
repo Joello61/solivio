@@ -11,20 +11,31 @@
 	<groupId>com.solivio</groupId>
 	<artifactId>solivio-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<name>Solivio API</name>
+	<description>Plateforme de gestion operationnelle pour les associations de solidarite etudiante</description>
+	<url>https://gitlab.com/tchindajoel61/solivio</url>
+
 	<licenses>
-		<license/>
+		<license>
+			<name>GNU Affero General Public License v3.0</name>
+			<url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
+
 	<developers>
-		<developer/>
+		<developer>
+			<id>joello61</id>
+			<name>Timothée Joël Tchinda Tchoffo</name>
+			<url>https://gitlab.com/tchindajoel61</url>
+		</developer>
 	</developers>
+
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:git://gitlab.com/tchindajoel61/solivio.git</connection>
+		<developerConnection>scm:git:ssh://git@gitlab.com/tchindajoel61/solivio.git</developerConnection>
+		<url>https://gitlab.com/tchindajoel61/solivio</url>
+		<tag>HEAD</tag>
 	</scm>
 	<properties>
 		<java.version>25</java.version>
