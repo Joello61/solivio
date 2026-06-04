@@ -37,6 +37,9 @@ Toujours partir de la derniere version stable et verifier au demarrage.
 
 ## Regles de code (non negociables)
 
+- Toujours faire des recherches sur internet sur les dernières versions des technos, 
+  librairies et dépendances utilisées pour avoir les bonnes pratiques, les bonnes 
+  recommandations, et la bonne manière d'implémenter selon la doc officielle
 - Aucun emoji, nulle part : code, commentaires, messages de commit.
 - Frontend : aucun emoji. Utiliser la bibliotheque d'icones du projet
   (par defaut lucide-react) a la place.
