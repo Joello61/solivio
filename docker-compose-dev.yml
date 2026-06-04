@@ -1,0 +1,192 @@
+# docker-compose-dev.yml - development environment
+#
+# Usage: docker compose -f docker-compose-dev.yml up -d
+#
+# This file starts all infrastructure services needed to run the application
+# locally. The backend and frontend are NOT started here by default: run them
+# directly on the host for hot-reload (IntelliJ / npm run dev).
+#
+# Credentials here are intentionally simple and hardcoded.
+# Never use these values in production.
+#
+# Exposed ports (for host access):
+#   PostgreSQL : localhost:5432
+#   Keycloak   : localhost:9090  (avoid conflict with Spring Boot on 8080)
+#   Kafka      : localhost:9092
+#   OpenBao    : localhost:8200
+#   Mailpit UI : localhost:8025
+#   Mailpit SMTP: localhost:1025
+#
+# Spring Boot properties for local development (application-dev.yml):
+#   spring.datasource.url: jdbc:postgresql://localhost:5432/solivio
+#   spring.kafka.bootstrap-servers: localhost:9092
+#   spring.mail.host: localhost
+#   spring.mail.port: 1025
+#   spring.cloud.vault.uri: http://localhost:8200
+#   spring.cloud.vault.token: root
+#   spring.security.oauth2.resourceserver.jwt.issuer-uri: http://localhost:9090/realms/solivio
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 18
+  # Creates two databases on first start via init-db-dev.sql:
+  #   - solivio   (application)
+  #   - keycloak  (Keycloak auth server)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:18-alpine
+    container_name: solivio_dev_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: solivio
+      POSTGRES_USER: solivio
+      POSTGRES_PASSWORD: solivio_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql/data
+      - ./init-db-dev.sql:/docker-entrypoint-initdb.d/init-db-dev.sql:ro
+    networks:
+      - solivio_dev_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solivio -d solivio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Keycloak 26 - dev mode
+  # No persistence, no TLS, admin console accessible on port 9090.
+  # After start, create a realm named "solivio" and configure clients.
+  # ---------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26
+    container_name: solivio_dev_keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_dev
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+    ports:
+      - "9090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - solivio_dev_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Apache Kafka 4 - KRaft mode, single broker
+  # Two listeners:
+  #   INTERNAL (kafka:9092)  - for container-to-container communication
+  #   EXTERNAL (localhost:9092) - for Spring Boot running on the host
+  #
+  # CLUSTER_ID: a fixed value for dev, does not need to be random.
+  # To generate a proper one: docker run --rm apache/kafka:4
+  #     /opt/kafka/bin/kafka-storage.sh random-uuid
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: apache/kafka:4
+    container_name: solivio_dev_kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093,CONTROLLER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 24
+      CLUSTER_ID: dev-cluster-id-solivio-00000
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    volumes:
+      - dev_kafka_data:/var/lib/kafka/data
+    networks:
+      - solivio_dev_net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # OpenBao 2 - dev mode
+  # Auto-unsealed, root token = "root", in-memory storage (no persistence).
+  # Access the UI at http://localhost:8200 with token "root".
+  # Spring Cloud Vault Config connects with:
+  #   spring.cloud.vault.token=root
+  #   spring.cloud.vault.uri=http://localhost:8200
+  # ---------------------------------------------------------------------------
+  openbao:
+    image: openbao/openbao:2
+    container_name: solivio_dev_openbao
+    restart: unless-stopped
+    command: server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    networks:
+      - solivio_dev_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/v1/sys/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # Mailpit - local SMTP server and email viewer
+  # Intercepts all outgoing emails instead of sending them.
+  # View captured emails at http://localhost:8025
+  # Spring Boot mail configuration:
+  #   spring.mail.host=localhost
+  #   spring.mail.port=1025
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: solivio_dev_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - solivio_dev_net
+
+# -----------------------------------------------------------------------------
+# Volumes
+# -----------------------------------------------------------------------------
+volumes:
+  dev_postgres_data:
+    driver: local
+  dev_kafka_data:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Networks
+# -----------------------------------------------------------------------------
+networks:
+  solivio_dev_net:
+    driver: bridge

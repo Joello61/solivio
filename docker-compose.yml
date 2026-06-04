@@ -1,0 +1,222 @@
+# docker-compose.yml - production
+#
+# Usage with Coolify: Coolify reads this file and manages routing and TLS.
+# Usage standalone:   docker compose up -d
+#
+# Required: copy .env.example to .env and fill all values before starting.
+# Required: run init-db.sql once on first start (creates the keycloak database).
+# Required: initialize OpenBao manually after first start (vault operator init).
+#
+# TLS is handled by Coolify (or Traefik in front). Services communicate over
+# the internal network without TLS between containers.
+#
+# CLUSTER_ID for Kafka must be generated once and kept stable:
+#   docker run --rm apache/kafka:4 /opt/kafka/bin/kafka-storage.sh random-uuid
+# Then set KAFKA_CLUSTER_ID in .env with that value.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 18
+  # Hosts two databases: solivio (application) and keycloak (auth server).
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:18-alpine
+    container_name: solivio_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Keycloak 26 - authentication and identity
+  # Production mode: uses PostgreSQL as persistence backend.
+  # TLS is handled upstream by Coolify.
+  # ---------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26
+    container_name: solivio_keycloak
+    restart: unless-stopped
+    command: start --optimized
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_DB_NAME}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_STRICT: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # Apache Kafka 4 - KRaft mode (no ZooKeeper)
+  # Single broker for small-scale production.
+  # KAFKA_CLUSTER_ID must be generated once and kept stable in .env.
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: apache/kafka:4
+    container_name: solivio_kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # OpenBao 2 - secrets management
+  # Production server mode: secrets persisted to a named volume.
+  # After first start, initialize manually:
+  #   docker exec solivio_openbao bao operator init
+  # Store the unseal keys and root token securely.
+  # ---------------------------------------------------------------------------
+  openbao:
+    image: openbao/openbao:2
+    container_name: solivio_openbao
+    restart: unless-stopped
+    command: server
+    cap_add:
+      - IPC_LOCK
+    environment:
+      BAO_LOCAL_CONFIG: |
+        storage "file" {
+          path = "/openbao/data"
+        }
+        listener "tcp" {
+          address     = "0.0.0.0:8200"
+          tls_disable = true
+        }
+        default_lease_ttl = "168h"
+        max_lease_ttl     = "720h"
+    volumes:
+      - openbao_data:/openbao/data
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/v1/sys/health || true"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Backend - Spring Boot 4 / Java 25
+  # ---------------------------------------------------------------------------
+  backend:
+    image: registry.gitlab.com/${GITLAB_PROJECT}/solivio-api:${APP_VERSION:-latest}
+    container_name: solivio_backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CLOUD_VAULT_URI: http://openbao:8200
+      SPRING_CLOUD_VAULT_TOKEN: ${OPENBAO_APP_TOKEN}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}
+      JAVA_OPTS: "-Xmx512m"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      openbao:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ---------------------------------------------------------------------------
+  # Frontend - Next.js 16
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: registry.gitlab.com/${GITLAB_PROJECT}/solivio-frontend:${APP_VERSION:-latest}
+    container_name: solivio_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # internal URL used by Next.js server components to call the backend
+      API_URL: http://backend:8080
+      # public URL visible from the browser (set to your domain)
+      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - solivio_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+# -----------------------------------------------------------------------------
+# Volumes
+# -----------------------------------------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+  kafka_data:
+    driver: local
+  openbao_data:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Networks
+# -----------------------------------------------------------------------------
+networks:
+  solivio_net:
+    driver: bridge
