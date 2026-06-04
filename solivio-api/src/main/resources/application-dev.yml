@@ -1,0 +1,80 @@
+# application-dev.yml
+# Development profile overrides.
+# Activated by: SPRING_PROFILES_ACTIVE=dev
+# Expected infrastructure: docker compose -f docker-compose-dev.yml up -d
+#
+# Place this file at: solivio-api/src/main/resources/application-dev.yml
+
+spring:
+  config:
+    import: "optional:vault://"
+
+  cloud:
+    vault:
+      uri: http://localhost:8200
+      # OpenBao dev mode starts with root token "root" by default.
+      token: root
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/solivio
+    username: solivio
+    password: solivio_dev
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Backend running on host connects via the EXTERNAL Kafka listener.
+  # See docker-compose-dev.yml KAFKA_ADVERTISED_LISTENERS for port 9093.
+  kafka:
+    bootstrap-servers: localhost:9093
+
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/solivio
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/solivio
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose all Actuator endpoints in dev for debugging.
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.solivio: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    # Logs the actual values bound to SQL parameters. Disable for sensitive data.
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.kafka: DEBUG
+    org.flywaydb: DEBUG

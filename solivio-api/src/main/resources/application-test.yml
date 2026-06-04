@@ -1,0 +1,57 @@
+# application-test.yml
+# Test profile activated automatically when running tests.
+# Activated by: @ActiveProfiles("test") or spring.profiles.active=test
+#
+# Testcontainers (@ServiceConnection) provides real PostgreSQL and Kafka
+# containers and automatically overrides datasource and Kafka connection
+# properties. You do not need to set datasource.url here.
+#
+# Place this file at: solivio-api/src/main/resources/application-test.yml
+
+spring:
+  # Vault is disabled in tests. Connection details come from Testcontainers.
+  config:
+    import: ""
+
+  cloud:
+    vault:
+      enabled: false
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  # Flyway runs migrations against the Testcontainers PostgreSQL instance.
+  flyway:
+    enabled: true
+
+  mail:
+    host: localhost
+    port: 3025
+
+  # JWT validation in tests:
+  # - For unit tests on controllers: use @WithMockUser or mock the JwtDecoder bean.
+  # - For integration tests requiring a real JWT: spin up a Keycloak Testcontainer
+  #   and set the issuer-uri to its URL.
+  # The placeholder below prevents startup failures when no JWT issuer is available.
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/solivio-test
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    root: WARN
+    com.solivio: INFO
+    org.testcontainers: INFO
+    org.springframework.test: DEBUG
+    org.flywaydb: WARN
