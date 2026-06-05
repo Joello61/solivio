@@ -44,26 +44,27 @@ spring:
 
   jpa:
     hibernate:
-      # Flyway manages the schema. Hibernate only validates against it.
-      ddl-auto: validate
+      # Flyway est la source de verite du schema. Avec le multi-tenancy
+      # schema-par-tenant, validate echouerait car les tables tenant ne
+      # sont pas dans le schema public (schema par defaut au demarrage).
+      ddl-auto: none
     show-sql: false
     open-in-view: false
     properties:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # Schema-based multi-tenancy. Requires custom beans:
-        # CurrentTenantIdentifierResolver and MultiTenantConnectionProvider.
-        multiTenancy: SCHEMA
-        default_schema: public
+        # Pas de default_schema : avec le multi-tenancy schema-par-tenant,
+        # le routage se fait via SET search_path, pas par un prefixe fixe.
+        # Association a @Table(schema="public") explicite et n'est pas affectee.
 
   flyway:
+    # Gere uniquement le schema public (shared/).
+    # Les migrations tenant (tenant/) sont appliquees par TenantFlywayMigrator.
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/shared
     baseline-on-migrate: false
     validate-on-migrate: true
-    # Each tenant schema uses its own migration history table.
-    # Custom Flyway configuration per schema is handled in FlywayConfig.
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -105,11 +106,20 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           keycloak:
-            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/solivio}
+            # Endpoints explicites : evite l'appel OIDC discovery au demarrage.
+            # Avec issuer-uri, clientRegistrationRepository appelle Keycloak au boot
+            # et fait echouer le demarrage si Keycloak n'est pas encore pret.
+            authorization-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/auth
+            token-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/token
+            user-info-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/userinfo
+            jwk-set-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/certs
             user-name-attribute: preferred_username
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/solivio}
+          # jwk-set-uri : charge les cles publiques sans OIDC discovery au demarrage.
+          # issuer-uri : valide le claim "iss" dans le JWT sans appel HTTP.
+          jwk-set-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/certs
+          issuer-uri: ${solivio.auth.keycloak-issuer-uri}
 
   # Thymeleaf is used exclusively for HTML email templates.
   # Disable web template resolution to avoid interference with REST endpoints.
@@ -156,6 +166,22 @@ logging:
 solivio:
   multitenancy:
     default-schema: public
+  auth:
+    keycloak-issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/solivio}
+    # URI de redirection apres login reussi (vers le frontend).
+    post-login-redirect-uri: ${SOLIVIO_POST_LOGIN_REDIRECT_URI:/}
+    # URI de redirection apres logout OIDC (vers le frontend).
+    post-logout-redirect-uri: ${SOLIVIO_POST_LOGOUT_REDIRECT_URI:}
   mail:
     from: noreply@solivio.app
     reply-to: contact@solivio.app
+  cookie:
+    # Cle AES-256 (32 octets, base64) pour chiffrer les cookies de session.
+    # En prod : injectee depuis OpenBao (secret/solivio-api, cle cookie.encryption-key).
+    # En dev  : definie dans application-dev.yml.
+    encryption-key: ${cookie.encryption-key:}
+  cors:
+    # Origins autorises pour les requetes cross-origin du frontend.
+    # En prod : URL publique du frontend (ex: https://app.solivio.org).
+    # En dev  : definie dans application-dev.yml.
+    allowed-origins: ${SOLIVIO_CORS_ALLOWED_ORIGINS:}
