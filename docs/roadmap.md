@@ -2,9 +2,11 @@
 
 > Quoi construire, dans quel ordre, et pourquoi : le plan d'exécution qui ordonne toutes les décisions de la série.
 
-**Document de pilotage — version 1.0**
+**Document de pilotage — version 1.1**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
+
+> Changement depuis la version 1.0 : Phase 0 et Phase 1 marquees comme completees (juin 2026). Phase 2 en cours.
 
 ---
 
@@ -63,7 +65,7 @@ flowchart TD
 
 ---
 
-## 3. Phase 0 — Observation terrain (préalable)
+## 3. Phase 0 — Observation terrain (préalable) — COMPLETE
 
 **Objectif.** Confirmer que le besoin est réel et bien compris, avant d'écrire du code.
 
@@ -75,7 +77,7 @@ flowchart TD
 
 ---
 
-## 4. Phase 1 — Fondations techniques
+## 4. Phase 1 — Fondations techniques — COMPLETE (juin 2026)
 
 **Objectif.** Poser le socle invisible sur lequel tout reposera. À faire pendant la fenêtre de disponibilité maximale.
 
@@ -91,7 +93,9 @@ flowchart TD
 - la gestion des secrets via OpenBao ;
 - le pipeline GitLab CI/CD (analyse, tests, construction, migrations, déploiement).
 
-**Critère de sortie.** Une application qui ne fait encore rien de visible, mais sur laquelle on peut se connecter, dont les associations sont isolées, et que la chaîne d'intégration continue déploie automatiquement. C'est normal qu'il n'y ait rien à montrer : c'est la phase la plus ingrate et la plus importante.
+**Critère de sortie atteint.** L'application demarre, les associations sont isolees par schema PostgreSQL (suite de tests d'isolation validee), la connexion via Keycloak fonctionne en mode BFF stateless (tokens chiffres en cookies HttpOnly), le provisioning JIT cree la Personne au premier appel authentifie, et la CI GitLab passe au vert. Les fondations sont en place, Phase 2 peut commencer.
+
+**Ce qui a ete construit en plus des previsions initiales :** BFF stateless complet (Spring Boot OAuth2 Client + Resource Server, cookies AES-256-GCM), support dual-client browser/Capacitor (CompositeBearerTokenResolver), CORS configurable, CSRF spa(), cle de chiffrement depuis OpenBao, realm Keycloak versionne (keycloak/realm-solivio.json).
 
 **Risque principal.** La tentation d'abandonner faute de résultat visible. La parade : se rappeler que c'est cette phase qui rend tout le reste possible, et qu'elle est le meilleur usage de la fenêtre de disponibilité actuelle.
 

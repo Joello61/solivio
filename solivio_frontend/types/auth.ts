@@ -1,0 +1,29 @@
+export interface TenantSummary {
+  slug: string;
+  nom: string;
+  role: string;
+  coordoType: string | null;
+}
+
+export interface TokenResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  tenants: TenantSummary[];
+}
+
+export interface MeResponse {
+  id: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  superAdmin: boolean;
+  tenantActif: string | null;
+  roles: string[];
+}
+
+export interface ApiError {
+  title: string;
+  detail?: string;
+  status: number;
+}
