@@ -54,17 +54,23 @@ public class RefreshToken {
     @Column(nullable = false)
     private boolean revoque = false;
 
+    // true = cookie persistant (Max-Age=30j), false = cookie de session.
+    // Preserve la preference "rester connecte" du login initial lors des rotations.
+    @Column(name = "long_duree", nullable = false)
+    private boolean longDuree = false;
+
     @Column(name = "cree_a", nullable = false, updatable = false)
     private Instant creeA = Instant.now();
 
     public RefreshToken(Compte compte, String tokenHash, String tenantSlug,
-                        String userAgent, String ipAddress, Instant expireA) {
+                        String userAgent, String ipAddress, Instant expireA, boolean longDuree) {
         this.compte = compte;
         this.tokenHash = tokenHash;
         this.tenantSlug = tenantSlug;
         this.userAgent = userAgent;
         this.ipAddress = ipAddress;
         this.expireA = expireA;
+        this.longDuree = longDuree;
     }
 
     public boolean estExpire() {
