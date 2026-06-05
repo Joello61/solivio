@@ -11,7 +11,6 @@ import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,9 +20,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Orchestration du login, logout, refresh token et switch-tenant.
@@ -85,7 +84,7 @@ public class AuthService {
         );
 
         emetAccessTokenCookie(accessToken, request, response);
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, rememberMe);
+        emetRefreshTokenCookie(compte, tenantSlug, request, response, rememberMe, rememberMe);
 
         return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, tenants);
     }
@@ -113,9 +112,23 @@ public class AuthService {
         );
 
         emetAccessTokenCookie(accessToken, request, response);
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, false);
+        emetRefreshTokenCookie(compte, tenantSlug, request, response, false, false);
 
         return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of());
+    }
+
+    /**
+     * Extrait le refresh token depuis le cookie HttpOnly (web) ou depuis un token brut passe en parametre (mobile).
+     * La priorite va au cookie.
+     */
+    public Optional<String> extraireRefreshTokenDepuisCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return Optional.empty();
+        }
+        return Arrays.stream(request.getCookies())
+            .filter(c -> "refresh_token".equals(c.getName()))
+            .map(jakarta.servlet.http.Cookie::getValue)
+            .findFirst();
     }
 
     @Transactional
@@ -126,7 +139,6 @@ public class AuthService {
             .orElseThrow(() -> new IllegalArgumentException("Refresh token invalide"));
 
         if (token.isRevoque() || token.estExpire()) {
-            // Detection de reutilisation : revoquer tous les tokens du compte
             if (token.isRevoque()) {
                 refreshTokenRepo.revoquerTousParCompte(token.getCompte().getId());
             }
@@ -134,6 +146,7 @@ public class AuthService {
         }
 
         // Rotation : on revoque l'ancien et on emet un nouveau
+        boolean longDuree = token.isLongDuree();
         token.setRevoque(true);
         refreshTokenRepo.save(token);
 
@@ -141,14 +154,13 @@ public class AuthService {
         String tenantSlug = token.getTenantSlug();
 
         List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
-        String role = affiliations.stream()
-            .filter(a -> a.getAssociation().getSlug().equals(tenantSlug))
-            .map(MembreAssociation::getRole)
-            .findFirst().orElse(null);
-        String coordoType = affiliations.stream()
-            .filter(a -> a.getAssociation().getSlug().equals(tenantSlug))
-            .map(MembreAssociation::getCoordoType)
-            .findFirst().orElse(null);
+        // findFirst() appelle Optional.of() qui refuse les null : on recherche l'entite
+        // d'abord, puis on lit les champs (coordoType peut legitimement etre null).
+        Optional<MembreAssociation> membreOpt = affiliations.stream()
+            .filter(a -> tenantSlug != null && tenantSlug.equals(a.getAssociation().getSlug()))
+            .findFirst();
+        String role = membreOpt.map(MembreAssociation::getRole).orElse(null);
+        String coordoType = membreOpt.map(MembreAssociation::getCoordoType).orElse(null);
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
@@ -157,7 +169,8 @@ public class AuthService {
         );
 
         emetAccessTokenCookie(accessToken, request, response);
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, true);
+        // Propage la preference longDuree du token initial (rememberMe)
+        emetRefreshTokenCookie(compte, tenantSlug, request, response, longDuree, longDuree);
 
         return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of());
     }
@@ -200,7 +213,7 @@ public class AuthService {
 
     private void emetRefreshTokenCookie(Compte compte, String tenantSlug,
                                         HttpServletRequest request, HttpServletResponse response,
-                                        boolean longDuree) {
+                                        boolean longDuree, boolean storerLongDuree) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
 
@@ -208,16 +221,13 @@ public class AuthService {
             compte, hash, tenantSlug,
             request.getHeader("User-Agent"),
             request.getRemoteAddr(),
-            jwtService.refreshTokenExpiration()
+            jwtService.refreshTokenExpiration(),
+            storerLongDuree
         );
         refreshTokenRepo.save(rt);
 
-        Cookie cookie = new Cookie("refresh_token", tokenBrut);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(request.isSecure());
-        cookie.setPath("/api/auth/refresh");
-        cookie.setMaxAge(longDuree ? (int) jwtService.getRefreshTokenSeconds() : -1);
-        // SameSite=Strict via header manuel (API Cookie Jakarta ne supporte pas encore SameSite)
+        // Header Set-Cookie manuel : l'API Cookie Jakarta ne supporte pas SameSite.
+        // Max-Age=-1 : cookie de session (expire a la fermeture du navigateur).
         response.addHeader("Set-Cookie",
             "refresh_token=" + tokenBrut
                 + "; Max-Age=" + (longDuree ? jwtService.getRefreshTokenSeconds() : -1)
