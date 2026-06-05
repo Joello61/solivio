@@ -1,84 +1,81 @@
 package com.solivio.api.identity.infrastructure.security;
 
-import com.solivio.api.identity.infrastructure.security.cookie.CompositeBearerTokenResolver;
-import com.solivio.api.identity.infrastructure.security.cookie.CorsProperties;
-import com.solivio.api.identity.infrastructure.security.cookie.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.solivio.api.identity.infrastructure.security.cookie.TokenCookieAuthenticationSuccessHandler;
-import com.solivio.api.identity.infrastructure.security.cookie.TokenCookieService;
-import com.solivio.api.identity.infrastructure.security.cookie.TokenRefreshFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Configuration de securite Spring Security.
+ * Stateless JWT : pas de session HTTP cote serveur.
+ * Deux modes de transport du token : cookie HttpOnly (web) et Bearer header (mobile).
+ * CSRF desactive : tokens JWT + CORS proteges par origin suffisent pour une API REST.
+ * Google OAuth2 via oauth2Login() : apres succes, emit un JWT Solivio.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final KeycloakJwtConverter keycloakJwtConverter;
-    private final TenantResolutionFilter tenantResolutionFilter;
-    private final JitProvisioningFilter jitProvisioningFilter;
-    private final TokenCookieService tokenCookieService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SolivioUserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
     private final CorsProperties corsProperties;
+    private final GoogleOAuth2UserService googleOAuth2UserService;
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
 
     public SecurityConfig(
-            KeycloakJwtConverter keycloakJwtConverter,
-            TenantResolutionFilter tenantResolutionFilter,
-            JitProvisioningFilter jitProvisioningFilter,
-            TokenCookieService tokenCookieService,
-            CorsProperties corsProperties) {
-        this.keycloakJwtConverter = keycloakJwtConverter;
-        this.tenantResolutionFilter = tenantResolutionFilter;
-        this.jitProvisioningFilter = jitProvisioningFilter;
-        this.tokenCookieService = tokenCookieService;
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            SolivioUserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder,
+            CorsProperties corsProperties,
+            GoogleOAuth2UserService googleOAuth2UserService,
+            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
         this.corsProperties = corsProperties;
+        this.googleOAuth2UserService = googleOAuth2UserService;
+        this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            HttpCookieOAuth2AuthorizationRequestRepository authRequestRepo,
-            TokenCookieAuthenticationSuccessHandler successHandler,
-            TokenRefreshFilter tokenRefreshFilter,
-            LogoutSuccessHandler logoutSuccessHandler) throws Exception {
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-            // Stateless : aucune session HTTP cote serveur.
-            // L'etat OAuth2 du flow de connexion passe par un cookie (authRequestRepo).
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-            // CORS : Next.js (port 3000) appelle l'API Spring Boot (port 8080).
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-            // CSRF : spa() configure CookieCsrfTokenRepository + SpaCsrfTokenRequestHandler.
-            // Le frontend lit XSRF-TOKEN et le renvoie dans X-XSRF-TOKEN.
-            .csrf(csrf -> csrf.spa())
-
+            // CSRF desactive : API REST stateless avec JWT. Le CORS + SameSite protegent contre le CSRF.
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Endpoints d'authentification publics
                 .requestMatchers(
-                    "/oauth2/**",
-                    "/login/**",
-                    "/logout",
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/refresh",
+                    "/api/auth/forgot-password",
+                    "/api/auth/reset-password",
+                    "/api/auth/verify-email",
+                    "/api/auth/resend-verification",
+                    "/api/invitations/*/details"
+                ).permitAll()
+                // Google OAuth2 initiation et callback
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                // Infrastructure
+                .requestMatchers(
                     "/actuator/health",
                     "/actuator/info",
                     "/api-docs/**",
@@ -87,81 +84,40 @@ public class SecurityConfig {
                 ).permitAll()
                 .anyRequest().authenticated()
             )
-
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .addLogoutHandler((request, response, auth) ->
-                    tokenCookieService.deleteTokenCookies(response))
-                .logoutSuccessHandler(logoutSuccessHandler)
-                .permitAll()
-            )
-
-            // BFF : Spring Boot gere le flow OIDC avec Keycloak.
-            // Apres auth : les tokens sont chiffres dans des cookies HttpOnly.
+            // Google OAuth2 : apres succes, GoogleOAuth2SuccessHandler emet un JWT Solivio.
             .oauth2Login(oauth2 -> oauth2
-                .authorizationEndpoint(ep -> ep
-                    .authorizationRequestRepository(authRequestRepo))
-                .successHandler(successHandler)
+                .userInfoEndpoint(ui -> ui.userService(googleOAuth2UserService))
+                .successHandler(googleOAuth2SuccessHandler)
             )
-
-            // Resource server : valide le JWT depuis le cookie access_token.
-            // L'autorite en matiere de droits reste cote backend (art. 8.3 arch. technique).
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter))
-                .bearerTokenResolver(new CompositeBearerTokenResolver(tokenCookieService))
+            // Pour les requetes API non authentifiees : 401 JSON au lieu d'une redirection 302.
+            // Le frontend gere la redirection vers /login lorsqu'il recoit un 401.
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/problem+json");
+                    response.getWriter().write("{\"title\":\"Non authentifie\",\"status\":401}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/problem+json");
+                    response.getWriter().write("{\"title\":\"Acces refuse\",\"status\":403}");
+                })
             )
-
-            // Refresh avant la validation JWT, resolution tenant et provisioning JIT apres.
-            .addFilterBefore(tokenRefreshFilter, BearerTokenAuthenticationFilter.class)
-            .addFilterAfter(tenantResolutionFilter, BearerTokenAuthenticationFilter.class)
-            .addFilterAfter(jitProvisioningFilter, TenantResolutionFilter.class)
-
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 
     @Bean
-    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
-        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
 
     @Bean
-    public TokenCookieAuthenticationSuccessHandler tokenCookieSuccessHandler(
-            OAuth2AuthorizedClientService authorizedClientService,
-            HttpCookieOAuth2AuthorizationRequestRepository authRequestRepo,
-            @Value("${solivio.auth.post-login-redirect-uri}") String postLoginRedirectUri) {
-        return new TokenCookieAuthenticationSuccessHandler(
-            tokenCookieService, authorizedClientService, authRequestRepo, postLoginRedirectUri);
-    }
-
-    @Bean
-    public TokenRefreshFilter tokenRefreshFilter(
-            OAuth2AuthorizedClientManager clientManager,
-            ClientRegistrationRepository clientRegistrationRepository,
-            JwtDecoder jwtDecoder) {
-        return new TokenRefreshFilter(
-            tokenCookieService, clientManager, clientRegistrationRepository, jwtDecoder);
-    }
-
-    @Bean
-    public OAuth2AuthorizedClientManager authorizedClientManager(
-            ClientRegistrationRepository clientRegistrationRepository,
-            OAuth2AuthorizedClientRepository authorizedClientRepository) {
-        DefaultOAuth2AuthorizedClientManager manager =
-            new DefaultOAuth2AuthorizedClientManager(
-                clientRegistrationRepository, authorizedClientRepository);
-        manager.setAuthorizedClientProvider(
-            OAuth2AuthorizedClientProviderBuilder.builder()
-                .authorizationCode()
-                .refreshToken()
-                .build());
-        return manager;
-    }
-
-    @Bean
-    public LogoutSuccessHandler logoutSuccessHandler(
-            @Value("${solivio.auth.keycloak-issuer-uri}") String issuerUri,
-            @Value("${solivio.auth.post-logout-redirect-uri}") String postLogoutRedirectUri) {
-        return new KeycloakOidcLogoutSuccessHandler(tokenCookieService, issuerUri, postLogoutRedirectUri);
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
@@ -170,7 +126,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(corsProperties.getAllowedOriginsList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        // Necessaire pour que le navigateur envoie les cookies cross-origin (meme site local).
+        // Requis pour envoyer les cookies cross-origin en dev (Next.js port 3000 -> Spring port 8080).
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
