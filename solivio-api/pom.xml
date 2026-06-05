@@ -284,6 +284,18 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.14</version>
+				<configuration>
+					<!-- Exclure les classes sans logique metier : entites JPA,
+					     classes de configuration (@ConfigurationProperties),
+					     et handlers dont la couverture n'apporte pas de valeur. -->
+					<excludes>
+						<exclude>com/solivio/api/identity/domain/**</exclude>
+						<exclude>com/solivio/api/association/domain/**</exclude>
+						<exclude>com/solivio/api/audit/domain/**</exclude>
+						<exclude>com/solivio/api/identity/infrastructure/security/cookie/CookieProperties.class</exclude>
+						<exclude>com/solivio/api/identity/infrastructure/security/cookie/CorsProperties.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
