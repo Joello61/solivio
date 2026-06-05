@@ -29,7 +29,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
       - solivio_net
@@ -41,12 +41,12 @@ services:
       start_period: 20s
 
   # ---------------------------------------------------------------------------
-  # Keycloak 26 - authentication and identity
+  # Keycloak 26.6.2 - authentication and identity
   # Production mode: uses PostgreSQL as persistence backend.
   # TLS is handled upstream by Coolify.
   # ---------------------------------------------------------------------------
   keycloak:
-    image: quay.io/keycloak/keycloak:26
+    image: quay.io/keycloak/keycloak:26.6.2
     container_name: solivio_keycloak
     restart: unless-stopped
     command: start --optimized
@@ -74,12 +74,12 @@ services:
       start_period: 60s
 
   # ---------------------------------------------------------------------------
-  # Apache Kafka 4 - KRaft mode (no ZooKeeper)
+  # Apache Kafka 4.0.2 - KRaft mode (no ZooKeeper)
   # Single broker for small-scale production.
   # KAFKA_CLUSTER_ID must be generated once and kept stable in .env.
   # ---------------------------------------------------------------------------
   kafka:
-    image: apache/kafka:4
+    image: apache/kafka:4.0.2
     container_name: solivio_kafka
     restart: unless-stopped
     environment:
