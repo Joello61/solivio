@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,11 +43,17 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refresh(
-            @Valid @RequestBody RefreshTokenRequest request,
+            @CookieValue(name = "refresh_token", required = false) String cookieToken,
+            @RequestBody(required = false) RefreshTokenRequest bodyRequest,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        TokenResponse token = authService.refreshToken(
-            request.refreshToken(), httpRequest, httpResponse);
+        // Priorite au cookie HttpOnly (web BFF). Fallback sur body JSON (mobile/API).
+        String tokenBrut = cookieToken != null ? cookieToken
+            : (bodyRequest != null ? bodyRequest.refreshToken() : null);
+        if (tokenBrut == null || tokenBrut.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        TokenResponse token = authService.refreshToken(tokenBrut, httpRequest, httpResponse);
         return ResponseEntity.ok(token);
     }
 

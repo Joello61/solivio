@@ -1,5 +1,5 @@
 package com.solivio.api.identity.infrastructure.web.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
-public record RefreshTokenRequest(@NotBlank String refreshToken) {}
+// refreshToken est optionnel : les clients web utilisent le cookie HttpOnly.
+// Les clients mobiles peuvent passer le token dans le body JSON.
+public record RefreshTokenRequest(String refreshToken) {}
