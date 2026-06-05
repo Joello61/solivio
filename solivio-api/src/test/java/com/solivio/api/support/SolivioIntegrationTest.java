@@ -22,11 +22,14 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest(properties = {
-    "spring.cloud.vault.enabled=false",
-    "spring.config.import=optional:vault://",
-    "solivio.cors.allowed-origins=http://localhost:3000",
-    "solivio.cookie.encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-})
+        "spring.cloud.vault.enabled=false",
+        "spring.config.import=optional:vault://",
+        "solivio.cors.allowed-origins=http://localhost:3000",
+        "solivio.auth.jwt-secret=test-jwt-secret-key-must-be-at-least-32-bytes-long",
+        "solivio.auth.access-token-expiration-minutes=15",
+        "solivio.auth.refresh-token-expiration-days=30"
+    }
+)
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 public @interface SolivioIntegrationTest {
