@@ -62,6 +62,10 @@ public class PasswordService {
         Compte compte = compteRepository.findById(userDetails.getCompteId())
             .orElseThrow();
 
+        if (compte.getPasswordHash() == null) {
+            throw new IllegalArgumentException(
+                "Ce compte utilise la connexion Google et n'a pas de mot de passe local");
+        }
         if (!passwordEncoder.matches(motDePasseActuel, compte.getPasswordHash())) {
             throw new IllegalArgumentException("Mot de passe actuel incorrect");
         }
