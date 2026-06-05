@@ -4,7 +4,6 @@
 # Usage standalone:   docker compose up -d
 #
 # Required: copy .env.example to .env and fill all values before starting.
-# Required: run init-db.sql once on first start (creates the keycloak database).
 # Required: initialize OpenBao manually after first start (vault operator init).
 #
 # TLS is handled by Coolify (or Traefik in front). Services communicate over
@@ -18,7 +17,6 @@ services:
 
   # ---------------------------------------------------------------------------
   # PostgreSQL 18
-  # Hosts two databases: solivio (application) and keycloak (auth server).
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
@@ -30,7 +28,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
       - solivio_net
     healthcheck:
@@ -39,39 +36,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
-  # ---------------------------------------------------------------------------
-  # Keycloak 26.6.2 - authentication and identity
-  # Production mode: uses PostgreSQL as persistence backend.
-  # TLS is handled upstream by Coolify.
-  # ---------------------------------------------------------------------------
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.6.2
-    container_name: solivio_keycloak
-    restart: unless-stopped
-    command: start --optimized
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_DB_NAME}
-      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
-      KC_HOSTNAME_STRICT: "true"
-      KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - solivio_net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   # ---------------------------------------------------------------------------
   # Apache Kafka 4.0.2 - KRaft mode (no ZooKeeper)
@@ -157,8 +121,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}
-      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}
+      SOLIVIO_POST_LOGIN_REDIRECT_URI: ${FRONTEND_URL}
+      SOLIVIO_POST_LOGOUT_REDIRECT_URI: ${FRONTEND_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       JAVA_OPTS: "-Xmx512m"
     depends_on:
       postgres:
@@ -166,8 +132,6 @@ services:
       kafka:
         condition: service_healthy
       openbao:
-        condition: service_healthy
-      keycloak:
         condition: service_healthy
     networks:
       - solivio_net
@@ -187,9 +151,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      # internal URL used by Next.js server components to call the backend
       API_URL: http://backend:8080
-      # public URL visible from the browser (set to your domain)
       NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
     depends_on:
       backend:

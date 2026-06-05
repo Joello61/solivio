@@ -2,37 +2,29 @@
 #
 # Usage: docker compose -f docker-compose-dev.yml up -d
 #
-# This file starts all infrastructure services needed to run the application
-# locally. The backend and frontend are NOT started here by default: run them
-# directly on the host for hot-reload (IntelliJ / npm run dev).
+# Starts all infrastructure services. Backend and frontend run on the host
+# for hot-reload (IntelliJ / npm run dev).
 #
-# Credentials here are intentionally simple and hardcoded.
-# Never use these values in production.
+# Credentials are intentionally simple. Never use in production.
 #
-# Exposed ports (for host access):
-#   PostgreSQL : localhost:5432
-#   Keycloak   : localhost:9090  (avoid conflict with Spring Boot on 8080)
-#   Kafka      : localhost:9092
-#   OpenBao    : localhost:8200
-#   Mailpit UI : localhost:8025
+# Exposed ports:
+#   PostgreSQL  : localhost:5436  (5432 occupied by system PostgreSQL)
+#   Kafka       : localhost:9093  (external listener for host access)
+#   OpenBao     : localhost:8200
+#   Mailpit UI  : localhost:8025
 #   Mailpit SMTP: localhost:1025
 #
-# Spring Boot properties for local development (application-dev.yml):
-#   spring.datasource.url: jdbc:postgresql://localhost:5432/solivio
-#   spring.kafka.bootstrap-servers: localhost:9092
-#   spring.mail.host: localhost
-#   spring.mail.port: 1025
+# Spring Boot (application-dev.yml):
+#   spring.datasource.url: jdbc:postgresql://localhost:5436/solivio
+#   spring.kafka.bootstrap-servers: localhost:9093
+#   spring.mail.host: localhost / port: 1025
 #   spring.cloud.vault.uri: http://localhost:8200
-#   spring.cloud.vault.token: root
-#   spring.security.oauth2.resourceserver.jwt.issuer-uri: http://localhost:9090/realms/solivio
+#   SPRING_CLOUD_VAULT_TOKEN=root (env var)
 
 services:
 
   # ---------------------------------------------------------------------------
   # PostgreSQL 18
-  # Creates two databases on first start via init-db-dev.sql:
-  #   - solivio   (application)
-  #   - keycloak  (Keycloak auth server)
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
@@ -46,7 +38,6 @@ services:
       - "5436:5432"
     volumes:
       - dev_postgres_data:/var/lib/postgresql
-      - ./init-db-dev.sql:/docker-entrypoint-initdb.d/init-db-dev.sql:ro
     networks:
       - solivio_dev_net
     healthcheck:
@@ -57,46 +48,10 @@ services:
       start_period: 10s
 
   # ---------------------------------------------------------------------------
-  # Keycloak 26.6.2 - dev mode
-  # No persistence, no TLS, admin console accessible on port 9090.
-  # After start, create a realm named "solivio" and configure clients.
-  # ---------------------------------------------------------------------------
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.6.2
-    container_name: solivio_dev_keycloak
-    restart: unless-stopped
-    command: start-dev
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak_dev
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HTTP_PORT: 8080
-    ports:
-      - "9090:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - solivio_dev_net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  # ---------------------------------------------------------------------------
   # Apache Kafka 4.0.2 - KRaft mode, single broker
   # Two listeners:
-  #   INTERNAL (kafka:9092)  - for container-to-container communication
-  #   EXTERNAL (localhost:9092) - for Spring Boot running on the host
-  #
-  # CLUSTER_ID: a fixed value for dev, does not need to be random.
-  # To generate a proper one: docker run --rm apache/kafka:4
-  #     /opt/kafka/bin/kafka-storage.sh random-uuid
+  #   INTERNAL (kafka:9092)  - container-to-container
+  #   EXTERNAL (localhost:9093) - Spring Boot running on the host
   # ---------------------------------------------------------------------------
   kafka:
     image: apache/kafka:4.0.2
@@ -133,11 +88,8 @@ services:
 
   # ---------------------------------------------------------------------------
   # OpenBao 2 - dev mode
-  # Auto-unsealed, root token = "root", in-memory storage (no persistence).
-  # Access the UI at http://localhost:8200 with token "root".
-  # Spring Cloud Vault Config connects with:
-  #   spring.cloud.vault.token=root
-  #   spring.cloud.vault.uri=http://localhost:8200
+  # Auto-unsealed, root token = "root", in-memory storage.
+  # UI: http://localhost:8200 (token: root)
   # ---------------------------------------------------------------------------
   openbao:
     image: openbao/openbao:2
@@ -158,12 +110,9 @@ services:
       start_period: 5s
 
   # ---------------------------------------------------------------------------
-  # Mailpit - local SMTP server and email viewer
-  # Intercepts all outgoing emails instead of sending them.
-  # View captured emails at http://localhost:8025
-  # Spring Boot mail configuration:
-  #   spring.mail.host=localhost
-  #   spring.mail.port=1025
+  # Mailpit - SMTP local + visualiseur d'emails
+  # Intercepte tous les emails sortants (aucun email reel envoye en dev).
+  # UI: http://localhost:8025
   # ---------------------------------------------------------------------------
   mailpit:
     image: axllent/mailpit:latest
