@@ -18,8 +18,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,22 +47,25 @@ class TenantResolutionFilterTest {
     }
 
     @Test
-    void setsTenantContextFromUserDetailsTenantSlug() throws Exception {
+    void setsTenantContextDurantExecutionDeLaChaine() throws Exception {
         Association association = new Association("pilote", "Association pilote");
         when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
         setUserDetailsAuthentication("pilote");
 
-        filter.doFilter(
-            mock(HttpServletRequest.class),
-            mock(HttpServletResponse.class),
-            mock(FilterChain.class)
-        );
+        AtomicReference<String> tenantPendantChaine = new AtomicReference<>();
+        FilterChain chain = mock(FilterChain.class);
+        doAnswer(inv -> {
+            tenantPendantChaine.set(TenantContext.getTenantId());
+            return null;
+        }).when(chain).doFilter(any(), any());
 
-        assertThat(TenantContext.getTenantId()).isNull();
+        filter.doFilter(mock(HttpServletRequest.class), mock(HttpServletResponse.class), chain);
+
+        assertThat(tenantPendantChaine.get()).isEqualTo("tenant_pilote");
     }
 
     @Test
-    void clearsTenantContextAfterFilterChain() throws Exception {
+    void nettoyeTenantContextApresLaChaine() throws Exception {
         Association association = new Association("pilote", "Association pilote");
         when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
         setUserDetailsAuthentication("pilote");

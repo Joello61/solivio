@@ -196,4 +196,31 @@ class AuthControllerIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.email").value("alice@example.com"));
     }
+
+    @Test
+    void refresh_retourne200ViaCookieEtRetourneNouveauToken() throws Exception {
+        // Login pour obtenir le cookie refresh_token
+        LoginRequest loginReq = new LoginRequest("alice@example.com", "password123!", false);
+        Cookie refreshCookie = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(loginReq)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getCookie("refresh_token");
+
+        assertThat(refreshCookie).isNotNull();
+
+        // Refresh via cookie (flux web BFF) : pas de body JSON
+        mockMvc.perform(post("/api/auth/refresh")
+                .cookie(refreshCookie))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
+            .andExpect(cookie().exists("access_token"))
+            .andExpect(cookie().exists("refresh_token"));
+    }
+
+    @Test
+    void refresh_retourne400SansCookieNiBody() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+            .andExpect(status().isBadRequest());
+    }
 }

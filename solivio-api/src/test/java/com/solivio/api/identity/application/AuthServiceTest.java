@@ -91,7 +91,7 @@ class AuthServiceTest {
         String tokenBrut = "old-refresh-token";
         String hash = "hashed-token";
         RefreshToken rt = new RefreshToken(compte, hash, "pilote", "Mozilla", "127.0.0.1",
-            Instant.now().plusSeconds(3600));
+            Instant.now().plusSeconds(3600), false);
         when(jwtService.hasher(tokenBrut)).thenReturn(hash);
         when(refreshTokenRepo.findByTokenHash(hash)).thenReturn(Optional.of(rt));
         when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
@@ -101,7 +101,7 @@ class AuthServiceTest {
         when(jwtService.hasher("new-refresh-brut")).thenReturn("new-hash");
         when(refreshTokenRepo.save(any())).thenReturn(rt);
         when(jwtService.refreshTokenExpiration()).thenReturn(Instant.now().plusSeconds(2592000));
-        when(jwtService.getRefreshTokenSeconds()).thenReturn(2592000L);
+        // longDuree=false : getRefreshTokenSeconds n'est pas appele (Max-Age=-1 directement)
         when(jwtService.getAccessTokenMinutes()).thenReturn(15L);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -119,7 +119,7 @@ class AuthServiceTest {
         String tokenBrut = "revoked-token";
         String hash = "revoked-hash";
         RefreshToken rt = new RefreshToken(compte, hash, "pilote", null, null,
-            Instant.now().plusSeconds(3600));
+            Instant.now().plusSeconds(3600), false);
         rt.setRevoque(true);
 
         when(jwtService.hasher(tokenBrut)).thenReturn(hash);
