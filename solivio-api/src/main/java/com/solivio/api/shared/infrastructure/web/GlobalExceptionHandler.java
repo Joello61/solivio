@@ -65,4 +65,13 @@ public class GlobalExceptionHandler {
         pd.setDetail(details);
         return pd;
     }
+
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleUnexpected(Exception ex) {
+        log.error("Erreur inattendue non geree", ex);
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        pd.setTitle("Erreur interne");
+        pd.setDetail("Une erreur inattendue s'est produite.");
+        return pd;
+    }
 }
