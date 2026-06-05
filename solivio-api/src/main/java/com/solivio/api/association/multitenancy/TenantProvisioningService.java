@@ -8,7 +8,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -57,8 +56,10 @@ public class TenantProvisioningService {
     /**
      * Provisionne un nouveau tenant : cree le schema et applique les migrations.
      * Appele a la creation d'une nouvelle association.
+     * Doit etre appele apres que l'association soit commitee : Flyway ouvre ses
+     * propres connexions et ne peut pas voir un schema cree dans une transaction
+     * en cours.
      */
-    @Transactional
     public void provision(Association association) {
         String schema = schemaName(association.getSlug());
         log.info("Provisioning tenant schema: {}", schema);
