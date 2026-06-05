@@ -83,6 +83,15 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             redirectUrl = frontendUrl + "/tenant-select#token=" + accessToken;
         }
 
+        // Cookie access_token pour que le layout protege BFF puisse appeler /api/auth/me.
+        response.addHeader("Set-Cookie",
+            "access_token=" + accessToken
+                + "; Max-Age=" + (jwtService.getAccessTokenMinutes() * 60)
+                + "; Path=/"
+                + "; HttpOnly"
+                + (request.isSecure() ? "; Secure" : "")
+                + "; SameSite=Strict");
+
         emetRefreshTokenCookie(compte, tenantSlug, request, response);
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
@@ -91,11 +100,13 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                                         HttpServletRequest request, HttpServletResponse response) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
+        // Google OAuth2 : toujours cookie persistant (pas de case "rester connecte").
         var rt = new com.solivio.api.identity.domain.RefreshToken(
             compte, hash, tenantSlug,
             request.getHeader("User-Agent"),
             request.getRemoteAddr(),
-            jwtService.refreshTokenExpiration()
+            jwtService.refreshTokenExpiration(),
+            true
         );
         refreshTokenRepo.save(rt);
         response.addHeader("Set-Cookie",
