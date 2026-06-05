@@ -2,6 +2,7 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.RegisterService;
 import com.solivio.api.identity.infrastructure.web.dto.RegisterRequest;
+import com.solivio.api.identity.infrastructure.web.dto.ResendVerificationRequest;
 import com.solivio.api.identity.infrastructure.web.dto.VerifyEmailRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -47,7 +48,8 @@ public class RegisterController {
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<Void> resendVerification(@RequestBody VerifyEmailRequest request) {
+    public ResponseEntity<Void> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request) {
         registerService.renvoyerVerification(request.email());
         return ResponseEntity.noContent().build();
     }
