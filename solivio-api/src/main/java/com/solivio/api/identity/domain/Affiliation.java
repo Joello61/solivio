@@ -17,9 +17,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Lien entre une personne et son role dans l'association.
- * unite_organisationnelle_id est reserve pour la hierarchie multi-antennes (V3),
- * il est volontairement present mais toujours null en V1.
+ * Lien entre une Personne et son Role dans le schema tenant.
+ * Les permissions metier (distributions, inscriptions) reposent sur cette entite.
+ * unite_organisationnelle_id est reserve pour la hierarchie multi-antennes (V3).
  */
 @Entity
 @Table(name = "affiliation")

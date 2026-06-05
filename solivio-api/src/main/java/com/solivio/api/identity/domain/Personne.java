@@ -14,9 +14,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Individu dans l'association. Donnees de contact uniquement.
- * Les donnees sociales sensibles sont dans ProfilBeneficiaire (acces restreint).
- * Keycloak gere le mot de passe et l'authentification ; keycloakId est le seul pont.
+ * Profil de contact d'un membre dans un schema tenant.
+ * Les donnees sensibles (situation sociale) sont dans ProfilBeneficiaire.
+ * Le lien avec public.compte passe par compte_email (meme valeur que email).
  */
 @Entity
 @Table(name = "personne")
@@ -29,8 +29,8 @@ public class Personne {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "keycloak_id", nullable = false, unique = true, length = 36)
-    private String keycloakId;
+    @Column(name = "compte_email", unique = true)
+    private String compteEmail;
 
     @Column(nullable = false, length = 100)
     private String nom;
@@ -50,11 +50,11 @@ public class Personne {
     @Column(name = "date_suppression")
     private Instant dateSuppression;
 
-    public Personne(String keycloakId, String nom, String prenom, String email) {
-        this.keycloakId = keycloakId;
+    public Personne(String nom, String prenom, String email) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
+        this.compteEmail = email;
     }
 
     public boolean estSupprimee() {

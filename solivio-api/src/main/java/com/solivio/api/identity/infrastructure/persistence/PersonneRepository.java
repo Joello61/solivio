@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public interface PersonneRepository extends JpaRepository<Personne, UUID> {
 
-    Optional<Personne> findByKeycloakId(String keycloakId);
-
     Optional<Personne> findByEmail(String email);
 
-    boolean existsByKeycloakId(String keycloakId);
+    Optional<Personne> findByCompteEmail(String compteEmail);
+
+    boolean existsByEmail(String email);
 }
