@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Verifie que l'isolation multi-tenant est garantie par construction :
  * une requete dans le schema du tenant A ne peut pas voir les donnees du tenant B.
- *
- * Ces tests sont ecrits avant le code metier et executes a chaque integration.
  */
 @SolivioIntegrationTest
 class TenantIsolationTest {
@@ -67,15 +65,11 @@ class TenantIsolationTest {
 
     @Test
     void personneCreatedInTenantA_isNotVisibleFromTenantB() {
-        // Cree une personne dans le schema A
         TenantContext.setTenantId(schemaA);
-        Personne personneA = personneRepository.save(
-            new Personne("kc-id-a", "Dupont", "Alice", "alice@example.com")
-        );
+        personneRepository.save(new Personne("Dupont", "Alice", "alice@example.com"));
 
-        // Bascule sur le schema B : la personne A ne doit pas etre visible
         TenantContext.setTenantId(schemaB);
-        boolean existsInB = personneRepository.existsByKeycloakId("kc-id-a");
+        boolean existsInB = personneRepository.existsByEmail("alice@example.com");
 
         assertThat(existsInB)
             .as("Une personne du tenant A ne doit pas etre visible depuis le tenant B")
@@ -85,8 +79,8 @@ class TenantIsolationTest {
     @Test
     void personnesAreCountedPerTenant() {
         TenantContext.setTenantId(schemaA);
-        personneRepository.save(new Personne("kc-1", "Martin", "Bob", "bob@example.com"));
-        personneRepository.save(new Personne("kc-2", "Durand", "Carol", "carol@example.com"));
+        personneRepository.save(new Personne("Martin", "Bob", "bob@example.com"));
+        personneRepository.save(new Personne("Durand", "Carol", "carol@example.com"));
         long countA = personneRepository.count();
 
         TenantContext.setTenantId(schemaB);
@@ -101,15 +95,11 @@ class TenantIsolationTest {
     @Test
     void tenantContextClearPreventsDataLeak() {
         TenantContext.setTenantId(schemaA);
-        personneRepository.save(new Personne("kc-leak", "Test", "Leak", "leak@example.com"));
+        personneRepository.save(new Personne("Test", "Leak", "leak@example.com"));
 
-        // Simule une fin de requete : le contexte est nettoye
         TenantContext.clear();
 
-        // Sans tenant dans le contexte, le resolver retourne "public".
-        // La table personne n'existe pas dans public -> count() doit lever une exception
-        // ou retourner 0 selon la config. L'important est que les donnees de A sont isolees.
         TenantContext.setTenantId(schemaB);
-        assertThat(personneRepository.existsByKeycloakId("kc-leak")).isFalse();
+        assertThat(personneRepository.existsByEmail("leak@example.com")).isFalse();
     }
 }

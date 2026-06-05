@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -44,10 +44,10 @@ class TenantResolutionFilterTest {
     }
 
     @Test
-    void setsTenantContextFromJwtAssociationIdClaim() throws Exception {
+    void setsTenantContextFromUserDetailsTenantSlug() throws Exception {
         Association association = new Association("pilote", "Association pilote");
         when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
-        setJwtAuthentication("pilote");
+        setUserDetailsAuthentication("pilote");
 
         filter.doFilter(
             mock(HttpServletRequest.class),
@@ -62,9 +62,8 @@ class TenantResolutionFilterTest {
     void clearsTenantContextAfterFilterChain() throws Exception {
         Association association = new Association("pilote", "Association pilote");
         when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
-        setJwtAuthentication("pilote");
+        setUserDetailsAuthentication("pilote");
 
-        // Capturer les mocks dans des variables pour les réutiliser dans verify()
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         FilterChain chain = mock(FilterChain.class);
@@ -87,8 +86,8 @@ class TenantResolutionFilterTest {
     }
 
     @Test
-    void doesNotSetTenantWhenAssociationIdClaimMissing() throws Exception {
-        setJwtAuthentication(null);
+    void doesNotSetTenantWhenTenantSlugIsNull() throws Exception {
+        setUserDetailsAuthentication(null);
 
         filter.doFilter(
             mock(HttpServletRequest.class),
@@ -102,7 +101,7 @@ class TenantResolutionFilterTest {
     @Test
     void doesNotSetTenantWhenAssociationNotFound() throws Exception {
         when(associationRepository.findBySlug("unknown")).thenReturn(Optional.empty());
-        setJwtAuthentication("unknown");
+        setUserDetailsAuthentication("unknown");
 
         filter.doFilter(
             mock(HttpServletRequest.class),
@@ -113,18 +112,18 @@ class TenantResolutionFilterTest {
         assertThat(TenantContext.getTenantId()).isNull();
     }
 
-    private void setJwtAuthentication(String associationId) {
-        Jwt.Builder builder = Jwt.withTokenValue("token")
-            .header("alg", "RS256")
-            .subject("user-123")
-            .issuedAt(Instant.now())
-            .expiresAt(Instant.now().plusSeconds(3600));
-        if (associationId != null) {
-            builder.claim("association_id", associationId);
-        }
-        Jwt jwt = builder.build();
+    private void setUserDetailsAuthentication(String tenantSlug) {
+        SolivioUserDetails userDetails = new SolivioUserDetails(
+            UUID.randomUUID(),
+            "user@example.com",
+            null,
+            tenantSlug,
+            false,
+            List.of(),
+            true
+        );
         SecurityContextHolder.getContext().setAuthentication(
-            new JwtAuthenticationToken(jwt)
+            new UsernamePasswordAuthenticationToken(userDetails, null, List.of())
         );
     }
 }
