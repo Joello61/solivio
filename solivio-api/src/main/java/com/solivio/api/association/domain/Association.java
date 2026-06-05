@@ -34,6 +34,9 @@ public class Association {
     @Column(nullable = false, unique = true, length = 63)
     private String slug;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String code;
+
     @Column(nullable = false)
     private String nom;
 
@@ -53,5 +56,10 @@ public class Association {
     public Association(String slug, String nom) {
         this.slug = slug;
         this.nom = nom;
+        // Code par defaut derive du slug : majuscules, tirets supprimes, 20 chars max.
+        this.code = slug.toUpperCase().replace("-", "").replace("_", "");
+        if (this.code.length() > 20) {
+            this.code = this.code.substring(0, 20);
+        }
     }
 }

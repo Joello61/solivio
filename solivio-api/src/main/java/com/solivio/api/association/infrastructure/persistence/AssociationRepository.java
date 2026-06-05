@@ -11,6 +11,8 @@ public interface AssociationRepository extends JpaRepository<Association, UUID> 
 
     Optional<Association> findBySlug(String slug);
 
+    Optional<Association> findByCode(String code);
+
     Optional<Association> findBySousDomaine(String sousDomaine);
 
     List<Association> findAllByStatut(String statut);
