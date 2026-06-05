@@ -1,21 +1,14 @@
 # application.yml
-# Base configuration loaded in all profiles.
-# Sensitive values are read from environment variables or injected
-# by Spring Cloud Vault Config at startup.
+# Configuration de base chargee dans tous les profils.
+# Les valeurs sensibles viennent des variables d'environnement ou de Spring Cloud Vault.
 #
-# Profile-specific overrides: application-dev.yml, application-test.yml
-# In production, set SPRING_PROFILES_ACTIVE=prod and ensure all
-# ${ENV_VAR} references are provided (via Docker Compose or the platform).
-#
-# Place this file at: solivio-api/src/main/resources/application.yml
+# Surcharges par profil : application-dev.yml, application-test.yml
+# En production : SPRING_PROFILES_ACTIVE=prod + toutes les ${ENV_VAR} fournies.
 
 spring:
   application:
     name: solivio-api
 
-  # Vault secrets are imported at startup.
-  # "optional:" means the app still starts if Vault is unreachable.
-  # Remove "optional:" in production to make Vault mandatory.
   config:
     import: "optional:vault://"
 
@@ -32,8 +25,6 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/solivio}
     username: ${SPRING_DATASOURCE_USERNAME:solivio}
-    # In production, this value is provided by Spring Cloud Vault Config.
-    # In dev, set SPRING_DATASOURCE_PASSWORD in your environment.
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -44,9 +35,6 @@ spring:
 
   jpa:
     hibernate:
-      # Flyway est la source de verite du schema. Avec le multi-tenancy
-      # schema-par-tenant, validate echouerait car les tables tenant ne
-      # sont pas dans le schema public (schema par defaut au demarrage).
       ddl-auto: none
     show-sql: false
     open-in-view: false
@@ -54,13 +42,8 @@ spring:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # Pas de default_schema : avec le multi-tenancy schema-par-tenant,
-        # le routage se fait via SET search_path, pas par un prefixe fixe.
-        # Association a @Table(schema="public") explicite et n'est pas affectee.
 
   flyway:
-    # Gere uniquement le schema public (shared/).
-    # Les migrations tenant (tenant/) sont appliquees par TenantFlywayMigrator.
     enabled: true
     locations: classpath:db/migration/shared
     baseline-on-migrate: false
@@ -92,37 +75,23 @@ spring:
             enable: true
             required: true
 
-  # BFF pattern: Spring Boot acts as both OAuth2 Client (login flow)
-  # and Resource Server (JWT validation on API calls).
+  # Google OAuth2 : seul fournisseur externe supporte.
+  # Les credentials Google sont injectes depuis OpenBao en production.
   security:
     oauth2:
       client:
         registration:
-          keycloak:
-            client-id: solivio-backend
-            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
-            scope: openid,profile,email,roles
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
         provider:
-          keycloak:
-            # Endpoints explicites : evite l'appel OIDC discovery au demarrage.
-            # Avec issuer-uri, clientRegistrationRepository appelle Keycloak au boot
-            # et fait echouer le demarrage si Keycloak n'est pas encore pret.
-            authorization-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/auth
-            token-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/token
-            user-info-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/userinfo
-            jwk-set-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/certs
-            user-name-attribute: preferred_username
-      resourceserver:
-        jwt:
-          # jwk-set-uri : charge les cles publiques sans OIDC discovery au demarrage.
-          # issuer-uri : valide le claim "iss" dans le JWT sans appel HTTP.
-          jwk-set-uri: ${solivio.auth.keycloak-issuer-uri}/protocol/openid-connect/certs
-          issuer-uri: ${solivio.auth.keycloak-issuer-uri}
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
-  # Thymeleaf is used exclusively for HTML email templates.
-  # Disable web template resolution to avoid interference with REST endpoints.
   thymeleaf:
     check-template-location: false
     prefix: classpath:/templates/email/
@@ -162,26 +131,23 @@ logging:
     org.hibernate.SQL: WARN
     org.flywaydb: INFO
 
-# Custom application properties
 solivio:
   multitenancy:
     default-schema: public
   auth:
-    keycloak-issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/solivio}
-    # URI de redirection apres login reussi (vers le frontend).
-    post-login-redirect-uri: ${SOLIVIO_POST_LOGIN_REDIRECT_URI:/}
-    # URI de redirection apres logout OIDC (vers le frontend).
-    post-logout-redirect-uri: ${SOLIVIO_POST_LOGOUT_REDIRECT_URI:}
+    # Duree de vie du JWT access token (minutes).
+    access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:15}
+    # Duree de vie du JWT refresh token (jours).
+    refresh-token-expiration-days: ${SOLIVIO_REFRESH_TOKEN_EXPIRATION:30}
+    # Cle secrete HMAC-SHA256 pour signer les JWT (32 octets minimum, base64).
+    # En prod : injectee depuis OpenBao (secret/solivio-api, cle jwt.secret).
+    jwt-secret: ${jwt.secret:}
+    # URI de redirection apres login Google reussi (vers le frontend).
+    post-login-redirect-uri: ${SOLIVIO_POST_LOGIN_REDIRECT_URI:http://localhost:3000}
+    # URI de redirection apres logout (vers le frontend).
+    post-logout-redirect-uri: ${SOLIVIO_POST_LOGOUT_REDIRECT_URI:http://localhost:3000}
   mail:
     from: noreply@solivio.app
     reply-to: contact@solivio.app
-  cookie:
-    # Cle AES-256 (32 octets, base64) pour chiffrer les cookies de session.
-    # En prod : injectee depuis OpenBao (secret/solivio-api, cle cookie.encryption-key).
-    # En dev  : definie dans application-dev.yml.
-    encryption-key: ${cookie.encryption-key:}
   cors:
-    # Origins autorises pour les requetes cross-origin du frontend.
-    # En prod : URL publique du frontend (ex: https://app.solivio.org).
-    # En dev  : definie dans application-dev.yml.
-    allowed-origins: ${SOLIVIO_CORS_ALLOWED_ORIGINS:}
+    allowed-origins: ${SOLIVIO_CORS_ALLOWED_ORIGINS:http://localhost:3000}

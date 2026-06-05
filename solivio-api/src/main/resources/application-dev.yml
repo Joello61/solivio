@@ -1,9 +1,6 @@
 # application-dev.yml
-# Development profile overrides.
-# Activated by: SPRING_PROFILES_ACTIVE=dev
-# Expected infrastructure: docker compose -f docker-compose-dev.yml up -d
-#
-# Place this file at: solivio-api/src/main/resources/application-dev.yml
+# Profil de developpement. Active avec : SPRING_PROFILES_ACTIVE=dev
+# Infrastructure attendue : docker compose -f docker-compose-dev.yml up -d
 
 spring:
   config:
@@ -12,9 +9,6 @@ spring:
   cloud:
     vault:
       uri: http://localhost:8200
-      # Token injecte via SPRING_CLOUD_VAULT_TOKEN=root (variable d'environnement).
-      # Ne pas mettre le token en clair ici : il n'est pas lu a temps par
-      # le ConfigDataEnvironmentPostProcessor (meme probleme que pour les tests).
 
   datasource:
     url: jdbc:postgresql://localhost:5436/solivio
@@ -27,8 +21,6 @@ spring:
       hibernate:
         format_sql: true
 
-  # Backend running on host connects via the EXTERNAL Kafka listener.
-  # See docker-compose-dev.yml KAFKA_ADVERTISED_LISTENERS for port 9093.
   kafka:
     bootstrap-servers: localhost:9093
 
@@ -45,21 +37,24 @@ spring:
             enable: false
             required: false
 
+  # En dev, Google OAuth est optionnel.
+  # Renseigner GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans .env.local
+  # ou dans OpenBao dev pour tester le flux Google.
   security:
     oauth2:
       client:
         registration:
-          keycloak:
-            client-secret: ${keycloak.client-secret:change-me}
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dev-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dev-google-client-secret}
 
 solivio:
   auth:
+    # Cle de dev uniquement - generee pour le profil dev.
+    # En production la cle est injectee depuis OpenBao.
+    jwt-secret: dev-jwt-secret-key-must-be-at-least-32-bytes-long-for-hmac256
     post-login-redirect-uri: http://localhost:3000
     post-logout-redirect-uri: http://localhost:3000
-  cookie:
-    # Cle de dev uniquement - generee et stockee dans OpenBao local.
-    # Valeur de fallback si OpenBao ne repond pas en dev.
-    encryption-key: TBtJGRAtY88z4VBjjke9shhAAp6C+LjbHUiJoI2KN5o=
   cors:
     allowed-origins: http://localhost:3000
 
@@ -70,7 +65,6 @@ management:
   endpoints:
     web:
       exposure:
-        # Expose all Actuator endpoints in dev for debugging.
         include: "*"
   endpoint:
     health:
@@ -83,7 +77,6 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
-    # Logs the actual values bound to SQL parameters. Disable for sensitive data.
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.kafka: DEBUG
     org.flywaydb: DEBUG

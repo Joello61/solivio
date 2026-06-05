@@ -1,42 +1,38 @@
 # application-test.yml
-# Test profile activated automatically when running tests.
-# Activated by: @ActiveProfiles("test") or spring.profiles.active=test
-#
-# Testcontainers (@ServiceConnection) provides real PostgreSQL and Kafka
-# containers and automatically overrides datasource and Kafka connection
-# properties. You do not need to set datasource.url here.
-#
-# Place this file at: solivio-api/src/main/resources/application-test.yml
+# Profil de test active automatiquement via @SolivioIntegrationTest.
+# Testcontainers (@ServiceConnection) fournit PostgreSQL et Kafka reels
+# et surcharge automatiquement les proprietes de connexion.
 
 spring:
-  # Vault est desactive via @SolivioIntegrationTest (properties de @SpringBootTest).
-  # Les fichiers de profil arrivent trop tard pour overrider spring.config.import.
-  # Voir : VaultConfigDisabledTests dans le projet Spring Cloud Vault.
-
   jpa:
     show-sql: false
     properties:
       hibernate:
         format_sql: false
 
-  # Flyway runs migrations against the Testcontainers PostgreSQL instance.
   flyway:
     enabled: true
 
   mail:
     host: localhost
     port: 3025
+    # Ne pas tester la connexion SMTP au demarrage (pas de serveur mail en test).
+    test-connection: false
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
 
-  # JWT validation in tests:
-  # - For unit tests on controllers: use @WithMockUser or mock the JwtDecoder bean.
-  # - For integration tests requiring a real JWT: spin up a Keycloak Testcontainer
-  #   and set the issuer-uri to its URL.
-  # The placeholder below prevents startup failures when no JWT issuer is available.
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:9090/realms/solivio-test
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
 
 management:
   endpoints:
@@ -44,6 +40,11 @@ management:
       exposure:
         include: health
 
+solivio:
+  auth:
+    jwt-secret: test-jwt-secret-key-must-be-at-least-32-bytes-long-for-testing
+    access-token-expiration-minutes: 15
+    refresh-token-expiration-days: 30
 
 logging:
   level:
