@@ -43,9 +43,9 @@ services:
       POSTGRES_USER: solivio
       POSTGRES_PASSWORD: solivio_dev
     ports:
-      - "5432:5432"
+      - "5436:5432"
     volumes:
-      - dev_postgres_data:/var/lib/postgresql/data
+      - dev_postgres_data:/var/lib/postgresql
       - ./init-db-dev.sql:/docker-entrypoint-initdb.d/init-db-dev.sql:ro
     networks:
       - solivio_dev_net
@@ -57,12 +57,12 @@ services:
       start_period: 10s
 
   # ---------------------------------------------------------------------------
-  # Keycloak 26 - dev mode
+  # Keycloak 26.6.2 - dev mode
   # No persistence, no TLS, admin console accessible on port 9090.
   # After start, create a realm named "solivio" and configure clients.
   # ---------------------------------------------------------------------------
   keycloak:
-    image: quay.io/keycloak/keycloak:26
+    image: quay.io/keycloak/keycloak:26.6.2
     container_name: solivio_dev_keycloak
     restart: unless-stopped
     command: start-dev
@@ -89,7 +89,7 @@ services:
       start_period: 30s
 
   # ---------------------------------------------------------------------------
-  # Apache Kafka 4 - KRaft mode, single broker
+  # Apache Kafka 4.0.2 - KRaft mode, single broker
   # Two listeners:
   #   INTERNAL (kafka:9092)  - for container-to-container communication
   #   EXTERNAL (localhost:9092) - for Spring Boot running on the host
@@ -99,7 +99,7 @@ services:
   #     /opt/kafka/bin/kafka-storage.sh random-uuid
   # ---------------------------------------------------------------------------
   kafka:
-    image: apache/kafka:4
+    image: apache/kafka:4.0.2
     container_name: solivio_dev_kafka
     restart: unless-stopped
     environment:
