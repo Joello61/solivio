@@ -12,11 +12,12 @@ spring:
   cloud:
     vault:
       uri: http://localhost:8200
-      # OpenBao dev mode starts with root token "root" by default.
-      token: root
+      # Token injecte via SPRING_CLOUD_VAULT_TOKEN=root (variable d'environnement).
+      # Ne pas mettre le token en clair ici : il n'est pas lu a temps par
+      # le ConfigDataEnvironmentPostProcessor (meme probleme que pour les tests).
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/solivio
+    url: jdbc:postgresql://localhost:5436/solivio
     username: solivio
     password: solivio_dev
 
@@ -47,12 +48,20 @@ spring:
   security:
     oauth2:
       client:
-        provider:
+        registration:
           keycloak:
-            issuer-uri: http://localhost:9090/realms/solivio
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:9090/realms/solivio
+            client-secret: ${keycloak.client-secret:change-me}
+
+solivio:
+  auth:
+    post-login-redirect-uri: http://localhost:3000
+    post-logout-redirect-uri: http://localhost:3000
+  cookie:
+    # Cle de dev uniquement - generee et stockee dans OpenBao local.
+    # Valeur de fallback si OpenBao ne repond pas en dev.
+    encryption-key: TBtJGRAtY88z4VBjjke9shhAAp6C+LjbHUiJoI2KN5o=
+  cors:
+    allowed-origins: http://localhost:3000
 
 server:
   port: 8080
