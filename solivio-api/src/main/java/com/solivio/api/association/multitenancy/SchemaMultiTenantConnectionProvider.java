@@ -34,6 +34,8 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public void releaseAnyConnection(Connection connection) throws SQLException {
+        // Reset avant retour au pool : une connexion quelconque peut avoir ete contaminee.
+        setSearchPath(connection, "public");
         connection.close();
     }
 
