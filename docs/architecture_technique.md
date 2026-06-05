@@ -32,7 +32,9 @@ Solivio est composé de quatre grands ensembles techniques, tous conteneurisés 
 
 Le tout est conteneurisé avec Docker, intégré et déployé via GitLab CI/CD, et hébergé sur une infrastructure européenne (cohérent avec le RGPD et le modèle économique).
 
-L'enchaînement type d'une requête : le navigateur parle au frontend Next.js, qui s'authentifie via Keycloak (protocole OIDC) et appelle l'API du backend Spring Boot ; le backend vérifie les droits, lit ou écrit dans PostgreSQL, publie au besoin des événements dans Kafka (par exemple pour déclencher une notification), et récupère ses secrets depuis Vault/OpenBao.
+L'enchaînement type d'une requête depuis un navigateur : le navigateur interagit avec Next.js ; pour la connexion, Spring Boot joue le rôle de BFF (Backend for Frontend) et gère lui-même le flow OIDC avec Keycloak — les tokens ne transitent jamais par le navigateur, ils sont chiffrés dans des cookies HttpOnly. Pour les appels API, Spring Boot vérifie les droits, lit ou écrit dans PostgreSQL, publie au besoin des événements dans Kafka (par exemple pour déclencher une notification), et récupère ses secrets depuis OpenBao.
+
+Depuis une application mobile Capacitor, le flow est différent : l'application gère elle-même le flow PKCE avec Keycloak et envoie le token en header `Authorization: Bearer`. Spring Boot accepte les deux modes de manière transparente.
 
 ---
 
@@ -111,11 +113,32 @@ Le backend expose une **API REST** documentée automatiquement via **OpenAPI**. 
 
 Conformément au principe « déléguer la commodité » du modèle économique, l'authentification n'est pas reconstruite : elle est confiée à **Keycloak** (version 26 en juin 2026), une solution open source mature, désormais projet de la fondation CNCF, qui gère identités, connexion, double authentification, rôles et jetons selon les standards OpenID Connect et OAuth 2.0.
 
-### 4.2 Intégration
+### 4.2 Deux clients Keycloak, deux patterns d'accès
 
-Le frontend et le backend s'appuient sur Keycloak via OpenID Connect : Keycloak émet des jetons que le backend vérifie pour authentifier et autoriser. Les rôles définis dans Solivio sont portés dans les jetons, et le contrôle d'accès contextuel (un coordinateur sur ses distributions) est appliqué côté backend à partir de ces informations.
+Deux clients Keycloak sont configurés dans le realm `solivio` (exporté dans `keycloak/realm-solivio.json`) :
 
-### 4.3 Multi-association et Keycloak
+| Client | Type | Usage |
+|---|---|---|
+| `solivio-backend` | Confidentiel (secret) | BFF : Spring Boot gere le flow Authorization Code avec Keycloak pour les clients browser |
+| `solivio-frontend` | Public (PKCE) | PKCE natif : l'application mobile Capacitor gere elle-meme son flow OIDC |
+
+Les roles Solivio (`responsable`, `coordinateur`, `benevole`, `beneficiaire`) sont des roles de realm Keycloak, portes dans le claim `realm_access.roles` du JWT. Le claim `association_id` (attribut utilisateur Keycloak) identifie l'association du token et est lu par le backend pour router vers le bon schema tenant.
+
+### 4.3 Pattern BFF (Backend for Frontend) pour les clients browser
+
+Pour les clients browser (Next.js), Spring Boot joue le role de BFF stateless :
+
+1. L'utilisateur est redirige vers `/oauth2/authorization/keycloak` (Spring Boot).
+2. Spring Boot redirige vers Keycloak (Authorization Code + PKCE via `solivio-backend`).
+3. Keycloak redirige vers le callback Spring Boot avec le code.
+4. Spring Boot echange le code contre les tokens et les chiffre en cookies HttpOnly (AES-256-GCM, cle depuis OpenBao).
+5. Les requetes API suivantes utilisent ces cookies ; Spring Boot dechiffre et valide le JWT.
+
+Pour les clients mobiles (Capacitor), le flow PKCE est gere nativement par l'application, et le token est envoye en header `Authorization: Bearer`. Spring Boot accepte les deux modes via un `CompositeBearerTokenResolver`.
+
+La cle de chiffrement des cookies est stockee dans OpenBao (`secret/solivio-api`, cle `cookie.encryption-key`) et injectee au demarrage via Spring Cloud Vault Config. Les cookies de token utilisent `SameSite=Strict` ; le cookie d'etat OAuth2 utilise `SameSite=Lax` (necessaire car Keycloak redirige depuis un domaine different).
+
+### 4.4 Multi-association et Keycloak
 
 Pour la V1 (une seule association pilote), un seul espace Keycloak suffit. Pour le multi-association, deux stratégies existent : la fonctionnalité **Organizations** de Keycloak (multi-tenance au sein d'un même realm, introduite récemment) ou un realm par association. La première est plus légère à exploiter et constitue la piste privilégiée ; le choix définitif est à valider au moment où la deuxième association arrive. En V1, ce point n'a pas à être tranché.
 
@@ -184,10 +207,15 @@ Le frontend repose sur **Next.js 16** (version 16.2 en juin 2026, sur React 19),
 
 - **Rendu côté serveur** pour les pages publiques (page d'une association, futures pages de campagne), bénéfique pour l'accès et le référencement.
 - **Contexte d'association** : le branding (logo, couleurs) est appliqué dynamiquement selon l'association, via le système de layouts.
-- **Authentification** déléguée à Keycloak via OpenID Connect.
+- **Authentification via le BFF** : le frontend ne gere pas de tokens directement. Il redirige vers Spring Boot (`/oauth2/authorization/keycloak`), qui gere le flow OIDC et pose des cookies HttpOnly chiffres. Les appels API sont authentifies par ces cookies, transparents pour le code Next.js.
+- **Support mobile** : le frontend Next.js est aussi la base de l'application mobile Capacitor. En contexte Capacitor, le flow PKCE est gere nativement avec le client `solivio-frontend` (voir section 4.3). Spring Boot accepte les deux modes via son `CompositeBearerTokenResolver`.
 - **Priorité au mobile** : l'inscription des bénéficiaires et le pointage le jour J doivent être impeccables sur téléphone, conformément à l'exigence non fonctionnelle des spécifications.
 
-### 8.3 Vigilance sécurité
+### 8.3 CORS
+
+Les origines autorisees pour les requetes cross-origin sont configurees via la propriete `solivio.cors.allowed-origins` (pas codee en dur). En dev : `http://localhost:3000`. En prod : l'URL publique du frontend. Les cookies de session etant `HttpOnly`, `credentials: true` est necessaire pour que le navigateur les envoie sur les requetes cross-origin vers le backend.
+
+### 8.4 Vigilance sécurité
 
 Next.js a connu en 2026 plusieurs avis de sécurité importants (contournements d'autorisation via le middleware, notamment). La règle est donc stricte : **se tenir à jour des correctifs de sécurité**, et ne jamais faire reposer une autorisation sensible uniquement sur le middleware frontend. L'autorité en matière de droits reste le backend.
 
@@ -250,8 +278,10 @@ Une solution de visualisation (tableaux de bord de métriques) pourra être ajou
 Synthèse des exigences techniques de sécurité, dont plusieurs sont déjà des invariants des documents précédents :
 
 - chiffrement des échanges (HTTPS partout) ;
-- secrets gérés par OpenBao, jamais en clair ;
-- authentification déléguée à Keycloak, jetons vérifiés côté backend ;
+- secrets gérés par OpenBao, jamais en clair — y compris la cle de chiffrement des cookies (`secret/solivio-api`, cle `cookie.encryption-key`) ;
+- tokens de session chiffres en AES-256-GCM dans des cookies HttpOnly (SameSite=Strict) — le navigateur ne voit jamais les JWT en clair ;
+- CSRF protege par `csrf.spa()` de Spring Security 7 : cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN` ;
+- authentification déléguée à Keycloak, jetons vérifiés côté backend uniquement ;
 - contrôle d'accès appliqué côté backend, jamais uniquement côté frontend ;
 - validation stricte de toutes les entrées côté serveur ;
 - limitation de débit par association et par point d'accès, pour éviter qu'une association ne dégrade le service des autres ;
@@ -313,7 +343,7 @@ Point laissé ouvert par le modèle de données. Recommandation : choisir une co
 
 **Le style.** Un monolithe modulaire évolutif : une seule application déployable, découpée en modules à frontières nettes, communiquant par interfaces et par événements Kafka, conçue pour extraire des microservices plus tard. Cela réconcilie l'apprentissage voulu et la livraison à protéger.
 
-**La pile (juin 2026).** Backend Spring Boot 4 sur Java 25 ; frontend Next.js 16 sur React 19 en TypeScript ; authentification déléguée à Keycloak 26 ; base PostgreSQL 18 en schéma par association ; événementiel Apache Kafka 4 en mode KRaft ; secrets gérés par OpenBao plutôt que Vault, pour l'alignement open source ; le tout conteneurisé avec Docker et livré par GitLab CI/CD.
+**La pile (juin 2026).** Backend Spring Boot 4 sur Java 25 ; frontend Next.js 16 sur React 19 en TypeScript (base de l'app mobile Capacitor) ; authentification via BFF stateless — Spring Boot gere le flow OIDC avec Keycloak 26, tokens chiffres AES-256-GCM en cookies HttpOnly, fallback Bearer header pour Capacitor ; base PostgreSQL 18 en schéma par association ; événementiel Apache Kafka 4 en mode KRaft ; secrets gérés par OpenBao plutôt que Vault, pour l'alignement open source ; le tout conteneurisé avec Docker et livré par GitLab CI/CD.
 
 **L'isolation.** Un schéma PostgreSQL par association, géré nativement par Hibernate, avec une suite de tests dédiée à la non-fuite inter-association.
 
