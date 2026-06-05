@@ -1,8 +1,11 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -37,6 +40,8 @@ public class SecurityConfig {
     private final CorsProperties corsProperties;
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+    private final AssociationRepository associationRepository;
+    private final Environment environment;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -44,13 +49,35 @@ public class SecurityConfig {
             PasswordEncoder passwordEncoder,
             CorsProperties corsProperties,
             GoogleOAuth2UserService googleOAuth2UserService,
-            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler) {
+            GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
+            AssociationRepository associationRepository,
+            Environment environment) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.corsProperties = corsProperties;
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
+        this.associationRepository = associationRepository;
+        this.environment = environment;
+    }
+
+    @Bean
+    public TenantResolutionFilter tenantResolutionFilter() {
+        return new TenantResolutionFilter(associationRepository);
+    }
+
+    /**
+     * Desactive l'enregistrement automatique du filtre comme filtre servlet.
+     * Il est enregistre uniquement dans la SecurityFilterChain via addFilterAfter.
+     * Sans ce bean, Spring Boot l'enregistrerait deux fois.
+     */
+    @Bean
+    public FilterRegistrationBean<TenantResolutionFilter> tenantFilterRegistration(
+            TenantResolutionFilter filter) {
+        FilterRegistrationBean<TenantResolutionFilter> reg = new FilterRegistrationBean<>(filter);
+        reg.setEnabled(false);
+        return reg;
     }
 
     @Bean
@@ -75,13 +102,11 @@ public class SecurityConfig {
                 // Google OAuth2 initiation et callback
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 // Infrastructure
-                .requestMatchers(
-                    "/actuator/health",
-                    "/actuator/info",
-                    "/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                // Swagger : public en dev/test, bloque en prod.
+                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                    .access((a, ctx) -> new org.springframework.security.authorization.AuthorizationDecision(
+                        environment.acceptsProfiles(Profiles.of("dev | test"))))
                 .anyRequest().authenticated()
             )
             // Google OAuth2 : apres succes, GoogleOAuth2SuccessHandler emet un JWT Solivio.
@@ -104,6 +129,8 @@ public class SecurityConfig {
                 })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // TenantResolutionFilter apres JWT : le SecurityContext est peuple, on peut lire le tenant.
+            .addFilterAfter(tenantResolutionFilter(), JwtAuthenticationFilter.class)
             .build();
     }
 

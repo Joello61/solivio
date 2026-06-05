@@ -12,18 +12,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 /**
- * Alimente le TenantContext apres l'authentification JWT custom.
- * Lit le claim "tenant" du SolivioUserDetails et resout le schema tenant.
- * Nettoie le contexte apres chaque requete pour eviter les fuites entre requetes.
- * NOTE: sera complete en Phase 3 avec SolivioUserDetails.
+ * Alimente le TenantContext depuis le claim "tenant" du JWT apres l'authentification.
+ * Doit etre enregistre dans la SecurityFilterChain (apres JwtAuthenticationFilter)
+ * pour avoir acces au SecurityContext peuple. Ne pas mettre @Component : le bean est
+ * declare dans SecurityConfig avec FilterRegistrationBean pour eviter la double
+ * registration servlet.
  */
-@Component
 public class TenantResolutionFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(TenantResolutionFilter.class);
