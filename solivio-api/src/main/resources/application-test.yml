@@ -9,13 +9,9 @@
 # Place this file at: solivio-api/src/main/resources/application-test.yml
 
 spring:
-  # Vault is disabled in tests. Connection details come from Testcontainers.
-  config:
-    import: ""
-
-  cloud:
-    vault:
-      enabled: false
+  # Vault est desactive via @SolivioIntegrationTest (properties de @SpringBootTest).
+  # Les fichiers de profil arrivent trop tard pour overrider spring.config.import.
+  # Voir : VaultConfigDisabledTests dans le projet Spring Cloud Vault.
 
   jpa:
     show-sql: false
@@ -47,6 +43,7 @@ management:
     web:
       exposure:
         include: health
+
 
 logging:
   level:
