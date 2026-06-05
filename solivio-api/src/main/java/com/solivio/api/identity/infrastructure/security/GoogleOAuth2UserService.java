@@ -41,8 +41,12 @@ public class GoogleOAuth2UserService extends DefaultOAuth2UserService {
         if (nom == null || nom.isBlank()) {
             nom = oAuth2User.getAttribute("name");
         }
-        if (prenom == null) prenom = "";
-        if (nom == null) nom = "";
+        if (prenom == null) {
+            prenom = "";
+        }
+        if (nom == null) {
+            nom = "";
+        }
 
         provisionnerOuMettreAJour(googleId, email, nom, prenom);
         return oAuth2User;

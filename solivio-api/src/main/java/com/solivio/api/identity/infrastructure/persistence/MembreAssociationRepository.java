@@ -12,13 +12,15 @@ public interface MembreAssociationRepository extends JpaRepository<MembreAssocia
 
     List<MembreAssociation> findByCompteIdAndStatut(UUID compteId, String statut);
 
-    @Query("SELECT m FROM MembreAssociation m JOIN FETCH m.compte WHERE m.association.id = :associationId AND m.statut = 'actif'")
+    @Query("SELECT m FROM MembreAssociation m JOIN FETCH m.compte"
+        + " WHERE m.association.id = :associationId AND m.statut = 'actif'")
     List<MembreAssociation> findActivesByAssociationId(UUID associationId);
 
     Optional<MembreAssociation> findByCompteIdAndAssociationId(UUID compteId, UUID associationId);
 
     boolean existsByCompteIdAndAssociationId(UUID compteId, UUID associationId);
 
-    @Query("SELECT m FROM MembreAssociation m JOIN FETCH m.association WHERE m.compte.id = :compteId AND m.statut = 'actif'")
+    @Query("SELECT m FROM MembreAssociation m JOIN FETCH m.association"
+        + " WHERE m.compte.id = :compteId AND m.statut = 'actif'")
     List<MembreAssociation> findActivesByCompteId(UUID compteId);
 }

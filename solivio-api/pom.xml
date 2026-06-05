@@ -360,6 +360,14 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<version>3.6.0</version>
+				<!-- La configuration est au niveau du plugin pour eviter que le
+				     parametre ${checkstyle.config.location} du plugin ne prenne
+				     la precedence sur la configuration d'execution. -->
+				<configuration>
+					<configLocation>${project.basedir}/checkstyle.xml</configLocation>
+					<failsOnError>true</failsOnError>
+					<consoleOutput>true</consoleOutput>
+				</configuration>
 				<executions>
 					<execution>
 						<id>checkstyle-check</id>
@@ -367,11 +375,6 @@
 						<goals>
 							<goal>check</goal>
 						</goals>
-						<configuration>
-							<configLocation>google_checks.xml</configLocation>
-							<failsOnError>true</failsOnError>
-							<consoleOutput>true</consoleOutput>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>

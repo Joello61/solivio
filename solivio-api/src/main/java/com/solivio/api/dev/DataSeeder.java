@@ -118,8 +118,10 @@ public class DataSeeder implements CommandLineRunner {
             affilifier(r, toulouse, "responsable", null);
         }
 
-        rapport.add("\n  Responsables Paris    : resp1.paris@solivio.app .. resp3.paris@solivio.app / " + MDP_DEFAULT);
-        rapport.add("  Responsables Toulouse : resp1.toulouse@solivio.app .. resp3.toulouse@solivio.app / " + MDP_DEFAULT);
+        rapport.add("\n  Responsables Paris    : resp1.paris@solivio.app .. resp3.paris@solivio.app / "
+            + MDP_DEFAULT);
+        rapport.add("  Responsables Toulouse : resp1.toulouse@solivio.app .. resp3.toulouse@solivio.app / "
+            + MDP_DEFAULT);
 
         // ------------------------------------------------------------------ //
         //  COORDINATEURS                                                        //
@@ -135,7 +137,8 @@ public class DataSeeder implements CommandLineRunner {
         }
         // 4 coordos propres a Toulouse
         for (int i = 0; i < coordoTypes.length; i++) {
-            Compte c = creerCompte("coordo" + (i + 1) + ".toulouse@solivio.app", hash, "Coordo" + (i + 1), "Toulouse", false);
+            Compte c = creerCompte("coordo" + (i + 1) + ".toulouse@solivio.app",
+                hash, "Coordo" + (i + 1), "Toulouse", false);
             affilifier(c, toulouse, "coordinateur", coordoTypes[i]);
         }
         // 1 coordo dans les DEUX assos
@@ -143,8 +146,10 @@ public class DataSeeder implements CommandLineRunner {
         affilifier(coordoBoth, paris, "coordinateur", "coordo_generale");
         affilifier(coordoBoth, toulouse, "coordinateur", "coordo_sec");
 
-        rapport.add("  Coordos Paris (x4)    : coordo1.paris@solivio.app .. coordo4.paris@solivio.app / " + MDP_DEFAULT);
-        rapport.add("  Coordos Toulouse (x4) : coordo1.toulouse@solivio.app .. coordo4.toulouse@solivio.app / " + MDP_DEFAULT);
+        rapport.add("  Coordos Paris (x4)    : coordo1.paris@solivio.app .. coordo4.paris@solivio.app / "
+            + MDP_DEFAULT);
+        rapport.add("  Coordos Toulouse (x4) : coordo1.toulouse@solivio.app .. coordo4.toulouse@solivio.app / "
+            + MDP_DEFAULT);
         rapport.add("  Coordo commun (2 assos): coordo.commun@solivio.app / " + MDP_DEFAULT);
 
         // ------------------------------------------------------------------ //
@@ -166,9 +171,12 @@ public class DataSeeder implements CommandLineRunner {
             affilifier(b, toulouse, "beneficiaire", null);
         }
 
-        rapport.add("  Benefs Paris (x7)     : benef1.paris@solivio.app .. benef7.paris@solivio.app / " + MDP_DEFAULT);
-        rapport.add("  Benefs Toulouse (x7)  : benef1.toulouse@solivio.app .. benef7.toulouse@solivio.app / " + MDP_DEFAULT);
-        rapport.add("  Benefs communs (x3)   : benef.commun1@solivio.app .. benef.commun3@solivio.app / " + MDP_DEFAULT);
+        rapport.add("  Benefs Paris (x7)     : benef1.paris@solivio.app .. benef7.paris@solivio.app / "
+            + MDP_DEFAULT);
+        rapport.add("  Benefs Toulouse (x7)  : benef1.toulouse@solivio.app .. benef7.toulouse@solivio.app / "
+            + MDP_DEFAULT);
+        rapport.add("  Benefs communs (x3)   : benef.commun1@solivio.app .. benef.commun3@solivio.app / "
+            + MDP_DEFAULT);
 
         // ------------------------------------------------------------------ //
         //  PERSONNE dans les schemas tenant (profil metier)                    //
