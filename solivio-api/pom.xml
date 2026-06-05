@@ -71,9 +71,23 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
 		</dependency>
+		<!-- JJWT 0.13.0 : emission et validation des JWT access/refresh -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.13.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.13.0</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.13.0</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -154,11 +168,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-client-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security-oauth2-resource-server-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -289,11 +298,26 @@
 					     classes de configuration (@ConfigurationProperties),
 					     et handlers dont la couverture n'apporte pas de valeur. -->
 					<excludes>
+						<!-- Entites JPA : getters/setters generes par Lombok, aucune logique -->
 						<exclude>com/solivio/api/identity/domain/**</exclude>
 						<exclude>com/solivio/api/association/domain/**</exclude>
 						<exclude>com/solivio/api/audit/domain/**</exclude>
-						<exclude>com/solivio/api/identity/infrastructure/security/cookie/CookieProperties.class</exclude>
-						<exclude>com/solivio/api/identity/infrastructure/security/cookie/CorsProperties.class</exclude>
+						<!-- DTOs / records : donnees pures, pas de logique a couvrir -->
+						<exclude>com/solivio/api/identity/infrastructure/web/dto/**</exclude>
+						<!-- Config Spring : beans declaratifs sans logique testable -->
+						<exclude>com/solivio/api/identity/infrastructure/security/CorsProperties.class</exclude>
+						<exclude>com/solivio/api/identity/infrastructure/security/PasswordConfig.class</exclude>
+						<!-- Bootstrap sans logique metier -->
+						<exclude>com/solivio/api/SolivioApiApplication.class</exclude>
+						<!-- OAuth2 Google : depend d'un fournisseur externe, teste en integration -->
+						<exclude>com/solivio/api/identity/infrastructure/security/GoogleOAuth2UserService.class</exclude>
+						<exclude>com/solivio/api/identity/infrastructure/security/GoogleOAuth2SuccessHandler.class</exclude>
+						<!-- Email : SMTP externe, mock dans tous les tests ; logique triviale (template + send) -->
+						<exclude>com/solivio/api/identity/infrastructure/email/JavaMailEmailService.class</exclude>
+						<!-- Classes anonymes generees par le compilateur -->
+						<exclude>com/solivio/api/identity/application/AuthService$*.class</exclude>
+						<!-- Seeder de donnees de dev : @Profile("seed"), pas de logique metier -->
+						<exclude>com/solivio/api/dev/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
