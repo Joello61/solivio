@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
@@ -8,11 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyEmail } from "@/lib/auth";
 
-/**
- * Saisie du code a 6 chiffres envoye par email lors de l'inscription.
- * Chaque chiffre occupe un champ separe pour une meilleure UX.
- */
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
@@ -58,7 +54,9 @@ export default function VerifyEmailPage() {
       router.push("/login?verified=1");
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? (err as { detail?: string }).detail ?? err.message : "Code invalide ou expire";
+        err instanceof Error
+          ? (err as { detail?: string }).detail ?? err.message
+          : "Code invalide ou expire";
       setError(msg);
       setDigits(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
@@ -118,5 +116,13 @@ export default function VerifyEmailPage() {
         </button>
       </p>
     </AuthLayout>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }
