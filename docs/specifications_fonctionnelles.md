@@ -155,13 +155,15 @@ Côté bénéficiaire :
 - Consulter ses inscriptions en cours et passées.
 
 Côté bénévole :
-- S'inscrire sur un créneau d'une distribution, en indiquant éventuellement un rôle (logistique, accueil, etc.).
+- S'inscrire sur un créneau d'une distribution.
 - Se désinscrire, en alertant le coordinateur si c'est tardif.
-- Consulter ses créneaux à venir.
+- Consulter ses créneaux à venir et les rôles qui lui ont été attribués.
 
 Côté coordinateur :
 - Voir en temps réel le remplissage d'une distribution (inscrits, places restantes, liste d'attente).
 - Inscrire ou désinscrire manuellement une personne si besoin.
+- Attribuer un ou plusieurs rôles aux bénévoles inscrits (distribution, réapprovisionnement, gestion des cartons, etc.). Les rôles sont définis librement ou à partir d'un catalogue propre à l'association. Un même bénévole peut cumuler plusieurs rôles.
+- Consulter le nombre d'absences passées de chaque bénéficiaire dans la liste des inscrits.
 
 **Règles de gestion clés (détaillées en section 6) :** la fréquence d'inscription d'un bénéficiaire peut être limitée (par exemple une fois par semaine), et le comportement en cas d'absence répétée est défini.
 
