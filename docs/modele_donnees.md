@@ -228,7 +228,6 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | type | énumération | beneficiaire ou benevole |
 | statut | énumération | confirmee, liste_attente, annulee |
 | rang_liste_attente | entier | Position en liste d'attente (si applicable) |
-| role_benevole | texte | Pour les bénévoles : accueil, logistique… (optionnel) |
 | presence | énumération | non_pointe (défaut), present, absent |
 | date_pointage | date-heure | Quand la présence a été pointée |
 | pointe_par | référence | Qui a pointé |
@@ -237,6 +236,28 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 > Choix de modélisation : la présence est portée par l'inscription (champs `presence`, `date_pointage`, `pointe_par`) plutôt que par une entité séparée. C'est plus simple et suffisant pour la V1. Si le pointage devenait plus riche (plusieurs passages, horodatage multiple), une entité dédiée pourrait être extraite plus tard sans douleur.
 
 > Règles portées par cette entité : l'unicité d'un bénéficiaire par distribution (RG2), la liste d'attente et la promotion automatique (RG3), le comptage des absences (RG4).
+
+**`type_role`** — catalogue des rôles bénévoles définis par l'association (optionnel).
+
+| Attribut | Type logique | Description |
+|---|---|---|
+| identifiant | identifiant | Clé unique |
+| parent | référence | Rôle parent (null = rôle principal, non null = sous-type) |
+| libelle | texte | Nom du rôle (ex : Distribution, Réapprovisionnement) |
+| actif | booléen | Permet d'archiver un rôle sans le supprimer |
+
+> Hiérarchie à deux niveaux : un rôle principal (parent null) peut avoir des sous-types (ex : Distribution > Distribution des carottes). Une association qui ne configure pas de catalogue utilise des libellés libres.
+
+**`role_benevole_inscription`** — rôles attribués par le coordinateur à un bénévole inscrit.
+
+| Attribut | Type logique | Description |
+|---|---|---|
+| identifiant | identifiant | Clé unique |
+| inscription | référence | L'inscription concernée (ON DELETE CASCADE) |
+| type_role | référence | Entrée du catalogue (optionnel) |
+| libelle_libre | texte | Libellé ad hoc si pas de catalogue (optionnel) |
+
+> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par admin, responsable ou coordinateur après l'inscription du bénévole.
 
 ### 4.4 Répartition des denrées
 
