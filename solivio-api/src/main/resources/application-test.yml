@@ -14,9 +14,7 @@ spring:
     enabled: true
 
   mail:
-    host: localhost
-    port: 3025
-    # Ne pas tester la connexion SMTP au demarrage (pas de serveur mail en test).
+    # host et port injectes dynamiquement par DynamicPropertyRegistrar (Mailpit Testcontainers).
     test-connection: false
     properties:
       mail:
