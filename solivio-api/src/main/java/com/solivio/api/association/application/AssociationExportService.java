@@ -2,7 +2,6 @@ package com.solivio.api.association.application;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantContext;
 import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.shared.exception.NotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -52,12 +51,7 @@ public class AssociationExportService {
             .orElseThrow(() -> new NotFoundException("Association introuvable : " + tenantSlug));
 
         String schema = TenantProvisioningService.schemaName(tenantSlug);
-        TenantContext.setTenantId(schema);
-        try {
-            return construireZip(asso, schema);
-        } finally {
-            TenantContext.clear();
-        }
+        return construireZip(asso, schema);
     }
 
     private byte[] construireZip(Association asso, String schema) {
