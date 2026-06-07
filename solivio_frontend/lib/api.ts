@@ -93,3 +93,35 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
 export function apiGet<T>(path: string): Promise<T> {
   return apiFetch<T>(path, { method: "GET" });
 }
+
+/**
+ * Fetch sans header Content-Type automatique, pour les envois multipart (FormData).
+ * Le navigateur positionne lui-meme le boundary requis.
+ */
+export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    credentials: "include",
+  });
+
+  if (response.status === 401) {
+    const refreshed = await tentativeRefresh();
+    if (refreshed) {
+      const retry = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
+      if (retry.ok) {
+        if (retry.status === 204) return undefined as T;
+        return retry.json() as Promise<T>;
+      }
+    }
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw Object.assign(new Error("Session expiree"), { status: 401 });
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw parseErrorResponse(body, response.status);
+  }
+
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}

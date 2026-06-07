@@ -1,4 +1,4 @@
-import { apiGet, apiFetch } from "@/lib/api";
+import { apiGet, apiFetch, apiFetchRaw } from "@/lib/api";
 import type {
   AssociationResponse,
   UpdateAssociationPayload,
@@ -18,6 +18,15 @@ export function mettreAJourAssociation(
   return apiFetch<AssociationResponse>("/api/association", {
     method: "PATCH",
     body: JSON.stringify(payload),
+  });
+}
+
+export function uploadLogo(file: File): Promise<AssociationResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  return apiFetchRaw<AssociationResponse>("/api/association/logo", {
+    method: "POST",
+    body: form,
   });
 }
 

@@ -97,7 +97,8 @@ public class SecurityConfig {
                     "/api/auth/reset-password",
                     "/api/auth/verify-email",
                     "/api/auth/resend-verification",
-                    "/api/invitations/*/details"
+                    "/api/invitations/*/details",
+                    "/api/public/**"
                 ).permitAll()
                 // Google OAuth2 initiation et callback
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()

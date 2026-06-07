@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mettreAJourAssociation } from "@/lib/api/association";
+import { mettreAJourAssociation, uploadLogo } from "@/lib/api/association";
 import type { AssociationResponse } from "@/types/association";
 
 interface Props {
@@ -14,9 +16,12 @@ interface Props {
 
 export function FormulaireConfiguration({ association }: Props) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState(false);
+  const [logoErreur, setLogoErreur] = useState<string | null>(null);
 
   const [nom, setNom] = useState(association.nom);
   const [logoUrl, setLogoUrl] = useState(association.logoUrl ?? "");
@@ -36,6 +41,24 @@ export function FormulaireConfiguration({ association }: Props) {
   const [contactTelephone, setContactTelephone] = useState(
     association.contactTelephone ?? ""
   );
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoErreur(null);
+    setLogoUploading(true);
+    try {
+      const updated = await uploadLogo(file);
+      setLogoUrl(updated.logoUrl ?? "");
+      router.refresh();
+    } catch (err) {
+      const e2 = err as { detail?: string; message?: string };
+      setLogoErreur(e2.detail ?? e2.message ?? "Erreur lors du telechargement du logo.");
+    } finally {
+      setLogoUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function soumettre(e: React.FormEvent) {
     e.preventDefault();
@@ -90,14 +113,45 @@ export function FormulaireConfiguration({ association }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="logoUrl">URL du logo</Label>
-        <Input
-          id="logoUrl"
-          type="url"
-          value={logoUrl}
-          onChange={(e) => setLogoUrl(e.target.value)}
-          placeholder="https://..."
-        />
+        <Label>Logo de l&apos;association</Label>
+        {logoUrl && (
+          <div className="mb-2 flex items-center gap-3">
+            <Image
+              src={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}${logoUrl}`}
+              alt="Logo actuel"
+              width={64}
+              height={64}
+              className="rounded border border-border object-contain"
+            />
+            <span className="text-sm text-muted-foreground">Logo actuel</span>
+          </div>
+        )}
+        {logoErreur && (
+          <p className="text-sm text-destructive">{logoErreur}</p>
+        )}
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handleLogoChange}
+            aria-label="Choisir un fichier logo"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={logoUploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            {logoUploading ? "Telechargement..." : "Choisir un logo"}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            JPG, PNG, GIF ou WEBP - 2 Mo max
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
