@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vous avez une place</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,-apple-system,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="560" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+
+          <tr>
+            <td style="background:#16513F;padding:32px 40px;text-align:center;">
+              <span style="color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">Solivio</span>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:40px 40px 24px;">
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">
+                Une place est disponible pour vous
+              </h1>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
+                Bonjour <span th:text="${prenom}">Prenom</span>,
+              </p>
+              <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
+                Une place s'est liberee <th:block th:if="${estBenevole}">sur le creneau benevole </th:block>. Vous etes maintenant inscrit(e) et confirme(e) pour la distribution suivante.
+              </p>
+              <div style="background:#f0faf6;border:1px solid #b0dcca;border-radius:8px;padding:20px 24px;margin:16px 0 24px;">
+                <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#16513F;"
+                   th:text="${distributionTitre}">Titre de la distribution</p>
+                <p style="margin:0 0 4px;font-size:14px;color:#374151;">
+                  Date : <span th:text="${#temporals.format(distributionDate, 'EEEE d MMMM yyyy', #locale)}">lundi 1 janvier 2025</span>
+                </p>
+                <p th:if="${creneauHeureDebut != null}" style="margin:0 0 4px;font-size:14px;color:#374151;">
+                  Horaire : <span th:text="${#temporals.format(creneauHeureDebut, 'HH:mm')}">09:00</span>
+                  - <span th:text="${#temporals.format(creneauHeureFin, 'HH:mm')}">11:00</span>
+                </p>
+                <p th:if="${distributionLieu != null and !#strings.isEmpty(distributionLieu)}"
+                   style="margin:0;font-size:14px;color:#374151;">
+                  Lieu : <span th:text="${distributionLieu}">Lieu</span>
+                </p>
+              </div>
+              <div th:if="${estBenevole}" style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px 20px;margin:0 0 32px;">
+                <p th:if="${heureArriveeBenevole != null}" style="margin:0;font-size:14px;color:#92400e;">
+                  En tant que benevole, merci d'arriver a
+                  <strong th:text="${#temporals.format(heureArriveeBenevole, 'HH:mm')}">07:30</strong>
+                  (1h30 avant le debut de votre creneau).
+                </p>
+                <p th:if="${heureArriveeBenevole == null}" style="margin:0;font-size:14px;color:#92400e;">
+                  En tant que benevole, merci d'arriver <strong>1h30 avant le debut</strong> de la distribution.
+                </p>
+              </div>
+              <table th:if="${!estBenevole}" role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-radius:6px;background:#16513F;">
+                    <a th:href="${appUrl}" href="#"
+                       style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
+                      Voir mes inscriptions
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <table th:if="${estBenevole}" role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-radius:6px;background:#16513F;">
+                    <a th:href="${appUrl}" href="#"
+                       style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
+                      Voir mes benevoles
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 40px 40px;">
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 24px;">
+              <p style="margin:0;font-size:13px;color:#9ca3af;">
+                Si vous ne souhaitez plus participer, vous pouvez annuler votre inscription depuis votre espace.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
