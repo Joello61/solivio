@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Calendar, MapPin, Users, ClipboardList, Tag } from "lucide-react";
+import { Calendar, MapPin, Users, ClipboardList, Tag, Package } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
@@ -104,14 +104,25 @@ export default async function DistributionDetailPage({ params }: PageProps) {
             <p className="text-sm text-muted-foreground">Motif : {distribution.motifAnnulation}</p>
           )}
         </div>
-        {estGestionnaire && distribution.statut === "EN_COURS" && (
-          <Link
-            href={`/distributions/${id}/pointage`}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            <ClipboardList className="mr-2 size-4" />
-            Pointage
-          </Link>
+        {estGestionnaire && (
+          <div className="flex gap-2">
+            {distribution.statut === "EN_COURS" && (
+              <Link
+                href={`/distributions/${id}/pointage`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <ClipboardList className="mr-2 size-4" />
+                Pointage
+              </Link>
+            )}
+            <Link
+              href={`/distributions/${id}/repartition`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <Package className="mr-2 size-4" />
+              Repartition
+            </Link>
+          </div>
         )}
       </div>
 
