@@ -6,6 +6,9 @@ import type {
   CreateDistributionPayload,
   TypeRoleResponse,
   RoleBenevoleResponse,
+  DenreeResponse,
+  DotationResponse,
+  SaisirDenreePayload,
 } from "@/types/distribution";
 
 export function listerDistributions(): Promise<DistributionResponse[]> {
@@ -75,6 +78,44 @@ export function pointer(
     `/api/distributions/${distributionId}/pointage/${inscriptionId}`,
     { method: "PUT", body: JSON.stringify({ presence }) },
   );
+}
+
+// --- Repartition des denrees ---
+
+export function listerDenrees(distributionId: string): Promise<DenreeResponse[]> {
+  return apiGet<DenreeResponse[]>(`/api/distributions/${distributionId}/denrees`);
+}
+
+export function saisirDenree(
+  distributionId: string,
+  payload: SaisirDenreePayload,
+): Promise<DenreeResponse> {
+  return apiPost<DenreeResponse>(`/api/distributions/${distributionId}/denrees`, payload);
+}
+
+export function modifierDenree(
+  distributionId: string,
+  denreeId: string,
+  payload: SaisirDenreePayload,
+): Promise<DenreeResponse> {
+  return apiFetch<DenreeResponse>(`/api/distributions/${distributionId}/denrees/${denreeId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function supprimerDenree(distributionId: string, denreeId: string): Promise<void> {
+  return apiFetch<void>(`/api/distributions/${distributionId}/denrees/${denreeId}`, {
+    method: "DELETE",
+  });
+}
+
+export function calculerDotation(
+  distributionId: string,
+  base?: "INSCRITS" | "PRESENTS",
+): Promise<DotationResponse> {
+  const params = base ? `?base=${base}` : "";
+  return apiGet<DotationResponse>(`/api/distributions/${distributionId}/repartition${params}`);
 }
 
 // --- Catalogue de types de roles ---
