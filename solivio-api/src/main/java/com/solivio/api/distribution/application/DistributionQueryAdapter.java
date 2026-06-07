@@ -2,6 +2,7 @@ package com.solivio.api.distribution.application;
 
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
+import com.solivio.api.distribution.domain.StatutDistribution;
 import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository;
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
@@ -9,6 +10,8 @@ import com.solivio.api.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -46,6 +49,27 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             .orElseThrow(() -> new NotFoundException(
                 "Creneau " + creneauId + " introuvable pour distribution " + distributionId
             ));
-        return new CreneauInfo(c.getId(), c.getCapacite());
+        return new CreneauInfo(c.getId(), c.getCapacite(), c.getHeureDebut(), c.getHeureFin());
+    }
+
+    @Override
+    public DistributionDetailInfo trouverDistributionDetails(UUID distributionId) {
+        Distribution d = distributionRepository.findById(distributionId)
+            .orElseThrow(() -> new NotFoundException("Distribution introuvable : " + distributionId));
+        return new DistributionDetailInfo(
+            d.getId(),
+            d.getTitre(),
+            d.getDate(),
+            d.getLieu(),
+            d.getMotifAnnulation()
+        );
+    }
+
+    @Override
+    public List<UUID> trouverDistributionsPublieesPourDate(LocalDate date) {
+        return distributionRepository.findByDateAndStatut(date, StatutDistribution.PUBLIEE)
+            .stream()
+            .map(Distribution::getId)
+            .toList();
     }
 }

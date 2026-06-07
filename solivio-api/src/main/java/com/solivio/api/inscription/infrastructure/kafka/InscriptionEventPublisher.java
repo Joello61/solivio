@@ -38,6 +38,8 @@ public class InscriptionEventPublisher {
             inscription.getId(),
             inscription.getDistributionId(),
             inscription.getPersonneId(),
+            inscription.getType().name(),
+            inscription.getCreneauId(),
             tenantSlug,
             Instant.now()
         );

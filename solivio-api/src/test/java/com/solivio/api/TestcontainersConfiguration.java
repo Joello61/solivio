@@ -8,6 +8,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.test.context.DynamicPropertyRegistrar;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -25,6 +28,27 @@ public class TestcontainersConfiguration {
     @ServiceConnection
     PostgreSQLContainer postgresContainer() {
         return new PostgreSQLContainer(DockerImageName.parse("postgres:latest"));
+    }
+
+    @Bean
+    GenericContainer<?> mailpitContainer() {
+        return new GenericContainer<>(DockerImageName.parse("axllent/mailpit:latest"))
+            .withExposedPorts(1025, 8025)
+            .waitingFor(Wait.forHttp("/api/v1/messages").forPort(8025));
+    }
+
+    /**
+     * Enregistre les proprietes spring.mail apres le demarrage du container Mailpit.
+     * DynamicPropertyRegistrar est evalue apres le cycle de vie des beans Testcontainers.
+     */
+    @Bean
+    DynamicPropertyRegistrar mailpitProperties(GenericContainer<?> mailpitContainer) {
+        return registry -> {
+            registry.add("spring.mail.host", mailpitContainer::getHost);
+            registry.add("spring.mail.port", () -> mailpitContainer.getMappedPort(1025));
+            registry.add("solivio.test.mailpit.api.base-url",
+                () -> "http://" + mailpitContainer.getHost() + ":" + mailpitContainer.getMappedPort(8025));
+        };
     }
 
     /**

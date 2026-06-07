@@ -6,6 +6,8 @@ import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class PersonneQueryAdapter implements PersonneQueryPort {
 
@@ -20,5 +22,12 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
         Personne p = personneRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("Personne introuvable : " + email));
         return new PersonneInfo(p.getId(), p.getNom(), p.getPrenom());
+    }
+
+    @Override
+    public PersonneContactInfo trouverPersonneParId(UUID id) {
+        Personne p = personneRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Personne introuvable : " + id));
+        return new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom());
     }
 }
