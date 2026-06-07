@@ -2,34 +2,83 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 type FetchOptions = RequestInit & { noCredentials?: boolean };
 
-/**
- * Fetch wrapper pour les appels au backend Spring Boot.
- * Inclut les cookies automatiquement (credentials: 'include') pour l'auth BFF.
- * Leve une erreur si le statut HTTP >= 400.
- */
-export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { noCredentials, ...init } = options;
+// Promise partagee entre les requetes concurrentes : on ne refreshe qu'une seule fois
+// meme si plusieurs requetes recoivent un 401 simultanement.
+let refreshPromise: Promise<boolean> | null = null;
 
-  const response = await fetch(`${API_URL}${path}`, {
+async function tentativeRefresh(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+function buildInit(init: RequestInit, noCredentials: boolean): RequestInit {
+  return {
     ...init,
     credentials: noCredentials ? "omit" : "include",
     headers: {
       "Content-Type": "application/json",
       ...init.headers,
     },
-  });
+  };
+}
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({ title: "Erreur serveur", status: response.status }));
-    const error = Object.assign(new Error(body.detail ?? body.title ?? "Erreur"), {
-      status: response.status,
-      title: body.title,
-      detail: body.detail,
-    });
-    throw error;
+function parseErrorResponse(body: unknown, status: number): Error {
+  const b = body as { title?: string; detail?: string } | null;
+  return Object.assign(new Error(b?.detail ?? b?.title ?? "Erreur"), {
+    status,
+    title: b?.title,
+    detail: b?.detail,
+  });
+}
+
+/**
+ * Fetch wrapper pour les appels au backend Spring Boot.
+ * Inclut les cookies automatiquement (credentials: 'include') pour l'auth BFF.
+ * Sur 401 : tente un refresh du token (une seule fois, concurrent-safe),
+ * puis rejoue la requete. Si le refresh echoue, redirige vers /login.
+ */
+export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
+  const { noCredentials = false, ...init } = options;
+  const isRefreshEndpoint = path === "/api/auth/refresh";
+
+  const response = await fetch(`${API_URL}${path}`, buildInit(init, noCredentials));
+
+  // Token expire : on tente un refresh puis on rejoue la requete.
+  if (response.status === 401 && !noCredentials && !isRefreshEndpoint) {
+    const refreshed = await tentativeRefresh();
+
+    if (refreshed) {
+      const retryResponse = await fetch(`${API_URL}${path}`, buildInit(init, noCredentials));
+      if (retryResponse.ok) {
+        if (retryResponse.status === 204) return undefined as T;
+        return retryResponse.json() as Promise<T>;
+      }
+      // Le retry a aussi echoue : on laisse tomber vers la redirection.
+    }
+
+    // Refresh impossible (refresh token expire ou invalide) : retour au login.
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    throw Object.assign(new Error("Session expiree"), { status: 401 });
   }
 
-  // 204 No Content
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw parseErrorResponse(body, response.status);
+  }
+
   if (response.status === 204) {
     return undefined as T;
   }

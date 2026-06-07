@@ -45,6 +45,7 @@ class AuthServiceTest {
     @Mock private RefreshTokenRepository refreshTokenRepo;
     @Mock private JwtService jwtService;
     @Mock private AssociationRepository associationRepository;
+    @Mock private PersonneProvisioningService personneProvisioningService;
 
     private AuthService service;
     private Compte compte;
@@ -53,7 +54,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         service = new AuthService(authenticationManager, compteRepository, membreRepo,
-            refreshTokenRepo, jwtService, associationRepository);
+            refreshTokenRepo, jwtService, associationRepository, personneProvisioningService);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         compte.setId(compteId);

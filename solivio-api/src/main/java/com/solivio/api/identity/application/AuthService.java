@@ -13,6 +13,7 @@ import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -36,6 +37,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepo;
     private final JwtService jwtService;
     private final AssociationRepository associationRepository;
+    private final PersonneProvisioningService personneProvisioningService;
 
     public AuthService(
             AuthenticationManager authenticationManager,
@@ -43,13 +45,15 @@ public class AuthService {
             MembreAssociationRepository membreRepo,
             RefreshTokenRepository refreshTokenRepo,
             JwtService jwtService,
-            AssociationRepository associationRepository) {
+            AssociationRepository associationRepository,
+            PersonneProvisioningService personneProvisioningService) {
         this.authenticationManager = authenticationManager;
         this.compteRepository = compteRepository;
         this.membreRepo = membreRepo;
         this.refreshTokenRepo = refreshTokenRepo;
         this.jwtService = jwtService;
         this.associationRepository = associationRepository;
+        this.personneProvisioningService = personneProvisioningService;
     }
 
     @Transactional
@@ -83,6 +87,14 @@ public class AuthService {
             coordoType, compte.isSuperAdmin()
         );
 
+        // JIT : provision la Personne dans le schema tenant si elle n'existe pas encore.
+        // Couvre Google OAuth2 et les comptes anterieurs sans Personne tenant.
+        if (tenantSlug != null) {
+            personneProvisioningService.provisionner(
+                tenantSlug, compte.getEmail(), compte.getNom(), compte.getPrenom()
+            );
+        }
+
         emetAccessTokenCookie(accessToken, request, response);
         emetRefreshTokenCookie(compte, tenantSlug, request, response, rememberMe, rememberMe);
 
@@ -109,6 +121,11 @@ public class AuthService {
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
             tenantSlug, List.of(membre.getRole()),
             membre.getCoordoType(), compte.isSuperAdmin()
+        );
+
+        // JIT : provision la Personne dans le schema tenant si elle n'existe pas encore.
+        personneProvisioningService.provisionner(
+            tenantSlug, compte.getEmail(), compte.getNom(), compte.getPrenom()
         );
 
         emetAccessTokenCookie(accessToken, request, response);
@@ -202,13 +219,14 @@ public class AuthService {
 
     private void emetAccessTokenCookie(String accessToken,
                                         HttpServletRequest request, HttpServletResponse response) {
-        response.addHeader("Set-Cookie",
-            "access_token=" + accessToken
-                + "; Max-Age=" + (jwtService.getAccessTokenMinutes() * 60)
-                + "; Path=/"
-                + "; HttpOnly"
-                + (request.isSecure() ? "; Secure" : "")
-                + "; SameSite=Strict");
+        ResponseCookie cookie = ResponseCookie.from("access_token", accessToken)
+            .maxAge(jwtService.getAccessTokenMinutes() * 60)
+            .path("/")
+            .httpOnly(true)
+            .secure(request.isSecure())
+            .sameSite("Strict")
+            .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     private void emetRefreshTokenCookie(Compte compte, String tenantSlug,
@@ -226,21 +244,28 @@ public class AuthService {
         );
         refreshTokenRepo.save(rt);
 
-        // Header Set-Cookie manuel : l'API Cookie Jakarta ne supporte pas SameSite.
-        // Max-Age=-1 : cookie de session (expire a la fermeture du navigateur).
-        response.addHeader("Set-Cookie",
-            "refresh_token=" + tokenBrut
-                + "; Max-Age=" + (longDuree ? jwtService.getRefreshTokenSeconds() : -1)
-                + "; Path=/api/auth/refresh"
-                + "; HttpOnly"
-                + (request.isSecure() ? "; Secure" : "")
-                + "; SameSite=Strict");
+        // ResponseCookie.maxAge(-1) omet l'attribut Max-Age => cookie de session.
+        // Ne pas construire "Max-Age=-1" en chaine brute : la RFC 6265 Section 5.2.2
+        // impose que Max-Age <= 0 declenche l'expiration immediate du cookie.
+        // Spring gere correctement ce cas : maxAge(-1) -> pas de Max-Age dans le header.
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", tokenBrut)
+            .maxAge(longDuree ? jwtService.getRefreshTokenSeconds() : -1)
+            .path("/api/auth/refresh")
+            .httpOnly(true)
+            .secure(request.isSecure())
+            .sameSite("Strict")
+            .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     private void supprimerCookies(HttpServletResponse response) {
         response.addHeader("Set-Cookie",
-            "refresh_token=; Max-Age=0; Path=/api/auth/refresh; HttpOnly; SameSite=Strict");
+            ResponseCookie.from("refresh_token", "")
+                .maxAge(0).path("/api/auth/refresh").httpOnly(true).sameSite("Strict")
+                .build().toString());
         response.addHeader("Set-Cookie",
-            "access_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict");
+            ResponseCookie.from("access_token", "")
+                .maxAge(0).path("/").httpOnly(true).sameSite("Strict")
+                .build().toString());
     }
 }

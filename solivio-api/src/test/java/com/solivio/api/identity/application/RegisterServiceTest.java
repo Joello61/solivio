@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,13 +36,15 @@ class RegisterServiceTest {
     @Mock private VerificationCodeService verificationCodeService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EmailService emailService;
+    @Mock private PersonneProvisioningService personneProvisioningService;
 
     private RegisterService service;
 
     @BeforeEach
     void setUp() {
         service = new RegisterService(compteRepository, associationRepository, membreRepo,
-            invitationRepository, verificationCodeService, passwordEncoder, emailService);
+            invitationRepository, verificationCodeService, passwordEncoder, emailService,
+            personneProvisioningService);
     }
 
     @Test
@@ -82,6 +85,9 @@ class RegisterServiceTest {
 
         verify(compteRepository).save(any());
         verify(membreRepo).save(any());
+        verify(personneProvisioningService).provisionner(
+            eq(asso.getSlug()), eq("bob@example.com"), eq("Martin"), eq("Bob")
+        );
         verify(emailService).envoyerVerificationEmail(any(), any());
     }
 

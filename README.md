@@ -3,7 +3,7 @@
 Plateforme de gestion opérationnelle pour les associations de solidarité étudiante.
 
 [![pipeline status](https://gitlab.com/tchindajoel61/solivio/badges/main/pipeline.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
-[![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/TON_USERNAME/solivio/-/pipelines)
+[![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
@@ -37,7 +37,6 @@ La documentation complète du projet (note d'intention, spécifications fonction
 | Backend | Spring Boot 4, Java 25 |
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS v4 |
 | Base de données | PostgreSQL 18 (un schéma par association) |
-| Authentification | Keycloak 26 (OIDC, pattern BFF) |
 | Événementiel | Apache Kafka 4 (KRaft) |
 | Secrets | OpenBao 2 |
 | Conteneurisation | Docker, Docker Compose |
@@ -69,7 +68,7 @@ cd solivio
 docker compose -f docker-compose-dev.yml up -d
 ```
 
-Cela démarre PostgreSQL, Keycloak, Kafka, OpenBao et Mailpit.
+Cela démarre PostgreSQL, Kafka, OpenBao et Mailpit.
 Attendre que tous les services soient sains (environ 30 secondes).
 
 ```bash
@@ -102,7 +101,6 @@ L'application est disponible sur `http://localhost:3000`.
 |---|---|---|
 | Application | http://localhost:3000 | - |
 | API | http://localhost:8080 | - |
-| Keycloak admin | http://localhost:9090 | admin / admin |
 | OpenBao UI | http://localhost:8200 | token: root |
 | Mailpit (emails) | http://localhost:8025 | - |
 

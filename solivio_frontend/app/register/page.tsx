@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -10,13 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { register } from "@/lib/auth";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Chemin 1 : token d'invitation dans l'URL (/register?invitation=xxx)
   const tokenInvitation = searchParams.get("invitation") ?? undefined;
-  // Chemin 2 : code association dans l'URL (/register?asso=PILOTE)
   const assoParam = searchParams.get("asso") ?? "";
 
   const [nom, setNom] = useState("");
@@ -45,7 +43,9 @@ export default function RegisterPage() {
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? (err as { detail?: string }).detail ?? err.message : "Erreur lors de l'inscription";
+        err instanceof Error
+          ? (err as { detail?: string }).detail ?? err.message
+          : "Erreur lors de l'inscription";
       setError(msg);
     } finally {
       setPending(false);
@@ -143,5 +143,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </AuthLayout>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

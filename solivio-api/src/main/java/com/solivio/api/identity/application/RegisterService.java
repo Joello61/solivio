@@ -29,6 +29,7 @@ public class RegisterService {
     private final VerificationCodeService verificationCodeService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final PersonneProvisioningService personneProvisioningService;
 
     public RegisterService(
             CompteRepository compteRepository,
@@ -37,7 +38,8 @@ public class RegisterService {
             InvitationRepository invitationRepository,
             VerificationCodeService verificationCodeService,
             PasswordEncoder passwordEncoder,
-            EmailService emailService) {
+            EmailService emailService,
+            PersonneProvisioningService personneProvisioningService) {
         this.compteRepository = compteRepository;
         this.associationRepository = associationRepository;
         this.membreRepo = membreRepo;
@@ -45,6 +47,7 @@ public class RegisterService {
         this.verificationCodeService = verificationCodeService;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.personneProvisioningService = personneProvisioningService;
     }
 
     @Transactional
@@ -62,6 +65,9 @@ public class RegisterService {
 
         MembreAssociation membre = new MembreAssociation(compte, association, "beneficiaire");
         membreRepo.save(membre);
+
+        // Provision JIT : cree l'enregistrement Personne dans le schema tenant.
+        personneProvisioningService.provisionner(association.getSlug(), email, nom, prenom);
 
         envoyerVerificationEmail(compte);
         return compte;
@@ -92,6 +98,11 @@ public class RegisterService {
 
         invitation.setStatut("accepted");
         invitationRepository.save(invitation);
+
+        // Provision JIT : cree l'enregistrement Personne dans le schema tenant.
+        personneProvisioningService.provisionner(
+            invitation.getAssociation().getSlug(), email, nom, prenom
+        );
 
         envoyerVerificationEmail(compte);
         return compte;

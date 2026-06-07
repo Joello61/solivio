@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import type { Metadata } from "next";
 import type { MeResponse } from "@/types/auth";
 
@@ -36,12 +37,16 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Placeholder - sera remplace par les modules metier en Phase 2 */}
-      <div className="rounded-xl border border-border bg-card p-6">
-        <p className="text-sm text-muted-foreground">
-          Les modules de gestion des distributions, des inscriptions et
-          de la repartition seront disponibles ici lors de la Phase 2.
-        </p>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+        <h2 className="font-medium text-base">Acces rapide</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/distributions"
+            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
+          >
+            Distributions
+          </Link>
+        </div>
       </div>
     </div>
   );
