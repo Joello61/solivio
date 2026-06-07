@@ -82,4 +82,11 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "AND i.presence = 'ABSENT' "
         + "GROUP BY i.personneId")
     List<Object[]> compterAbsencesParPersonnes(@Param("personneIds") List<UUID> personneIds);
+
+    // Repartition : base presents (pointage effectue)
+    @Query("SELECT COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId = :distId "
+        + "AND i.type = 'BENEFICIAIRE' "
+        + "AND i.presence = 'PRESENT'")
+    long compterBeneficiairesPresents(@Param("distId") UUID distributionId);
 }
