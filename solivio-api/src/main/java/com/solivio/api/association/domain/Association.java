@@ -50,6 +50,27 @@ public class Association {
     @Column(nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> configuration = Map.of();
 
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
+    @Column(name = "couleur_primaire", length = 7)
+    private String couleurPrimaire = "#16513F";
+
+    @Column(name = "couleur_secondaire", length = 7)
+    private String couleurSecondaire = "#1E6B52";
+
+    @Column(name = "fuseau_horaire", length = 50)
+    private String fuseauHoraire = "Europe/Paris";
+
+    @Column(name = "frequence_max_par_semaine")
+    private Integer frequenceMaxParSemaine;
+
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
+
+    @Column(name = "contact_telephone", length = 30)
+    private String contactTelephone;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     private Instant dateCreation = Instant.now();
 
