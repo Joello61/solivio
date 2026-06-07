@@ -14,12 +14,18 @@ import type { StatutDistribution } from "@/types/distribution";
 interface Props {
   distributionId: string;
   statut: StatutDistribution;
+  distributionDate: string;
 }
 
-export function DistributionActions({ distributionId, statut }: Props) {
+export function DistributionActions({ distributionId, statut, distributionDate }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+
+  const aujourd = new Date();
+  aujourd.setHours(0, 0, 0, 0);
+  const dateDistrib = new Date(distributionDate + "T00:00:00");
+  const estDateFuture = dateDistrib > aujourd;
 
   async function executer(action: string) {
     setPending(action);
@@ -67,7 +73,11 @@ export function DistributionActions({ distributionId, statut }: Props) {
         </Button>
       )}
       {statut === "PUBLIEE" && (
-        <Button size="sm" onClick={() => executer("demarrer")} disabled={pending === "demarrer"}>
+        <Button
+          size="sm"
+          onClick={() => executer("demarrer")}
+          disabled={pending === "demarrer" || estDateFuture}
+        >
           {pending === "demarrer" ? "Demarrage..." : "Demarrer"}
         </Button>
       )}
@@ -85,6 +95,17 @@ export function DistributionActions({ distributionId, statut }: Props) {
         >
           {pending === "annuler" ? "Annulation..." : "Annuler"}
         </Button>
+      )}
+      {statut === "PUBLIEE" && estDateFuture && (
+        <p className="w-full text-xs text-muted-foreground">
+          Le demarrage sera possible le{" "}
+          {dateDistrib.toLocaleDateString("fr-FR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          })}
+          .
+        </p>
       )}
     </div>
   );
