@@ -23,21 +23,25 @@ public class InscriptionNotificationConsumer {
     @KafkaListener(topics = "inscriptions", groupId = "notifications-inscriptions")
     public void traiter(InscriptionEvent event) {
         if (!"inscription.confirmee".equals(event.type())
-            && !"inscription.promue".equals(event.type())) {
+            && !"inscription.promue".equals(event.type())
+            && !"inscription.desistement_tardif_benevole".equals(event.type())) {
             return;
         }
         log.debug("Traitement notification pour evenement {} inscription {}",
             event.type(), event.inscriptionId());
         TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
         try {
-            if ("inscription.confirmee".equals(event.type())) {
-                notificationService.notifierConfirmationInscription(
+            switch (event.type()) {
+                case "inscription.confirmee" -> notificationService.notifierConfirmationInscription(
                     event.personneId(), event.distributionId(),
                     event.typeInscription(), event.creneauId());
-            } else {
-                notificationService.notifierPromotionListeAttente(
+                case "inscription.promue" -> notificationService.notifierPromotionListeAttente(
                     event.personneId(), event.distributionId(),
                     event.typeInscription(), event.creneauId());
+                case "inscription.desistement_tardif_benevole" ->
+                    notificationService.notifierDesistementTardifBenevole(
+                        event.personneId(), event.distributionId());
+                default -> { }
             }
         } finally {
             TenantContext.clear();

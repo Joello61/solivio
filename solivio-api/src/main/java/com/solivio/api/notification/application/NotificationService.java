@@ -87,6 +87,22 @@ public class NotificationService {
     }
 
     @Transactional
+    public void notifierDesistementTardifBenevole(UUID personneBenevoleId, UUID distributionId) {
+        PersonneContactInfo benevole = personneQueryPort.trouverPersonneParId(personneBenevoleId);
+        DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
+        String sujet = "Desistement tardif benevole - " + distribution.titre();
+        List<PersonneContactInfo> coordinateurs = personneQueryPort.trouverContactsParRole("coordinateur");
+        for (PersonneContactInfo coord : coordinateurs) {
+            envoyerEtTracer(coord.id(), distributionId,
+                TypeEvenementNotification.DESISTEMENT_TARDIF_BENEVOLE, sujet,
+                () -> emailService.envoyerDesistementTardifBenevole(
+                    coord.email(), coord.prenom(),
+                    benevole.prenom(), benevole.nom(),
+                    distribution));
+        }
+    }
+
+    @Transactional
     public void notifierRappelVeille(UUID distributionId) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
         String sujet = "Rappel : distribution demain - " + distribution.titre();
