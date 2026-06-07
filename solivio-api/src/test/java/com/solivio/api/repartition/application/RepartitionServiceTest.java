@@ -8,6 +8,7 @@ import com.solivio.api.repartition.infrastructure.web.dto.DotationDenreeDto;
 import com.solivio.api.repartition.infrastructure.web.dto.DotationResponse;
 import com.solivio.api.repartition.infrastructure.web.dto.SaisirDenreeRequest;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,11 +92,54 @@ class RepartitionServiceTest {
     @Test
     void supprimerDenree_echoueSiDenreeInexistante() {
         UUID denreeId = UUID.randomUUID();
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribInfo);
         when(denreeRepository.findByIdAndDistributionId(denreeId, distributionId))
             .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.supprimerDenree(distributionId, denreeId))
             .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void saisirDenree_echoueSiDistributionTerminee() {
+        DistributionQueryPort.DistributionInfo distribTerminee = new DistributionQueryPort.DistributionInfo(
+            distributionId, "TERMINEE", 50, null, "CRENEAU_UNIQUE", "INSCRITS",
+            java.time.LocalDate.now()
+        );
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribTerminee);
+
+        assertThatThrownBy(() ->
+            service.saisirDenree(distributionId, new SaisirDenreeRequest("Pommes", "KILOGRAMME", 1, 5.0))
+        ).isInstanceOf(ConflictException.class)
+            .hasMessageContaining("terminee");
+    }
+
+    @Test
+    void modifierDenree_echoueSiDistributionAnnulee() {
+        DistributionQueryPort.DistributionInfo distribAnnulee = new DistributionQueryPort.DistributionInfo(
+            distributionId, "ANNULEE", 50, null, "CRENEAU_UNIQUE", "INSCRITS",
+            java.time.LocalDate.now()
+        );
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribAnnulee);
+
+        assertThatThrownBy(() ->
+            service.modifierDenree(distributionId, UUID.randomUUID(),
+                new SaisirDenreeRequest("Pommes", "KILOGRAMME", 1, 5.0))
+        ).isInstanceOf(ConflictException.class)
+            .hasMessageContaining("annulee");
+    }
+
+    @Test
+    void supprimerDenree_echoueSiDistributionTerminee() {
+        DistributionQueryPort.DistributionInfo distribTerminee = new DistributionQueryPort.DistributionInfo(
+            distributionId, "TERMINEE", 50, null, "CRENEAU_UNIQUE", "INSCRITS",
+            java.time.LocalDate.now()
+        );
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribTerminee);
+
+        assertThatThrownBy(() -> service.supprimerDenree(distributionId, UUID.randomUUID()))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("terminee");
     }
 
     // === Tests du calcul de dotation (RG8) ===

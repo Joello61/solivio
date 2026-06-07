@@ -68,6 +68,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[denreeMock]}
         dotationInitiale={dotationNormale}
+        modifiable={true}
       />,
     );
 
@@ -81,6 +82,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[denreeMock]}
         dotationInitiale={dotationPenurie}
+        modifiable={true}
       />,
     );
 
@@ -94,18 +96,20 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[denreeMock]}
         dotationInitiale={dotationNormale}
+        modifiable={true}
       />,
     );
 
     expect(screen.getByText(/10 beneficiaire/)).toBeInTheDocument();
   });
 
-  it("affiche le bouton d'ajout de denree", () => {
+  it("affiche le bouton d'ajout de denree si modifiable", () => {
     render(
       <RepartitionPanel
         distributionId="dist-1"
         denreesInitiales={[]}
         dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
       />,
     );
 
@@ -118,6 +122,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[]}
         dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
       />,
     );
 
@@ -134,6 +139,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[]}
         dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
       />,
     );
 
@@ -153,6 +159,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[]}
         dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
       />,
     );
 
@@ -184,6 +191,7 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[denreeMock]}
         dotationInitiale={dotationAvecReste}
+        modifiable={true}
       />,
     );
 
@@ -196,9 +204,66 @@ describe("RepartitionPanel", () => {
         distributionId="dist-1"
         denreesInitiales={[]}
         dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
       />,
     );
 
     expect(screen.getByText(/Aucune denree saisie/)).toBeInTheDocument();
+  });
+
+  // --- Mode lecture seule (distribution terminee ou annulee) ---
+
+  it("affiche la banniere lecture seule quand non modifiable", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={dotationNormale}
+        modifiable={false}
+      />,
+    );
+
+    expect(screen.getByText(/cloturee/i)).toBeInTheDocument();
+  });
+
+  it("masque le bouton d'ajout quand non modifiable", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[]}
+        dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={false}
+      />,
+    );
+
+    expect(screen.queryByText(/Ajouter une denree/)).not.toBeInTheDocument();
+  });
+
+  it("masque les boutons modifier et supprimer quand non modifiable", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={dotationNormale}
+        modifiable={false}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Modifier")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Supprimer")).not.toBeInTheDocument();
+  });
+
+  it("affiche les denrees et la dotation en lecture seule", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={dotationNormale}
+        modifiable={false}
+      />,
+    );
+
+    expect(screen.getByText("Pommes de terre")).toBeInTheDocument();
+    expect(screen.getByText(/5 kg \/ personne/)).toBeInTheDocument();
   });
 });
