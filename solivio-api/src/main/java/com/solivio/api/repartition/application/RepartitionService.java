@@ -8,6 +8,7 @@ import com.solivio.api.repartition.infrastructure.web.dto.DotationDenreeDto;
 import com.solivio.api.repartition.infrastructure.web.dto.DotationResponse;
 import com.solivio.api.repartition.infrastructure.web.dto.SaisirDenreeRequest;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class RepartitionService {
     }
 
     public DenreeResponse saisirDenree(UUID distributionId, SaisirDenreeRequest request) {
-        distributionQueryPort.trouverDistribution(distributionId);
+        validerModifiable(distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
 
@@ -51,6 +52,7 @@ public class RepartitionService {
     }
 
     public DenreeResponse modifierDenree(UUID distributionId, UUID denreeId, SaisirDenreeRequest request) {
+        validerModifiable(distributionId);
         DenreeDistribution denree = trouverOuEchouer(denreeId, distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
@@ -63,6 +65,7 @@ public class RepartitionService {
     }
 
     public void supprimerDenree(UUID distributionId, UUID denreeId) {
+        validerModifiable(distributionId);
         DenreeDistribution denree = trouverOuEchouer(denreeId, distributionId);
         denreeRepository.delete(denree);
     }
@@ -154,6 +157,16 @@ public class RepartitionService {
             false,
             nbBeneficiaires
         );
+    }
+
+    private void validerModifiable(UUID distributionId) {
+        DistributionQueryPort.DistributionInfo distrib = distributionQueryPort.trouverDistribution(distributionId);
+        String statut = distrib.statut();
+        if ("TERMINEE".equals(statut) || "ANNULEE".equals(statut)) {
+            throw new ConflictException(
+                "Modification impossible : la distribution est " + statut.toLowerCase()
+            );
+        }
     }
 
     private DenreeDistribution trouverOuEchouer(UUID denreeId, UUID distributionId) {

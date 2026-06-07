@@ -11,11 +11,13 @@ import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreneauResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -77,6 +79,11 @@ public class DistributionService {
 
     public DistributionResponse demarrer(UUID distributionId) {
         Distribution d = trouverOuEchouer(distributionId);
+        if (d.getDate().isAfter(LocalDate.now())) {
+            throw new ConflictException(
+                "La distribution ne peut pas etre demarree avant sa date : " + d.getDate()
+            );
+        }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
         return toResponse(distributionRepository.save(d),
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));

@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Package } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { RepartitionPanel } from "@/components/repartition/RepartitionPanel";
-import type { DenreeResponse, DotationResponse } from "@/types/distribution";
+import type { DistributionResponse, DenreeResponse, DotationResponse } from "@/types/distribution";
 
 export const metadata: Metadata = { title: "Repartition des denrees" };
 
@@ -13,17 +13,19 @@ async function fetchData(id: string, cookieHeader: string) {
   const base = process.env.API_URL ?? "http://localhost:8080";
   const h = { Cookie: cookieHeader };
 
-  const [denreesRes, dotationRes] = await Promise.all([
+  const [distribRes, denreesRes, dotationRes] = await Promise.all([
+    fetch(`${base}/api/distributions/${id}`, { headers: h, cache: "no-store" }),
     fetch(`${base}/api/distributions/${id}/denrees`, { headers: h, cache: "no-store" }),
     fetch(`${base}/api/distributions/${id}/repartition`, { headers: h, cache: "no-store" }),
   ]);
 
-  if (!denreesRes.ok || !dotationRes.ok) return null;
+  if (!distribRes.ok || !denreesRes.ok || !dotationRes.ok) return null;
 
+  const distribution = (await distribRes.json()) as DistributionResponse;
   const denrees = (await denreesRes.json()) as DenreeResponse[];
   const dotation = (await dotationRes.json()) as DotationResponse;
 
-  return { denrees, dotation };
+  return { distribution, denrees, dotation };
 }
 
 interface PageProps {
@@ -63,6 +65,7 @@ export default async function RepartitionPage({ params }: PageProps) {
           distributionId={id}
           denreesInitiales={data.denrees}
           dotationInitiale={data.dotation}
+          modifiable={data.distribution.statut !== "TERMINEE" && data.distribution.statut !== "ANNULEE"}
         />
       </div>
     </div>

@@ -29,12 +29,14 @@ interface Props {
   distributionId: string;
   denreesInitiales: DenreeResponse[];
   dotationInitiale: DotationResponse;
+  modifiable: boolean;
 }
 
 export function RepartitionPanel({
   distributionId,
   denreesInitiales,
   dotationInitiale,
+  modifiable,
 }: Props) {
   const [denrees, setDenrees] = useState<DenreeResponse[]>(denreesInitiales);
   const [dotation, setDotation] = useState<DotationResponse>(dotationInitiale);
@@ -113,6 +115,12 @@ export function RepartitionPanel({
 
   return (
     <div className="space-y-6">
+      {!modifiable && (
+        <p className="text-sm text-muted-foreground border border-border rounded-lg px-4 py-3">
+          Cette distribution est cloturee. Les denrees sont en lecture seule.
+        </p>
+      )}
+
       {/* Bascule inscrits / presents */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
@@ -186,24 +194,26 @@ export function RepartitionPanel({
                         </span>
                       </p>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEnEdition(denree.id)}
-                        aria-label="Modifier"
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSuppression(denree.id)}
-                        aria-label="Supprimer"
-                      >
-                        <Trash2 className="size-3.5 text-destructive" />
-                      </Button>
-                    </div>
+                    {modifiable && (
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEnEdition(denree.id)}
+                          aria-label="Modifier"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSuppression(denree.id)}
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 className="size-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {d && (
@@ -250,25 +260,27 @@ export function RepartitionPanel({
         })}
       </div>
 
-      {/* Formulaire d'ajout */}
-      {ajoutVisible ? (
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-medium mb-4">Nouvelle denree</h3>
-          <FormulaireDenree
-            onSubmit={handleAjout}
-            onAnnuler={() => setAjoutVisible(false)}
-          />
-        </div>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setAjoutVisible(true)}
-          className="w-full"
-        >
-          <Plus className="mr-2 size-4" />
-          Ajouter une denree
-        </Button>
+      {/* Formulaire d'ajout - uniquement si modifiable */}
+      {modifiable && (
+        ajoutVisible ? (
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="text-sm font-medium mb-4">Nouvelle denree</h3>
+            <FormulaireDenree
+              onSubmit={handleAjout}
+              onAnnuler={() => setAjoutVisible(false)}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAjoutVisible(true)}
+            className="w-full"
+          >
+            <Plus className="mr-2 size-4" />
+            Ajouter une denree
+          </Button>
+        )
       )}
     </div>
   );

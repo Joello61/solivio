@@ -9,6 +9,17 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+vi.mock("@/lib/api/distributions", () => ({
+  publierDistribution: vi.fn(),
+  demarrerDistribution: vi.fn(),
+  terminerDistribution: vi.fn(),
+  annulerDistribution: vi.fn(),
+}));
+
 const distributionMock: DistributionResponse = {
   id: "abc-123",
   titre: "Distribution de test",
@@ -49,5 +60,28 @@ describe("DistributionCard", () => {
   it("affiche le badge de statut PUBLIEE", () => {
     render(<DistributionCard distribution={distributionMock} />);
     expect(screen.getByText("Publiee")).toBeInTheDocument();
+  });
+
+  // --- Vue gestionnaire ---
+
+  it("affiche le bouton Demarrer pour une distribution PUBLIEE vue gestionnaire", () => {
+    render(<DistributionCard distribution={distributionMock} estGestionnaire={true} />);
+    expect(screen.getByRole("button", { name: /demarrer/i })).toBeInTheDocument();
+  });
+
+  it("affiche le bouton Annuler pour une distribution active vue gestionnaire", () => {
+    render(<DistributionCard distribution={distributionMock} estGestionnaire={true} />);
+    expect(screen.getByRole("button", { name: /annuler/i })).toBeInTheDocument();
+  });
+
+  it("n'affiche pas de boutons d'action pour une distribution TERMINEE", () => {
+    const terminee = { ...distributionMock, statut: "TERMINEE" as const };
+    render(<DistributionCard distribution={terminee} estGestionnaire={true} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("n'affiche pas de boutons d'action sans estGestionnaire", () => {
+    render(<DistributionCard distribution={distributionMock} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

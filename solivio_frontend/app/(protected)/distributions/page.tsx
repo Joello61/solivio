@@ -66,7 +66,7 @@ export default async function DistributionsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {distributions.map((d) => (
-            <DistributionCard key={d.id} distribution={d} />
+            <DistributionCard key={d.id} distribution={d} estGestionnaire={estGestionnaire} />
           ))}
         </div>
       )}

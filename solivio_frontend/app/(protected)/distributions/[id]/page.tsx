@@ -174,7 +174,11 @@ export default async function DistributionDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          <DistributionActions distributionId={id} statut={distribution.statut} />
+          <DistributionActions
+            distributionId={id}
+            statut={distribution.statut}
+            distributionDate={distribution.date}
+          />
         </div>
       )}
 
