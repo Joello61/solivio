@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.infrastructure.web;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.distribution.application.DistributionService;
 import com.solivio.api.distribution.infrastructure.web.dto.AnnulerDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
@@ -25,9 +26,11 @@ import java.util.UUID;
 public class DistributionController {
 
     private final DistributionService distributionService;
+    private final AuditService auditService;
 
-    public DistributionController(DistributionService distributionService) {
+    public DistributionController(DistributionService distributionService, AuditService auditService) {
         this.distributionService = distributionService;
+        this.auditService = auditService;
     }
 
     @PostMapping
@@ -37,6 +40,7 @@ public class DistributionController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         DistributionResponse response = distributionService.creer(request, user.getUsername());
+        auditService.tracer(user.getCompteId(), "DISTRIBUTION_CREEE", "distribution", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,7 +48,6 @@ public class DistributionController {
     public ResponseEntity<List<DistributionResponse>> lister(
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        // Les coordinateurs/responsables voient tout ; les autres voient uniquement les publiees.
         boolean voitTout = user.getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals("ROLE_COORDINATEUR")
                 || a.getAuthority().equals("ROLE_RESPONSABLE")
@@ -66,13 +69,20 @@ public class DistributionController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(distributionService.publier(id, user.getTenantSlug()));
+        DistributionResponse response = distributionService.publier(id, user.getTenantSlug());
+        auditService.tracer(user.getCompteId(), "DISTRIBUTION_PUBLIEE", "distribution", id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/demarrer")
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<DistributionResponse> demarrer(@PathVariable UUID id) {
-        return ResponseEntity.ok(distributionService.demarrer(id));
+    public ResponseEntity<DistributionResponse> demarrer(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        DistributionResponse response = distributionService.demarrer(id);
+        auditService.tracer(user.getCompteId(), "DISTRIBUTION_DEMARREE", "distribution", id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/terminer")
@@ -81,7 +91,9 @@ public class DistributionController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(distributionService.terminer(id, user.getTenantSlug()));
+        DistributionResponse response = distributionService.terminer(id, user.getTenantSlug());
+        auditService.tracer(user.getCompteId(), "DISTRIBUTION_TERMINEE", "distribution", id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/annuler")
@@ -91,6 +103,8 @@ public class DistributionController {
         @Valid @RequestBody AnnulerDistributionRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(distributionService.annuler(id, request.motif(), user.getTenantSlug()));
+        DistributionResponse response = distributionService.annuler(id, request.motif(), user.getTenantSlug());
+        auditService.tracer(user.getCompteId(), "DISTRIBUTION_ANNULEE", "distribution", id);
+        return ResponseEntity.ok(response);
     }
 }
