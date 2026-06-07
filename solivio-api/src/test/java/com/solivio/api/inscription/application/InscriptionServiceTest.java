@@ -7,6 +7,7 @@ import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.kafka.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
+import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
@@ -36,6 +37,7 @@ class InscriptionServiceTest {
     @Mock private InscriptionRepository inscriptionRepository;
     @Mock private DistributionQueryPort distributionQueryPort;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AssociationQueryPort associationQueryPort;
     @Mock private InscriptionEventPublisher eventPublisher;
 
     private InscriptionService service;
@@ -50,14 +52,16 @@ class InscriptionServiceTest {
     @BeforeEach
     void setUp() {
         service = new InscriptionService(
-            inscriptionRepository, distributionQueryPort, personneQueryPort, eventPublisher
+            inscriptionRepository, distributionQueryPort, personneQueryPort,
+            associationQueryPort, eventPublisher
         );
         distributionId = UUID.randomUUID();
         personneId = UUID.randomUUID();
         inscriptionId = UUID.randomUUID();
 
         distribPubliee = new DistributionQueryPort.DistributionInfo(
-            distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS"
+            distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
+            java.time.LocalDate.now().plusDays(3)
         );
         personne = new PersonneQueryPort.PersonneInfo(personneId, "Dupont", "Marie");
     }
@@ -91,6 +95,7 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.of(ancienne));
 
+        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(0L);
@@ -122,6 +127,7 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.empty());
 
+        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(1L);
@@ -171,6 +177,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.empty());
+        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(0L);
@@ -243,7 +250,8 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribEnCours =
-            new DistributionQueryPort.DistributionInfo(distributionId, "EN_COURS", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
+            new DistributionQueryPort.DistributionInfo(distributionId, "EN_COURS", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
+                java.time.LocalDate.now());
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribEnCours);
 
         UUID pointeurId = UUID.randomUUID();
@@ -265,7 +273,8 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribPubliee =
-            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
+                java.time.LocalDate.now().plusDays(5));
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
         assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com", "tenant1"))
@@ -285,7 +294,8 @@ class InscriptionServiceTest {
     @Test
     void inscrire_echoueSiDistributionEnBrouillon() {
         DistributionQueryPort.DistributionInfo brouillon =
-            new DistributionQueryPort.DistributionInfo(distributionId, "BROUILLON", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
+            new DistributionQueryPort.DistributionInfo(distributionId, "BROUILLON", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
+                java.time.LocalDate.now().plusDays(7));
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(brouillon);
 
         assertThatThrownBy(() -> service.inscrire(
@@ -341,7 +351,61 @@ class InscriptionServiceTest {
         assertThat(result.get(0).nombreAbsencesPassees()).isEqualTo(0L);
     }
 
+    // --- Desistement tardif benevole ---
+
+    @Test
+    void desinscrire_publieDesistementTardifSiBenevoleConfirmeEtDistributionImminente() {
+        Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
+        benevoleConfirme.setId(inscriptionId);
+        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(benevoleConfirme));
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+
+        DistributionQueryPort.DistributionInfo distribAujourdhui =
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10,
+                "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.now());
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribAujourdhui);
+        when(inscriptionRepository.save(any(Inscription.class))).thenReturn(benevoleConfirme);
+        when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            any(), any(), any())).thenReturn(Optional.empty());
+
+        service.desinscrire(inscriptionId, "ben@example.com", "tenant1");
+
+        verify(eventPublisher).publierDesistementTardifBenevole(benevoleConfirme, "tenant1");
+    }
+
+    @Test
+    void desinscrire_nePubliePasDesistementSiDistributionLointaine() {
+        Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
+        benevoleConfirme.setId(inscriptionId);
+        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(benevoleConfirme));
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+
+        DistributionQueryPort.DistributionInfo distribLointaine =
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10,
+                "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.now().plusDays(7));
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribLointaine);
+        when(inscriptionRepository.save(any(Inscription.class))).thenReturn(benevoleConfirme);
+        when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            any(), any(), any())).thenReturn(Optional.empty());
+
+        service.desinscrire(inscriptionId, "ben@example.com", "tenant1");
+
+        verify(eventPublisher, never()).publierDesistementTardifBenevole(any(), any());
+    }
+
     // --- Helpers ---
+
+    private Inscription inscriptionBenevole(UUID pId, StatutInscription statut) {
+        Inscription i = new Inscription(
+            distributionId, null, pId, "Dupont", "Marie", TypeInscription.BENEVOLE
+        );
+        if (statut == StatutInscription.ANNULEE) {
+            i.annuler();
+        } else if (statut == StatutInscription.LISTE_ATTENTE) {
+            i.placerEnListeAttente(1);
+        }
+        return i;
+    }
 
     private Inscription inscriptionBeneficiaire(UUID pId, StatutInscription statut) {
         Inscription i = new Inscription(

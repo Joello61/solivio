@@ -15,13 +15,16 @@ public interface DistributionQueryPort {
 
     List<UUID> trouverDistributionsPublieesPourDate(LocalDate date);
 
+    List<DistributionDetailInfo> trouverDetailsParIds(List<UUID> ids);
+
     record DistributionInfo(
         UUID id,
         String statut,
         int capaciteBeneficiaires,
         Integer capaciteBenevoles,
         String modeCreneau,
-        String baseRepartition
+        String baseRepartition,
+        LocalDate date
     ) {}
 
     record CreneauInfo(UUID id, int capacite, LocalTime heureDebut, LocalTime heureFin) {}

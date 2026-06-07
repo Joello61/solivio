@@ -111,6 +111,12 @@ export default async function DashboardPage() {
           >
             Distributions
           </Link>
+          <Link
+            href="/mes-inscriptions"
+            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
+          >
+            Mes inscriptions
+          </Link>
           {estResponsable && (
             <>
               <Link

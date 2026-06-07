@@ -74,6 +74,8 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID personneId, UUID distributionId
     );
 
+    List<Inscription> findByPersonneIdOrderByDateInscriptionDesc(UUID personneId);
+
     // RG4 : absences passees par beneficiaire (batch pour eviter le N+1).
     // Renvoie des paires [personneId, count] pour les personneIds fournis.
     @Query("SELECT i.personneId, COUNT(i) FROM Inscription i "
