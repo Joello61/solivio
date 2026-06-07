@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Tableau de bord" };
 async function fetchDashboardData(cookieHeader: string): Promise<{
   me: MeResponse | null;
   statsMois: StatistiquePeriodeResponse | null;
+  statsErreur: boolean;
 }> {
   const baseUrl = process.env.API_URL ?? "http://localhost:8080";
   const headers = { Cookie: cookieHeader };
@@ -18,18 +19,36 @@ async function fetchDashboardData(cookieHeader: string): Promise<{
   const dernierJour = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const fin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(dernierJour).padStart(2, "0")}`;
 
-  const [meRes, statsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/statistiques/periode?debut=${debut}&fin=${fin}`, {
-      headers,
-      cache: "no-store",
-    }),
-  ]);
-
+  const meRes = await fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" });
   const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const statsMois = statsRes.ok ? ((await statsRes.json()) as StatistiquePeriodeResponse) : null;
 
-  return { me, statsMois };
+  // Fetch stats uniquement si l'utilisateur est gestionnaire, pour eviter un 403 inutile.
+  const estGestionnairePrecheck = me?.roles.some((r) =>
+    ["coordinateur", "responsable", "super_admin"].includes(r),
+  );
+
+  let statsMois: StatistiquePeriodeResponse | null = null;
+  let statsErreur = false;
+
+  if (estGestionnairePrecheck) {
+    try {
+      const statsRes = await fetch(
+        `${baseUrl}/api/statistiques/periode?debut=${debut}&fin=${fin}`,
+        { headers, cache: "no-store" },
+      );
+      if (statsRes.ok) {
+        statsMois = (await statsRes.json()) as StatistiquePeriodeResponse;
+      } else {
+        console.error("[dashboard] stats endpoint:", statsRes.status, statsRes.statusText);
+        statsErreur = true;
+      }
+    } catch (err) {
+      console.error("[dashboard] stats fetch failed:", err);
+      statsErreur = true;
+    }
+  }
+
+  return { me, statsMois, statsErreur };
 }
 
 function CarteStatistique({
@@ -57,7 +76,7 @@ export default async function DashboardPage() {
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const { me, statsMois } = await fetchDashboardData(cookieHeader);
+  const { me, statsMois, statsErreur } = await fetchDashboardData(cookieHeader);
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),
@@ -77,28 +96,34 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {estGestionnaire && statsMois && (
+      {estGestionnaire && (
         <section>
           <h2 className="text-base font-medium text-foreground mb-3">
             Statistiques - {moisCourant}
           </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <CarteStatistique
-              titre="Distributions"
-              valeur={statsMois.nbDistributions}
-              description="ce mois"
-            />
-            <CarteStatistique
-              titre="Beneficiaires servis"
-              valeur={statsMois.nbBeneficiairesDistinctsServis}
-              description="beneficiaires distincts"
-            />
-            <CarteStatistique
-              titre="Benevoles mobilises"
-              valeur={statsMois.nbBenevolesDistincts}
-              description="benevoles distincts"
-            />
-          </div>
+          {statsErreur ? (
+            <p className="text-sm text-muted-foreground">
+              Statistiques indisponibles. Verifiez que le service est accessible.
+            </p>
+          ) : statsMois ? (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <CarteStatistique
+                titre="Distributions"
+                valeur={statsMois.nbDistributions}
+                description="ce mois"
+              />
+              <CarteStatistique
+                titre="Beneficiaires servis"
+                valeur={statsMois.nbBeneficiairesDistinctsServis}
+                description="beneficiaires distincts"
+              />
+              <CarteStatistique
+                titre="Benevoles mobilises"
+                valeur={statsMois.nbBenevolesDistincts}
+                description="benevoles distincts"
+              />
+            </div>
+          ) : null}
         </section>
       )}
 
