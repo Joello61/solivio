@@ -13,7 +13,8 @@ public interface DistributionQueryPort {
         String statut,
         int capaciteBeneficiaires,
         Integer capaciteBenevoles,
-        String modeCreneau
+        String modeCreneau,
+        String baseRepartition
     ) {}
 
     record CreneauInfo(UUID id, int capacite) {}

@@ -76,6 +76,45 @@ export interface TypeRoleResponse {
   sousTypes: TypeRoleResponse[];
 }
 
+export type UniteConditionnement = "UNITE" | "KILOGRAMME" | "LITRE" | "PIECE";
+
+export interface DenreeResponse {
+  id: string;
+  distributionId: string;
+  libelle: string;
+  unite: UniteConditionnement;
+  nombreContenants: number;
+  quantiteParContenant: number;
+  quantiteTotale: number;
+}
+
+export interface DotationDenreeDto {
+  id: string;
+  libelle: string;
+  unite: UniteConditionnement;
+  nombreContenants: number;
+  quantiteParContenant: number;
+  quantiteTotale: number;
+  dotation: number;
+  reste: number;
+  penurie: boolean;
+  nbPeutRecevoir: number;
+}
+
+export interface DotationResponse {
+  distributionId: string;
+  base: "INSCRITS" | "PRESENTS";
+  nbBeneficiaires: number;
+  denrees: DotationDenreeDto[];
+}
+
+export interface SaisirDenreePayload {
+  libelle: string;
+  unite: UniteConditionnement;
+  nombreContenants: number;
+  quantiteParContenant: number;
+}
+
 export interface CreateDistributionPayload {
   titre: string;
   description?: string;
