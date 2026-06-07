@@ -9,6 +9,7 @@ import com.solivio.api.distribution.infrastructure.persistence.DistributionRepos
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -170,9 +171,15 @@ class DistributionServiceTest {
 
     @Test
     void demarrer_nEmettreAucunEvenementKafka() {
-        distribution.transitionnerVers(StatutDistribution.PUBLIEE, null);
-        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(distribution));
-        when(distributionRepository.save(any(Distribution.class))).thenReturn(distribution);
+        // Distribution a la date du jour : demarrage autorise
+        Distribution distribAujourdhui = new Distribution(
+            "Distribution de test", null, "Salle A", LocalDate.now(),
+            50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId
+        );
+        distribAujourdhui.setId(distributionId);
+        distribAujourdhui.transitionnerVers(StatutDistribution.PUBLIEE, null);
+        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(distribAujourdhui));
+        when(distributionRepository.save(any(Distribution.class))).thenReturn(distribAujourdhui);
         when(creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId))
             .thenReturn(List.of());
 
@@ -181,5 +188,34 @@ class DistributionServiceTest {
         assertThat(response.statut()).isEqualTo("EN_COURS");
         verify(eventPublisher, never()).publierPubliee(any(), any(), any());
         verify(eventPublisher, never()).publierAnnulee(any(), any(), any());
+    }
+
+    @Test
+    void demarrer_echoueSiDateFuture() {
+        // setUp() cree une distribution avec date = today+7
+        distribution.transitionnerVers(StatutDistribution.PUBLIEE, null);
+        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(distribution));
+
+        assertThatThrownBy(() -> service.demarrer(distributionId))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("avant sa date");
+    }
+
+    @Test
+    void demarrer_autoriseSiDatePassee() {
+        Distribution distribPassee = new Distribution(
+            "Distribution passee", null, "Salle B", LocalDate.now().minusDays(1),
+            50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId
+        );
+        distribPassee.setId(distributionId);
+        distribPassee.transitionnerVers(StatutDistribution.PUBLIEE, null);
+        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(distribPassee));
+        when(distributionRepository.save(any(Distribution.class))).thenReturn(distribPassee);
+        when(creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId))
+            .thenReturn(List.of());
+
+        DistributionResponse response = service.demarrer(distributionId);
+
+        assertThat(response.statut()).isEqualTo("EN_COURS");
     }
 }
