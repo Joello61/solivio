@@ -35,7 +35,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             d.getStatut().name(),
             d.getCapaciteBeneficiaires(),
             d.getCapaciteBenevoles(),
-            d.getModeCreneau().name()
+            d.getModeCreneau().name(),
+            d.getBaseRepartition().name()
         );
     }
 

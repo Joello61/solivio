@@ -57,7 +57,7 @@ class InscriptionServiceTest {
         inscriptionId = UUID.randomUUID();
 
         distribPubliee = new DistributionQueryPort.DistributionInfo(
-            distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE"
+            distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS"
         );
         personne = new PersonneQueryPort.PersonneInfo(personneId, "Dupont", "Marie");
     }
@@ -243,7 +243,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribEnCours =
-            new DistributionQueryPort.DistributionInfo(distributionId, "EN_COURS", 50, 10, "CRENEAU_UNIQUE");
+            new DistributionQueryPort.DistributionInfo(distributionId, "EN_COURS", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribEnCours);
 
         UUID pointeurId = UUID.randomUUID();
@@ -265,7 +265,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribPubliee =
-            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE");
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
         assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com", "tenant1"))
@@ -285,7 +285,7 @@ class InscriptionServiceTest {
     @Test
     void inscrire_echoueSiDistributionEnBrouillon() {
         DistributionQueryPort.DistributionInfo brouillon =
-            new DistributionQueryPort.DistributionInfo(distributionId, "BROUILLON", 50, 10, "CRENEAU_UNIQUE");
+            new DistributionQueryPort.DistributionInfo(distributionId, "BROUILLON", 50, 10, "CRENEAU_UNIQUE", "INSCRITS");
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(brouillon);
 
         assertThatThrownBy(() -> service.inscrire(
