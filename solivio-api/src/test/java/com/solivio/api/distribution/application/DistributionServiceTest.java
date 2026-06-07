@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -117,7 +118,7 @@ class DistributionServiceTest {
         DistributionResponse response = service.publier(distributionId, "tenant1");
 
         assertThat(response.statut()).isEqualTo("PUBLIEE");
-        verify(eventPublisher).publierPubliee(distributionId, "tenant1");
+        verify(eventPublisher).publierPubliee(eq(distributionId), eq("tenant1"), any(LocalDate.class));
     }
 
     @Test
@@ -138,7 +139,7 @@ class DistributionServiceTest {
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.motifAnnulation()).isEqualTo("Raison X");
-        verify(eventPublisher).publierAnnulee(distributionId, "tenant1");
+        verify(eventPublisher).publierAnnulee(eq(distributionId), eq("tenant1"), any(LocalDate.class));
     }
 
     @Test
@@ -178,7 +179,7 @@ class DistributionServiceTest {
         DistributionResponse response = service.demarrer(distributionId);
 
         assertThat(response.statut()).isEqualTo("EN_COURS");
-        verify(eventPublisher, never()).publierPubliee(any(), any());
-        verify(eventPublisher, never()).publierAnnulee(any(), any());
+        verify(eventPublisher, never()).publierPubliee(any(), any(), any());
+        verify(eventPublisher, never()).publierAnnulee(any(), any(), any());
     }
 }
