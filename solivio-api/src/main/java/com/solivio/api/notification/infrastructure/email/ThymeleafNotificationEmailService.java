@@ -59,6 +59,24 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
             "rappel-veille", contexteThymeleaf(contexte));
     }
 
+    @Override
+    public void envoyerDesistementTardifBenevole(
+        String emailCoordinateur, String prenomCoordinateur,
+        String prenomBenevole, String nomBenevole,
+        com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo distribution
+    ) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenomCoordinateur", prenomCoordinateur);
+        ctx.setVariable("prenomBenevole", prenomBenevole);
+        ctx.setVariable("nomBenevole", nomBenevole);
+        ctx.setVariable("distributionTitre", distribution.titre());
+        ctx.setVariable("distributionDate", distribution.date());
+        ctx.setVariable("distributionLieu", distribution.lieu());
+        envoyer(emailCoordinateur,
+            "Desistement tardif benevole - " + distribution.titre(),
+            "desistement-tardif-benevole", ctx);
+    }
+
     private Context contexteThymeleaf(ContexteEmail c) {
         Context ctx = new Context(Locale.FRENCH);
         ctx.setVariable("prenom", c.prenom());

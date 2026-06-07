@@ -14,6 +14,10 @@ public interface NotificationEmailService {
 
     void envoyerRappelVeille(String email, ContexteEmail contexte);
 
+    void envoyerDesistementTardifBenevole(String emailCoordinateur, String prenomCoordinateur,
+                                          String prenomBenevole, String nomBenevole,
+                                          DistributionDetailInfo distribution);
+
     /**
      * Contexte complet pour la generation d'un email de notification.
      * heureDebutCreneau et heureFinCreneau sont null pour les distributions en creneau unique.

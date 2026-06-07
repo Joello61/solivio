@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Calendar, MapPin, Users, ClipboardList, Tag, Package } from "lucide-react";
+import { Calendar, MapPin, Users, ClipboardList, Tag, Package, CheckCircle, XCircle, Clock, Percent } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
@@ -11,6 +11,7 @@ import { InscriptionButton } from "@/components/distributions/InscriptionButton"
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
 import type { MeResponse } from "@/types/auth";
+import type { StatistiqueDistributionResponse } from "@/types/association";
 
 export const metadata: Metadata = { title: "Detail distribution" };
 
@@ -22,6 +23,7 @@ async function fetchData(
   me: MeResponse | null;
   inscrits: InscriptionResponse[];
   mesInscriptions: InscriptionResponse[];
+  stats: StatistiqueDistributionResponse | null;
 }> {
   const base = process.env.API_URL ?? "http://localhost:8080";
   const h = { Cookie: cookieHeader };
@@ -31,7 +33,7 @@ async function fetchData(
     fetch(`${base}/api/auth/me`, { headers: h, cache: "no-store" }),
   ]);
 
-  if (!distRes.ok) return { distribution: null, me: null, inscrits: [], mesInscriptions: [] };
+  if (!distRes.ok) return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null };
 
   const distribution = (await distRes.json()) as DistributionResponse;
   const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
@@ -40,17 +42,21 @@ async function fetchData(
     ["coordinateur", "responsable", "super_admin"].includes(r),
   );
 
-  const [inscritsRes, mesRes] = await Promise.all([
+  const [inscritsRes, mesRes, statsRes] = await Promise.all([
     estGestionnaire
       ? fetch(`${base}/api/distributions/${id}/inscriptions`, { headers: h, cache: "no-store" })
       : Promise.resolve(null),
     fetch(`${base}/api/distributions/${id}/inscriptions/mes`, { headers: h, cache: "no-store" }),
+    estGestionnaire && distribution.statut === "TERMINEE"
+      ? fetch(`${base}/api/statistiques/distributions/${id}`, { headers: h, cache: "no-store" })
+      : Promise.resolve(null),
   ]);
 
   const inscrits = inscritsRes?.ok ? ((await inscritsRes.json()) as InscriptionResponse[]) : [];
   const mesInscriptions = mesRes?.ok ? ((await mesRes.json()) as InscriptionResponse[]) : [];
+  const stats = statsRes?.ok ? ((await statsRes.json()) as StatistiqueDistributionResponse) : null;
 
-  return { distribution, me, inscrits, mesInscriptions };
+  return { distribution, me, inscrits, mesInscriptions, stats };
 }
 
 interface PageProps {
@@ -65,7 +71,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const { distribution, me, inscrits, mesInscriptions } = await fetchData(id, cookieHeader);
+  const { distribution, me, inscrits, mesInscriptions, stats } = await fetchData(id, cookieHeader);
 
   if (!distribution) notFound();
 
@@ -169,6 +175,60 @@ export default async function DistributionDetailPage({ params }: PageProps) {
           </div>
 
           <DistributionActions distributionId={id} statut={distribution.statut} />
+        </div>
+      )}
+
+      {estGestionnaire && distribution.statut === "TERMINEE" && stats && (
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="font-medium">Statistiques finales</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center gap-3">
+              <Users className="size-5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-lg font-semibold">{stats.nbInscritsBeneficiaires}</p>
+                <p className="text-xs text-muted-foreground">beneficiaires inscrits</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="size-5 text-green-600 dark:text-green-400 shrink-0" />
+              <div>
+                <p className="text-lg font-semibold">{stats.nbPresentsBeneficiaires}</p>
+                <p className="text-xs text-muted-foreground">presents</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <XCircle className="size-5 text-destructive shrink-0" />
+              <div>
+                <p className="text-lg font-semibold">{stats.nbAbsentsBeneficiaires}</p>
+                <p className="text-xs text-muted-foreground">absents</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="size-5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-lg font-semibold">{stats.nbNonPointes}</p>
+                <p className="text-xs text-muted-foreground">non pointes</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Percent className="size-5 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-lg font-semibold">
+                {Number(stats.tauxPresence).toFixed(1)} %
+              </p>
+              <p className="text-xs text-muted-foreground">taux de presence</p>
+            </div>
+            {stats.nbInscritsBenevoles > 0 && (
+              <div className="ml-8 flex items-center gap-3">
+                <Users className="size-5 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-lg font-semibold">{stats.nbInscritsBenevoles}</p>
+                  <p className="text-xs text-muted-foreground">benevoles presents</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

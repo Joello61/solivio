@@ -145,7 +145,7 @@ class NotificationConsumerIntegrationTest {
     @Test
     void distributionAnnulee_envoieEmailATousLesInscritsConfirmes() {
         DistributionEvent event = new DistributionEvent(
-            "distribution.annulee", distributionId, tenantSlug, Instant.now()
+            "distribution.annulee", distributionId, tenantSlug, LocalDate.now(), Instant.now()
         );
         kafkaTemplate.send("distributions", distributionId.toString(), event);
 
@@ -160,7 +160,7 @@ class NotificationConsumerIntegrationTest {
     @Test
     void distributionPubliee_nenvoiePasDemail() {
         DistributionEvent event = new DistributionEvent(
-            "distribution.publiee", distributionId, tenantSlug, Instant.now()
+            "distribution.publiee", distributionId, tenantSlug, LocalDate.now(), Instant.now()
         );
         kafkaTemplate.send("distributions", distributionId.toString(), event);
 

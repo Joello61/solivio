@@ -6,8 +6,11 @@ import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.kafka.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
+import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
+import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
+import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
@@ -16,34 +19,39 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class InscriptionService {
 
-    // RG1 : un beneficiaire ne peut pas s'inscrire plus d'une fois par semaine (7 jours).
-    private static final int FREQUENCE_MAX_JOURS = 7;
+    // Frequence par defaut si l'association n'a pas configure de limite (RG1).
+    private static final int FREQUENCE_DEFAUT_JOURS = 7;
 
     private final InscriptionRepository inscriptionRepository;
     private final DistributionQueryPort distributionQueryPort;
     private final PersonneQueryPort personneQueryPort;
+    private final AssociationQueryPort associationQueryPort;
     private final InscriptionEventPublisher eventPublisher;
 
     public InscriptionService(
         InscriptionRepository inscriptionRepository,
         DistributionQueryPort distributionQueryPort,
         PersonneQueryPort personneQueryPort,
+        AssociationQueryPort associationQueryPort,
         InscriptionEventPublisher eventPublisher
     ) {
         this.inscriptionRepository = inscriptionRepository;
         this.distributionQueryPort = distributionQueryPort;
         this.personneQueryPort = personneQueryPort;
+        this.associationQueryPort = associationQueryPort;
         this.eventPublisher = eventPublisher;
     }
 
@@ -71,7 +79,7 @@ public class InscriptionService {
 
         // RG1 : frequence (beneficiaires uniquement)
         if (type == TypeInscription.BENEFICIAIRE) {
-            verifierFrequence(personne.id());
+            verifierFrequence(personne.id(), tenantSlug);
         }
 
         // Validation du creneau
@@ -118,9 +126,19 @@ public class InscriptionService {
         }
 
         boolean etaitConfirmee = inscription.getStatut() == StatutInscription.CONFIRMEE;
+        boolean estBenevole = inscription.getType() == TypeInscription.BENEVOLE;
         inscription.annuler();
         inscriptionRepository.save(inscription);
         eventPublisher.publierAnnulee(inscription, tenantSlug);
+
+        // Alerte desistement tardif : benevole confirme se desinscrit dans les 24h avant la distribution.
+        if (etaitConfirmee && estBenevole) {
+            DistributionQueryPort.DistributionInfo distrib =
+                distributionQueryPort.trouverDistribution(inscription.getDistributionId());
+            if (distrib.date() != null && !distrib.date().isAfter(LocalDate.now().plusDays(1))) {
+                eventPublisher.publierDesistementTardifBenevole(inscription, tenantSlug);
+            }
+        }
 
         // RG3 : promotion automatique si une place confirmee se libere
         if (etaitConfirmee) {
@@ -185,6 +203,45 @@ public class InscriptionService {
     }
 
     @Transactional(readOnly = true)
+    public List<InscriptionPersonnelleResponse> toutesInscriptions(String email) {
+        try {
+            PersonneQueryPort.PersonneInfo personne = personneQueryPort.trouverPersonne(email);
+            List<Inscription> inscriptions = inscriptionRepository
+                .findByPersonneIdOrderByDateInscriptionDesc(personne.id());
+
+            List<UUID> distributionIds = inscriptions.stream()
+                .map(Inscription::getDistributionId)
+                .distinct()
+                .toList();
+
+            Map<UUID, DistributionDetailInfo> detailsParId = distributionQueryPort
+                .trouverDetailsParIds(distributionIds)
+                .stream()
+                .collect(Collectors.toMap(DistributionDetailInfo::id, Function.identity()));
+
+            return inscriptions.stream()
+                .map(i -> {
+                    DistributionDetailInfo dist = detailsParId.get(i.getDistributionId());
+                    return new InscriptionPersonnelleResponse(
+                        i.getId(),
+                        i.getDistributionId(),
+                        dist != null ? dist.titre() : null,
+                        dist != null ? dist.date() : null,
+                        dist != null ? dist.lieu() : null,
+                        i.getType().name(),
+                        i.getStatut().name(),
+                        i.getRangListeAttente(),
+                        i.getPresence().name(),
+                        i.getDateInscription()
+                    );
+                })
+                .toList();
+        } catch (com.solivio.api.shared.exception.NotFoundException e) {
+            return List.of();
+        }
+    }
+
+    @Transactional(readOnly = true)
     public List<InscriptionResponse> mesinscriptions(String email, UUID distributionId) {
         // Un utilisateur authentifie peut ne pas encore avoir de personne dans ce tenant.
         try {
@@ -224,12 +281,16 @@ public class InscriptionService {
         }
     }
 
-    private void verifierFrequence(UUID personneId) {
-        Instant debut = Instant.now().minus(FREQUENCE_MAX_JOURS, ChronoUnit.DAYS);
+    private void verifierFrequence(UUID personneId, String tenantSlug) {
+        Integer configMax = associationQueryPort.frequenceMaxParSemaine(tenantSlug);
+        // null = pas de limite configuree, on applique la limite par defaut (1 par semaine).
+        int maxParSemaine = (configMax != null && configMax > 0) ? configMax : 1;
+        Instant debut = Instant.now().minus(FREQUENCE_DEFAUT_JOURS, ChronoUnit.DAYS);
         long count = inscriptionRepository.compterInscriptionsConfirmeesPeriode(personneId, debut, Instant.now());
-        if (count > 0) {
+        if (count >= maxParSemaine) {
             throw new ConflictException(
-                "Limite de frequence atteinte : une seule inscription confirmee par semaine est autorisee."
+                "Limite de frequence atteinte : maximum " + maxParSemaine
+                + " inscription(s) confirmee(s) par semaine."
             );
         }
     }

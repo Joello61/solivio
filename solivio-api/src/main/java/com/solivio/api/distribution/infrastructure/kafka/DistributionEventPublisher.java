@@ -6,6 +6,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -20,16 +21,20 @@ public class DistributionEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierPubliee(UUID distributionId, String tenantSlug) {
-        emettreEvenement("distribution.publiee", distributionId, tenantSlug);
+    public void publierPubliee(UUID distributionId, String tenantSlug, LocalDate date) {
+        emettreEvenement("distribution.publiee", distributionId, tenantSlug, date);
     }
 
-    public void publierAnnulee(UUID distributionId, String tenantSlug) {
-        emettreEvenement("distribution.annulee", distributionId, tenantSlug);
+    public void publierAnnulee(UUID distributionId, String tenantSlug, LocalDate date) {
+        emettreEvenement("distribution.annulee", distributionId, tenantSlug, date);
     }
 
-    private void emettreEvenement(String type, UUID distributionId, String tenantSlug) {
-        DistributionEvent event = new DistributionEvent(type, distributionId, tenantSlug, Instant.now());
+    public void publierTerminee(UUID distributionId, String tenantSlug, LocalDate date) {
+        emettreEvenement("distribution.terminee", distributionId, tenantSlug, date);
+    }
+
+    private void emettreEvenement(String type, UUID distributionId, String tenantSlug, LocalDate date) {
+        DistributionEvent event = new DistributionEvent(type, distributionId, tenantSlug, date, Instant.now());
         kafkaTemplate.send(TOPIC, distributionId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

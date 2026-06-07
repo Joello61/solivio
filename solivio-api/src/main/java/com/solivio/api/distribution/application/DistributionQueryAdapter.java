@@ -39,7 +39,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             d.getCapaciteBeneficiaires(),
             d.getCapaciteBenevoles(),
             d.getModeCreneau().name(),
-            d.getBaseRepartition().name()
+            d.getBaseRepartition().name(),
+            d.getDate()
         );
     }
 
@@ -70,6 +71,18 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
         return distributionRepository.findByDateAndStatut(date, StatutDistribution.PUBLIEE)
             .stream()
             .map(Distribution::getId)
+            .toList();
+    }
+
+    @Override
+    public List<DistributionDetailInfo> trouverDetailsParIds(List<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return distributionRepository.findAllById(ids).stream()
+            .map(d -> new DistributionDetailInfo(
+                d.getId(), d.getTitre(), d.getDate(), d.getLieu(), d.getMotifAnnulation()
+            ))
             .toList();
     }
 }

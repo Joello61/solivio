@@ -32,6 +32,10 @@ public class InscriptionEventPublisher {
         emettre("inscription.promue", inscription, tenantSlug);
     }
 
+    public void publierDesistementTardifBenevole(Inscription inscription, String tenantSlug) {
+        emettre("inscription.desistement_tardif_benevole", inscription, tenantSlug);
+    }
+
     private void emettre(String type, Inscription inscription, String tenantSlug) {
         InscriptionEvent event = new InscriptionEvent(
             type,

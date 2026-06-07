@@ -161,9 +161,10 @@ Côté bénévole :
 
 Côté coordinateur :
 - Voir en temps réel le remplissage d'une distribution (inscrits, places restantes, liste d'attente).
-- Inscrire ou désinscrire manuellement une personne si besoin.
 - Attribuer un ou plusieurs rôles aux bénévoles inscrits (distribution, réapprovisionnement, gestion des cartons, etc.). Les rôles sont définis librement ou à partir d'un catalogue propre à l'association. Un même bénévole peut cumuler plusieurs rôles.
 - Consulter le nombre d'absences passées de chaque bénéficiaire dans la liste des inscrits.
+
+**Précision sur l'inscription manuelle.** Le coordinateur ne peut pas inscrire ni désinscrire une autre personne à la place de cette personne. Chaque utilisateur gère ses propres inscriptions. Le coordinateur peut néanmoins s'inscrire lui-même en tant que bénévole sur un créneau. Ce choix préserve l'autonomie de chaque utilisateur et simplifie le modèle de contrôle d'accès en V1.
 
 **Règles de gestion clés (détaillées en section 6) :** la fréquence d'inscription d'un bénéficiaire peut être limitée (par exemple une fois par semaine), et le comportement en cas d'absence répétée est défini.
 

@@ -57,6 +57,8 @@ solivio:
     post-logout-redirect-uri: http://localhost:3000
   cors:
     allowed-origins: http://localhost:3000
+  uploads:
+    logos-dir: /tmp/solivio-logos
 
 server:
   port: 8080

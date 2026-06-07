@@ -45,7 +45,8 @@ class RepartitionServiceTest {
         service = new RepartitionService(denreeRepository, distributionQueryPort, inscriptionQueryPort);
         distributionId = UUID.randomUUID();
         distribInfo = new DistributionQueryPort.DistributionInfo(
-            distributionId, "EN_COURS", 50, null, "CRENEAU_UNIQUE", "INSCRITS"
+            distributionId, "EN_COURS", 50, null, "CRENEAU_UNIQUE", "INSCRITS",
+            java.time.LocalDate.now()
         );
     }
 

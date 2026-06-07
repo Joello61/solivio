@@ -1,0 +1,82 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GestionMembres } from "@/components/association/GestionMembres";
+import type { MembreResponse } from "@/types/association";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+vi.mock("@/lib/api/association", () => ({
+  mettreAJourRoleMembre: vi.fn().mockResolvedValue({}),
+  supprimerMembre: vi.fn().mockResolvedValue(undefined),
+}));
+
+const membres: MembreResponse[] = [
+  {
+    compteId: "user-1",
+    nom: "Dupont",
+    prenom: "Alice",
+    email: "alice@example.com",
+    role: "benevole",
+    coordoType: null,
+    statut: "actif",
+    dateDebut: "2026-01-01",
+  },
+  {
+    compteId: "user-2",
+    nom: "Martin",
+    prenom: "Bob",
+    email: "bob@example.com",
+    role: "coordinateur",
+    coordoType: null,
+    statut: "actif",
+    dateDebut: "2026-02-01",
+  },
+];
+
+describe("GestionMembres", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("affiche le message vide si aucun membre", () => {
+    render(<GestionMembres membres={[]} currentUserId="user-1" />);
+    expect(screen.getByText(/aucun membre/i)).toBeInTheDocument();
+  });
+
+  it("affiche la liste des membres", () => {
+    render(<GestionMembres membres={membres} currentUserId="other" />);
+    expect(screen.getByText("Alice Dupont")).toBeInTheDocument();
+    expect(screen.getByText("Bob Martin")).toBeInTheDocument();
+  });
+
+  it("affiche les emails", () => {
+    render(<GestionMembres membres={membres} currentUserId="other" />);
+    expect(screen.getByText("alice@example.com")).toBeInTheDocument();
+  });
+
+  it("ne montre pas le selecteur de role pour l'utilisateur courant", () => {
+    render(<GestionMembres membres={membres} currentUserId="user-1" />);
+    const selecteurs = screen.queryAllByRole("combobox");
+    // user-1 (Alice) n'a pas de selecteur, user-2 (Bob) en a un
+    expect(selecteurs).toHaveLength(1);
+  });
+
+  it("appelle mettreAJourRoleMembre quand on change le role", async () => {
+    const { mettreAJourRoleMembre } = await import("@/lib/api/association");
+    render(<GestionMembres membres={membres} currentUserId="user-1" />);
+    const selecteur = screen.getByRole("combobox") as HTMLSelectElement;
+    fireEvent.change(selecteur, { target: { value: "responsable" } });
+    await waitFor(() => {
+      expect(mettreAJourRoleMembre).toHaveBeenCalledWith("user-2", { role: "responsable" });
+    });
+  });
+
+  it("ne montre pas le bouton Retirer pour l'utilisateur courant", () => {
+    render(<GestionMembres membres={membres} currentUserId="user-1" />);
+    const boutons = screen.getAllByRole("button", { name: /retirer/i });
+    // Seul Bob a le bouton Retirer (pas Alice qui est l'utilisateur courant)
+    expect(boutons).toHaveLength(1);
+  });
+});

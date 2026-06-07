@@ -74,6 +74,8 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID personneId, UUID distributionId
     );
 
+    List<Inscription> findByPersonneIdOrderByDateInscriptionDesc(UUID personneId);
+
     // RG4 : absences passees par beneficiaire (batch pour eviter le N+1).
     // Renvoie des paires [personneId, count] pour les personneIds fournis.
     @Query("SELECT i.personneId, COUNT(i) FROM Inscription i "
@@ -89,4 +91,40 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "AND i.type = 'BENEFICIAIRE' "
         + "AND i.presence = 'PRESENT'")
     long compterBeneficiairesPresents(@Param("distId") UUID distributionId);
+
+    // Statistiques : beneficiaires CONFIRMEE par distribution
+    @Query("SELECT COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId = :distId "
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE'")
+    long compterInscritsBeneficiaires(@Param("distId") UUID distributionId);
+
+    // Statistiques : benevoles CONFIRMEE par distribution
+    @Query("SELECT COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId = :distId "
+        + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
+    long compterInscritsBenevoles(@Param("distId") UUID distributionId);
+
+    // Statistiques : absents confirmes par distribution
+    @Query("SELECT COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId = :distId "
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'ABSENT'")
+    long compterAbsentsBeneficiaires(@Param("distId") UUID distributionId);
+
+    // Statistiques : non pointes confirmes par distribution
+    @Query("SELECT COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId = :distId "
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'NON_POINTE'")
+    long compterNonPointesBeneficiaires(@Param("distId") UUID distributionId);
+
+    // Statistiques periode : beneficiaires distincts PRESENT sur plusieurs distributions
+    @Query("SELECT COUNT(DISTINCT i.personneId) FROM Inscription i "
+        + "WHERE i.distributionId IN :distributionIds "
+        + "AND i.type = 'BENEFICIAIRE' AND i.presence = 'PRESENT'")
+    long compterBeneficiairesDistinctsServis(@Param("distributionIds") List<UUID> distributionIds);
+
+    // Statistiques periode : benevoles distincts CONFIRMEE sur plusieurs distributions
+    @Query("SELECT COUNT(DISTINCT i.personneId) FROM Inscription i "
+        + "WHERE i.distributionId IN :distributionIds "
+        + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
+    long compterBenevolesDistincts(@Param("distributionIds") List<UUID> distributionIds);
 }
