@@ -71,7 +71,7 @@ public class DistributionService {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
-        eventPublisher.publierPubliee(distributionId, tenantSlug);
+        eventPublisher.publierPubliee(distributionId, tenantSlug, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
@@ -82,18 +82,19 @@ public class DistributionService {
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
-    public DistributionResponse terminer(UUID distributionId) {
+    public DistributionResponse terminer(UUID distributionId, String tenantSlug) {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.TERMINEE, null);
-        return toResponse(distributionRepository.save(d),
-            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        distributionRepository.save(d);
+        eventPublisher.publierTerminee(distributionId, tenantSlug, d.getDate());
+        return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
     public DistributionResponse annuler(UUID distributionId, String motif, String tenantSlug) {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.ANNULEE, motif);
         distributionRepository.save(d);
-        eventPublisher.publierAnnulee(distributionId, tenantSlug);
+        eventPublisher.publierAnnulee(distributionId, tenantSlug, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 

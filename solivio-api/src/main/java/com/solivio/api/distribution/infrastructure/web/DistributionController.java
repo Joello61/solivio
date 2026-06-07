@@ -77,8 +77,11 @@ public class DistributionController {
 
     @PostMapping("/{id}/terminer")
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<DistributionResponse> terminer(@PathVariable UUID id) {
-        return ResponseEntity.ok(distributionService.terminer(id));
+    public ResponseEntity<DistributionResponse> terminer(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(distributionService.terminer(id, user.getTenantSlug()));
     }
 
     @PostMapping("/{id}/annuler")
