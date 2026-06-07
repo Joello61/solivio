@@ -3,7 +3,7 @@
 Plateforme de gestion opérationnelle pour les associations de solidarité étudiante.
 
 [![pipeline status](https://gitlab.com/tchindajoel61/solivio/badges/main/pipeline.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
-[![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/TON_USERNAME/solivio/-/pipelines)
+[![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
