@@ -71,9 +71,9 @@ export function FormulaireMonCompte({ user }: Props) {
       {/* Photo de profil */}
       <div className="flex items-center gap-6">
         <div className="relative">
-          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border">
+          <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border">
             {avatarSrc ? (
-              <Image src={avatarSrc} alt="Photo de profil" fill className="object-cover" />
+              <Image src={avatarSrc} alt="Photo de profil" fill sizes="80px" className="object-cover" />
             ) : (
               <User className="h-9 w-9 text-primary/60" />
             )}
