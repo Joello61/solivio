@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronLeft,
+  ChevronRight,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,11 +61,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
         collapsed ? "w-[64px]" : "w-[248px]",
       )}
     >
-      {/* En-tete : logo + collapse quand expanded */}
+      {/* En-tete : logo + bouton collapse/expand */}
       <div
         className={cn(
-          "flex h-14 items-center border-b border-border shrink-0 gap-2",
-          collapsed ? "justify-center px-0" : "px-4",
+          "flex items-center border-b border-border shrink-0 gap-2",
+          collapsed ? "h-auto flex-col py-3 px-0" : "h-14 px-4",
         )}
       >
         <Link
@@ -89,15 +90,17 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           )}
         </Link>
 
-        {!collapsed && (
-          <button
-            onClick={onCollapseToggle}
-            className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Reduire la barre laterale"
-          >
+        <button
+          onClick={onCollapseToggle}
+          className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          aria-label={collapsed ? "Agrandir la barre laterale" : "Reduire la barre laterale"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
             <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
+          )}
+        </button>
       </div>
 
       {/* Navigation principale */}
