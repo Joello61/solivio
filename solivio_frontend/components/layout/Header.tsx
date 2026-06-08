@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, User, ChevronDown, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LogOut, Settings, ChevronDown, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NavBreadcrumb } from "./NavBreadcrumb";
 import { logout } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -34,6 +37,7 @@ export function Header({ user }: HeaderProps) {
   const primaryRole = user.roles[0];
   const roleLabel = primaryRole ? (ROLE_LABELS[primaryRole] ?? primaryRole) : null;
   const avatarSrc = user.photoUrl ? `${API_URL}${user.photoUrl}` : null;
+  const initials = `${user.prenom[0] ?? ""}${user.nom[0] ?? ""}`.toUpperCase();
 
   async function handleLogout() {
     setPending(true);
@@ -46,47 +50,62 @@ export function Header({ user }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-primary">Solivio</span>
-          {user.tenantActif && (
-            <>
-              <Separator orientation="vertical" className="h-4" />
-              <span className="text-sm text-muted-foreground">{user.tenantActif}</span>
-            </>
-          )}
+      <div className="flex h-14 items-center gap-3 px-4">
+        {/* Logo cliquable (mobile uniquement, la sidebar s'en charge sur desktop) */}
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 lg:hidden shrink-0"
+        >
+          <Image src="/logo.svg" alt="Solivio" width={28} height={28} className="rounded-md" />
+          <span className="font-bold text-foreground tracking-tight">Solivio</span>
+        </Link>
+
+        {/* Breadcrumb desktop uniquement */}
+        <div className="hidden lg:flex flex-1 items-center min-w-0">
+          <NavBreadcrumb />
         </div>
 
+        {/* Separateur flexible sur mobile */}
+        <div className="flex-1 lg:hidden" />
+
+        {/* Toggle theme */}
+        <ThemeToggle className="hidden lg:flex" />
+
         {/* Menu utilisateur */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted transition-colors"
             aria-expanded={menuOpen}
+            aria-haspopup="true"
           >
-            <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground overflow-hidden">
+            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-semibold overflow-hidden">
               {avatarSrc ? (
                 <Image
                   src={avatarSrc}
-                  alt="Avatar"
+                  alt={`${user.prenom} ${user.nom}`}
                   fill
                   sizes="28px"
                   className="object-cover"
                 />
               ) : (
-                <User className="h-4 w-4" />
+                <span>{initials}</span>
               )}
             </div>
-            <div className="hidden sm:block text-left">
-              <p className="font-medium leading-none text-card-foreground">
+            <div className="hidden sm:block text-left max-w-[140px]">
+              <p className="text-sm font-medium leading-tight text-card-foreground truncate">
                 {user.prenom} {user.nom}
               </p>
               {roleLabel && (
-                <p className="text-xs text-muted-foreground mt-0.5">{roleLabel}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
               )}
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                menuOpen && "rotate-180",
+              )}
+            />
           </button>
 
           {menuOpen && (
@@ -96,47 +115,61 @@ export function Header({ user }: HeaderProps) {
                 onClick={() => setMenuOpen(false)}
                 aria-hidden="true"
               />
-              <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border border-border bg-popover p-1 shadow-md">
-                <div className="px-3 py-2">
+              <div className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-border bg-popover p-1.5 shadow-lg">
+                {/* Infos utilisateur */}
+                <div className="px-3 py-2.5 space-y-1">
                   <p className="text-sm font-medium text-popover-foreground truncate">
-                    {user.email}
+                    {user.prenom} {user.nom}
                   </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   {roleLabel && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
+                    <Badge variant="secondary" className="mt-0.5 text-[11px]">
                       {roleLabel}
                     </Badge>
                   )}
                 </div>
-                <Separator className="my-1" />
-                <Link
-                  href="/mon-compte"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors w-full"
-                >
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  Mon compte
-                </Link>
-                {user.superAdmin && (
+
+                <Separator className="my-1.5" />
+
+                <div className="space-y-0.5">
                   <Link
-                    href="/admin/utilisateurs"
+                    href="/mon-compte"
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors w-full"
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    Utilisateurs
+                    <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span>Mon compte</span>
                   </Link>
-                )}
-                <Separator className="my-1" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  {user.superAdmin && (
+                    <Link
+                      href="/admin/utilisateurs"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    >
+                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span>Utilisateurs</span>
+                    </Link>
+                  )}
+                </div>
+
+                <Separator className="my-1.5" />
+
+                <button
                   onClick={handleLogout}
                   disabled={pending}
+                  className={cn(
+                    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm",
+                    "text-destructive hover:bg-destructive/10 transition-colors",
+                    "disabled:opacity-50 disabled:pointer-events-none",
+                  )}
                 >
-                  <LogOut className="h-4 w-4" />
-                  {pending ? "Deconnexion..." : "Se deconnecter"}
-                </Button>
+                  {pending ? (
+                    <Spinner size="sm" className="text-destructive" />
+                  ) : (
+                    <LogOut className="h-4 w-4 shrink-0" />
+                  )}
+                  <span>{pending ? "Deconnexion..." : "Se deconnecter"}</span>
+                </button>
               </div>
             </>
           )}
