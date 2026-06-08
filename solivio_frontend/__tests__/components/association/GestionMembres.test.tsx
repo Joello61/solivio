@@ -10,6 +10,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/api/association", () => ({
   mettreAJourRoleMembre: vi.fn().mockResolvedValue({}),
   supprimerMembre: vi.fn().mockResolvedValue(undefined),
+  changerStatutMembre: vi.fn().mockResolvedValue({}),
 }));
 
 const membres: MembreResponse[] = [
@@ -78,5 +79,30 @@ describe("GestionMembres", () => {
     const boutons = screen.getAllByRole("button", { name: /retirer/i });
     // Seul Bob a le bouton Retirer (pas Alice qui est l'utilisateur courant)
     expect(boutons).toHaveLength(1);
+  });
+
+  it("affiche les boutons Suspendre pour les membres autres que soi", () => {
+    render(<GestionMembres membres={membres} currentUserId="user-1" />);
+    const boutons = screen.getAllByRole("button", { name: /suspendre/i });
+    expect(boutons).toHaveLength(1);
+  });
+
+  it("appelle changerStatutMembre lors du clic Suspendre", async () => {
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    const { changerStatutMembre } = await import("@/lib/api/association");
+    render(<GestionMembres membres={membres} currentUserId="user-1" />);
+    fireEvent.click(screen.getByRole("button", { name: /suspendre/i }));
+    await waitFor(() => {
+      expect(changerStatutMembre).toHaveBeenCalledWith("user-2", "suspendu");
+    });
+  });
+
+  it("affiche Reactiver pour un membre deja suspendu", () => {
+    const membresSuspendus = [
+      { ...membres[0] },
+      { ...membres[1], statut: "suspendu" },
+    ];
+    render(<GestionMembres membres={membresSuspendus} currentUserId="user-1" />);
+    expect(screen.getByRole("button", { name: /reactiver/i })).toBeInTheDocument();
   });
 });
