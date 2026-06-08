@@ -17,6 +17,8 @@ export interface MeResponse {
   email: string;
   nom: string;
   prenom: string;
+  telephone: string | null;
+  photoUrl: string | null;
   superAdmin: boolean;
   tenantActif: string | null;
   roles: string[];
