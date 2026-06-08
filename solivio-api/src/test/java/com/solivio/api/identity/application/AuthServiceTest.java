@@ -6,6 +6,7 @@ import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.domain.RefreshToken;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
+import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
@@ -46,6 +47,7 @@ class AuthServiceTest {
     @Mock private JwtService jwtService;
     @Mock private AssociationRepository associationRepository;
     @Mock private PersonneProvisioningService personneProvisioningService;
+    @Mock private PersonneRepository personneRepository;
 
     private AuthService service;
     private Compte compte;
@@ -54,7 +56,8 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         service = new AuthService(authenticationManager, compteRepository, membreRepo,
-            refreshTokenRepo, jwtService, associationRepository, personneProvisioningService);
+            refreshTokenRepo, jwtService, associationRepository, personneProvisioningService,
+            personneRepository);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         compte.setId(compteId);
@@ -63,6 +66,7 @@ class AuthServiceTest {
     @Test
     void me_retourneInfosUtilisateur() {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
+        when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.empty());
         SolivioUserDetails userDetails = new SolivioUserDetails(
             compteId, "alice@example.com", null, "pilote", false,
             List.of(new SimpleGrantedAuthority("ROLE_BENEFICIAIRE")), true);
@@ -73,6 +77,27 @@ class AuthServiceTest {
         assertThat(response.nom()).isEqualTo("Dupont");
         assertThat(response.tenantActif()).isEqualTo("pilote");
         assertThat(response.roles()).contains("beneficiaire");
+        assertThat(response.telephone()).isNull();
+        assertThat(response.photoUrl()).isNull();
+    }
+
+    @Test
+    void me_retourneTelephoneEtPhotoDepuisPersonneTenant() {
+        compte.setPhotoUrl(null);
+        when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
+        com.solivio.api.identity.domain.Personne personne = new com.solivio.api.identity.domain.Personne(
+            "Dupont", "Alice", "alice@example.com");
+        personne.setTelephone("0600000000");
+        personne.setPhotoUrl("/api/public/avatar/" + compteId);
+        when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.of(personne));
+        SolivioUserDetails userDetails = new SolivioUserDetails(
+            compteId, "alice@example.com", null, "pilote", false,
+            List.of(new SimpleGrantedAuthority("ROLE_BENEFICIAIRE")), true);
+
+        MeResponse response = service.me(userDetails);
+
+        assertThat(response.telephone()).isEqualTo("0600000000");
+        assertThat(response.photoUrl()).isEqualTo("/api/public/avatar/" + compteId);
     }
 
     @Test
