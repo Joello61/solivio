@@ -89,8 +89,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean superAdmin = Boolean.TRUE.equals(claims.get("super_admin", Boolean.class));
 
         List<String> roles = claims.get("roles", List.class);
-        List<SimpleGrantedAuthority> authorities = roles == null ? List.of() :
-            roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase())).toList();
+        java.util.ArrayList<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>(
+            roles == null ? List.of() :
+            roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase())).toList()
+        );
+        if (superAdmin) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+        }
 
         return new SolivioUserDetails(
             compteId, email, null, tenantSlug, superAdmin, authorities, true
