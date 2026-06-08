@@ -9,6 +9,7 @@ import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import com.solivio.api.association.infrastructure.web.dto.MembreResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
 import com.solivio.api.association.infrastructure.web.dto.UpdateRoleMembreRequest;
+import com.solivio.api.association.infrastructure.web.dto.UpdateStatutMembreRequest;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -100,6 +101,20 @@ public class AssociationController {
         MembreResponse response =
             configService.mettreAJourRole(user.getTenantSlug(), compteId, request);
         auditService.tracer(user.getCompteId(), "ROLE_MEMBRE_MODIFIE", "compte", compteId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/membres/{compteId}/statut")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<MembreResponse> changerStatutMembre(
+        @PathVariable UUID compteId,
+        @Valid @RequestBody UpdateStatutMembreRequest request,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        MembreResponse response = configService.changerStatutMembre(
+            user.getTenantSlug(), compteId, request.statut());
+        String action = "suspendu".equals(request.statut()) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
+        auditService.tracer(user.getCompteId(), action, "compte", compteId);
         return ResponseEntity.ok(response);
     }
 
