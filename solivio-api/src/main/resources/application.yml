@@ -1,0 +1,23 @@
+# application.yml
+# Configuration de base, valable pour tous les profils.
+# Les valeurs sensibles (jwt-secret, datasource, etc.) doivent etre injectees
+# depuis OpenBao via des variables d'environnement en production.
+
+spring:
+  config:
+    import: "optional:vault://"
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+solivio:
+  uploads:
+    # En production, monter un volume persistant et surcharger ces chemins
+    # via les variables d'environnement SOLIVIO_UPLOADS_LOGOS_DIR et SOLIVIO_UPLOADS_AVATARS_DIR.
+    logos-dir: ${SOLIVIO_UPLOADS_LOGOS_DIR:/var/solivio/uploads/logos}
+    avatars-dir: ${SOLIVIO_UPLOADS_AVATARS_DIR:/var/solivio/uploads/avatars}

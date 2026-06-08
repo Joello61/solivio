@@ -3,9 +3,11 @@ package com.solivio.api.identity.application;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
+import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.domain.RefreshToken;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
+import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
@@ -38,6 +40,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AssociationRepository associationRepository;
     private final PersonneProvisioningService personneProvisioningService;
+    private final PersonneRepository personneRepository;
 
     public AuthService(
             AuthenticationManager authenticationManager,
@@ -46,7 +49,8 @@ public class AuthService {
             RefreshTokenRepository refreshTokenRepo,
             JwtService jwtService,
             AssociationRepository associationRepository,
-            PersonneProvisioningService personneProvisioningService) {
+            PersonneProvisioningService personneProvisioningService,
+            PersonneRepository personneRepository) {
         this.authenticationManager = authenticationManager;
         this.compteRepository = compteRepository;
         this.membreRepo = membreRepo;
@@ -54,6 +58,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.associationRepository = associationRepository;
         this.personneProvisioningService = personneProvisioningService;
+        this.personneRepository = personneRepository;
     }
 
     @Transactional
@@ -206,11 +211,21 @@ public class AuthService {
         List<String> roles = userDetails.getAuthorities().stream()
             .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
             .toList();
+        // Telephone et photo tenant (peut etre null si pas de tenant actif ou pas encore provisionne).
+        Personne personne = userDetails.getTenantSlug() != null
+            ? personneRepository.findByCompteEmail(compte.getEmail()).orElse(null)
+            : null;
+        String telephone = personne != null ? personne.getTelephone() : null;
+        String photoUrl = compte.getPhotoUrl() != null
+            ? compte.getPhotoUrl()
+            : (personne != null ? personne.getPhotoUrl() : null);
         return new MeResponse(
             compte.getId().toString(),
             compte.getEmail(),
             compte.getNom(),
             compte.getPrenom(),
+            telephone,
+            photoUrl,
             compte.isSuperAdmin(),
             userDetails.getTenantSlug(),
             roles

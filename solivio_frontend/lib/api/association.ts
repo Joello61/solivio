@@ -50,6 +50,16 @@ export function supprimerMembre(compteId: string): Promise<void> {
   });
 }
 
+export function changerStatutMembre(
+  compteId: string,
+  statut: "actif" | "suspendu"
+): Promise<MembreResponse> {
+  return apiFetch<MembreResponse>(`/api/association/membres/${compteId}/statut`, {
+    method: "PATCH",
+    body: JSON.stringify({ statut }),
+  });
+}
+
 export function statsDistribution(
   id: string
 ): Promise<StatistiqueDistributionResponse> {

@@ -62,6 +62,9 @@ public class Compte {
     @Column(name = "date_modification", nullable = false)
     private Instant dateModification = Instant.now();
 
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     public Compte(String email, String passwordHash, String nom, String prenom) {
         this.email = email;
         this.passwordHash = passwordHash;

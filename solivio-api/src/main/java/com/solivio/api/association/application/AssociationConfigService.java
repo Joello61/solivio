@@ -69,10 +69,19 @@ public class AssociationConfigService {
     @Transactional(readOnly = true)
     public List<MembreResponse> listerMembres(String tenantSlug) {
         Association asso = trouverOuEchouer(tenantSlug);
-        return membreRepository.findActivesByAssociationId(asso.getId())
+        return membreRepository.findAllByAssociationId(asso.getId())
             .stream()
             .map(this::toMembreResponse)
             .toList();
+    }
+
+    public MembreResponse changerStatutMembre(String tenantSlug, UUID compteId, String statut) {
+        Association asso = trouverOuEchouer(tenantSlug);
+        MembreAssociation membre = membreRepository
+            .findByCompteIdAndAssociationId(compteId, asso.getId())
+            .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
+        membre.setStatut(statut);
+        return toMembreResponse(membreRepository.save(membre));
     }
 
     public MembreResponse mettreAJourRole(

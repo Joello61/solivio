@@ -7,6 +7,8 @@ public record MeResponse(
     String email,
     String nom,
     String prenom,
+    String telephone,
+    String photoUrl,
     boolean superAdmin,
     String tenantActif,
     List<String> roles

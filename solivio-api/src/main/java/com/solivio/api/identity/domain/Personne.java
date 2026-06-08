@@ -50,6 +50,9 @@ public class Personne {
     @Column(name = "date_suppression")
     private Instant dateSuppression;
 
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     public Personne(String nom, String prenom, String email) {
         this.nom = nom;
         this.prenom = prenom;

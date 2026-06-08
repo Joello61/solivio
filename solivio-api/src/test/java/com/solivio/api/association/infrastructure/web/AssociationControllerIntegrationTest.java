@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasItems;
 
 @SolivioIntegrationTest
 class AssociationControllerIntegrationTest {
@@ -148,6 +149,34 @@ class AssociationControllerIntegrationTest {
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].email").value("resp@cfg.com"))
             .andExpect(jsonPath("$[0].role").value("responsable"));
+    }
+
+    @Test
+    void changerStatutMembre_suspenduEtReactive() throws Exception {
+        // Suspension
+        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"statut\":\"suspendu\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statut").value("suspendu"));
+
+        // Reactivation
+        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"statut\":\"actif\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statut").value("actif"));
+    }
+
+    @Test
+    void changerStatutMembre_refuseStatutInvalide() throws Exception {
+        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"statut\":\"inconnu\"}"))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
