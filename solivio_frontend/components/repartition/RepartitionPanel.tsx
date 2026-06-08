@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Pencil, Trash2, Plus, AlertTriangle, Users } from "lucide-react";
+import { Pencil, Trash2, Plus, AlertTriangle, Users, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormulaireDenree } from "./FormulaireDenree";
@@ -109,61 +109,63 @@ export function RepartitionPanel({
     await rafraichirDotation(nouvelleBase);
   }
 
-  const dotationParId = Object.fromEntries(
-    dotation.denrees.map((d) => [d.id, d]),
-  );
+  const dotationParId = Object.fromEntries(dotation.denrees.map((d) => [d.id, d]));
 
   return (
     <div className="space-y-6">
       {!modifiable && (
-        <p className="text-sm text-muted-foreground border border-border rounded-lg px-4 py-3">
+        <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <Scale className="h-4 w-4 shrink-0" />
           Cette distribution est cloturee. Les denrees sont en lecture seule.
-        </p>
+        </div>
       )}
 
       {/* Bascule inscrits / presents */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
-            Base de calcul : {dotation.nbBeneficiaires} beneficiaire
-            {dotation.nbBeneficiaires > 1 ? "s" : ""}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Users className="size-4" />
+          <span>
+            {dotation.nbBeneficiaires} beneficiaire{dotation.nbBeneficiaires > 1 ? "s" : ""}
           </span>
         </div>
-        <div className="flex gap-1 rounded-lg border border-border p-1">
-          <button
-            type="button"
-            onClick={() => handleBasculeBase("INSCRITS")}
-            className={`rounded-md px-3 py-1 text-sm transition-colors ${
-              base === "INSCRITS"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Inscrits
-          </button>
-          <button
-            type="button"
-            onClick={() => handleBasculeBase("PRESENTS")}
-            className={`rounded-md px-3 py-1 text-sm transition-colors ${
-              base === "PRESENTS"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Presents reels
-          </button>
+        <div
+          role="group"
+          aria-label="Base de calcul"
+          className="inline-flex gap-0.5 rounded-xl border border-border bg-muted/50 p-1"
+        >
+          {(["INSCRITS", "PRESENTS"] as const).map((b) => (
+            <button
+              key={b}
+              type="button"
+              onClick={() => handleBasculeBase(b)}
+              className={[
+                "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
+                base === b
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              {b === "INSCRITS" ? "Inscrits" : "Presents reels"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {erreur && (
-        <p className="text-sm text-destructive">{erreur}</p>
-      )}
+      {erreur && <p className="text-sm text-destructive">{erreur}</p>}
 
       {/* Liste des denrees avec dotation */}
       <div className="space-y-3">
         {denrees.length === 0 && !ajoutVisible && (
-          <p className="text-sm text-muted-foreground">Aucune denree saisie pour cette distribution.</p>
+          <div className="rounded-xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              Aucune denree saisie pour cette distribution.
+            </p>
+            {modifiable && (
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                Cliquez sur &quot;Ajouter une denree&quot; pour commencer.
+              </p>
+            )}
+          </div>
         )}
 
         {denrees.map((denree) => {
@@ -173,7 +175,7 @@ export function RepartitionPanel({
           return (
             <div
               key={denree.id}
-              className="rounded-lg border border-border bg-card p-4 space-y-3"
+              className="rounded-xl border border-border bg-card p-4 space-y-3"
             >
               {estEnEdition ? (
                 <FormulaireDenree
@@ -186,10 +188,10 @@ export function RepartitionPanel({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-sm">{denree.libelle}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {denree.nombreContenants} contenant(s) x{" "}
                         {formatQte(denree.quantiteParContenant, denree.unite)} ={" "}
-                        <span className="font-medium">
+                        <span className="font-medium text-foreground">
                           {formatQte(denree.quantiteTotale, denree.unite)} total
                         </span>
                       </p>
@@ -201,6 +203,7 @@ export function RepartitionPanel({
                           size="sm"
                           onClick={() => setEnEdition(denree.id)}
                           aria-label="Modifier"
+                          className="h-7 w-7 p-0"
                         >
                           <Pencil className="size-3.5" />
                         </Button>
@@ -209,41 +212,36 @@ export function RepartitionPanel({
                           size="sm"
                           onClick={() => handleSuppression(denree.id)}
                           aria-label="Supprimer"
+                          className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Trash2 className="size-3.5 text-destructive" />
+                          <Trash2 className="size-3.5" />
                         </Button>
                       </div>
                     )}
                   </div>
 
                   {d && (
-                    <div className="flex items-center gap-3 pt-1 border-t border-border">
+                    <div className="pt-3 border-t border-border">
                       {d.penurie ? (
-                        <div className="flex items-start gap-2 text-sm">
+                        <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-sm">
                           <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
                           <span className="text-amber-700 dark:text-amber-400">
                             Stock insuffisant : {d.nbPeutRecevoir} personne
                             {d.nbPeutRecevoir > 1 ? "s" : ""} sur{" "}
                             {dotation.nbBeneficiaires} peuvent recevoir{" "}
-                            <span className="font-semibold">
-                              1 {d.unite.toLowerCase()}
-                            </span>
+                            <span className="font-semibold">1 {d.unite.toLowerCase()}</span>
                             {d.reste > 0 && (
-                              <span>
-                                {" "}
-                                (reste {formatQte(d.reste, d.unite)})
-                              </span>
+                              <span> (reste {formatQte(d.reste, d.unite)})</span>
                             )}
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-4 text-sm">
-                          <span>
-                            Dotation :{" "}
-                            <span className="font-semibold text-foreground">
+                        <div className="flex items-center gap-3 text-sm">
+                          <div className="rounded-lg bg-primary/10 px-3 py-1.5">
+                            <span className="text-primary font-medium">
                               {formatQte(d.dotation, d.unite)} / personne
                             </span>
-                          </span>
+                          </div>
                           {d.reste > 0 && (
                             <Badge variant="secondary" className="text-xs">
                               Reste : {formatQte(d.reste, d.unite)}
@@ -260,10 +258,10 @@ export function RepartitionPanel({
         })}
       </div>
 
-      {/* Formulaire d'ajout - uniquement si modifiable */}
+      {/* Formulaire d'ajout */}
       {modifiable && (
         ajoutVisible ? (
-          <div className="rounded-lg border border-border bg-card p-4">
+          <div className="rounded-xl border border-border bg-card p-4">
             <h3 className="text-sm font-medium mb-4">Nouvelle denree</h3>
             <FormulaireDenree
               onSubmit={handleAjout}
