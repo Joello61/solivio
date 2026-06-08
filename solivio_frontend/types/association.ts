@@ -41,6 +41,21 @@ export interface UpdateRoleMembrePayload {
   coordoType?: string;
 }
 
+export interface AssociationAdminResponse {
+  id: string;
+  slug: string;
+  code: string;
+  nom: string;
+  statut: string;
+  dateCreation: string;
+}
+
+export interface CreateAssociationPayload {
+  nom: string;
+  slug: string;
+  emailResponsable: string;
+}
+
 export interface StatistiqueDistributionResponse {
   distributionId: string;
   distributionDate: string;
