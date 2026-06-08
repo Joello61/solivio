@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Spinner } from "@/components/ui/spinner";
 import { resetPassword } from "@/lib/auth";
 
 function ResetPasswordForm() {
@@ -28,6 +29,12 @@ function ResetPasswordForm() {
     next[index] = value;
     setDigits(next);
     if (value && index < 5) inputs.current[index + 1]?.focus();
+  }
+
+  function handleKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputs.current[index - 1]?.focus();
+    }
   }
 
   function handlePaste(e: React.ClipboardEvent) {
@@ -58,6 +65,8 @@ function ResetPasswordForm() {
     }
   }
 
+  const codeComplet = digits.join("").length === 6;
+
   return (
     <AuthLayout
       title="Nouveau mot de passe"
@@ -66,9 +75,9 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label>Code de verification</Label>
-          <div className="flex gap-2" onPaste={handlePaste}>
+          <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
             {digits.map((d, i) => (
-              <Input
+              <input
                 key={i}
                 ref={(el) => { inputs.current[i] = el; }}
                 type="text"
@@ -76,8 +85,14 @@ function ResetPasswordForm() {
                 maxLength={1}
                 value={d}
                 onChange={(e) => handleDigitChange(i, e.target.value)}
-                className="h-10 w-9 text-center font-mono p-0"
+                onKeyDown={(e) => handleKeyDown(i, e)}
                 aria-label={`Chiffre ${i + 1}`}
+                className={[
+                  "h-12 w-10 rounded-xl border-2 bg-card text-center text-lg font-bold font-mono",
+                  "text-foreground caret-transparent transition-all",
+                  "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30",
+                  d ? "border-primary/60 bg-primary/5" : "border-border",
+                ].join(" ")}
               />
             ))}
           </div>
@@ -85,9 +100,8 @@ function ResetPasswordForm() {
 
         <div className="space-y-1.5">
           <Label htmlFor="password">Nouveau mot de passe</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
@@ -99,20 +113,24 @@ function ResetPasswordForm() {
 
         <div className="space-y-1.5">
           <Label htmlFor="confirm">Confirmer le mot de passe</Label>
-          <Input
+          <PasswordInput
             id="confirm"
-            type="password"
             required
             autoComplete="new-password"
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
+            placeholder="Repetez votre mot de passe"
           />
         </div>
 
         <FormError message={error} />
 
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Modification..." : "Modifier le mot de passe"}
+        <Button type="submit" className="w-full" disabled={pending || !codeComplet}>
+          {pending ? (
+            <><Spinner size="sm" /> Modification...</>
+          ) : (
+            "Modifier le mot de passe"
+          )}
         </Button>
       </form>
 
