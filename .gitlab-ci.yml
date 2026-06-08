@@ -225,7 +225,7 @@ frontend:test:
 # -----------------------------------------------------------------------
 frontend:e2e:
   stage: test
-  image: mcr.microsoft.com/playwright:v1.60.0-focal
+  image: mcr.microsoft.com/playwright:v1.59.0-noble
   rules:
     - changes:
         - solivio_frontend/**/*
