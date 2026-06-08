@@ -190,7 +190,7 @@ frontend:lint:
   before_script:
     - cd solivio_frontend && npm ci
   script:
-    - cd solivio_frontend && npm run lint
+    - npm run lint
 
 # -----------------------------------------------------------------------
 # FRONTEND - unit tests
@@ -211,7 +211,7 @@ frontend:test:
   before_script:
     - cd solivio_frontend && npm ci
   script:
-    - cd solivio_frontend && npm run test:coverage
+    - npm run test:coverage
   artifacts:
     when: always
     paths:
@@ -235,7 +235,7 @@ frontend:e2e:
   before_script:
     - cd solivio_frontend && npm ci
   script:
-    - cd solivio_frontend && npm run test:e2e
+    - npm run test:e2e
   artifacts:
     when: always
     paths:
