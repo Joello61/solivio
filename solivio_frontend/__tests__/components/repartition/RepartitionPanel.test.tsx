@@ -113,7 +113,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/Ajouter une denree/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ajouter une denree/ })).toBeInTheDocument();
   });
 
   it("affiche le formulaire d'ajout au clic", async () => {
@@ -127,7 +127,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText(/Ajouter une denree/));
+      fireEvent.click(screen.getByRole("button", { name: /Ajouter une denree/ }));
     });
 
     expect(screen.getByLabelText("Libelle")).toBeInTheDocument();

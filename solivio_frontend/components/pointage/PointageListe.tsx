@@ -5,11 +5,12 @@ import { Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { rechercherPointage, pointer } from "@/lib/api/distributions";
 import type { PointageInfoResponse } from "@/types/distribution";
 
 const DEBOUNCE_MS = 300;
-const SEUIL_AUTO = 2; // nombre de caracteres minimum pour declencher la recherche automatique
+const SEUIL_AUTO = 2;
 
 interface Props {
   distributionId: string;
@@ -23,7 +24,6 @@ export function PointageListe({ distributionId }: Props) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [aRecherche, setARecherche] = useState(false);
 
-  // Ref pour annuler le debounce si le composant est demonte ou si la valeur change.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const executerRecherche = useCallback(
@@ -51,7 +51,6 @@ export function PointageListe({ distributionId }: Props) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     const isTropCourt = recherche.length < SEUIL_AUTO;
-    // Delai immediat pour l'effacement, debounce normal pour la recherche.
     const delai = isTropCourt ? 0 : DEBOUNCE_MS;
 
     debounceRef.current = setTimeout(() => {
@@ -68,7 +67,6 @@ export function PointageListe({ distributionId }: Props) {
     };
   }, [recherche, executerRecherche]);
 
-  // Recherche immediate declenchee par le bouton ou la touche Entree.
   function handleRechercheImmediate() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     executerRecherche(recherche);
@@ -92,9 +90,14 @@ export function PointageListe({ distributionId }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Barre de recherche */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          {recherchePending ? (
+            <Spinner size="sm" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          )}
           <Input
             className="pl-9"
             placeholder="Taper 2 lettres minimum pour rechercher..."
@@ -104,29 +107,32 @@ export function PointageListe({ distributionId }: Props) {
             autoFocus
           />
         </div>
-        <Button onClick={handleRechercheImmediate} disabled={recherchePending}>
-          {recherchePending ? "Recherche..." : "Rechercher"}
+        <Button onClick={handleRechercheImmediate} disabled={recherchePending || !recherche.trim()}>
+          {recherchePending ? <><Spinner size="sm" /> Recherche...</> : "Rechercher"}
         </Button>
       </div>
 
       {erreur && <p className="text-sm text-destructive">{erreur}</p>}
 
-      {recherchePending && (
-        <p className="text-sm text-muted-foreground text-center py-2">Recherche en cours...</p>
-      )}
-
+      {/* Etat vide apres recherche */}
       {!recherchePending && aRecherche && resultats.length === 0 && recherche && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          Aucun inscrit trouve pour &quot;{recherche}&quot;.
-        </p>
+        <div className="rounded-xl border border-border bg-muted/30 px-6 py-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Aucun inscrit trouve pour &quot;{recherche}&quot;.
+          </p>
+        </div>
       )}
 
+      {/* Resultats */}
       {resultats.length > 0 && (
-        <div className="divide-y divide-border rounded-xl border border-border bg-card">
+        <div className="divide-y divide-border rounded-xl border border-border bg-card overflow-hidden">
           {resultats.map((r) => (
-            <div key={r.inscriptionId} className="flex items-center justify-between px-4 py-3">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium">
+            <div
+              key={r.inscriptionId}
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
+            >
+              <div className="space-y-1 min-w-0 flex-1 mr-4">
+                <p className="text-sm font-medium truncate">
                   {r.nom} {r.prenom}
                 </p>
                 <div className="flex gap-2">
@@ -144,7 +150,7 @@ export function PointageListe({ distributionId }: Props) {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button
                   size="icon"
                   variant={r.presence === "PRESENT" ? "default" : "outline"}
@@ -153,7 +159,11 @@ export function PointageListe({ distributionId }: Props) {
                   onClick={() => handlePointer(r.inscriptionId, "PRESENT")}
                   title="Marquer present"
                 >
-                  <Check className="size-4" />
+                  {pending === r.inscriptionId ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
                 </Button>
                 <Button
                   size="icon"
@@ -163,7 +173,11 @@ export function PointageListe({ distributionId }: Props) {
                   onClick={() => handlePointer(r.inscriptionId, "ABSENT")}
                   title="Marquer absent"
                 >
-                  <X className="size-4" />
+                  {pending === r.inscriptionId ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <X className="size-4" />
+                  )}
                 </Button>
               </div>
             </div>

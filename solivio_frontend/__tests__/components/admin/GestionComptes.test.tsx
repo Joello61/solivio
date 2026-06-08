@@ -100,11 +100,18 @@ describe("GestionComptes", () => {
   });
 
   it("appelle changerStatutCompte lors du clic Desactiver", async () => {
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     const { changerStatutCompte } = await import("@/lib/api/profil");
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Desactiver" }));
+    // Ouvre le dialog de confirmation
+    fireEvent.click(screen.getByRole("button", { name: /Desactiver/i }));
+
+    // Attend l'affichage du dialog et confirme l'action
+    await waitFor(() => {
+      expect(screen.getByText("Desactiver le compte")).toBeInTheDocument();
+    });
+    const boutons = screen.getAllByRole("button", { name: /Desactiver/i });
+    fireEvent.click(boutons[boutons.length - 1]);
 
     await waitFor(() => {
       expect(changerStatutCompte).toHaveBeenCalledWith("compte-1", false);

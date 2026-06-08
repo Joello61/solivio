@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { inscrire, desinscrire } from "@/lib/api/distributions";
 import type { InscriptionResponse, TypeInscription, CreneauResponse } from "@/types/distribution";
 
@@ -72,39 +80,43 @@ export function InscriptionButton({
 
       {estInscrit ? (
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-foreground">
-            {inscriptionExistante?.statut === "LISTE_ATTENTE"
-              ? `Liste d'attente (rang ${inscriptionExistante.rangListeAttente ?? "?"})`
-              : "Inscrit(e)"}
-          </span>
+          <div className="rounded-lg bg-primary/10 px-3 py-1.5">
+            <span className="text-sm font-medium text-primary">
+              {inscriptionExistante?.statut === "LISTE_ATTENTE"
+                ? `Liste d'attente (rang ${inscriptionExistante.rangListeAttente ?? "?"})`
+                : "Inscrit(e)"}
+            </span>
+          </div>
           <Button size="sm" variant="outline" onClick={handleDesinscrire} disabled={pending}>
-            {pending ? "Annulation..." : "Se desinscrire"}
+            {pending ? <><Spinner size="sm" /> Annulation...</> : "Se desinscrire"}
           </Button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {necessisteChoixCreneau && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground" htmlFor="creneau-select">
                 Choisir un creneau
               </label>
-              <select
-                id="creneau-select"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                value={creneauChoisi}
-                onChange={(e) => setCreneauChoisi(e.target.value)}
+              <Select
+                value={creneauChoisi || undefined}
+                onValueChange={setCreneauChoisi}
               >
-                <option value="">-- Selectionnez un creneau --</option>
-                {creneaux.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.heureDebut} - {c.heureFin} ({c.capacite} places)
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="creneau-select" className="w-full">
+                  <SelectValue placeholder="-- Selectionnez un creneau --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {creneaux.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.heureDebut} - {c.heureFin} ({c.capacite} places)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <Button size="sm" onClick={handleInscrire} disabled={pending}>
-            {pending ? "Inscription..." : "S'inscrire"}
+            {pending ? <><Spinner size="sm" /> Inscription...</> : "S'inscrire"}
           </Button>
         </div>
       )}

@@ -5,12 +5,18 @@ import type { MeResponse } from "@/types/auth";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard",
 }));
 
 vi.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
+}));
+
+vi.mock("next/image", () => ({
+  // eslint-disable-next-line @next/next/no-img-element
+  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -39,9 +45,16 @@ describe("Header", () => {
     expect(screen.getByText("Alice Dupont")).toBeInTheDocument();
   });
 
-  it("affiche le tenant actif", () => {
+  it("affiche les initiales de l'utilisateur si pas de photo", () => {
     render(<Header user={userBase} />);
-    expect(screen.getByText("pilote")).toBeInTheDocument();
+    expect(screen.getByText("AD")).toBeInTheDocument();
+    // Pas d'image d'avatar (le logo /logo.svg est present mais avec alt="Solivio")
+    expect(screen.queryByRole("img", { name: "Alice Dupont" })).not.toBeInTheDocument();
+  });
+
+  it("affiche l'image si photoUrl est defini", () => {
+    render(<Header user={{ ...userBase, photoUrl: "/api/public/avatar/user-1" }} />);
+    expect(screen.getByRole("img", { name: "Alice Dupont" })).toBeInTheDocument();
   });
 
   it("affiche le lien Mon compte apres ouverture du menu", () => {
@@ -61,24 +74,27 @@ describe("Header", () => {
     fireEvent.click(screen.getByRole("button", { name: /Alice Dupont/i }));
     expect(screen.getByRole("link", { name: /Utilisateurs/ })).toHaveAttribute(
       "href",
-      "/admin/utilisateurs"
+      "/admin/utilisateurs",
     );
-  });
-
-  it("affiche une icone User par defaut sans photo", () => {
-    render(<Header user={userBase} />);
-    // L'icone User est dans le bouton du header - pas d'image
-    expect(screen.queryByRole("img", { name: "Avatar" })).not.toBeInTheDocument();
-  });
-
-  it("affiche l'image si photoUrl est defini", () => {
-    render(<Header user={{ ...userBase, photoUrl: "/api/public/avatar/user-1" }} />);
-    expect(screen.getByRole("img", { name: "Avatar" })).toBeInTheDocument();
   });
 
   it("affiche le bouton Se deconnecter apres ouverture du menu", () => {
     render(<Header user={userBase} />);
     fireEvent.click(screen.getByRole("button", { name: /Alice Dupont/i }));
     expect(screen.getByRole("button", { name: "Se deconnecter" })).toBeInTheDocument();
+  });
+
+  it("ferme le menu en recliquant sur le declencheur", () => {
+    render(<Header user={userBase} />);
+    const trigger = screen.getByRole("button", { name: /Alice Dupont/i });
+    fireEvent.click(trigger);
+    expect(screen.getByText("alice@example.com")).toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.queryByText("alice@example.com")).not.toBeInTheDocument();
+  });
+
+  it("affiche le logo Solivio visible sur mobile", () => {
+    render(<Header user={userBase} />);
+    expect(screen.getByRole("link", { name: /Solivio/i })).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { assignerRole, retirerRole } from "@/lib/api/distributions";
 import type { RoleBenevoleResponse } from "@/types/distribution";
 
@@ -60,17 +61,21 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
         {roles.map((role) => (
           <span
             key={role.id}
-            className="inline-flex items-center gap-1 rounded-full bg-teal-50 border border-teal-200 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-300"
+            className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-xs font-medium text-primary"
           >
             {role.libelle}
             <button
               type="button"
               disabled={retirantId === role.id}
               onClick={() => handleRetirer(role.id)}
-              className="text-teal-600 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-100 disabled:opacity-50"
+              className="text-primary/60 hover:text-primary disabled:opacity-40 transition-colors"
               aria-label={`Retirer le role ${role.libelle}`}
             >
-              <X className="size-3" />
+              {retirantId === role.id ? (
+                <Spinner size="sm" className="h-2.5 w-2.5" />
+              ) : (
+                <X className="size-3" />
+              )}
             </button>
           </span>
         ))}
@@ -78,7 +83,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary/80 transition-colors"
             aria-label="Ajouter un role"
           >
             <Plus className="size-3" />
@@ -99,7 +104,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
             }}
             placeholder="Ex : distribution des carottes"
             autoFocus
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           />
           <Button
             size="sm"
@@ -108,12 +113,12 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
             disabled={pending || !libelle.trim()}
             onClick={handleAjouter}
           >
-            {pending ? "..." : "OK"}
+            {pending ? <Spinner size="sm" /> : "OK"}
           </Button>
           <button
             type="button"
             onClick={() => { setShowForm(false); setLibelle(""); setErreur(null); }}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Annuler"
           >
             <X className="size-4" />

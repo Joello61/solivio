@@ -24,7 +24,8 @@ describe("AuthLayout", () => {
 
   it("affiche le branding Solivio", () => {
     render(<AuthLayout title="Connexion"><p>contenu</p></AuthLayout>);
-    expect(screen.getByText("Solivio")).toBeInTheDocument();
+    const elements = screen.getAllByText("Solivio");
+    expect(elements.length).toBeGreaterThanOrEqual(1);
   });
 
   it("rend les enfants dans l'encart", () => {

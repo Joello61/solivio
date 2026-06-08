@@ -9,6 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { creerDistribution } from "@/lib/api/distributions";
 
 const creneauSchema = z.object({
@@ -72,21 +73,23 @@ export function CreateDistributionForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
       {erreur && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {erreur}
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Informations generales</h2>
+
         <div className="space-y-1.5">
-          <Label htmlFor="titre">Titre *</Label>
+          <Label htmlFor="titre">Titre <span className="text-destructive">*</span></Label>
           <Input id="titre" {...register("titre")} placeholder="Distribution du 15 janvier" />
           {errors.titre && <p className="text-xs text-destructive">{errors.titre.message}</p>}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="date">Date *</Label>
+            <Label htmlFor="date">Date <span className="text-destructive">*</span></Label>
             <Input id="date" type="date" {...register("date")} />
             {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
           </div>
@@ -98,12 +101,21 @@ export function CreateDistributionForm() {
 
         <div className="space-y-1.5">
           <Label htmlFor="description">Description</Label>
-          <Input id="description" {...register("description")} placeholder="Informations complementaires..." />
+          <Input
+            id="description"
+            {...register("description")}
+            placeholder="Informations complementaires..."
+          />
         </div>
+      </div>
 
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Capacites</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="capaciteBeneficiaires">Capacite beneficiaires *</Label>
+            <Label htmlFor="capaciteBeneficiaires">
+              Beneficiaires <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="capaciteBeneficiaires"
               type="number"
@@ -115,52 +127,66 @@ export function CreateDistributionForm() {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="capaciteBenevoles">Capacite benevoles</Label>
+            <Label htmlFor="capaciteBenevoles">Benevoles</Label>
             <Input
               id="capaciteBenevoles"
               type="number"
               min={1}
+              placeholder="Illimite"
               {...register("capaciteBenevoles", { valueAsNumber: true })}
             />
           </div>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium text-sm">Creneaux horaires</h2>
+          <h2 className="text-sm font-semibold text-foreground">Creneaux horaires</h2>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => append({ heureDebut: "", heureFin: "", capacite: 50 })}
           >
-            <Plus className="mr-1 size-3" />
+            <Plus className="mr-1 size-3.5" />
             Ajouter un creneau
           </Button>
         </div>
 
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex items-end gap-2">
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor={`creneaux.${index}.heureDebut`}>Debut</Label>
-              <Input type="time" {...register(`creneaux.${index}.heureDebut`)} />
+        <div className="space-y-3">
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex items-end gap-2 rounded-lg bg-muted/30 p-3">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor={`creneaux.${index}.heureDebut`} className="text-xs">Debut</Label>
+                <Input type="time" {...register(`creneaux.${index}.heureDebut`)} className="h-8 text-sm" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label htmlFor={`creneaux.${index}.heureFin`} className="text-xs">Fin</Label>
+                <Input type="time" {...register(`creneaux.${index}.heureFin`)} className="h-8 text-sm" />
+              </div>
+              <div className="w-24 space-y-1">
+                <Label htmlFor={`creneaux.${index}.capacite`} className="text-xs">Places</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              {fields.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                  onClick={() => remove(index)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
             </div>
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor={`creneaux.${index}.heureFin`}>Fin</Label>
-              <Input type="time" {...register(`creneaux.${index}.heureFin`)} />
-            </div>
-            <div className="w-24 space-y-1.5">
-              <Label htmlFor={`creneaux.${index}.capacite`}>Places</Label>
-              <Input type="number" min={1} {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })} />
-            </div>
-            {fields.length > 1 && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
 
         {errors.creneaux?.root && (
           <p className="text-xs text-destructive">{errors.creneaux.root.message}</p>
@@ -169,7 +195,11 @@ export function CreateDistributionForm() {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creation en cours..." : "Creer la distribution"}
+          {isSubmitting ? (
+            <><Spinner size="sm" /> Creation en cours...</>
+          ) : (
+            "Creer la distribution"
+          )}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Annuler

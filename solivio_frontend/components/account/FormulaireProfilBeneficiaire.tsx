@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { mettreAJourProfilBeneficiaire } from "@/lib/api/profil";
 import type { ProfilBeneficiaireResponse } from "@/types/profil";
 
@@ -45,37 +54,31 @@ const SITUATIONS_LOGEMENT = [
   { value: "autre", label: "Autre" },
 ];
 
-function SelectField({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-  placeholder = "-- Choisir --",
-}: {
+interface SelectFieldProps {
   id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   placeholder?: string;
-}) {
+}
+
+function SelectField({ id, label, value, onChange, options, placeholder = "-- Choisir --" }: SelectFieldProps) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <Select value={value || undefined} onValueChange={onChange}>
+        <SelectTrigger id={id} className="w-full">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -85,19 +88,19 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
   const [dateNaissance, setDateNaissance] = useState(profil.dateNaissance ?? "");
   const [statutBoursier, setStatutBoursier] = useState(profil.statutBoursier ?? "");
   const [echelonBourse, setEchelonBourse] = useState(
-    profil.echelonBourse != null ? String(profil.echelonBourse) : ""
+    profil.echelonBourse != null ? String(profil.echelonBourse) : "",
   );
   const [categorieNationalite, setCategorieNationalite] = useState(
-    profil.categorieNationalite ?? ""
+    profil.categorieNationalite ?? "",
   );
   const [resteAVivre, setResteAVivre] = useState(
-    profil.resteAVivreMensuel != null ? String(profil.resteAVivreMensuel) : ""
+    profil.resteAVivreMensuel != null ? String(profil.resteAVivreMensuel) : "",
   );
   const [niveauAcademique, setNiveauAcademique] = useState(profil.niveauAcademique ?? "");
   const [etablissement, setEtablissement] = useState(profil.etablissement ?? "");
   const [situationLogement, setSituationLogement] = useState(profil.situationLogement ?? "");
   const [aEmploi, setAEmploi] = useState(
-    profil.aEmploiEtudiant != null ? String(profil.aEmploiEtudiant) : ""
+    profil.aEmploiEtudiant != null ? String(profil.aEmploiEtudiant) : "",
   );
   const [pending, setPending] = useState(false);
   const [succes, setSucces] = useState(false);
@@ -229,28 +232,28 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <div className="space-y-1.5">
           <Label htmlFor="aEmploi">Emploi etudiant</Label>
-          <select
-            id="aEmploi"
-            value={aEmploi}
-            onChange={(e) => setAEmploi(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">-- Choisir --</option>
-            <option value="true">Oui</option>
-            <option value="false">Non</option>
-          </select>
+          <Select value={aEmploi || undefined} onValueChange={setAEmploi}>
+            <SelectTrigger id="aEmploi" className="w-full">
+              <SelectValue placeholder="-- Choisir --" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Oui</SelectItem>
+              <SelectItem value="false">Non</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {succes && (
-        <Alert className="border-green-500/50 bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-400">
-          Dossier mis a jour avec succes.
-        </Alert>
+        <div className="flex items-center gap-2.5 rounded-lg border border-green-500/30 bg-green-50 px-4 py-3 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+          <CheckCircle className="h-4 w-4 shrink-0" />
+          <span className="text-sm">Dossier mis a jour avec succes.</span>
+        </div>
       )}
       {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Enregistrement..." : "Enregistrer le dossier"}
+        {pending ? <><Spinner size="sm" /> Enregistrement...</> : "Enregistrer le dossier"}
       </Button>
     </form>
   );

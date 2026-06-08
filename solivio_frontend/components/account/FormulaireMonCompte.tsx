@@ -2,11 +2,12 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { User, Camera } from "lucide-react";
+import { Camera, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import Image from "next/image";
 import { mettreAJourProfil, uploadAvatar } from "@/lib/api/profil";
 import type { MeResponse } from "@/types/auth";
@@ -65,17 +66,24 @@ export function FormulaireMonCompte({ user }: Props) {
   }
 
   const avatarSrc = photoUrl ? `${API_URL}${photoUrl}` : null;
+  const initiales = `${user.prenom[0] ?? ""}${user.nom[0] ?? ""}`.toUpperCase();
 
   return (
     <div className="space-y-8">
       {/* Photo de profil */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-5">
         <div className="relative">
-          <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border">
+          <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden ring-2 ring-primary/10">
             {avatarSrc ? (
               <Image src={avatarSrc} alt="Photo de profil" fill sizes="80px" className="object-cover" />
             ) : (
-              <User className="h-9 w-9 text-primary/60" />
+              <span className="text-2xl font-semibold text-primary">{initiales}</span>
+            )}
+            {/* Overlay pendant l'upload */}
+            {uploadPending && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+                <Spinner size="default" className="text-white" />
+              </div>
             )}
           </div>
           <button
@@ -83,9 +91,9 @@ export function FormulaireMonCompte({ user }: Props) {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadPending}
             aria-label="Changer la photo de profil"
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            <Camera className="h-3.5 w-3.5" />
+            {uploadPending ? <Spinner size="sm" className="h-3 w-3" /> : <Camera className="h-3.5 w-3.5" />}
           </button>
           <input
             ref={fileInputRef}
@@ -97,12 +105,24 @@ export function FormulaireMonCompte({ user }: Props) {
           />
         </div>
         <div>
-          <p className="font-medium text-sm">
+          <p className="font-semibold text-sm">
             {user.prenom} {user.nom}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">{user.email}</p>
           {uploadPending && (
-            <p className="text-xs text-muted-foreground mt-1">Chargement...</p>
+            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+              <Spinner size="sm" />
+              Chargement de la photo...
+            </p>
+          )}
+          {!uploadPending && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-1.5 text-xs text-primary hover:underline"
+            >
+              Modifier la photo
+            </button>
           )}
         </div>
       </div>
@@ -153,16 +173,15 @@ export function FormulaireMonCompte({ user }: Props) {
         </div>
 
         {succes && (
-          <Alert className="border-green-500/50 bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-400">
-            Profil mis a jour avec succes.
-          </Alert>
+          <div className="flex items-center gap-2.5 rounded-lg border border-green-500/30 bg-green-50 px-4 py-3 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span className="text-sm">Profil mis a jour avec succes.</span>
+          </div>
         )}
-        {erreur && (
-          <Alert variant="destructive">{erreur}</Alert>
-        )}
+        {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
         <Button type="submit" disabled={pending}>
-          {pending ? "Enregistrement..." : "Enregistrer"}
+          {pending ? <><Spinner size="sm" /> Enregistrement...</> : "Enregistrer"}
         </Button>
       </form>
     </div>
