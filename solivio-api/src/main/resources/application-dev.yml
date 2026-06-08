@@ -59,6 +59,7 @@ solivio:
     allowed-origins: http://localhost:3000
   uploads:
     logos-dir: /tmp/solivio-logos
+    avatars-dir: /tmp/solivio-avatars
 
 server:
   port: 8080

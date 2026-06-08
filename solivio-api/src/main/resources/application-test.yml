@@ -5,6 +5,9 @@
 
 spring:
   jpa:
+    hibernate:
+      # Flyway reconstruit le schema depuis zero via Testcontainers ; validate est inutile en tests.
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -45,6 +48,7 @@ solivio:
     refresh-token-expiration-days: 30
   uploads:
     logos-dir: /tmp/solivio-logos-test
+    avatars-dir: /tmp/solivio-avatars-test
 
 logging:
   level:
