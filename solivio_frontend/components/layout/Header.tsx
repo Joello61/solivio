@@ -135,7 +135,7 @@ export function Header({ user }: HeaderProps) {
                   <Link
                     href="/mon-compte"
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-muted transition-colors"
                   >
                     <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span>Mon compte</span>
@@ -144,7 +144,7 @@ export function Header({ user }: HeaderProps) {
                     <Link
                       href="/admin/utilisateurs"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-muted transition-colors"
                     >
                       <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span>Utilisateurs</span>

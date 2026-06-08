@@ -47,7 +47,7 @@ export default async function MonComptePage() {
             </div>
             <Link
               href="/mon-compte/profil-beneficiaire"
-              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent/50 transition-colors"
+              className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
             >
               Voir le dossier
             </Link>

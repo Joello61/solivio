@@ -104,7 +104,7 @@ function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
       className={cn(
         "flex items-center gap-3 rounded-xl border border-border bg-background",
         "px-4 py-3 text-sm font-medium text-foreground",
-        "hover:bg-accent hover:border-border/80 transition-all duration-150",
+        "hover:bg-muted hover:border-primary/20 transition-all duration-150",
       )}
     >
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
