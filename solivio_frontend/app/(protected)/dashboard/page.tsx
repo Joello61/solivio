@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { BarChart3, Users, Heart, Calendar, Settings, UserCog } from "lucide-react";
 import type { Metadata } from "next";
+import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiquePeriodeResponse } from "@/types/association";
 
@@ -22,7 +24,6 @@ async function fetchDashboardData(cookieHeader: string): Promise<{
   const meRes = await fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" });
   const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
 
-  // Fetch stats uniquement si l'utilisateur est gestionnaire, pour eviter un 403 inutile.
   const estGestionnairePrecheck = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),
   );
@@ -51,21 +52,64 @@ async function fetchDashboardData(cookieHeader: string): Promise<{
   return { me, statsMois, statsErreur };
 }
 
+interface CarteStatistiqueProps {
+  titre: string;
+  valeur: number | string;
+  description: string;
+  icon: React.ElementType;
+  couleur: "blue" | "green" | "purple";
+}
+
+const COULEURS = {
+  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  purple: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+};
+
 function CarteStatistique({
   titre,
   valeur,
   description,
-}: {
-  titre: string;
-  valeur: number | string;
-  description: string;
-}) {
+  icon: Icon,
+  couleur,
+}: CarteStatistiqueProps) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-1">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{titre}</p>
-      <p className="text-3xl font-bold text-foreground">{valeur}</p>
-      <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          {titre}
+        </p>
+        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", COULEURS[couleur])}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-foreground tabular-nums">{valeur}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      </div>
     </div>
+  );
+}
+
+interface AccesRapideProps {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border border-border bg-background",
+        "px-4 py-3 text-sm font-medium text-foreground",
+        "hover:bg-accent hover:border-border/80 transition-all duration-150",
+      )}
+    >
+      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+      {label}
+    </Link>
   );
 }
 
@@ -86,20 +130,23 @@ export default async function DashboardPage() {
   const moisCourant = new Date().toLocaleString("fr-FR", { month: "long", year: "numeric" });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-5xl">
+      {/* Salutation */}
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Bonjour, {me?.prenom ?? "utilisateur"}
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="mt-1 text-muted-foreground">
           Bienvenue sur votre espace{me?.tenantActif ? ` - ${me.tenantActif}` : ""}.
         </p>
       </div>
 
+      {/* Statistiques du mois (gestionnaires uniquement) */}
       {estGestionnaire && (
-        <section>
-          <h2 className="text-base font-medium text-foreground mb-3">
-            Statistiques - {moisCourant}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            Statistiques -{" "}
+            <span className="text-muted-foreground font-normal capitalize">{moisCourant}</span>
           </h2>
           {statsErreur ? (
             <p className="text-sm text-muted-foreground">
@@ -110,56 +157,43 @@ export default async function DashboardPage() {
               <CarteStatistique
                 titre="Distributions"
                 valeur={statsMois.nbDistributions}
-                description="ce mois"
+                description="ce mois-ci"
+                icon={BarChart3}
+                couleur="blue"
               />
               <CarteStatistique
                 titre="Beneficiaires servis"
                 valeur={statsMois.nbBeneficiairesDistinctsServis}
                 description="beneficiaires distincts"
+                icon={Heart}
+                couleur="green"
               />
               <CarteStatistique
                 titre="Benevoles mobilises"
                 valeur={statsMois.nbBenevolesDistincts}
                 description="benevoles distincts"
+                icon={Users}
+                couleur="purple"
               />
             </div>
           ) : null}
         </section>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-        <h2 className="font-medium text-base">Acces rapide</h2>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/distributions"
-            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
-          >
-            Distributions
-          </Link>
-          <Link
-            href="/mes-inscriptions"
-            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
-          >
-            Mes inscriptions
-          </Link>
+      {/* Acces rapide */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">Acces rapide</h2>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <AccesRapide href="/distributions" icon={Calendar} label="Distributions" />
+          <AccesRapide href="/mes-inscriptions" icon={Users} label="Mes inscriptions" />
           {estResponsable && (
             <>
-              <Link
-                href="/association/configuration"
-                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
-              >
-                Configuration
-              </Link>
-              <Link
-                href="/association/membres"
-                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent/50 transition-colors"
-              >
-                Membres
-              </Link>
+              <AccesRapide href="/association/configuration" icon={Settings} label="Configuration" />
+              <AccesRapide href="/association/membres" icon={UserCog} label="Membres" />
             </>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
