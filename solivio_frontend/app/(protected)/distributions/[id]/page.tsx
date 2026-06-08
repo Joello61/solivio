@@ -13,8 +13,8 @@ import {
   Clock,
   Percent,
   Tag,
+  ChevronRight,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
@@ -113,37 +113,15 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       {/* En-tete */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold text-foreground">{distribution.titre}</h1>
-            <DistributionStatutBadge statut={distribution.statut} />
-          </div>
-          {distribution.motifAnnulation && (
-            <p className="text-sm text-muted-foreground">
-              Motif d&apos;annulation : {distribution.motifAnnulation}
-            </p>
-          )}
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold text-foreground">{distribution.titre}</h1>
+          <DistributionStatutBadge statut={distribution.statut} />
         </div>
-        {estGestionnaire && (
-          <div className="flex gap-2 shrink-0">
-            {distribution.statut === "EN_COURS" && (
-              <Link
-                href={`/distributions/${id}/pointage`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                <ClipboardList className="mr-2 size-4" />
-                Pointage
-              </Link>
-            )}
-            <Link
-              href={`/distributions/${id}/repartition`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              <Package className="mr-2 size-4" />
-              Repartition
-            </Link>
-          </div>
+        {distribution.motifAnnulation && (
+          <p className="text-sm text-muted-foreground">
+            Motif d&apos;annulation : {distribution.motifAnnulation}
+          </p>
         )}
       </div>
 
@@ -270,6 +248,45 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
         {/* Colonne laterale (1/3) */}
         <div className="space-y-6">
+
+          {/* Outils de la distribution (gestionnaire) */}
+          {estGestionnaire && (
+            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Outils
+              </p>
+              <div className="space-y-2">
+                {distribution.statut === "EN_COURS" && (
+                  <Link
+                    href={`/distributions/${id}/pointage`}
+                    className="group flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/40 hover:border-primary/30 transition-all"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                      <ClipboardList className="size-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Pointage</p>
+                      <p className="text-xs text-muted-foreground">Pointer les presences en temps reel</p>
+                    </div>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                  </Link>
+                )}
+                <Link
+                  href={`/distributions/${id}/repartition`}
+                  className="group flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/40 hover:border-primary/30 transition-all"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                    <Package className="size-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">Repartition des denrees</p>
+                    <p className="text-xs text-muted-foreground">Calculer et ajuster les dotations</p>
+                  </div>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Actions gestionnaire */}
           {estGestionnaire && (
