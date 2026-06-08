@@ -8,11 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DenreeResponse } from "@/types/distribution";
 
+// valueAsNumber: true dans register() fournit des nombres directement au store interne.
+// z.number() (sans coerce) permet a z.infer<schema> d'avoir le bon type numerique,
+// ce qui evite le conflit de types entre zodResolver et useForm<FormValues>.
 const schema = z.object({
   libelle: z.string().min(1, "Le libelle est requis").max(200),
   unite: z.enum(["UNITE", "KILOGRAMME", "LITRE", "PIECE"]),
-  nombreContenants: z.coerce.number().int().positive("Doit etre positif"),
-  quantiteParContenant: z.coerce.number().positive("Doit etre positif"),
+  nombreContenants: z.number().int().positive("Doit etre positif"),
+  quantiteParContenant: z.number().positive("Doit etre positif"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -81,7 +84,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
             type="number"
             min="1"
             step="1"
-            {...register("nombreContenants")}
+            {...register("nombreContenants", { valueAsNumber: true })}
           />
           {errors.nombreContenants && (
             <p className="text-xs text-destructive">{errors.nombreContenants.message}</p>
@@ -95,7 +98,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
             type="number"
             min="0.001"
             step="0.001"
-            {...register("quantiteParContenant")}
+            {...register("quantiteParContenant", { valueAsNumber: true })}
           />
           {errors.quantiteParContenant && (
             <p className="text-xs text-destructive">{errors.quantiteParContenant.message}</p>
