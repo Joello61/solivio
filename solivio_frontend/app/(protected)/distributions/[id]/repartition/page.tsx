@@ -43,29 +43,38 @@ export default async function RepartitionPage({ params }: PageProps) {
   const data = await fetchData(id, cookieHeader);
   if (!data) notFound();
 
+  const modifiable =
+    data.distribution.statut !== "TERMINEE" && data.distribution.statut !== "ANNULEE";
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-3">
         <Link
           href={`/distributions/${id}`}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
+          className={buttonVariants({ variant: "ghost", size: "icon" })}
+          aria-label="Retour a la distribution"
         >
-          <ArrowLeft className="mr-2 size-4" />
-          Retour
+          <ArrowLeft className="size-4" />
         </Link>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Package className="size-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Repartition des denrees</h1>
+            <p className="text-xs text-muted-foreground">
+              {data.distribution.titre}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Package className="size-5 text-muted-foreground" />
-        <h1 className="text-xl font-semibold">Repartition des denrees</h1>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-5">
         <RepartitionPanel
           distributionId={id}
           denreesInitiales={data.denrees}
           dotationInitiale={data.dotation}
-          modifiable={data.distribution.statut !== "TERMINEE" && data.distribution.statut !== "ANNULEE"}
+          modifiable={modifiable}
         />
       </div>
     </div>
