@@ -8,6 +8,8 @@ import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Spinner } from "@/components/ui/spinner";
 import { register } from "@/lib/auth";
 
 function RegisterForm() {
@@ -100,9 +102,8 @@ function RegisterForm() {
 
         <div className="space-y-1.5">
           <Label htmlFor="password">Mot de passe</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
             autoComplete="new-password"
             minLength={8}
@@ -132,7 +133,11 @@ function RegisterForm() {
         <FormError message={error} />
 
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Inscription..." : "Creer mon compte"}
+          {pending ? (
+            <><Spinner size="sm" /> Inscription en cours...</>
+          ) : (
+            "Creer mon compte"
+          )}
         </Button>
       </form>
 
