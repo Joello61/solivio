@@ -103,6 +103,10 @@
   /* Polices */
   --font-sans:    var(--font-geist-sans);
   --font-mono:    var(--font-geist-mono);
+
+  /* Echelle typographique elargie : xs et sm agrandis pour meilleure lisibilite */
+  --text-xs: 0.8125rem;  /* 13px au lieu de 12px */
+  --text-sm: 0.9375rem;  /* 15px au lieu de 14px */
 }
 
 /* ==========================================================================

@@ -47,7 +47,7 @@ export function BottomNav() {
               </div>
               <span
                 className={cn(
-                  "text-[10px] font-medium leading-none transition-colors",
+                  "text-[11px] font-medium leading-none transition-colors",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >

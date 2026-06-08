@@ -97,7 +97,7 @@ export function Header({ user }: HeaderProps) {
                 {user.prenom} {user.nom}
               </p>
               {roleLabel && (
-                <p className="text-[11px] text-muted-foreground leading-tight">{roleLabel}</p>
+                <p className="text-xs text-muted-foreground leading-tight">{roleLabel}</p>
               )}
             </div>
             <ChevronDown
@@ -123,7 +123,7 @@ export function Header({ user }: HeaderProps) {
                   </p>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   {roleLabel && (
-                    <Badge variant="secondary" className="mt-0.5 text-[11px]">
+                    <Badge variant="secondary" className="mt-0.5 text-xs">
                       {roleLabel}
                     </Badge>
                   )}

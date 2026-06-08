@@ -213,16 +213,16 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                         {inscrit.nom} {inscrit.prenom}
                       </span>
                       <div className="flex flex-wrap gap-1.5 justify-end">
-                        <Badge variant="outline" className="text-[11px] shrink-0">
+                        <Badge variant="outline" className="shrink-0">
                           {inscrit.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
                         </Badge>
                         {inscrit.statut === "LISTE_ATTENTE" && (
-                          <Badge variant="secondary" className="text-[11px] shrink-0">
+                          <Badge variant="secondary" className="shrink-0">
                             Attente #{inscrit.rangListeAttente}
                           </Badge>
                         )}
                         {inscrit.type === "BENEFICIAIRE" && inscrit.nombreAbsencesPassees > 0 && (
-                          <Badge variant="destructive" className="text-[11px] shrink-0">
+                          <Badge variant="destructive" className="shrink-0">
                             {inscrit.nombreAbsencesPassees} absence
                             {inscrit.nombreAbsencesPassees > 1 ? "s" : ""}
                           </Badge>

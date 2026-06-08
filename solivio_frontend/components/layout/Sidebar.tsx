@@ -118,7 +118,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             <div key={sectionIndex} className="space-y-0.5">
               {/* Libelle de section (expanded uniquement) */}
               {!collapsed && section.title && (
-                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                   {section.title}
                 </p>
               )}
@@ -214,7 +214,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
                 {user.prenom} {user.nom}
               </p>
               {roleLabel && (
-                <p className="truncate text-[11px] text-muted-foreground">{roleLabel}</p>
+                <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
               )}
             </div>
           </Link>

@@ -166,7 +166,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
           <div className="flex gap-1.5">
             <span
               className={cn(
-                "inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-medium",
+                "inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium",
                 TYPE_PILL[i.type] ?? "bg-muted text-muted-foreground border-border",
               )}
             >
@@ -174,7 +174,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
             </span>
             <span
               className={cn(
-                "inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-medium",
+                "inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium",
                 STATUT_PILL[i.statut] ?? "bg-muted text-muted-foreground border-border",
               )}
             >
