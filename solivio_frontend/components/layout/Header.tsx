@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, User, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { logout } from "@/lib/auth";
 import type { MeResponse } from "@/types/auth";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super admin",
@@ -29,6 +33,7 @@ export function Header({ user }: HeaderProps) {
 
   const primaryRole = user.roles[0];
   const roleLabel = primaryRole ? (ROLE_LABELS[primaryRole] ?? primaryRole) : null;
+  const avatarSrc = user.photoUrl ? `${API_URL}${user.photoUrl}` : null;
 
   async function handleLogout() {
     setPending(true);
@@ -60,8 +65,12 @@ export function Header({ user }: HeaderProps) {
             className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm hover:bg-muted transition-colors"
             aria-expanded={menuOpen}
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <User className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground overflow-hidden">
+              {avatarSrc ? (
+                <Image src={avatarSrc} alt="Avatar" fill className="object-cover" />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
             </div>
             <div className="hidden sm:block text-left">
               <p className="font-medium leading-none text-card-foreground">
@@ -92,6 +101,25 @@ export function Header({ user }: HeaderProps) {
                     </Badge>
                   )}
                 </div>
+                <Separator className="my-1" />
+                <Link
+                  href="/mon-compte"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors w-full"
+                >
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  Mon compte
+                </Link>
+                {user.superAdmin && (
+                  <Link
+                    href="/admin/utilisateurs"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors w-full"
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    Utilisateurs
+                  </Link>
+                )}
                 <Separator className="my-1" />
                 <Button
                   variant="ghost"
