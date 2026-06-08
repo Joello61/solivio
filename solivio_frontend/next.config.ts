@@ -4,9 +4,12 @@ const apiUrl = new URL(
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
 );
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    unoptimized: isDev,
     remotePatterns: [
       {
         protocol: apiUrl.protocol.replace(":", "") as "http" | "https",

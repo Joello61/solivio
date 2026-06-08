@@ -65,9 +65,15 @@ export function Header({ user }: HeaderProps) {
             className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm hover:bg-muted transition-colors"
             aria-expanded={menuOpen}
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground overflow-hidden">
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground overflow-hidden">
               {avatarSrc ? (
-                <Image src={avatarSrc} alt="Avatar" fill className="object-cover" />
+                <Image
+                  src={avatarSrc}
+                  alt="Avatar"
+                  fill
+                  sizes="28px"
+                  className="object-cover"
+                />
               ) : (
                 <User className="h-4 w-4" />
               )}
