@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Suspense } from "react";
 import LoginPage from "@/app/login/page";
@@ -73,7 +74,7 @@ describe("LoginPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Connexion..." })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /Connexion en cours/ })).toBeDisabled();
     });
   });
 
@@ -127,11 +128,12 @@ describe("LoginPage", () => {
     expect(authLib.login).toHaveBeenCalledWith("alice@example.com", "motdepasse123", false);
   });
 
-  it("coche 'Rester connecte' change l'etat du checkbox", () => {
+  it("coche 'Rester connecte' change l'etat du checkbox", async () => {
+    const user = userEvent.setup();
     renderLogin();
     const checkbox = screen.getByRole("checkbox", { name: /Rester connecte/ });
     expect(checkbox).not.toBeChecked();
-    fireEvent.click(checkbox);
+    await user.click(checkbox);
     expect(checkbox).toBeChecked();
   });
 });

@@ -46,7 +46,7 @@ describe("ForgotPasswordPage", () => {
       expect(screen.getByText(/Email envoye/)).toBeInTheDocument();
     });
     expect(screen.getByText(/alice@example.com/)).toBeInTheDocument();
-    expect(screen.getByText("Saisir le code")).toBeInTheDocument();
+    expect(screen.getByText("Saisir le code de verification")).toBeInTheDocument();
   });
 
   it("affiche une erreur en cas d'echec", async () => {
@@ -85,7 +85,7 @@ describe("ForgotPasswordPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Envoi..." })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /Envoi en cours/ })).toBeDisabled();
     });
   });
 

@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GestionMembres } from "@/components/association/GestionMembres";
 import type { MembreResponse } from "@/types/association";
@@ -65,10 +66,19 @@ describe("GestionMembres", () => {
   });
 
   it("appelle mettreAJourRoleMembre quand on change le role", async () => {
+    const user = userEvent.setup();
     const { mettreAJourRoleMembre } = await import("@/lib/api/association");
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
-    const selecteur = screen.getByRole("combobox") as HTMLSelectElement;
-    fireEvent.change(selecteur, { target: { value: "responsable" } });
+
+    // Ouvre le select base-ui via userEvent
+    await user.click(screen.getByRole("combobox"));
+
+    // Attend l'ouverture de la liste et clique sur Responsable
+    await waitFor(async () => {
+      const option = screen.getByRole("option", { name: /Responsable/i });
+      await user.click(option);
+    });
+
     await waitFor(() => {
       expect(mettreAJourRoleMembre).toHaveBeenCalledWith("user-2", { role: "responsable" });
     });
@@ -88,10 +98,19 @@ describe("GestionMembres", () => {
   });
 
   it("appelle changerStatutMembre lors du clic Suspendre", async () => {
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     const { changerStatutMembre } = await import("@/lib/api/association");
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
+
+    // Ouvre le dialog de confirmation
     fireEvent.click(screen.getByRole("button", { name: /suspendre/i }));
+
+    // Attend l'affichage du dialog et confirme
+    await waitFor(() => {
+      expect(screen.getByText("Suspendre le membre")).toBeInTheDocument();
+    });
+    const boutons = screen.getAllByRole("button", { name: /suspendre/i });
+    fireEvent.click(boutons[boutons.length - 1]);
+
     await waitFor(() => {
       expect(changerStatutMembre).toHaveBeenCalledWith("user-2", "suspendu");
     });
