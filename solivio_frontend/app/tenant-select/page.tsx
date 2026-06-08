@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight, Building2 } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { switchTenant } from "@/lib/auth";
 import type { TenantSummary } from "@/types/auth";
 
@@ -34,12 +36,10 @@ function readTenantsFromSession(): TenantSummary[] {
 
 export default function TenantSelectPage() {
   const router = useRouter();
-  // Initialisation paresseuse : evite setState dans useEffect.
   const [tenants] = useState<TenantSummary[]>(readTenantsFromSession);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirige si la session est vide (acces direct a la page).
   useEffect(() => {
     if (tenants.length === 0) {
       router.replace("/login");
@@ -70,7 +70,7 @@ export default function TenantSelectPage() {
   return (
     <AuthLayout
       title="Choisir votre association"
-      description="Vous etes membre de plusieurs associations. Laquelle souhaitez-vous rejoindre ?"
+      description="Vous etes membre de plusieurs associations. Selectionnez celle dans laquelle vous souhaitez vous connecter."
     >
       <div className="space-y-2">
         {tenants.map((t) => (
@@ -78,18 +78,29 @@ export default function TenantSelectPage() {
             key={t.slug}
             onClick={() => selectTenant(t.slug)}
             disabled={pending !== null}
-            className="w-full flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-left hover:border-primary hover:bg-foret-50 transition-colors disabled:opacity-50"
+            className="group w-full flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 disabled:opacity-60 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div>
-              <p className="font-medium text-card-foreground">{t.nom}</p>
-              <p className="text-sm text-muted-foreground">
-                {ROLE_LABELS[t.role] ?? t.role}
-                {t.coordoType ? ` - ${t.coordoType}` : ""}
-              </p>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Building2 className="h-5 w-5" />
             </div>
-            <Badge variant="secondary" className="text-xs">
-              {pending === t.slug ? "..." : t.slug}
-            </Badge>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-card-foreground truncate">{t.nom}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <Badge variant="secondary" className="text-xs font-normal">
+                  {ROLE_LABELS[t.role] ?? t.role}
+                </Badge>
+                {t.coordoType && (
+                  <span className="text-xs text-muted-foreground">{t.coordoType}</span>
+                )}
+              </div>
+            </div>
+            <div className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors">
+              {pending === t.slug ? (
+                <Spinner size="sm" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </div>
           </button>
         ))}
       </div>
