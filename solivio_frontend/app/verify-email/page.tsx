@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { verifyEmail } from "@/lib/auth";
 
 function VerifyEmailForm() {
@@ -65,15 +65,17 @@ function VerifyEmailForm() {
     }
   }
 
+  const codeComplet = digits.join("").length === 6;
+
   return (
     <AuthLayout
       title="Verifiez votre email"
-      description={email ? `Code envoye a ${email}` : "Entrez le code a 6 chiffres recu par email."}
+      description={email ? `Code a 6 chiffres envoye a ${email}` : "Entrez le code a 6 chiffres recu par email."}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="flex justify-center gap-2" onPaste={handlePaste}>
+        <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
           {digits.map((d, i) => (
-            <Input
+            <input
               key={i}
               ref={(el) => { inputs.current[i] = el; }}
               type="text"
@@ -82,16 +84,21 @@ function VerifyEmailForm() {
               value={d}
               onChange={(e) => handleDigitChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="h-12 w-10 text-center text-xl font-mono p-0"
               aria-label={`Chiffre ${i + 1}`}
+              className={[
+                "h-14 w-11 rounded-xl border-2 bg-card text-center text-xl font-bold font-mono",
+                "text-foreground caret-transparent transition-all",
+                "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30",
+                d ? "border-primary/60 bg-primary/5" : "border-border",
+              ].join(" ")}
             />
           ))}
         </div>
 
         <FormError message={error} />
 
-        <Button type="submit" className="w-full" disabled={pending || digits.join("").length !== 6}>
-          {pending ? "Verification..." : "Valider"}
+        <Button type="submit" className="w-full" disabled={pending || !codeComplet}>
+          {pending ? <><Spinner size="sm" /> Verification...</> : "Valider le code"}
         </Button>
       </form>
 
@@ -99,7 +106,7 @@ function VerifyEmailForm() {
         Pas recu le code ?{" "}
         <button
           type="button"
-          className="text-primary hover:underline"
+          className="text-primary hover:underline font-medium"
           onClick={async () => {
             if (!email) return;
             try {
