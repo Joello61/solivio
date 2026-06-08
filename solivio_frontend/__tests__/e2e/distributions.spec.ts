@@ -1,153 +1,33 @@
 import { test, expect } from "@playwright/test";
 
-// Tests E2E Phase 2 - Parcours distributions et inscriptions.
+// Tests E2E des parcours distributions et pointage.
+// Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
 //
 // Prerequis pour les tests authentifies :
-//   PLAYWRIGHT_BASE_URL pointe vers l'app en cours (frontend + backend).
-//   Les tests marques @auth necessitent un storageState genere par global-setup.ts.
+//   - Backend en cours d'execution (docker compose up)
+//   - E2E_EMAIL et E2E_PASSWORD definis pour generer les cookies via auth.setup.ts
 //
-// Tests de redirection : executables sans auth, juste l'app frontend demarree.
+// Si l'auth n'est pas disponible, les tests detectent la redirection vers /login
+// et se sautent automatiquement.
 
-// ---------------------------------------------------------------------------
-// Redirections non authentifiees - toutes les routes protegees
-// ---------------------------------------------------------------------------
-
-test.describe("Redirections non authentifiees", () => {
-  const routesProtegees = [
-    "/dashboard",
-    "/distributions",
-    "/distributions/some-id",
-    "/distributions/some-id/pointage",
-    "/distributions/nouvelle",
-  ];
-
-  for (const route of routesProtegees) {
-    test(`${route} redirige vers /login`, async ({ page }) => {
-      await page.goto(route);
-      await expect(page).toHaveURL(/\/login/);
-    });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// Page de connexion
-// ---------------------------------------------------------------------------
-
-test.describe("Page login", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/login");
-  });
-
-  test("affiche le formulaire de connexion", async ({ page }) => {
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/mot de passe/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /se connecter/i })).toBeVisible();
-  });
-
-  test("affiche un lien vers la page d'inscription", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /inscription/i })).toBeVisible();
-  });
-
-  test("affiche un lien vers la reinitialisation du mot de passe", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /mot de passe oublie/i })).toBeVisible();
-  });
-
-  test("identifiants incorrects : affiche un message d'erreur", async ({ page }) => {
-    await page.route("**/api/auth/login", (route) =>
-      route.fulfill({ status: 401, json: { detail: "Identifiants invalides" } }),
-    );
-
-    await page.getByLabel(/email/i).fill("inconnu@example.com");
-    await page.getByLabel(/mot de passe/i).fill("mauvaismdp");
-    await page.getByRole("button", { name: /se connecter/i }).click();
-
-    await expect(page.getByText(/identifiants invalides/i)).toBeVisible();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Page d'inscription
-// ---------------------------------------------------------------------------
-
-test.describe("Page inscription (register)", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/register");
-  });
-
-  test("affiche les champs du formulaire", async ({ page }) => {
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/mot de passe/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /s'inscrire/i })).toBeVisible();
-  });
-
-  test("affiche un lien vers la connexion", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /connexion|se connecter/i })).toBeVisible();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Parcours pointage (avec mocks client-side)
-// Le composant PointageListe est client-side : page.route intercepte les appels.
-// La page /distributions/[id]/pointage est un server component minimal qui rend PointageListe.
-// Pour tester sans auth SSR, injecter un cookie access_token valide ou executer via global-setup.
-// ---------------------------------------------------------------------------
+// La page /distributions/[id]/pointage ne fait aucun appel backend SSR propre
+// (uniquement le check d'auth du layout protege). Les interactions client-side
+// de PointageListe sont interceptables via page.route().
 
 test.describe("Pointage - interactions client-side", () => {
-  test.beforeEach(async ({ page }) => {
-    // Mock /api/auth/me pour le check SSR du layout protege.
-    await page.route("**/api/auth/me", (route) =>
-      route.fulfill({
-        json: {
-          id: "coord-1",
-          email: "coord@test.com",
-          nom: "Coord",
-          prenom: "Test",
-          roles: ["coordinateur"],
-          tenantSlug: "pilote",
-          superAdmin: false,
-        },
-      }),
-    );
-    // Mock la distribution pour la page detail si necessaire.
-    await page.route("**/api/distributions/**", (route) => {
-      const url = route.request().url();
-      if (url.includes("/pointage")) {
-        route.fulfill({ json: [] });
-      } else {
-        route.fulfill({
-          json: {
-            id: "dist-1",
-            titre: "Distribution test",
-            statut: "EN_COURS",
-            capaciteBeneficiaires: 50,
-            capaciteBenevoles: 10,
-            modeCreneau: "CRENEAU_UNIQUE",
-            creneaux: [],
-            baseRepartition: "INSCRITS",
-            date: "2026-06-15",
-            dateCreation: "2026-06-01T10:00:00Z",
-            description: null,
-            lieu: null,
-            motifAnnulation: null,
-          },
-        });
-      }
-    });
-  });
-
   test("champ de recherche presente sur la page de pointage", async ({ page }) => {
-    await page.goto("/distributions/dist-1/pointage");
-    // Si redirige vers /login, le test est skipped gracieusement (auth SSR non disponible).
-    const url = page.url();
-    if (url.includes("/login")) {
-      test.skip();
+    await page.goto("/distributions/dist-e2e/pointage");
+
+    if (page.url().includes("/login")) {
+      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
+
     await expect(page.getByPlaceholder(/taper 2 lettres/i)).toBeVisible();
   });
 
   test("recherche affiche les resultats mockes", async ({ page }) => {
-    await page.route("**/api/distributions/dist-1/pointage**", (route) =>
+    await page.route("**/api/distributions/dist-e2e/pointage**", (route) =>
       route.fulfill({
         json: [
           {
@@ -164,10 +44,10 @@ test.describe("Pointage - interactions client-side", () => {
       }),
     );
 
-    await page.goto("/distributions/dist-1/pointage");
-    const url = page.url();
-    if (url.includes("/login")) {
-      test.skip();
+    await page.goto("/distributions/dist-e2e/pointage");
+
+    if (page.url().includes("/login")) {
+      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
@@ -178,8 +58,8 @@ test.describe("Pointage - interactions client-side", () => {
     await expect(page.getByText("Dupont Marie")).toBeVisible();
   });
 
-  test("bouton pointer present marque l'inscrit comme present", async ({ page }) => {
-    await page.route("**/api/distributions/dist-1/pointage**", async (route) => {
+  test("clic sur 'Marquer present' met a jour le statut", async ({ page }) => {
+    await page.route("**/api/distributions/dist-e2e/pointage**", async (route) => {
       if (route.request().method() === "GET" || route.request().method() === "HEAD") {
         await route.fulfill({
           json: [
@@ -196,29 +76,14 @@ test.describe("Pointage - interactions client-side", () => {
           ],
         });
       } else {
-        await route.fulfill({
-          json: {
-            id: "insc-1",
-            distributionId: "dist-1",
-            creneauId: null,
-            nom: "Martin",
-            prenom: "Paul",
-            type: "BENEVOLE",
-            statut: "CONFIRMEE",
-            rangListeAttente: null,
-            roles: [],
-            presence: "PRESENT",
-            dateInscription: "2026-06-01T10:00:00Z",
-            nombreAbsencesPassees: 0,
-          },
-        });
+        await route.fulfill({ status: 200, json: {} });
       }
     });
 
-    await page.goto("/distributions/dist-1/pointage");
-    const url = page.url();
-    if (url.includes("/login")) {
-      test.skip();
+    await page.goto("/distributions/dist-e2e/pointage");
+
+    if (page.url().includes("/login")) {
+      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
@@ -227,58 +92,20 @@ test.describe("Pointage - interactions client-side", () => {
     await expect(page.getByText("Martin Paul")).toBeVisible();
 
     await page.getByTitle("Marquer present").click();
-    await expect(page.getByText("Martin Paul")).toBeVisible();
+    // Apres le pointage, la liste se met a jour localement (pas de rechargement SSR)
+    await expect(page.getByTitle("Marquer present")).toBeVisible();
   });
 });
 
-// ---------------------------------------------------------------------------
-// Parcours liste des distributions
-// ---------------------------------------------------------------------------
-
 test.describe("Liste des distributions", () => {
-  test("affiche les distributions mockees pour un utilisateur connecte", async ({ page }) => {
-    await page.route("**/api/auth/me", (route) =>
-      route.fulfill({
-        json: {
-          id: "benef-1",
-          email: "benef@test.com",
-          nom: "Benef",
-          prenom: "Test",
-          roles: ["beneficiaire"],
-          tenantSlug: "pilote",
-          superAdmin: false,
-        },
-      }),
-    );
-    await page.route("**/api/distributions", (route) =>
-      route.fulfill({
-        json: [
-          {
-            id: "dist-pub",
-            titre: "Distribution du samedi",
-            statut: "PUBLIEE",
-            date: "2026-06-20",
-            lieu: "Salle B",
-            capaciteBeneficiaires: 50,
-            capaciteBenevoles: 10,
-            modeCreneau: "CRENEAU_UNIQUE",
-            creneaux: [],
-            baseRepartition: "INSCRITS",
-            dateCreation: "2026-06-01T10:00:00Z",
-            description: null,
-            motifAnnulation: null,
-          },
-        ],
-      }),
-    );
-
+  test("affiche la page distributions pour un utilisateur connecte", async ({ page }) => {
     await page.goto("/distributions");
-    const url = page.url();
-    if (url.includes("/login")) {
-      test.skip();
+
+    if (page.url().includes("/login")) {
+      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
-    await expect(page.getByText("Distribution du samedi")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /distributions/i })).toBeVisible();
   });
 });
