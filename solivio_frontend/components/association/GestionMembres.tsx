@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mettreAJourRoleMembre, supprimerMembre } from "@/lib/api/association";
+import { mettreAJourRoleMembre, supprimerMembre, changerStatutMembre } from "@/lib/api/association";
 import type { MembreResponse } from "@/types/association";
 
 const ROLES = ["benevole", "coordinateur", "responsable", "super_admin"] as const;
@@ -36,9 +36,11 @@ interface LigneMembre {
 function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
   const router = useRouter();
   const [role, setRole] = useState(membre.role);
+  const [statut, setStatut] = useState(membre.statut);
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const estSoi = membre.compteId === currentUserId;
+  const estSuspendu = statut === "suspendu";
 
   async function changerRole(nouveauRole: string) {
     setRole(nouveauRole);
@@ -56,8 +58,28 @@ function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
     }
   }
 
+  async function toggleStatut() {
+    const nouveauStatut = estSuspendu ? "actif" : "suspendu";
+    const message = estSuspendu
+      ? `Reactiver ${membre.prenom} ${membre.nom} ?`
+      : `Suspendre ${membre.prenom} ${membre.nom} de l'association ?`;
+    if (!confirm(message)) return;
+    setPending(true);
+    setErreur(null);
+    try {
+      await changerStatutMembre(membre.compteId, nouveauStatut);
+      setStatut(nouveauStatut);
+      router.refresh();
+    } catch (err) {
+      const e = err as { detail?: string; message?: string };
+      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de statut.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function retirer() {
-    if (!confirm(`Retirer ${membre.prenom} ${membre.nom} de l'association ?`)) return;
+    if (!confirm(`Retirer definitivement ${membre.prenom} ${membre.nom} de l'association ?`)) return;
     setPending(true);
     setErreur(null);
     try {
@@ -71,7 +93,7 @@ function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
   }
 
   return (
-    <tr className="border-b border-border last:border-0">
+    <tr className={`border-b border-border last:border-0 ${estSuspendu ? "opacity-60" : ""}`}>
       <td className="py-3 pr-4">
         <div className="font-medium text-sm">
           {membre.prenom} {membre.nom}
@@ -80,9 +102,7 @@ function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
         {erreur && <div className="text-xs text-destructive mt-1">{erreur}</div>}
       </td>
       <td className="py-3 pr-4">
-        <Badge variant={variantStatut(membre.statut)}>
-          {membre.statut}
-        </Badge>
+        <Badge variant={variantStatut(statut)}>{statut}</Badge>
       </td>
       <td className="py-3 pr-4">
         {estSoi ? (
@@ -91,7 +111,7 @@ function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
           <select
             value={role}
             onChange={(e) => changerRole(e.target.value)}
-            disabled={pending}
+            disabled={pending || estSuspendu}
             className="rounded-md border border-input bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {ROLES.map((r) => (
@@ -104,15 +124,30 @@ function LigneMembreRow({ membre, currentUserId }: LigneMembre) {
       </td>
       <td className="py-3">
         {!estSoi && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={retirer}
-            disabled={pending}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            Retirer
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleStatut}
+              disabled={pending}
+              className={
+                estSuspendu
+                  ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+                  : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+              }
+            >
+              {estSuspendu ? "Reactiver" : "Suspendre"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={retirer}
+              disabled={pending}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              Retirer
+            </Button>
+          </div>
         )}
       </td>
     </tr>
