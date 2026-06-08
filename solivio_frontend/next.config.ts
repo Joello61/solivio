@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
         hostname: apiUrl.hostname,
         // port est une chaine vide si c'est le port par defaut du protocole
         port: apiUrl.port,
-        pathname: "/api/public/logo/**",
+        pathname: "/api/public/**",
       },
     ],
   },
