@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { MeResponse } from "@/types/auth";
-import { Header } from "@/components/layout/Header";
+import { AppShell } from "@/components/layout/AppShell";
 
 /**
  * Layout des pages protegees.
@@ -13,7 +13,6 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Forwarder les cookies vers le backend (Next.js App Router).
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
     .getAll()
@@ -35,10 +34,5 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <Header user={user} />
-      <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
-    </div>
-  );
+  return <AppShell user={user}>{children}</AppShell>;
 }

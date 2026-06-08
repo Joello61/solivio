@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,9 +30,20 @@ export default function RootLayout({
     <html
       lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+          <TooltipProvider delayDuration={300}>
+            {children}
+            <Toaster
+              richColors
+              position="bottom-right"
+              closeButton
+              toastOptions={{ duration: 4000 }}
+            />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
