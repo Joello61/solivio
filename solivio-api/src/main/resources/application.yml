@@ -9,7 +9,11 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      # none : Flyway gere toutes les migrations et garantit la coherence du schema.
+      # validate est incompatible avec le multi-tenant par schema : getAnyConnection()
+      # retourne une connexion sur "public", ce qui provoque la validation des entites
+      # tenant (ex. Affiliation) contre les mauvaises tables du schema partage.
+      ddl-auto: none
     open-in-view: false
 
   flyway:

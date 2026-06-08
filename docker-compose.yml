@@ -125,7 +125,15 @@ services:
       SOLIVIO_POST_LOGOUT_REDIRECT_URI: ${FRONTEND_URL}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SPRING_MAIL_HOST: ${SMTP_HOST}
+      SPRING_MAIL_PORT: ${SMTP_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
+      SOLIVIO_LOGOS_DIR: /var/solivio/uploads/logos
+      SOLIVIO_UPLOADS_AVATARS_DIR: /var/solivio/uploads/avatars
       JAVA_OPTS: "-Xmx512m"
+    volumes:
+      - uploads_data:/var/solivio/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -174,6 +182,8 @@ volumes:
   kafka_data:
     driver: local
   openbao_data:
+    driver: local
+  uploads_data:
     driver: local
 
 # -----------------------------------------------------------------------------

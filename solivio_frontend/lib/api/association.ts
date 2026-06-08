@@ -6,6 +6,8 @@ import type {
   UpdateRoleMembrePayload,
   StatistiqueDistributionResponse,
   StatistiquePeriodeResponse,
+  AssociationAdminResponse,
+  CreateAssociationPayload,
 } from "@/types/association";
 
 export function lireAssociation(): Promise<AssociationResponse> {
@@ -82,4 +84,17 @@ export function statsPeriode(
   return apiGet<StatistiquePeriodeResponse>(
     `/api/statistiques/periode?debut=${debut}&fin=${fin}`
   );
+}
+
+export function listerAssociationsAdmin(): Promise<AssociationAdminResponse[]> {
+  return apiGet<AssociationAdminResponse[]>("/api/admin/associations");
+}
+
+export function creerAssociation(
+  payload: CreateAssociationPayload
+): Promise<AssociationAdminResponse> {
+  return apiFetch<AssociationAdminResponse>("/api/admin/associations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
