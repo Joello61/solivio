@@ -11,7 +11,6 @@ async function tentativeRefresh(): Promise<boolean> {
     refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
     })
       .then((res) => res.ok)
       .catch(() => false)
