@@ -17,6 +17,8 @@ public interface DistributionQueryPort {
 
     List<DistributionDetailInfo> trouverDetailsParIds(List<UUID> ids);
 
+    List<UUID> trouverIdsTermineesEntre(LocalDate debut, LocalDate fin);
+
     record DistributionInfo(
         UUID id,
         String statut,

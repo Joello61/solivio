@@ -1,5 +1,6 @@
 package com.solivio.api.statistique.application;
 
+import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.statistique.StatistiqueInscriptionPort;
 import com.solivio.api.shared.statistique.StatistiqueInscriptionPort.StatsDistribution;
 import com.solivio.api.statistique.domain.StatistiqueDistribution;
@@ -29,12 +30,13 @@ class StatistiqueServiceTest {
 
     @Mock private StatistiqueDistributionRepository statsRepository;
     @Mock private StatistiqueInscriptionPort inscriptionPort;
+    @Mock private DistributionQueryPort distributionQueryPort;
 
     private StatistiqueService service;
 
     @BeforeEach
     void setUp() {
-        service = new StatistiqueService(statsRepository, inscriptionPort);
+        service = new StatistiqueService(statsRepository, inscriptionPort, distributionQueryPort);
     }
 
     @Test
@@ -114,8 +116,7 @@ class StatistiqueServiceTest {
         LocalDate fin = LocalDate.of(2026, 5, 31);
         List<UUID> ids = List.of(UUID.randomUUID(), UUID.randomUUID());
 
-        when(statsRepository.compterDistributionsPeriode(debut, fin)).thenReturn(2L);
-        when(statsRepository.findDistributionIdsByPeriode(debut, fin)).thenReturn(ids);
+        when(distributionQueryPort.trouverIdsTermineesEntre(debut, fin)).thenReturn(ids);
         when(inscriptionPort.compterBeneficiairesDistinctsServis(ids)).thenReturn(95L);
         when(inscriptionPort.compterBenevolesDistincts(ids)).thenReturn(20L);
 
@@ -133,8 +134,7 @@ class StatistiqueServiceTest {
         LocalDate debut = LocalDate.of(2026, 4, 1);
         LocalDate fin = LocalDate.of(2026, 4, 30);
 
-        when(statsRepository.compterDistributionsPeriode(debut, fin)).thenReturn(0L);
-        when(statsRepository.findDistributionIdsByPeriode(debut, fin)).thenReturn(List.of());
+        when(distributionQueryPort.trouverIdsTermineesEntre(debut, fin)).thenReturn(List.of());
         when(inscriptionPort.compterBeneficiairesDistinctsServis(List.of())).thenReturn(0L);
         when(inscriptionPort.compterBenevolesDistincts(List.of())).thenReturn(0L);
 

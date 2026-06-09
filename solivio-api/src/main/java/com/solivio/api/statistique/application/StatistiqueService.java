@@ -1,5 +1,6 @@
 package com.solivio.api.statistique.application;
 
+import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.statistique.StatistiqueInscriptionPort;
 import com.solivio.api.shared.statistique.StatistiqueInscriptionPort.StatsDistribution;
 import com.solivio.api.statistique.domain.StatistiqueDistribution;
@@ -24,13 +25,16 @@ public class StatistiqueService {
 
     private final StatistiqueDistributionRepository statsRepository;
     private final StatistiqueInscriptionPort inscriptionPort;
+    private final DistributionQueryPort distributionQueryPort;
 
     public StatistiqueService(
         StatistiqueDistributionRepository statsRepository,
-        StatistiqueInscriptionPort inscriptionPort
+        StatistiqueInscriptionPort inscriptionPort,
+        DistributionQueryPort distributionQueryPort
     ) {
         this.statsRepository = statsRepository;
         this.inscriptionPort = inscriptionPort;
+        this.distributionQueryPort = distributionQueryPort;
     }
 
     public void calculerEtSauvegarder(UUID distributionId, LocalDate distributionDate) {
@@ -65,8 +69,10 @@ public class StatistiqueService {
 
     @Transactional(readOnly = true)
     public StatistiquePeriodeResponse aggregerPeriode(LocalDate debut, LocalDate fin) {
-        long nbDistributions = statsRepository.compterDistributionsPeriode(debut, fin);
-        List<UUID> ids = statsRepository.findDistributionIdsByPeriode(debut, fin);
+        // Les IDs viennent directement de la table distribution (statut TERMINEE),
+        // pas du snapshot statistique_distribution qui depend du flux Kafka.
+        List<UUID> ids = distributionQueryPort.trouverIdsTermineesEntre(debut, fin);
+        long nbDistributions = ids.size();
         long nbBeneficiaires = inscriptionPort.compterBeneficiairesDistinctsServis(ids);
         long nbBenevoles = inscriptionPort.compterBenevolesDistincts(ids);
         return new StatistiquePeriodeResponse(debut, fin, nbDistributions, nbBeneficiaires, nbBenevoles);
