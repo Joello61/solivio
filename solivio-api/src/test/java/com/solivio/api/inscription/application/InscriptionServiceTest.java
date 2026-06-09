@@ -74,8 +74,8 @@ class InscriptionServiceTest {
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
         Inscription existante = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
-        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
-            distributionId, personneId, TypeInscription.BENEFICIAIRE)
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE, StatutInscription.ANNULEE)
         ).thenReturn(Optional.of(existante));
 
         assertThatThrownBy(() -> service.inscrire(
@@ -90,10 +90,10 @@ class InscriptionServiceTest {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
-        Inscription ancienne = inscriptionBeneficiaire(personneId, StatutInscription.ANNULEE);
-        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
-            distributionId, personneId, TypeInscription.BENEFICIAIRE)
-        ).thenReturn(Optional.of(ancienne));
+        // La requete filtre hors ANNULEE : aucune inscription active trouvee.
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE, StatutInscription.ANNULEE)
+        ).thenReturn(Optional.empty());
 
         when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
@@ -117,14 +117,34 @@ class InscriptionServiceTest {
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
     }
 
+    @Test
+    void inscrire_echoueSiDejaInscritApresDesinscriptionEtReinscription() {
+        // Scenario : inscription -> desinscription -> reinscription.
+        // La BD contient 2 lignes (1 ANNULEE + 1 CONFIRMEE) mais la requete ne renvoie
+        // que l'active ; une troisieme tentative d'inscription doit etre refusee.
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+
+        Inscription active = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE, StatutInscription.ANNULEE)
+        ).thenReturn(Optional.of(active));
+
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+        ))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("deja inscrit");
+    }
+
     // --- RG1 : frequence ---
 
     @Test
     void inscrire_echoueSiBeneficiaireADejaUneInscriptionCetteSemaine() {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
-        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
-            distributionId, personneId, TypeInscription.BENEFICIAIRE)
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE, StatutInscription.ANNULEE)
         ).thenReturn(Optional.empty());
 
         when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
@@ -145,8 +165,8 @@ class InscriptionServiceTest {
         when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(
             new PersonneQueryPort.PersonneInfo(personneId, "Bernard", "Leon")
         );
-        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
-            distributionId, personneId, TypeInscription.BENEVOLE)
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.ANNULEE)
         ).thenReturn(Optional.empty());
 
         when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
@@ -174,8 +194,8 @@ class InscriptionServiceTest {
     void inscrire_placeEnListeAttenteQuandCapacitePleine() {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
-        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
-            distributionId, personneId, TypeInscription.BENEFICIAIRE)
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE, StatutInscription.ANNULEE)
         ).thenReturn(Optional.empty());
         when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(

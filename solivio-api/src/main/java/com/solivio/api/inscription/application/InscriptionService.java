@@ -272,9 +272,11 @@ public class InscriptionService {
     }
 
     private void verifierUnicite(UUID distributionId, UUID personneId, TypeInscription type) {
-        Optional<Inscription> existante =
-            inscriptionRepository.findByDistributionIdAndPersonneIdAndType(distributionId, personneId, type);
-        if (existante.isPresent() && existante.get().estActive()) {
+        boolean dejaActif = inscriptionRepository
+            .findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+                distributionId, personneId, type, StatutInscription.ANNULEE)
+            .isPresent();
+        if (dejaActif) {
             throw new ConflictException(
                 "Vous etes deja inscrit(e) a cette distribution en tant que " + type.name().toLowerCase()
             );

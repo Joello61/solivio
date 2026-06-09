@@ -20,8 +20,9 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID distributionId, StatutInscription statut
     );
 
-    Optional<Inscription> findByDistributionIdAndPersonneIdAndType(
-        UUID distributionId, UUID personneId, TypeInscription type
+    // Filtre hors ANNULEE : l'index partiel uq_inscription_*_active garantit au plus un resultat.
+    Optional<Inscription> findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
+        UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut
     );
 
     long countByDistributionIdAndTypeAndStatut(
