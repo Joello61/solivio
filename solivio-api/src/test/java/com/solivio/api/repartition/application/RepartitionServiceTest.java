@@ -34,6 +34,7 @@ class RepartitionServiceTest {
     @Mock private DenreeDistributionRepository denreeRepository;
     @Mock private DistributionQueryPort distributionQueryPort;
     @Mock private InscriptionQueryPort inscriptionQueryPort;
+    @Mock private CatalogueDenreeService catalogueDenreeService;
 
     private RepartitionService service;
 
@@ -43,7 +44,7 @@ class RepartitionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new RepartitionService(denreeRepository, distributionQueryPort, inscriptionQueryPort);
+        service = new RepartitionService(denreeRepository, distributionQueryPort, inscriptionQueryPort, catalogueDenreeService);
         distributionId = UUID.randomUUID();
         distribInfo = new DistributionQueryPort.DistributionInfo(
             distributionId, "EN_COURS", 50, null, "CRENEAU_UNIQUE", "INSCRITS",
