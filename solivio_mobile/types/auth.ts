@@ -10,6 +10,7 @@ export interface TokenResponse {
   tokenType: string;
   expiresIn: number;
   tenants: TenantSummary[];
+  refreshToken: string | null;
 }
 
 export interface MeResponse {

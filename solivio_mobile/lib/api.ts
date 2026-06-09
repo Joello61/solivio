@@ -128,15 +128,34 @@ export function apiDelete<T>(path: string): Promise<T> {
 }
 
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
-  const token = await getAccessToken();
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const buildUploadHeaders = async (): Promise<Record<string, string>> => {
+    const token = await getAccessToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
-    headers,
+    headers: await buildUploadHeaders(),
     body: formData,
   });
+
+  if (response.status === 401) {
+    const refreshed = await tentativeRefresh();
+    if (refreshed) {
+      const retryResponse = await fetch(`${API_URL}${path}`, {
+        method: 'POST',
+        headers: await buildUploadHeaders(),
+        body: formData,
+      });
+      if (retryResponse.ok) {
+        if (retryResponse.status === 204) return undefined as T;
+        return retryResponse.json() as Promise<T>;
+      }
+    }
+    await clearTokens();
+    router.replace('/(auth)/login');
+    throw Object.assign(new Error('Session expiree'), { status: 401 });
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);

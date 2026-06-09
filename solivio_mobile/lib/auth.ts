@@ -7,7 +7,7 @@ export async function login(
   rememberMe: boolean,
 ): Promise<TokenResponse> {
   const data = await apiPost<TokenResponse>('/api/auth/login', { email, motDePasse, rememberMe });
-  await setTokens(data.accessToken);
+  await setTokens(data.accessToken, data.refreshToken ?? undefined);
   return data;
 }
 
@@ -49,6 +49,6 @@ export async function resetPassword(
 
 export async function switchTenant(tenantSlug: string): Promise<TokenResponse> {
   const data = await apiPost<TokenResponse>('/api/auth/switch-tenant', { tenantSlug });
-  await setTokens(data.accessToken);
+  await setTokens(data.accessToken, data.refreshToken ?? undefined);
   return data;
 }
