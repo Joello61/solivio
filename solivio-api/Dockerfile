@@ -45,7 +45,7 @@ COPY --from=build /build/target/*.jar app.jar
 
 # jarmode=tools is the Spring Boot 4 way to extract layers
 # produces: dependencies/ spring-boot-loader/ snapshot-dependencies/ application/
-RUN java -Djarmode=tools -jar app.jar extract --destination extracted
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
 
 # -----------------------------------------------------------------------------
 # Stage 3: final runtime image
