@@ -74,8 +74,15 @@ public class InscriptionService {
         TypeInscription type = parseType(typeStr);
         PersonneQueryPort.PersonneInfo personne = personneQueryPort.trouverPersonne(emailInscrit);
 
-        // RG2 : unicite par distribution
-        verifierUnicite(distributionId, personne.id(), type);
+        Optional<Inscription> existante = inscriptionRepository
+            .findByDistributionIdAndPersonneIdAndType(distributionId, personne.id(), type);
+
+        // RG2 : unicite par distribution - erreur si deja active, reinscription autorisee si ANNULEE
+        if (existante.isPresent() && existante.get().estActive()) {
+            throw new ConflictException(
+                "Vous etes deja inscrit(e) a cette distribution en tant que " + type.name().toLowerCase()
+            );
+        }
 
         // RG1 : frequence (beneficiaires uniquement)
         if (type == TypeInscription.BENEFICIAIRE) {
@@ -92,9 +99,16 @@ public class InscriptionService {
         // Calcul de la capacite disponible
         boolean placeDisponible = verifierCapacite(distrib, distributionId, creneauId, type);
 
-        Inscription inscription = new Inscription(
-            distributionId, creneauId, personne.id(), personne.nom(), personne.prenom(), type
-        );
+        Inscription inscription;
+        if (existante.isPresent()) {
+            // Reinscription apres annulation : reutilisation de la ligne existante
+            inscription = existante.get();
+            inscription.reinitialiser(creneauId, personne.nom(), personne.prenom());
+        } else {
+            inscription = new Inscription(
+                distributionId, creneauId, personne.id(), personne.nom(), personne.prenom(), type
+            );
+        }
 
         if (!placeDisponible) {
             // RG3 : liste d'attente
@@ -269,18 +283,6 @@ public class InscriptionService {
                 null, null
             ))
             .toList();
-    }
-
-    private void verifierUnicite(UUID distributionId, UUID personneId, TypeInscription type) {
-        boolean dejaActif = inscriptionRepository
-            .findByDistributionIdAndPersonneIdAndTypeAndStatutNot(
-                distributionId, personneId, type, StatutInscription.ANNULEE)
-            .isPresent();
-        if (dejaActif) {
-            throw new ConflictException(
-                "Vous etes deja inscrit(e) a cette distribution en tant que " + type.name().toLowerCase()
-            );
-        }
     }
 
     private void verifierFrequence(UUID personneId, String tenantSlug) {
