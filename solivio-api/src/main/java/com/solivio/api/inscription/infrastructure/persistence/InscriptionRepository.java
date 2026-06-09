@@ -20,6 +20,7 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID distributionId, StatutInscription statut
     );
 
+    // Au plus une ligne par (distribution, personne, type) grace a la contrainte unique en V10.
     Optional<Inscription> findByDistributionIdAndPersonneIdAndType(
         UUID distributionId, UUID personneId, TypeInscription type
     );

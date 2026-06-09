@@ -7,6 +7,7 @@ import {
   Users,
   UserCog,
   Building2,
+  Package,
 } from "lucide-react";
 
 export interface NavItem {
@@ -43,6 +44,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Membres",
         icon: Users,
         roles: ["coordinateur", "responsable", "super_admin"],
+      },
+      {
+        href: "/association/catalogue-denrees",
+        label: "Catalogue denrees",
+        icon: Package,
+        roles: ["responsable", "super_admin"],
       },
     ],
   },

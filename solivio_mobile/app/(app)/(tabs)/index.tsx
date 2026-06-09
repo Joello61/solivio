@@ -1,0 +1,184 @@
+import { ScrollView, Text, View, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart3, Users, Heart, Calendar, Settings, UserCog } from 'lucide-react-native';
+import { useAuthContext } from '@/context/AuthContext';
+import { statsPeriode } from '@/lib/api/association';
+import { AppHeader } from '@/components/layout/AppHeader';
+import { Card } from '@/components/ui/Card';
+import { Spinner } from '@/components/ui/Spinner';
+
+function debutFinMoisCourant(): { debut: string; fin: string } {
+  const now = new Date();
+  const debut = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const dernierJour = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const fin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(dernierJour).padStart(2, '0')}`;
+  return { debut, fin };
+}
+
+function StatCard({
+  titre,
+  valeur,
+  description,
+  color,
+  icon: Icon,
+}: {
+  titre: string;
+  valeur: number;
+  description: string;
+  color: string;
+  icon: React.ElementType;
+}) {
+  return (
+    <Card className="flex-1">
+      <View className="flex-row items-center justify-between mb-3">
+        <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          {titre}
+        </Text>
+        <View
+          className="w-8 h-8 rounded-lg items-center justify-center"
+          style={{ backgroundColor: color + '1a' }}
+        >
+          <Icon size={16} color={color} />
+        </View>
+      </View>
+      <Text className="text-3xl font-bold text-foreground tabular-nums">{valeur}</Text>
+      <Text className="text-xs text-muted-foreground mt-0.5">{description}</Text>
+    </Card>
+  );
+}
+
+function AccesRapide({
+  label,
+  icon: Icon,
+  href,
+}: {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+}) {
+  const router = useRouter();
+  return (
+    <Pressable
+      onPress={() => router.push(href as never)}
+      className="flex-row items-center gap-3 border border-border rounded-xl px-4 py-4 bg-background active:bg-muted"
+    >
+      <Icon size={18} color="#6b7280" />
+      <Text className="text-base font-medium text-foreground">{label}</Text>
+    </Pressable>
+  );
+}
+
+export default function DashboardScreen() {
+  const { user } = useAuthContext();
+  const { debut, fin } = debutFinMoisCourant();
+
+  const estGestionnaire = user?.roles.some((r) =>
+    ['coordinateur', 'responsable', 'super_admin'].includes(r),
+  );
+  const estResponsable = user?.roles.some((r) => ['responsable', 'super_admin'].includes(r));
+
+  const moisLabel = new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['stats-periode', debut, fin],
+    queryFn: () => statsPeriode(debut, fin),
+    enabled: !!estGestionnaire,
+  });
+
+  return (
+    <View className="flex-1 bg-background">
+      <AppHeader title="Dashboard" />
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-4 py-6 gap-6"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Salutation */}
+        <View>
+          <Text className="text-2xl font-semibold text-foreground">
+            Bonjour, {user?.prenom ?? 'utilisateur'}
+          </Text>
+          <Text className="text-muted-foreground mt-1">
+            Bienvenue sur votre espace{user?.tenantActif ? ` - ${user.tenantActif}` : ''}.
+          </Text>
+        </View>
+
+        {/* Statistiques du mois */}
+        {estGestionnaire && (
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-foreground">
+              Statistiques{' '}
+              <Text className="text-muted-foreground font-normal capitalize">{moisLabel}</Text>
+            </Text>
+            {statsLoading ? (
+              <View className="items-center py-4">
+                <Spinner size="small" />
+              </View>
+            ) : stats ? (
+              <View className="gap-3">
+                <View className="flex-row gap-3">
+                  <StatCard
+                    titre="Distributions"
+                    valeur={stats.nbDistributions}
+                    description="ce mois-ci"
+                    color="#16513F"
+                    icon={BarChart3}
+                  />
+                  <StatCard
+                    titre="Beneficiaires"
+                    valeur={stats.nbBeneficiairesDistinctsServis}
+                    description="distincts"
+                    color="#10b981"
+                    icon={Heart}
+                  />
+                </View>
+                <View className="flex-row gap-3">
+                  <StatCard
+                    titre="Benevoles"
+                    valeur={stats.nbBenevolesDistincts}
+                    description="distincts"
+                    color="#7c3aed"
+                    icon={Users}
+                  />
+                  <View className="flex-1" />
+                </View>
+              </View>
+            ) : null}
+          </View>
+        )}
+
+        {/* Acces rapide */}
+        <View className="gap-3">
+          <Text className="text-sm font-semibold text-foreground">Acces rapide</Text>
+          <View className="gap-2">
+            <AccesRapide
+              label="Distributions"
+              icon={Calendar}
+              href="/(app)/(tabs)/distributions"
+            />
+            <AccesRapide
+              label="Mes inscriptions"
+              icon={Users}
+              href="/(app)/(tabs)/inscriptions"
+            />
+            {estResponsable && (
+              <>
+                <AccesRapide
+                  label="Configuration"
+                  icon={Settings}
+                  href="/(app)/association/configuration"
+                />
+                <AccesRapide
+                  label="Membres"
+                  icon={UserCog}
+                  href="/(app)/association/membres"
+                />
+              </>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

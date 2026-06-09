@@ -86,7 +86,26 @@ class InscriptionServiceTest {
     }
 
     @Test
-    void inscrire_autoriseSiInscriptionPrecedenteAnnulee() {
+    void inscrire_echoueSiDejaEnListeAttente() {
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+
+        Inscription enAttente = inscriptionBeneficiaire(personneId, StatutInscription.LISTE_ATTENTE);
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE)
+        ).thenReturn(Optional.of(enAttente));
+
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+        ))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("deja inscrit");
+    }
+
+    @Test
+    void inscrire_reactiveInscriptionAnnuleeExistante() {
+        // Scenario : desinscription puis reinscription -> la ligne ANNULEE est reactivee,
+        // aucune nouvelle ligne n'est creee.
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
@@ -99,22 +118,19 @@ class InscriptionServiceTest {
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(0L);
-
         when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
             distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)
         ).thenReturn(0L);
-
-        when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> {
-            Inscription i = inv.getArgument(0);
-            i.setId(inscriptionId);
-            return i;
-        });
+        when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
         InscriptionResponse response = service.inscrire(
             distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
         );
 
+        // La ligne reactivee est la meme instance (pas de new Inscription)
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
+        // save() appele exactement une fois avec l'inscription reactivee
+        verify(inscriptionRepository).save(ancienne);
     }
 
     // --- RG1 : frequence ---

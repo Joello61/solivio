@@ -85,4 +85,13 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             ))
             .toList();
     }
+
+    @Override
+    public List<UUID> trouverIdsTermineesEntre(LocalDate debut, LocalDate fin) {
+        return distributionRepository
+            .findByDateBetweenAndStatut(debut, fin, StatutDistribution.TERMINEE)
+            .stream()
+            .map(Distribution::getId)
+            .toList();
+    }
 }

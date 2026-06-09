@@ -103,6 +103,21 @@ public class Inscription {
         this.statut = StatutInscription.ANNULEE;
     }
 
+    // Reinscription apres annulation : remet la ligne a son etat initial.
+    // Nom et prenom sont rafraichis en cas de modification entre les deux inscriptions.
+    public void reinitialiser(UUID nouveauCreneauId, String nouveauNom, String nouveauPrenom) {
+        this.creneauId = nouveauCreneauId;
+        this.nom = nouveauNom;
+        this.prenom = nouveauPrenom;
+        this.statut = StatutInscription.CONFIRMEE;
+        this.rangListeAttente = null;
+        this.presence = StatutPresence.NON_POINTE;
+        this.datePointage = null;
+        this.pointeParId = null;
+        this.dateInscription = Instant.now();
+        this.roles.clear();
+    }
+
     public void pointer(StatutPresence statutPresence, UUID pointeParId) {
         this.presence = statutPresence;
         this.datePointage = Instant.now();

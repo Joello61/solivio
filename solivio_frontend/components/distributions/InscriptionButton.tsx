@@ -100,7 +100,7 @@ export function InscriptionButton({
               </label>
               <Select
                 value={creneauChoisi || undefined}
-                onValueChange={setCreneauChoisi}
+                onValueChange={(v) => { if (v !== null) setCreneauChoisi(v); }}
               >
                 <SelectTrigger id="creneau-select" className="w-full">
                   <SelectValue placeholder="-- Selectionnez un creneau --" />

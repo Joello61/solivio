@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CreatableCombobox } from "./CreatableCombobox";
 import type { DenreeResponse } from "@/types/distribution";
 
 // valueAsNumber: true dans register() fournit des nombres directement au store interne.
@@ -43,8 +44,8 @@ interface Props {
 
 export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
   const {
-    register,
     control,
+    register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -63,7 +64,18 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-1.5">
         <Label htmlFor="libelle">Libelle</Label>
-        <Input id="libelle" placeholder="Ex : Pommes de terre" {...register("libelle")} />
+        <Controller
+          name="libelle"
+          control={control}
+          render={({ field }) => (
+            <CreatableCombobox
+              id="libelle"
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Ex : Pommes de terre"
+            />
+          )}
+        />
         {errors.libelle && (
           <p className="text-xs text-destructive">{errors.libelle.message}</p>
         )}

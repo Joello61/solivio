@@ -161,7 +161,7 @@ function LigneMembreRow({
           ) : (
             <Select
               value={role as RoleValue}
-              onValueChange={changerRole}
+              onValueChange={(v) => { if (v !== null) changerRole(v); }}
               disabled={pending || estSuspendu}
             >
               <SelectTrigger size="sm" className="w-[140px]">

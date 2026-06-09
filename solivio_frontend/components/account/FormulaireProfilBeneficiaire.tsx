@@ -67,7 +67,7 @@ function SelectField({ id, label, value, onChange, options, placeholder = "-- Ch
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value || undefined} onValueChange={onChange}>
+      <Select value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -232,7 +232,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <div className="space-y-1.5">
           <Label htmlFor="aEmploi">Emploi etudiant</Label>
-          <Select value={aEmploi || undefined} onValueChange={setAEmploi}>
+          <Select value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
             <SelectTrigger id="aEmploi" className="w-full">
               <SelectValue placeholder="-- Choisir --" />
             </SelectTrigger>

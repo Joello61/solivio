@@ -218,11 +218,9 @@ export default function GestionAssociations({ associations: initial }: Props) {
                     </Badge>
                   </td>
                   <td className="py-3.5 px-4">
-                    <Button variant="ghost" size="sm" className="text-muted-foreground h-7 px-2" asChild>
-                      <a href={`/association/configuration`}>
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    </Button>
+                    <a href="/association/configuration" className="inline-flex items-center justify-center h-7 px-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
                   </td>
                 </tr>
               ))}

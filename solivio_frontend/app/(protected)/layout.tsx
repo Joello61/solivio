@@ -19,7 +19,7 @@ export default async function ProtectedLayout({
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  let user: MeResponse;
+  let user: MeResponse | null = null;
   try {
     const res = await fetch(
       `${process.env.API_URL ?? "http://localhost:8080"}/api/auth/me`,
@@ -28,11 +28,14 @@ export default async function ProtectedLayout({
         cache: "no-store",
       },
     );
-    if (!res.ok) redirect("/login");
-    user = (await res.json()) as MeResponse;
+    if (res.ok) {
+      user = (await res.json()) as MeResponse;
+    }
   } catch {
-    redirect("/login");
+    // erreur reseau
   }
 
-  return <AppShell user={user}>{children}</AppShell>;
+  if (!user) redirect("/login");
+
+  return <AppShell user={user!}>{children}</AppShell>;
 }
