@@ -9,6 +9,7 @@ import type {
   DenreeResponse,
   DotationResponse,
   SaisirDenreePayload,
+  CatalogueDenreeResponse,
 } from "@/types/distribution";
 
 export function listerDistributions(): Promise<DistributionResponse[]> {
@@ -170,4 +171,29 @@ export function retirerRole(
     `/api/distributions/${distributionId}/inscriptions/${inscriptionId}/roles/${roleId}`,
     { method: "DELETE" },
   );
+}
+
+// --- Catalogue des denrees ---
+
+export function rechercherCatalogueDenrees(q: string): Promise<CatalogueDenreeResponse[]> {
+  return apiGet<CatalogueDenreeResponse[]>(`/api/denrees/catalogue?q=${encodeURIComponent(q)}`);
+}
+
+export function listerCatalogueDenrees(): Promise<CatalogueDenreeResponse[]> {
+  return apiGet<CatalogueDenreeResponse[]>("/api/denrees/catalogue");
+}
+
+export function creerCatalogueDenree(libelle: string): Promise<CatalogueDenreeResponse> {
+  return apiPost<CatalogueDenreeResponse>("/api/denrees/catalogue", { libelle });
+}
+
+export function modifierCatalogueDenree(id: string, libelle: string): Promise<CatalogueDenreeResponse> {
+  return apiFetch<CatalogueDenreeResponse>(`/api/denrees/catalogue/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ libelle }),
+  });
+}
+
+export function supprimerCatalogueDenree(id: string): Promise<void> {
+  return apiFetch<void>(`/api/denrees/catalogue/${id}`, { method: "DELETE" });
 }
