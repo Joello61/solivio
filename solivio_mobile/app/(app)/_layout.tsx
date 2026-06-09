@@ -18,6 +18,7 @@ export default function AppLayout() {
       <Stack.Screen name="distributions/nouvelle" options={{ presentation: 'modal' }} />
       <Stack.Screen name="association/configuration" />
       <Stack.Screen name="association/membres" />
+      <Stack.Screen name="association/catalogue-denrees" />
       <Stack.Screen name="mon-compte/index" />
       <Stack.Screen name="mon-compte/profil-beneficiaire" />
       <Stack.Screen name="a-propos" />
