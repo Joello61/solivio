@@ -141,7 +141,7 @@ solivio:
     default-schema: public
   auth:
     # Duree de vie du JWT access token (minutes).
-    access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:1}
+    access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:15}
     # Duree de vie du JWT refresh token (jours).
     refresh-token-expiration-days: ${SOLIVIO_REFRESH_TOKEN_EXPIRATION:30}
     # Cle secrete HMAC-SHA256 pour signer les JWT (32 octets minimum, base64).
