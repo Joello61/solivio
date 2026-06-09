@@ -109,6 +109,7 @@ describe("LoginPage", () => {
       accessToken: "token123",
       tokenType: "Bearer",
       expiresIn: 900,
+      refreshToken: null,
       tenants: [{ slug: "pilote", nom: "Asso Pilote", role: "beneficiaire", coordoType: null }],
     });
 

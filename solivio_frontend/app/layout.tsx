@@ -34,7 +34,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider delay={300}>
             {children}
             <Toaster
               richColors

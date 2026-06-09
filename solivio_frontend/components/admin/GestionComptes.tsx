@@ -178,7 +178,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
             <AlertDialogCancel onClick={fermerDialog}>Annuler</AlertDialogCancel>
             <AlertDialogAction
               variant={compte.actif ? "outline" : "default"}
-              onClick={() => executer(() => changerStatutCompte(compte.id, !compte.actif))}
+              onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
             >
               {compte.actif ? "Desactiver" : "Reactiver"}
             </AlertDialogAction>
@@ -210,7 +210,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={fermerDialog}>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => executer(() => changerSuperAdmin(compte.id, !compte.superAdmin))}
+              onClick={() => executer(async () => { await changerSuperAdmin(compte.id, !compte.superAdmin); })}
             >
               Confirmer
             </AlertDialogAction>
