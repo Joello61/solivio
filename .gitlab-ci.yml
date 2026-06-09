@@ -33,7 +33,7 @@ variables:
 
   # Docker image names
   BACKEND_IMAGE: "${CI_REGISTRY_IMAGE}/solivio-api"
-  FRONTEND_IMAGE: "${CI_REGISTRY_IMAGE}/solivio-frontend"
+  FRONTEND_IMAGE: "${CI_REGISTRY_IMAGE}/solivio_frontend"
 
 # Run pipelines for merge requests, branch pushes, and tags.
 # The rules: changes: conditions on each job narrow down execution further.
@@ -185,12 +185,12 @@ frontend:lint:
       - .npm
   rules:
     - changes:
-        - solivio-frontend/**/*
+        - solivio_frontend/**/*
         - .gitlab-ci.yml
   before_script:
-    - cd solivio-frontend && npm ci
+    - cd solivio_frontend && npm ci
   script:
-    - cd solivio-frontend && npm run lint
+    - npm run lint
 
 # -----------------------------------------------------------------------
 # FRONTEND - unit tests
@@ -204,18 +204,18 @@ frontend:test:
       - .npm
   rules:
     - changes:
-        - solivio-frontend/**/*
+        - solivio_frontend/**/*
         - .gitlab-ci.yml
   needs:
     - frontend:lint
   before_script:
-    - cd solivio-frontend && npm ci
+    - cd solivio_frontend && npm ci
   script:
-    - cd solivio-frontend && npm run test:coverage
+    - npm run test:coverage
   artifacts:
     when: always
     paths:
-      - solivio-frontend/coverage/
+      - solivio_frontend/coverage/
     expire_in: 2 weeks
 
 # -----------------------------------------------------------------------
@@ -225,21 +225,21 @@ frontend:test:
 # -----------------------------------------------------------------------
 frontend:e2e:
   stage: test
-  image: mcr.microsoft.com/playwright:v1.60.0-focal
+  image: mcr.microsoft.com/playwright:v1.59.0-noble
   rules:
     - changes:
-        - solivio-frontend/**/*
+        - solivio_frontend/**/*
         - .gitlab-ci.yml
   needs:
     - frontend:lint
   before_script:
-    - cd solivio-frontend && npm ci
+    - cd solivio_frontend && npm ci
   script:
-    - cd solivio-frontend && npm run test:e2e
+    - npm run test:e2e
   artifacts:
     when: always
     paths:
-      - solivio-frontend/playwright-report/
+      - solivio_frontend/playwright-report/
     expire_in: 1 week
   allow_failure: true
 
@@ -254,7 +254,7 @@ frontend:build:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
-        - solivio-frontend/**/*
+        - solivio_frontend/**/*
         - .gitlab-ci.yml
   needs:
     - frontend:test
@@ -266,8 +266,8 @@ frontend:build:
   script:
     - >-
       /kaniko/executor
-      --context "${CI_PROJECT_DIR}/solivio-frontend"
-      --dockerfile "${CI_PROJECT_DIR}/solivio-frontend/Dockerfile"
+      --context "${CI_PROJECT_DIR}/solivio_frontend"
+      --dockerfile "${CI_PROJECT_DIR}/solivio_frontend/Dockerfile"
       --destination "${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}"
       --destination "${FRONTEND_IMAGE}:latest"
       --cache=true
@@ -282,7 +282,7 @@ frontend:deploy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
-        - solivio-frontend/**/*
+        - solivio_frontend/**/*
       when: manual
   needs:
     - frontend:build

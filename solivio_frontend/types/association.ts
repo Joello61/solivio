@@ -1,0 +1,77 @@
+export interface AssociationResponse {
+  id: string;
+  slug: string;
+  code: string;
+  nom: string;
+  statut: string;
+  logoUrl: string | null;
+  couleurPrimaire: string | null;
+  couleurSecondaire: string | null;
+  fuseauHoraire: string | null;
+  frequenceMaxParSemaine: number | null;
+  contactEmail: string | null;
+  contactTelephone: string | null;
+  dateCreation: string;
+}
+
+export interface UpdateAssociationPayload {
+  nom?: string;
+  logoUrl?: string;
+  couleurPrimaire?: string;
+  couleurSecondaire?: string;
+  fuseauHoraire?: string;
+  frequenceMaxParSemaine?: number | null;
+  contactEmail?: string;
+  contactTelephone?: string;
+}
+
+export interface MembreResponse {
+  compteId: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  role: string;
+  coordoType: string | null;
+  statut: string;
+  dateDebut: string;
+}
+
+export interface UpdateRoleMembrePayload {
+  role: string;
+  coordoType?: string;
+}
+
+export interface AssociationAdminResponse {
+  id: string;
+  slug: string;
+  code: string;
+  nom: string;
+  statut: string;
+  dateCreation: string;
+}
+
+export interface CreateAssociationPayload {
+  nom: string;
+  slug: string;
+  emailResponsable: string;
+}
+
+export interface StatistiqueDistributionResponse {
+  distributionId: string;
+  distributionDate: string;
+  nbInscritsBeneficiaires: number;
+  nbInscritsBenevoles: number;
+  nbPresentsBeneficiaires: number;
+  nbAbsentsBeneficiaires: number;
+  nbNonPointes: number;
+  tauxPresence: number;
+  dateCalcul: string;
+}
+
+export interface StatistiquePeriodeResponse {
+  debut: string;
+  fin: string;
+  nbDistributions: number;
+  nbBeneficiairesDistinctsServis: number;
+  nbBenevolesDistincts: number;
+}
