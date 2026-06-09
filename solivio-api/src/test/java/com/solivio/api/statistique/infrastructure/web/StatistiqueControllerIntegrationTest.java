@@ -38,6 +38,7 @@ class StatistiqueControllerIntegrationTest {
     private MockMvc mockMvc;
     private Association association;
     private String schema;
+    private UUID responsableId;
     private String tokenResponsable;
     private String tokenBeneficiaire;
 
@@ -53,7 +54,7 @@ class StatistiqueControllerIntegrationTest {
         jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
         flywayMigrator.migrate(schema);
 
-        UUID responsableId = UUID.randomUUID();
+        responsableId = UUID.randomUUID();
         jdbcTemplate.update(
             "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
                 + "VALUES (?, 'Resp', 'Test', 'resp@test.com', 'resp@test.com')",
@@ -121,25 +122,14 @@ class StatistiqueControllerIntegrationTest {
 
     @Test
     void statistiquesPeriode_retourneAgregatSurPeriode() throws Exception {
-        LocalDate d1 = LocalDate.of(2026, 5, 10);
-        LocalDate d2 = LocalDate.of(2026, 5, 20);
-
-        jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".statistique_distribution "
-                + "(distribution_id, distribution_date, nb_inscrits_beneficiaires, "
-                + "nb_inscrits_benevoles, nb_presents_beneficiaires, "
-                + "nb_absents_beneficiaires, nb_non_pointes, taux_presence) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            UUID.randomUUID(), d1, 50, 10, 45, 3, 2, 90.0
-        );
-        jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".statistique_distribution "
-                + "(distribution_id, distribution_date, nb_inscrits_beneficiaires, "
-                + "nb_inscrits_benevoles, nb_presents_beneficiaires, "
-                + "nb_absents_beneficiaires, nb_non_pointes, taux_presence) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            UUID.randomUUID(), d2, 60, 8, 50, 5, 5, 83.33
-        );
+        // aggregerPeriode lit la table distribution (statut TERMINEE), pas le snapshot
+        String insertDist = "INSERT INTO \"" + schema + "\".distribution "
+            + "(id, titre, date, statut, capacite_beneficiaires, cree_par_id) "
+            + "VALUES (?, ?, ?, 'TERMINEE', 50, ?)";
+        jdbcTemplate.update(insertDist,
+            UUID.randomUUID(), "Distribution mai 1", LocalDate.of(2026, 5, 10), responsableId);
+        jdbcTemplate.update(insertDist,
+            UUID.randomUUID(), "Distribution mai 2", LocalDate.of(2026, 5, 20), responsableId);
 
         mockMvc.perform(get("/api/statistiques/periode")
                 .cookie(new Cookie("access_token", tokenResponsable))
