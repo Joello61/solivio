@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   ScrollView,
   Text,
   View,
   Pressable,
   TextInput,
+  FlatList,
   Alert,
   RefreshControl,
 } from 'react-native';
@@ -12,20 +13,128 @@ import { useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { Plus, Trash2, AlertTriangle } from 'lucide-react-native';
+import { Plus, Trash2, AlertTriangle, PlusCircle } from 'lucide-react-native';
 import {
   listerDenrees,
   calculerDotation,
   saisirDenree,
   supprimerDenree,
+  rechercherCatalogueDenrees,
+  creerCatalogueDenree,
 } from '@/lib/api/distributions';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { Badge } from '@/components/ui/Badge';
-import type { SaisirDenreePayload, UniteConditionnement } from '@/types/distribution';
+import type { SaisirDenreePayload, UniteConditionnement, CatalogueDenreeResponse } from '@/types/distribution';
 
 const UNITES: UniteConditionnement[] = ['UNITE', 'KILOGRAMME', 'LITRE', 'PIECE'];
+
+const MAX_SUGGESTIONS = 5;
+
+interface LibelleComboboxProps {
+  value: string;
+  onChange: (v: string) => void;
+}
+
+function LibelleCombobox({ value, onChange }: LibelleComboboxProps) {
+  const safeValue = value ?? '';
+  const [suggestions, setSuggestions] = useState<CatalogueDenreeResponse[]>([]);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function fetchSuggestions(q: string) {
+    if (q.trim().length === 0) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const resultats = await rechercherCatalogueDenrees(q);
+      setSuggestions(resultats.slice(0, MAX_SUGGESTIONS));
+    } catch {
+      setSuggestions([]);
+    }
+  }
+
+  function handleChange(text: string) {
+    onChange(text);
+    setOpen(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(text), 300);
+  }
+
+  function selectionner(libelle: string) {
+    onChange(libelle);
+    setSuggestions([]);
+    setOpen(false);
+  }
+
+  async function ajouter() {
+    const libelle = safeValue.trim();
+    if (!libelle) return;
+    try {
+      // tente une creation immediate ; echoue silencieusement si role insuffisant
+      // l'entree sera creee par enregistrerSiInconnu lors du submit
+      await creerCatalogueDenree(libelle);
+    } catch {
+      // ignore
+    }
+    setOpen(false);
+  }
+
+  const exactMatch = suggestions.some(
+    (s) => s.libelle.toLowerCase() === safeValue.toLowerCase(),
+  );
+  const showAjouter = safeValue.trim().length > 0 && !exactMatch;
+  const showDropdown = open && (suggestions.length > 0 || showAjouter);
+
+  return (
+    <View>
+      <TextInput
+        className="border border-input rounded-lg px-3 py-3 text-base text-foreground"
+        value={safeValue}
+        onChangeText={handleChange}
+        onFocus={() => {
+          setOpen(true);
+          if (safeValue.trim().length > 0) fetchSuggestions(safeValue);
+        }}
+        onBlur={() => setOpen(false)}
+        placeholder="Riz, farine, huile..."
+        placeholderTextColor="#9ca3af"
+      />
+      {showDropdown && (
+        <View className="border border-border rounded-lg bg-card mt-1 overflow-hidden shadow-sm">
+          <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => selectionner(item.libelle)}
+                className="px-3 py-2.5 active:bg-muted border-b border-border"
+              >
+                <Text className="text-sm text-foreground">{item.libelle}</Text>
+              </Pressable>
+            )}
+            ListFooterComponent={
+              showAjouter ? (
+                <Pressable
+                  onPress={ajouter}
+                  className="px-3 py-2.5 active:bg-muted flex-row items-center gap-2"
+                >
+                  <PlusCircle size={14} color="#16513F" />
+                  <Text className="text-sm text-primary">
+                    {`Ajouter "${safeValue}"`}
+                  </Text>
+                </Pressable>
+              ) : null
+            }
+          />
+        </View>
+      )}
+    </View>
+  );
+}
 
 function formulaireDenreeVide(): SaisirDenreePayload {
   return { libelle: '', unite: 'UNITE', nombreContenants: 0, quantiteParContenant: 0 };
@@ -158,12 +267,9 @@ export default function RepartitionScreen() {
               <View className="gap-3">
                 <View>
                   <Text className="text-sm font-medium text-foreground mb-1.5">Libelle</Text>
-                  <TextInput
-                    className="border border-input rounded-lg px-3 py-3 text-base text-foreground"
+                  <LibelleCombobox
                     value={form.libelle}
-                    onChangeText={(v) => setForm({ ...form, libelle: v })}
-                    placeholder="Riz, farine, huile..."
-                    placeholderTextColor="#9ca3af"
+                    onChange={(v) => setForm({ ...form, libelle: v })}
                   />
                 </View>
 
