@@ -101,9 +101,10 @@ public class AuthService {
         }
 
         emetAccessTokenCookie(accessToken, request, response);
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, rememberMe, rememberMe);
+        String refreshTokenBrut = emetRefreshTokenCookie(
+            compte, tenantSlug, request, response, rememberMe, rememberMe);
 
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, tenants);
+        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, tenants, refreshTokenBrut);
     }
 
     @Transactional
@@ -134,9 +135,10 @@ public class AuthService {
         );
 
         emetAccessTokenCookie(accessToken, request, response);
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, false, false);
+        String refreshTokenBrut = emetRefreshTokenCookie(
+            compte, tenantSlug, request, response, false, false);
 
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of());
+        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of(), refreshTokenBrut);
     }
 
     /**
@@ -192,9 +194,10 @@ public class AuthService {
 
         emetAccessTokenCookie(accessToken, request, response);
         // Propage la preference longDuree du token initial (rememberMe)
-        emetRefreshTokenCookie(compte, tenantSlug, request, response, longDuree, longDuree);
+        String nouveauRefreshToken = emetRefreshTokenCookie(
+            compte, tenantSlug, request, response, longDuree, longDuree);
 
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of());
+        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of(), nouveauRefreshToken);
     }
 
     @Transactional
@@ -244,9 +247,9 @@ public class AuthService {
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
-    private void emetRefreshTokenCookie(Compte compte, String tenantSlug,
-                                        HttpServletRequest request, HttpServletResponse response,
-                                        boolean longDuree, boolean storerLongDuree) {
+    private String emetRefreshTokenCookie(Compte compte, String tenantSlug,
+                                          HttpServletRequest request, HttpServletResponse response,
+                                          boolean longDuree, boolean storerLongDuree) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
 
@@ -263,20 +266,23 @@ public class AuthService {
         // Ne pas construire "Max-Age=-1" en chaine brute : la RFC 6265 Section 5.2.2
         // impose que Max-Age <= 0 declenche l'expiration immediate du cookie.
         // Spring gere correctement ce cas : maxAge(-1) -> pas de Max-Age dans le header.
+        // path "/" : le cookie doit etre lisible sur toutes les requetes (page et API)
+        // pour permettre le refresh cote serveur depuis le proxy Next.js.
         ResponseCookie cookie = ResponseCookie.from("refresh_token", tokenBrut)
             .maxAge(longDuree ? jwtService.getRefreshTokenSeconds() : -1)
-            .path("/api/auth/refresh")
+            .path("/")
             .httpOnly(true)
             .secure(request.isSecure())
             .sameSite("Strict")
             .build();
         response.addHeader("Set-Cookie", cookie.toString());
+        return tokenBrut;
     }
 
     private void supprimerCookies(HttpServletResponse response) {
         response.addHeader("Set-Cookie",
             ResponseCookie.from("refresh_token", "")
-                .maxAge(0).path("/api/auth/refresh").httpOnly(true).sameSite("Strict")
+                .maxAge(0).path("/").httpOnly(true).sameSite("Strict")
                 .build().toString());
         response.addHeader("Set-Cookie",
             ResponseCookie.from("access_token", "")

@@ -199,7 +199,6 @@ class AuthControllerIntegrationTest {
 
     @Test
     void refresh_retourne200ViaCookieEtRetourneNouveauToken() throws Exception {
-        // Login pour obtenir le cookie refresh_token
         LoginRequest loginReq = new LoginRequest("alice@example.com", "password123!", false);
         Cookie refreshCookie = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -209,13 +208,36 @@ class AuthControllerIntegrationTest {
 
         assertThat(refreshCookie).isNotNull();
 
-        // Refresh via cookie (flux web BFF) : pas de body JSON
+        // Flux web BFF : pas de body, pas de Content-Type, cookie envoye automatiquement
         mockMvc.perform(post("/api/auth/refresh")
                 .cookie(refreshCookie))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").isNotEmpty())
+            .andExpect(jsonPath("$.refreshToken").isNotEmpty())
             .andExpect(cookie().exists("access_token"))
             .andExpect(cookie().exists("refresh_token"));
+    }
+
+    @Test
+    void refresh_retourne200ViaBodyJsonPourMobile() throws Exception {
+        // Login pour obtenir le refreshToken depuis le corps de reponse (flux mobile)
+        LoginRequest loginReq = new LoginRequest("alice@example.com", "password123!", false);
+        String loginBody = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(loginReq)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+            .andReturn().getResponse().getContentAsString();
+
+        String refreshToken = jsonMapper.readTree(loginBody).get("refreshToken").asText();
+
+        // Refresh via body JSON (flux mobile) : pas de cookie
+        mockMvc.perform(post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
+            .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
 
     @Test

@@ -136,6 +136,7 @@ class AuthServiceTest {
         TokenResponse result = service.refreshToken(tokenBrut, request, response);
 
         assertThat(result.accessToken()).isEqualTo("new-access-token");
+        assertThat(result.refreshToken()).isEqualTo("new-refresh-brut");
         // save() est appele 2x : une fois pour revoquer l'ancien, une fois pour persister le nouveau
         verify(refreshTokenRepo, org.mockito.Mockito.times(2)).save(any());
     }
@@ -199,6 +200,7 @@ class AuthServiceTest {
             request, response);
 
         assertThat(result.accessToken()).isEqualTo("access-token");
+        assertThat(result.refreshToken()).isEqualTo("refresh-brut");
         assertThat(result.tenants()).hasSize(1);
     }
 }
