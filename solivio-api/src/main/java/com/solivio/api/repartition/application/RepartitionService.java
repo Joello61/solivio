@@ -24,15 +24,18 @@ public class RepartitionService {
     private final DenreeDistributionRepository denreeRepository;
     private final DistributionQueryPort distributionQueryPort;
     private final InscriptionQueryPort inscriptionQueryPort;
+    private final CatalogueDenreeService catalogueDenreeService;
 
     public RepartitionService(
         DenreeDistributionRepository denreeRepository,
         DistributionQueryPort distributionQueryPort,
-        InscriptionQueryPort inscriptionQueryPort
+        InscriptionQueryPort inscriptionQueryPort,
+        CatalogueDenreeService catalogueDenreeService
     ) {
         this.denreeRepository = denreeRepository;
         this.distributionQueryPort = distributionQueryPort;
         this.inscriptionQueryPort = inscriptionQueryPort;
+        this.catalogueDenreeService = catalogueDenreeService;
     }
 
     public DenreeResponse saisirDenree(UUID distributionId, SaisirDenreeRequest request) {
@@ -47,6 +50,7 @@ public class RepartitionService {
             request.nombreContenants(),
             request.quantiteParContenant()
         );
+        catalogueDenreeService.enregistrerSiInconnu(request.libelle());
         denreeRepository.save(denree);
         return toResponse(denree);
     }
@@ -56,10 +60,14 @@ public class RepartitionService {
         DenreeDistribution denree = trouverOuEchouer(denreeId, distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
+        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(request.libelle());
         denree.setLibelle(request.libelle());
         denree.setUnite(unite);
         denree.setNombreContenants(request.nombreContenants());
         denree.setQuantiteParContenant(request.quantiteParContenant());
+        if (libelleChange) {
+            catalogueDenreeService.enregistrerSiInconnu(request.libelle());
+        }
         denreeRepository.save(denree);
         return toResponse(denree);
     }
