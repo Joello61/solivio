@@ -125,3 +125,10 @@ export interface CreateDistributionPayload {
   modeCreneau?: string;
   creneaux: { heureDebut: string; heureFin: string; capacite: number }[];
 }
+
+export interface CatalogueDenreeResponse {
+  id: string;
+  libelle: string;
+  dateCreation: string;
+  dateModification: string;
+}
