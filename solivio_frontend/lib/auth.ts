@@ -46,3 +46,13 @@ export async function refreshToken(refreshToken: string): Promise<TokenResponse>
 export async function switchTenant(tenantSlug: string): Promise<TokenResponse> {
   return apiPost<TokenResponse>("/api/auth/switch-tenant", { tenantSlug });
 }
+
+export async function completerInscriptionGoogle(payload: {
+  email: string;
+  nom: string;
+  prenom: string;
+  codeAssociation?: string;
+  tokenInvitation?: string;
+}): Promise<TokenResponse> {
+  return apiPost<TokenResponse>("/api/auth/google/complete-registration", payload);
+}
