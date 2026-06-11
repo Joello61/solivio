@@ -7,7 +7,7 @@ export default function NouvellePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Nouvelle distribution</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Nouvelle distribution</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Remplissez les informations pour creer une nouvelle distribution.
         </p>
