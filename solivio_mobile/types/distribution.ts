@@ -132,3 +132,21 @@ export interface CatalogueDenreeResponse {
   dateCreation: string;
   dateModification: string;
 }
+
+export interface MembreSuggestion {
+  id: string;
+  email: string;
+  prenom: string;
+  nom: string;
+}
+
+export interface PointageAdHocResponse {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string | null;
+  role: string | null;
+  presence: 'PRESENT' | 'ABSENT';
+  invitationEnvoyee: boolean;
+  datePointage: string;
+}
