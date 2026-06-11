@@ -13,6 +13,7 @@ interface DatePickerInputProps {
   onChange: (value: string) => void;
   mode?: Mode;
   error?: string;
+  helper?: string;
   minimumDate?: Date;
   maximumDate?: Date;
 }
@@ -64,6 +65,7 @@ export function DatePickerInput({
   onChange,
   mode = 'date',
   error,
+  helper,
   minimumDate,
   maximumDate,
 }: DatePickerInputProps) {
@@ -116,7 +118,7 @@ export function DatePickerInput({
   const displayText = value ? formatDisplay(value, mode) : null;
   const placeholder =
     mode === 'date' ? 'Selectionnez une date' :
-    mode === 'time' ? 'Selectionnez une heure' :
+    mode === 'time' ? "Selectionnez une heure" :
     'Selectionnez une date et heure';
   const sheetTitle =
     mode === 'date' ? 'Choisir une date' :
@@ -126,36 +128,50 @@ export function DatePickerInput({
 
   return (
     <>
-      <View className="gap-2">
-        {label && (
-          <Text className="text-base font-medium text-foreground">{label}</Text>
-        )}
+      <View className="gap-1.5">
+        {label ? (
+          <Text className="text-sm font-medium text-foreground">{label}</Text>
+        ) : null}
+
         <Pressable
           onPress={handleOpen}
           className={cn(
-            'flex-row items-center gap-3 border rounded-xl px-4 py-4 bg-background active:bg-muted',
+            'flex-row items-center gap-3 border rounded-xl px-4 min-h-[52px] bg-card active:bg-muted',
             error ? 'border-destructive' : 'border-input',
           )}
+          style={({ pressed }) =>
+            pressed ? { opacity: 0.85, transform: [{ scale: 0.99 }] } : null
+          }
         >
-          <Icon size={18} color={value ? '#1C2B24' : '#9ca3af'} />
-          <Text className={cn('flex-1 text-base', value ? 'text-foreground' : 'text-muted-foreground')}>
+          <Icon size={18} color={value ? '#0F172A' : '#94A3B8'} />
+          <Text
+            className={cn(
+              'flex-1 text-base py-3.5',
+              value ? 'text-foreground' : 'text-muted-foreground',
+            )}
+          >
             {displayText ?? placeholder}
           </Text>
         </Pressable>
-        {error && <Text className="text-sm text-destructive">{error}</Text>}
+
+        {error ? (
+          <Text className="text-xs text-destructive ml-0.5">{error}</Text>
+        ) : helper ? (
+          <Text className="text-xs text-muted-foreground ml-0.5">{helper}</Text>
+        ) : null}
       </View>
 
       {/* iOS : bottom sheet */}
-      {Platform.OS === 'ios' && show && (
+      {Platform.OS === 'ios' && show ? (
         <Modal transparent animationType="slide" onRequestClose={() => setShow(false)}>
           <View style={{ flex: 1 }}>
             <Pressable
-              style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}
+              style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.4)' }}
               onPress={() => setShow(false)}
             />
             <View
               style={{
-                backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 paddingBottom: Math.max(insets.bottom, 16),
@@ -178,16 +194,16 @@ export function DatePickerInput({
                 locale="fr-FR"
                 minimumDate={mode === 'time' ? undefined : minimumDate}
                 maximumDate={mode === 'time' ? undefined : maximumDate}
-                textColor={isDark ? '#ffffff' : '#1C2B24'}
+                textColor={isDark ? '#F1F5F9' : '#0F172A'}
                 style={{ height: 216, width: '100%' }}
               />
             </View>
           </View>
         </Modal>
-      )}
+      ) : null}
 
       {/* Android : dialog natif */}
-      {Platform.OS === 'android' && show && (
+      {Platform.OS === 'android' && show ? (
         <DateTimePicker
           value={tempDate}
           mode={mode === 'datetime' ? (androidStep === 'time' ? 'time' : 'date') : mode}
@@ -196,7 +212,7 @@ export function DatePickerInput({
           maximumDate={mode === 'time' ? undefined : maximumDate}
           onChange={handleAndroidChange}
         />
-      )}
+      ) : null}
     </>
   );
 }
