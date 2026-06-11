@@ -18,6 +18,19 @@ public interface NotificationEmailService {
                                           String prenomBenevole, String nomBenevole,
                                           DistributionDetailInfo distribution);
 
+    void envoyerConfirmationInscriptionReconditionnement(String email, ContexteReconditionnementEmail contexte);
+
+    void envoyerAnnulationSessionReconditionnement(String email, ContexteReconditionnementEmail contexte);
+
+    record ContexteReconditionnementEmail(
+        String prenom,
+        String sessionTitre,
+        java.time.ZonedDateTime dateHeureDebut,
+        java.time.ZonedDateTime dateHeureFin,
+        String sessionLieu,
+        String motifAnnulation
+    ) {}
+
     /**
      * Contexte complet pour la generation d'un email de notification.
      * heureDebutCreneau et heureFinCreneau sont null pour les distributions en creneau unique.

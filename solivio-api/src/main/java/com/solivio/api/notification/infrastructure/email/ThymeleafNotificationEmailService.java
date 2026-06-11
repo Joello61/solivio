@@ -77,6 +77,33 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
             "desistement-tardif-benevole", ctx);
     }
 
+    @Override
+    public void envoyerConfirmationInscriptionReconditionnement(
+        String email, ContexteReconditionnementEmail contexte
+    ) {
+        envoyer(email, "Inscription confirmee - " + contexte.sessionTitre(),
+            "confirmation-inscription-reconditionnement", contexteReconditionnementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationSessionReconditionnement(
+        String email, ContexteReconditionnementEmail contexte
+    ) {
+        envoyer(email, "Session annulee - " + contexte.sessionTitre(),
+            "annulation-session-reconditionnement", contexteReconditionnementThymeleaf(contexte));
+    }
+
+    private Context contexteReconditionnementThymeleaf(ContexteReconditionnementEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("sessionTitre", c.sessionTitre());
+        ctx.setVariable("dateHeureDebut", c.dateHeureDebut());
+        ctx.setVariable("dateHeureFin", c.dateHeureFin());
+        ctx.setVariable("sessionLieu", c.sessionLieu());
+        ctx.setVariable("motifAnnulation", c.motifAnnulation());
+        return ctx;
+    }
+
     private Context contexteThymeleaf(ContexteEmail c) {
         Context ctx = new Context(Locale.FRENCH);
         ctx.setVariable("prenom", c.prenom());

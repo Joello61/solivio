@@ -1,6 +1,7 @@
 package com.solivio.api.notification.application;
 
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import com.solivio.api.notification.domain.Notification;
 import com.solivio.api.notification.domain.TypeEvenementNotification;
 import com.solivio.api.notification.infrastructure.email.NotificationEmailException;
@@ -11,6 +12,8 @@ import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import com.solivio.api.shared.inscription.InscriptionQueryPort.DestinataireMail;
+import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort;
+import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort.SessionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,19 +32,22 @@ public class NotificationService {
     private final PersonneQueryPort personneQueryPort;
     private final DistributionQueryPort distributionQueryPort;
     private final InscriptionQueryPort inscriptionQueryPort;
+    private final SessionReconditionnementQueryPort sessionReconditionnementQueryPort;
 
     public NotificationService(
         NotificationEmailService emailService,
         NotificationRepository notificationRepository,
         PersonneQueryPort personneQueryPort,
         DistributionQueryPort distributionQueryPort,
-        InscriptionQueryPort inscriptionQueryPort
+        InscriptionQueryPort inscriptionQueryPort,
+        SessionReconditionnementQueryPort sessionReconditionnementQueryPort
     ) {
         this.emailService = emailService;
         this.notificationRepository = notificationRepository;
         this.personneQueryPort = personneQueryPort;
         this.distributionQueryPort = distributionQueryPort;
         this.inscriptionQueryPort = inscriptionQueryPort;
+        this.sessionReconditionnementQueryPort = sessionReconditionnementQueryPort;
     }
 
     @Transactional
@@ -130,6 +136,55 @@ public class NotificationService {
                 creneau.heureDebut(), creneau.heureFin(), distribution);
         }
         return ContexteEmail.of(prenom, typeInscription, null, null, distribution);
+    }
+
+    @Transactional
+    public void notifierConfirmationInscriptionReconditionnement(UUID personneId, UUID sessionId) {
+        PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(personneId);
+        SessionInfo session = sessionReconditionnementQueryPort.trouverSessionDetails(sessionId);
+        ContexteReconditionnementEmail contexte = new ContexteReconditionnementEmail(
+            personne.prenom(), session.titre(), session.dateHeureDebut(),
+            session.dateHeureFin(), session.lieu(), null);
+        String sujet = "Inscription confirmee - " + session.titre();
+        envoyerEtTracerReco(personne.id(), sessionId,
+            TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT, sujet,
+            () -> emailService.envoyerConfirmationInscriptionReconditionnement(personne.email(), contexte));
+    }
+
+    @Transactional
+    public void notifierAnnulationSessionReconditionnement(UUID sessionId) {
+        SessionInfo session = sessionReconditionnementQueryPort.trouverSessionDetails(sessionId);
+        String sujet = "Session annulee - " + session.titre();
+        List<UUID> personneIds = sessionReconditionnementQueryPort
+            .trouverPersonnesInscritesConfirmees(sessionId);
+        for (UUID personneId : personneIds) {
+            PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(personneId);
+            ContexteReconditionnementEmail contexte = new ContexteReconditionnementEmail(
+                personne.prenom(), session.titre(), session.dateHeureDebut(),
+                session.dateHeureFin(), session.lieu(), null);
+            envoyerEtTracerReco(personne.id(), sessionId,
+                TypeEvenementNotification.ANNULATION_SESSION_RECONDITIONNEMENT, sujet,
+                () -> emailService.envoyerAnnulationSessionReconditionnement(personne.email(), contexte));
+        }
+    }
+
+    private void envoyerEtTracerReco(
+        UUID personneId,
+        UUID sessionId,
+        TypeEvenementNotification type,
+        String sujet,
+        Runnable envoi
+    ) {
+        try {
+            envoi.run();
+            notificationRepository.save(
+                Notification.envoye(personneId, sessionId, type, sujet));
+            log.debug("Notification {} envoyee a personne {}", type, personneId);
+        } catch (NotificationEmailException e) {
+            notificationRepository.save(
+                Notification.echec(personneId, sessionId, type, sujet, e.getMessage()));
+            log.error("Echec notification {} pour personne {}: {}", type, personneId, e.getMessage());
+        }
     }
 
     private void envoyerEtTracer(
