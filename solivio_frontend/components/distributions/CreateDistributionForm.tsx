@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
+import { APIProvider } from "@vis.gl/react-google-maps";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { creerDistribution } from "@/lib/api/distributions";
+import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
+import type { LieuRequest } from "@/types/distribution";
 
 const creneauSchema = z.object({
   heureDebut: z.string().min(1, "Heure de debut requise"),
@@ -21,7 +24,6 @@ const creneauSchema = z.object({
 const schema = z.object({
   titre: z.string().min(1, "Le titre est requis").max(200),
   description: z.string().optional(),
-  lieu: z.string().optional(),
   date: z.string().min(1, "La date est requise"),
   capaciteBeneficiaires: z.number().int().positive("La capacite doit etre positive"),
   capaciteBenevoles: z.number().int().positive().optional(),
@@ -34,6 +36,18 @@ type FormValues = z.infer<typeof schema>;
 export function CreateDistributionForm() {
   const router = useRouter();
   const [erreur, setErreur] = useState<string | null>(null);
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(undefined);
+  const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetch("/api/public/config")
+      .then((r) => r.json())
+      .then((d) => setMapsApiKey(d.googleMapsApiKey ?? ""))
+      .catch(() => setMapsApiKey(""));
+  }, []);
 
   const {
     register,
@@ -56,7 +70,7 @@ export function CreateDistributionForm() {
       const distribution = await creerDistribution({
         titre: values.titre,
         description: values.description || undefined,
-        lieu: values.lieu || undefined,
+        lieu: lieu || undefined,
         date: values.date,
         capaciteBeneficiaires: values.capaciteBeneficiaires,
         capaciteBenevoles: values.capaciteBenevoles,
@@ -71,6 +85,7 @@ export function CreateDistributionForm() {
   }
 
   return (
+    <APIProvider apiKey={mapsApiKey ?? ""} libraries={["places"]}>
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
       {erreur && (
         <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
@@ -94,8 +109,12 @@ export function CreateDistributionForm() {
             {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="lieu">Lieu</Label>
-            <Input id="lieu" {...register("lieu")} placeholder="Salle polyvalente" />
+            <Label>Lieu</Label>
+            <AdresseAutocomplete
+              value={lieu?.adresseFormatee}
+              onSelect={setLieu}
+              onClear={() => setLieu(undefined)}
+            />
           </div>
         </div>
 
@@ -206,5 +225,6 @@ export function CreateDistributionForm() {
         </Button>
       </div>
     </form>
+    </APIProvider>
   );
 }
