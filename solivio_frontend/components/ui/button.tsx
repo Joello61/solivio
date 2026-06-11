@@ -4,33 +4,75 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  /* Base : layout + typographie + transitions */
+  [
+    "group/button inline-flex shrink-0 items-center justify-center gap-2",
+    "rounded-lg border border-transparent font-medium whitespace-nowrap",
+    "text-sm leading-none select-none",
+    "transition-all duration-150 ease-out",
+    "outline-none focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+    "disabled:pointer-events-none disabled:opacity-45",
+    "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "active:not-aria-[haspopup]:scale-[0.98]",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+        /* Primaire : fond teal plein, shadow coloree au hover */
+        default: [
+          "bg-primary text-primary-foreground border-primary",
+          "hover:bg-teal-700 hover:border-teal-700",
+          "hover:shadow-[0_4px_14px_0_oklch(0.532_0.118_185_/_0.40)]",
+          "active:bg-teal-800",
+        ].join(" "),
+
+        /* Secondaire : fond teal tres pale, texte teal */
+        secondary: [
+          "bg-teal-50 text-teal-700 border-teal-100",
+          "hover:bg-teal-100 hover:border-teal-200",
+        ].join(" "),
+
+        /* Outline : bordure visible, fond transparent */
+        outline: [
+          "bg-transparent text-foreground border-border",
+          "hover:bg-muted hover:border-neutral-300",
+          "dark:border-neutral-700 dark:hover:bg-neutral-800",
+        ].join(" "),
+
+        /* Ghost : sans bordure ni fond, discret */
+        ghost: [
+          "bg-transparent text-muted-foreground border-transparent",
+          "hover:bg-muted hover:text-foreground",
+        ].join(" "),
+
+        /* Accent : coral/orange pour CTAs secondaires importants */
+        accent: [
+          "bg-accent text-accent-foreground border-accent",
+          "hover:bg-coral-600 hover:border-coral-600",
+          "hover:shadow-[0_4px_14px_0_oklch(0.706_0.213_47_/_0.38)]",
+        ].join(" "),
+
+        /* Destructif : rouge discret en fond, plus visible au hover */
+        destructive: [
+          "bg-destructive/10 text-destructive border-destructive/20",
+          "hover:bg-destructive/20 hover:border-destructive/40",
+          "focus-visible:ring-destructive/30",
+        ].join(" "),
+
+        /* Link : texte seul avec underline au hover */
+        link: "text-primary underline-offset-4 hover:underline border-transparent bg-transparent",
       },
       size: {
-        default:
-          "h-9 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1 rounded-[min(var(--radius-md),12px)] px-3 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-10 gap-2 px-4 text-base has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
-        icon: "size-9",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-8 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-10",
+        xs: "h-7 px-2.5 text-xs rounded-md gap-1 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 px-3 text-sm rounded-lg gap-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        default: "h-9 px-4 text-sm",
+        lg: "h-10 px-5 text-base rounded-xl",
+        xl: "h-12 px-6 text-base rounded-xl font-semibold",
+        icon: "size-9 rounded-lg",
+        "icon-xs": "size-7 rounded-md [&_svg:not([class*='size-'])]:size-3.5",
+        "icon-sm": "size-8 rounded-lg [&_svg:not([class*='size-'])]:size-4",
+        "icon-lg": "size-10 rounded-xl [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {

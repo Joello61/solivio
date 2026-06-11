@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 interface EmptyStateAction {
   label: string;
@@ -29,29 +30,31 @@ function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center",
-        size === "default" ? "py-16 px-6" : "py-8 px-4",
+        size === "default" ? "py-20 px-8" : "py-10 px-6",
         className,
       )}
     >
       {Icon && (
         <div
           className={cn(
-            "flex items-center justify-center rounded-2xl bg-muted mb-4",
+            "flex items-center justify-center rounded-2xl mb-5",
+            "bg-teal-50 border border-teal-100",
+            "dark:bg-teal-950/30 dark:border-teal-900/50",
             size === "default" ? "h-16 w-16" : "h-12 w-12",
           )}
         >
           <Icon
             className={cn(
-              "text-muted-foreground/60",
-              size === "default" ? "h-8 w-8" : "h-6 w-6",
+              "text-primary",
+              size === "default" ? "h-7 w-7" : "h-5 w-5",
             )}
           />
         </div>
       )}
       <h3
         className={cn(
-          "font-semibold text-foreground",
-          size === "default" ? "text-base" : "text-sm",
+          "font-display font-semibold text-foreground",
+          size === "default" ? "text-lg" : "text-base",
         )}
       >
         {title}
@@ -59,7 +62,7 @@ function EmptyState({
       {description && (
         <p
           className={cn(
-            "text-muted-foreground mt-1 max-w-xs",
+            "text-muted-foreground mt-2 max-w-sm leading-relaxed",
             size === "default" ? "text-sm" : "text-xs",
           )}
         >
@@ -67,15 +70,19 @@ function EmptyState({
         </p>
       )}
       {action && (
-        <div className="mt-4">
+        <div className="mt-6">
           {action.href ? (
-            <a href={action.href}>
-              <Button size="sm">{action.label}</Button>
-            </a>
-          ) : (
-            <Button size="sm" onClick={action.onClick}>
+            <Link href={action.href} className={buttonVariants({ size: "default" })}>
               {action.label}
-            </Button>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={action.onClick}
+              className={buttonVariants({ size: "default" })}
+            >
+              {action.label}
+            </button>
           )}
         </div>
       )}

@@ -5,9 +5,9 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="skeleton"
       className={cn(
-        "relative overflow-hidden rounded-md bg-muted",
+        "relative overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800",
         "before:absolute before:inset-0",
-        "before:[background:linear-gradient(90deg,transparent_0%,oklch(from_var(--color-muted-foreground)_l_c_h/0.08)_50%,transparent_100%)]",
+        "before:[background:linear-gradient(90deg,transparent_25%,oklch(1_0_0_/_0.50)_50%,transparent_75%)]",
         "before:bg-[length:200%_100%]",
         "before:animate-shimmer",
         className,
