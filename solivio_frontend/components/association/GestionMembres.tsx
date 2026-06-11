@@ -510,7 +510,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select value={filtreStatut} onValueChange={setFiltreStatut}>
+              <Select value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -524,7 +524,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Role</span>
-              <Select value={filtreRole} onValueChange={setFiltreRole}>
+              <Select value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
