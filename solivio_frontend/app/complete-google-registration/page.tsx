@@ -20,8 +20,8 @@ function CompleteGoogleRegistrationForm() {
   const tokenInvitation = searchParams.get("invitation") ?? undefined;
   const isInvitation = !!tokenInvitation;
 
-  const [nom, setNom] = useState("");
-  const [prenom, setPrenom] = useState("");
+  const [nom, setNom] = useState(searchParams.get("nom") ?? "");
+  const [prenom, setPrenom] = useState(searchParams.get("prenom") ?? "");
   const [codeAssociation, setCodeAssociation] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
