@@ -140,7 +140,7 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
               }
             >
               {pending === "annuler" ? <Spinner className="mr-2 size-4" /> : null}
-              Confirmer l'annulation
+              Confirmer l&apos;annulation
             </Button>
             <Button
               variant="outline"

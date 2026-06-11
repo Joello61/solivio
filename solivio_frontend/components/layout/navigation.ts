@@ -10,6 +10,7 @@ import {
   Package,
   Recycle,
   Truck,
+  PartyPopper,
 } from "lucide-react";
 
 export interface NavItem {
@@ -32,6 +33,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
       { href: "/missions-collecte", label: "Missions collecte", icon: Truck },
       { href: "/mes-missions-collecte", label: "Mes missions", icon: Truck, roles: ["benevole"] },
+      { href: "/evenements", label: "Evenements", icon: PartyPopper },
+      { href: "/mes-evenements", label: "Mes evenements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
