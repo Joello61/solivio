@@ -8,6 +8,7 @@ interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
   showClose?: boolean;
+  modal?: boolean;
   right?: ReactNode;
 }
 
@@ -19,14 +20,14 @@ const HEADER_SHADOW = {
   elevation: 6,
 } as const;
 
-export function ScreenHeader({ title, subtitle, showClose = false, right }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, showClose = false, modal = false, right }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   return (
     <View
       className="bg-primary flex-row items-center px-2"
-      style={{ paddingTop: insets.top + 12, paddingBottom: 12, ...HEADER_SHADOW }}
+      style={{ paddingTop: modal ? 12 : insets.top + 12, paddingBottom: 12, ...HEADER_SHADOW }}
     >
       <Pressable
         onPress={() => router.back()}
