@@ -2,209 +2,225 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Dark mode via classe .dark sur <html> (toggle manuel, pas systeme). */
+/* Dark mode via classe .dark sur <html>. */
 @custom-variant dark (&:is(.dark *));
 
-/* ==========================================================================
-   PRIMITIVES SOLIVIO
-   Echelle chromatique complete pour les trois couleurs de marque.
-   Generees a partir des valeurs officielles en oklch.
-   ========================================================================== */
+/* ============================================================
+   PRIMITIVES - Palette Solivio 2026
+   ============================================================ */
 @theme inline {
-  /* --- Foret (vert fonce, couleur primaire) --- */
-  --color-foret-50:  oklch(0.970 0.012 158);
-  --color-foret-100: oklch(0.930 0.030 158);
-  --color-foret-200: oklch(0.850 0.055 158);
-  --color-foret-300: oklch(0.740 0.075 158);
-  --color-foret-400: oklch(0.600 0.085 158);
-  --color-foret-500: oklch(0.490 0.090 158);
-  --color-foret-600: oklch(0.420 0.090 157);
-  /* #1E6B52 */
-  --color-foret-700: oklch(0.352 0.085 157);
-  /* #16513F */
-  --color-foret-800: oklch(0.280 0.070 157);
-  --color-foret-900: oklch(0.200 0.055 157);
-  --color-foret-950: oklch(0.130 0.040 157);
 
-  /* --- Teal (vert moyen, couleur secondaire) --- */
-  --color-teal-50:  oklch(0.970 0.014 160);
-  --color-teal-100: oklch(0.935 0.034 160);
-  --color-teal-200: oklch(0.860 0.060 160);
-  --color-teal-300: oklch(0.760 0.082 160);
-  --color-teal-400: oklch(0.640 0.094 160);
-  /* #1E6B52 */
-  --color-teal-500: oklch(0.432 0.095 160);
-  --color-teal-600: oklch(0.370 0.088 160);
-  --color-teal-700: oklch(0.310 0.075 160);
-  --color-teal-800: oklch(0.240 0.060 160);
-  --color-teal-900: oklch(0.175 0.045 160);
-  --color-teal-950: oklch(0.110 0.030 160);
+  /* --- Teal (primaire) --- */
+  --color-teal-50:  oklch(0.984 0.014 186);
+  --color-teal-100: oklch(0.952 0.038 186);
+  --color-teal-200: oklch(0.890 0.072 186);
+  --color-teal-300: oklch(0.800 0.104 186);
+  --color-teal-400: oklch(0.700 0.124 186);
+  --color-teal-500: oklch(0.620 0.128 186);
+  --color-teal-600: oklch(0.532 0.118 185);
+  --color-teal-700: oklch(0.447 0.098 185);
+  --color-teal-800: oklch(0.358 0.078 184);
+  --color-teal-900: oklch(0.270 0.056 183);
+  --color-teal-950: oklch(0.175 0.036 183);
 
-  /* --- Ambre (accent chaleureux) --- */
-  --color-ambre-50:  oklch(0.988 0.020 90);
-  --color-ambre-100: oklch(0.970 0.050 88);
-  --color-ambre-200: oklch(0.940 0.095 86);
-  --color-ambre-300: oklch(0.890 0.145 82);
-  --color-ambre-400: oklch(0.840 0.175 76);
-  /* #F59E0B - Tailwind amber-500 exact */
-  --color-ambre-500: oklch(0.769 0.188 70);
-  --color-ambre-600: oklch(0.680 0.172 62);
-  --color-ambre-700: oklch(0.555 0.148 55);
-  --color-ambre-800: oklch(0.425 0.118 52);
-  --color-ambre-900: oklch(0.340 0.090 50);
-  --color-ambre-950: oklch(0.210 0.058 50);
+  /* --- Coral (accent chaud) --- */
+  --color-coral-50:  oklch(0.985 0.018 35);
+  --color-coral-100: oklch(0.960 0.048 38);
+  --color-coral-200: oklch(0.915 0.092 42);
+  --color-coral-300: oklch(0.850 0.138 45);
+  --color-coral-400: oklch(0.780 0.178 47);
+  --color-coral-500: oklch(0.706 0.213 47);
+  --color-coral-600: oklch(0.618 0.192 44);
+  --color-coral-700: oklch(0.518 0.165 42);
+  --color-coral-800: oklch(0.410 0.130 40);
+  --color-coral-900: oklch(0.330 0.100 38);
+  --color-coral-950: oklch(0.220 0.065 36);
 
-  /* ==========================================================================
-     TOKENS SEMANTIQUES (mode clair)
-     Mappes depuis les primitives ci-dessus vers les slots shadcn/ui.
-     ========================================================================== */
+  /* --- Neutral (gris de base, legere teinte chaude) --- */
+  --color-neutral-50:  oklch(0.988 0.002 264);
+  --color-neutral-100: oklch(0.965 0.003 264);
+  --color-neutral-200: oklch(0.924 0.006 264);
+  --color-neutral-300: oklch(0.872 0.010 264);
+  --color-neutral-400: oklch(0.747 0.018 264);
+  --color-neutral-500: oklch(0.621 0.022 264);
+  --color-neutral-600: oklch(0.504 0.025 264);
+  --color-neutral-700: oklch(0.395 0.022 264);
+  --color-neutral-800: oklch(0.285 0.016 264);
+  --color-neutral-900: oklch(0.208 0.012 264);
+  --color-neutral-950: oklch(0.130 0.008 264);
 
-  /* Surfaces */
-  --color-background:    var(--background);
-  --color-foreground:    var(--foreground);
+  /* ============================================================
+     TOKENS SEMANTIQUES
+     ============================================================ */
 
-  /* Cartes et popovers */
-  --color-card:               var(--card);
-  --color-card-foreground:    var(--card-foreground);
-  --color-popover:            var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  /* Primaire = Foret */
-  --color-primary:            var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  /* Secondaire = Foret tres clair */
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
   --color-secondary:            var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+  --color-accent:               var(--accent);
+  --color-accent-foreground:    var(--accent-foreground);
+  --color-destructive:          var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-ring:                 var(--ring);
 
-  /* Muted (surfaces neutres) */
-  --color-muted:            var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  /* ============================================================
+     RAYONS - Systeme coherent
+     ============================================================ */
+  --radius-xs:   0.25rem;   /* 4px */
+  --radius-sm:   0.375rem;  /* 6px */
+  --radius-md:   0.5rem;    /* 8px */
+  --radius-lg:   var(--radius);
+  --radius-xl:   calc(var(--radius) * 1.33);
+  --radius-2xl:  calc(var(--radius) * 1.67);
+  --radius-3xl:  calc(var(--radius) * 2);
+  --radius-full: 9999px;
 
-  /* Accent = Ambre */
-  --color-accent:            var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  /* ============================================================
+     SHADOWS - Systeme d'elevation a 5 niveaux
+     Niveau 0 = pas de shadow (surfaces a plat)
+     Niveau 1 = cards au repos
+     Niveau 2 = cards au hover / elements sureleves
+     Niveau 3 = dropdowns / popovers
+     Niveau 4 = modales
+     + shadows colorees pour boutons primaires
+     ============================================================ */
+  --shadow-xs:  0 1px 2px 0 oklch(0 0 0 / 0.05);
+  --shadow-sm:  0 1px 3px 0 oklch(0 0 0 / 0.08), 0 1px 2px -1px oklch(0 0 0 / 0.06);
+  --shadow-md:  0 4px 6px -1px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.06);
+  --shadow-lg:  0 10px 15px -3px oklch(0 0 0 / 0.08), 0 4px 6px -4px oklch(0 0 0 / 0.05);
+  --shadow-xl:  0 20px 25px -5px oklch(0 0 0 / 0.10), 0 8px 10px -6px oklch(0 0 0 / 0.06);
+  --shadow-2xl: 0 25px 50px -12px oklch(0 0 0 / 0.20);
 
-  /* Destructif */
-  --color-destructive: var(--destructive);
+  /* Shadows colorees - donnent de la profondeur brandee aux CTAs */
+  --shadow-primary:    0 4px 14px 0 oklch(0.532 0.118 185 / 0.32);
+  --shadow-primary-lg: 0 8px 24px 0 oklch(0.532 0.118 185 / 0.38);
+  --shadow-accent:     0 4px 14px 0 oklch(0.706 0.213 47 / 0.32);
 
-  /* Bordures, inputs, focus ring */
-  --color-border: var(--border);
-  --color-input:  var(--input);
-  --color-ring:   var(--ring);
-
-  /* Rayons standardises */
-  --radius-sm:  calc(var(--radius) * 0.6);
-  --radius-md:  calc(var(--radius) * 0.8);
-  --radius-lg:  var(--radius);
-  --radius-xl:  calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-
-  /* Polices */
-  --font-sans:    var(--font-geist-sans);
+  /* ============================================================
+     POLICES
+     ============================================================ */
+  --font-sans:    var(--font-dm-sans);
+  --font-display: var(--font-plus-jakarta-sans);
   --font-mono:    var(--font-geist-mono);
 
-  /* Echelle typographique elargie : xs et sm agrandis pour meilleure lisibilite */
-  --text-xs: 0.8125rem;  /* 13px au lieu de 12px */
-  --text-sm: 0.9375rem;  /* 15px au lieu de 14px */
+  /* ============================================================
+     Z-INDEX - Echelle d'empilement
+     ============================================================ */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 20;
+  --z-sticky:  30;
+  --z-fixed:   40;
+  --z-modal:   50;
+  --z-toast:   60;
+  --z-tooltip: 70;
 }
 
-/* ==========================================================================
+/* ============================================================
    MODE CLAIR
-   ========================================================================== */
+   ============================================================ */
 :root {
-  --background:    oklch(1 0 0);
-  --foreground:    oklch(0.145 0.012 158);
+  /* Fond blanc tres legererement chaud - jamais froid */
+  --background:    oklch(0.988 0.002 85);
+  --foreground:    oklch(0.208 0.012 264);
 
+  /* Cards : blanc pur pour maximiser le contraste avec le fond */
   --card:          oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.012 158);
+  --card-foreground: oklch(0.208 0.012 264);
 
   --popover:       oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.012 158);
+  --popover-foreground: oklch(0.208 0.012 264);
 
-  /* Primaire : Foret #16513F */
-  --primary:          oklch(0.352 0.085 157);
-  --primary-foreground: oklch(0.990 0 0);
+  /* Primaire : Teal vif #0D9488 */
+  --primary:          oklch(0.532 0.118 185);
+  --primary-foreground: oklch(1 0 0);
 
-  /* Secondaire : Foret tres clair pour les boutons ghost/outline */
-  --secondary:          oklch(0.940 0.025 158);
-  --secondary-foreground: oklch(0.352 0.085 157);
+  /* Secondaire : teal tres pale pour ghost/outline */
+  --secondary:          oklch(0.984 0.014 186);
+  --secondary-foreground: oklch(0.447 0.098 185);
 
-  /* Muted : gris-vert tres pale */
-  --muted:          oklch(0.965 0.010 158);
-  --muted-foreground: oklch(0.500 0.030 158);
+  /* Muted : neutre tres pale */
+  --muted:            oklch(0.965 0.003 264);
+  --muted-foreground: oklch(0.504 0.025 264);
 
-  /* Accent : Ambre #F59E0B */
-  --accent:          oklch(0.769 0.188 70);
-  --accent-foreground: oklch(0.145 0 0);
+  /* Accent : Coral vif #F97316 */
+  --accent:          oklch(0.706 0.213 47);
+  --accent-foreground: oklch(0.130 0.008 264);
 
   /* Destructif */
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive:          oklch(0.577 0.245 27);
+  --destructive-foreground: oklch(1 0 0);
 
   /* Bordures et champs */
-  --border: oklch(0.900 0.020 158);
-  --input:  oklch(0.900 0.020 158);
+  --border: oklch(0.924 0.006 264);
+  --input:  oklch(0.924 0.006 264);
+  --ring:   oklch(0.532 0.118 185);
 
-  /* Ring = Foret */
-  --ring: oklch(0.352 0.085 157);
-
-  /* Rayon de base */
-  --radius: 0.5rem;
+  /* Rayon de base shadcn */
+  --radius: 0.75rem;
 }
 
-/* ==========================================================================
+/* ============================================================
    MODE SOMBRE
-   Les fonds deviennent un vert tres fonce, pas du noir pur.
-   Cela renforce l'identite visuelle de Solivio meme en dark mode.
-   ========================================================================== */
+   Fond quasi-noir avec une legere teinte neutre (pas de couleur marque)
+   pour maximiser la lisibilite et la professionnalisme
+   ============================================================ */
 .dark {
-  /* Fond tres fonce avec une teinte foret */
-  --background:    oklch(0.130 0.030 158);
-  --foreground:    oklch(0.965 0.010 158);
+  --background:    oklch(0.148 0.008 264);
+  --foreground:    oklch(0.960 0.004 264);
 
-  --card:          oklch(0.175 0.030 158);
-  --card-foreground: oklch(0.965 0.010 158);
+  --card:          oklch(0.192 0.010 264);
+  --card-foreground: oklch(0.960 0.004 264);
 
-  --popover:       oklch(0.175 0.030 158);
-  --popover-foreground: oklch(0.965 0.010 158);
+  --popover:       oklch(0.192 0.010 264);
+  --popover-foreground: oklch(0.960 0.004 264);
 
-  /* Primaire en dark : teal plus clair pour rester lisible */
-  --primary:          oklch(0.432 0.095 160);
-  --primary-foreground: oklch(0.990 0 0);
+  /* Primaire en dark : teal un cran plus clair pour rester lisible */
+  --primary:          oklch(0.620 0.128 186);
+  --primary-foreground: oklch(0.148 0.008 264);
 
-  /* Secondaire en dark */
-  --secondary:          oklch(0.240 0.040 158);
-  --secondary-foreground: oklch(0.900 0.020 158);
+  --secondary:          oklch(0.255 0.014 264);
+  --secondary-foreground: oklch(0.800 0.104 186);
 
-  /* Muted en dark */
-  --muted:          oklch(0.210 0.035 158);
-  --muted-foreground: oklch(0.620 0.035 158);
+  --muted:            oklch(0.238 0.012 264);
+  --muted-foreground: oklch(0.621 0.022 264);
 
-  /* Accent ambre : reste identique (couleur vive sur fond sombre) */
-  --accent:          oklch(0.769 0.188 70);
-  --accent-foreground: oklch(0.145 0 0);
+  --accent:          oklch(0.706 0.213 47);
+  --accent-foreground: oklch(0.130 0.008 264);
 
-  /* Destructif en dark */
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive:          oklch(0.704 0.191 22);
+  --destructive-foreground: oklch(1 0 0);
 
-  /* Bordures et champs en dark */
-  --border: oklch(1 0 0 / 12%);
-  --input:  oklch(1 0 0 / 16%);
-
-  /* Ring en dark : teal */
-  --ring: oklch(0.432 0.095 160);
+  --border: oklch(1 0 0 / 10%);
+  --input:  oklch(1 0 0 / 14%);
+  --ring:   oklch(0.620 0.128 186);
 }
 
-/* ==========================================================================
-   ANIMATIONS CUSTOM
-   ========================================================================== */
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes shimmer {
   from { background-position: -200% 0; }
   to   { background-position:  200% 0; }
 }
 
 @keyframes slide-up-fade {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down-fade {
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -219,21 +235,29 @@
 }
 
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(8px); }
+  from { opacity: 0; transform: translateX(12px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-@theme inline {
-  --animate-shimmer:       shimmer 1.8s ease-in-out infinite;
-  --animate-slide-up-fade: slide-up-fade 0.2s ease-out both;
-  --animate-fade-in:       fade-in 0.15s ease-out both;
-  --animate-scale-in:      scale-in 0.15s ease-out both;
-  --animate-slide-in-right: slide-in-right 0.2s ease-out both;
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 
-/* ==========================================================================
+@theme inline {
+  --animate-shimmer:         shimmer 1.8s ease-in-out infinite;
+  --animate-slide-up-fade:   slide-up-fade 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-down-fade: slide-down-fade 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in:         fade-in 0.18s ease-out both;
+  --animate-scale-in:        scale-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right:  slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-bounce-in:       bounce-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============================================================
    BASE
-   ========================================================================== */
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -241,37 +265,40 @@
 
   body {
     @apply bg-background text-foreground;
-    /* Scroll fluide dans toute l'app */
     scroll-behavior: smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Couleur de selection de texte */
+  /* Headings : police display pour plus de personnalite */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), var(--font-sans);
+  }
+
+  /* Selection de texte avec la couleur primaire */
   ::selection {
-    background-color: oklch(from var(--color-primary) l c h / 0.2);
+    background-color: oklch(from var(--color-primary) l c h / 0.15);
     color: inherit;
   }
 
-  /* Scrollbar discrete (Webkit) */
-  ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  /* Scrollbar discrete */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 99px;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-muted-foreground);
   }
 
-  /* Focus visible global : anneau coherent */
+  /* Focus visible - anneau coherent et visible */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
@@ -283,10 +310,64 @@
     @apply cursor-pointer;
     transition-property: color, background-color, border-color, opacity, box-shadow, transform;
     transition-duration: 150ms;
-    transition-timing-function: ease;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Feedback presse subtil */
   button:active:not(:disabled) {
     transform: scale(0.98);
+  }
+
+  /* prefers-reduced-motion : desactive toutes les animations */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ============================================================
+   UTILITAIRES CUSTOM
+   ============================================================ */
+@layer utilities {
+  /* Gradient de marque - usage sur les heros et les accents forts */
+  .gradient-brand {
+    background: linear-gradient(135deg, oklch(0.532 0.118 185), oklch(0.447 0.098 185));
+  }
+
+  /* Gradient brand vers coral */
+  .gradient-brand-coral {
+    background: linear-gradient(135deg, oklch(0.532 0.118 185), oklch(0.706 0.213 47));
+  }
+
+  /* Surface tintee primaire - pour les cards stat et les sections hero */
+  .surface-primary {
+    background-color: oklch(0.984 0.014 186);
+    border: 1px solid oklch(0.890 0.072 186);
+  }
+
+  /* Shadow coloree sur les boutons primaires */
+  .shadow-primary {
+    box-shadow: var(--shadow-primary);
+  }
+  .shadow-primary-lg {
+    box-shadow: var(--shadow-primary-lg);
+  }
+  .shadow-accent {
+    box-shadow: var(--shadow-accent);
+  }
+
+  /* Shimmer skeleton */
+  .animate-shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      var(--color-muted) 25%,
+      oklch(from var(--color-muted) calc(l + 0.03) c h) 50%,
+      var(--color-muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
   }
 }

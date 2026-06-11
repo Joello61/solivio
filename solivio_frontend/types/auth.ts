@@ -23,6 +23,10 @@ export interface MeResponse {
   superAdmin: boolean;
   tenantActif: string | null;
   roles: string[];
+  dateCreation: string;
+  dateModification: string;
+  emailVerifie: boolean;
+  authMethod: "google" | "password";
 }
 
 export interface ApiError {
