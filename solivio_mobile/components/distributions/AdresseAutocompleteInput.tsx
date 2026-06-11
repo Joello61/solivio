@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import GooglePlacesTextInput from 'react-native-google-places-textinput';
+import GooglePlacesTextInput, { type Place } from 'react-native-google-places-textinput';
 import type { LieuRequest } from '@/types/distribution';
 
 interface Props {
@@ -12,16 +11,35 @@ interface Props {
   error?: string;
 }
 
-// Extrait une composante d'adresse par type depuis le tableau address_components.
-function composante(
-  components: Array<{ long_name: string; types: string[] }>,
-  type: string
-): string | undefined {
-  return components.find((c) => c.types.includes(type))?.long_name ?? undefined;
+interface AddressComponent {
+  longText?: string;
+  types?: string[];
+}
+
+// Extrait une composante d'adresse par type depuis les address_components (new Places API).
+function composante(components: AddressComponent[], type: string): string | undefined {
+  return components.find((c) => c.types?.includes(type))?.longText ?? undefined;
 }
 
 export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, label, error }: Props) {
-  const [texte, setTexte] = useState(value ?? '');
+  function handlePlaceSelect(place: Place) {
+    const details = place.details ?? {};
+    const comps: AddressComponent[] = details.addressComponents ?? [];
+    const location = details.location ?? {};
+
+    const lieu: LieuRequest = {
+      placeId: place.placeId ?? undefined,
+      nom: details.displayName?.text ?? place.structuredFormat?.mainText?.text ?? undefined,
+      adresseFormatee: details.formattedAddress ?? undefined,
+      latitude: location.latitude ?? undefined,
+      longitude: location.longitude ?? undefined,
+      numeroRue: composante(comps, 'street_number'),
+      voie: composante(comps, 'route'),
+      codePostal: composante(comps, 'postal_code'),
+      ville: composante(comps, 'locality'),
+    };
+    onSelect(lieu);
+  }
 
   return (
     <View style={styles.container}>
@@ -29,35 +47,21 @@ export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, lab
       <View style={[styles.inputWrap, error ? styles.inputError : null]}>
         <GooglePlacesTextInput
           apiKey={apiKey}
-          initialValue={texte}
-          language="fr"
-          country="fr"
-          placeholder="Rechercher une adresse..."
-          placeholderTextColor="#94A3B8"
-          textInputStyle={styles.input}
-          containerStyle={styles.gpContainer}
-          listStyle={styles.list}
-          onPlaceSelected={(data, details) => {
-            if (!details) return;
-            const comps = details.address_components ?? [];
-            const lieu: LieuRequest = {
-              placeId: details.place_id ?? undefined,
-              nom: details.name ?? undefined,
-              adresseFormatee: details.formatted_address ?? undefined,
-              latitude: details.geometry?.location?.lat ?? undefined,
-              longitude: details.geometry?.location?.lng ?? undefined,
-              numeroRue: composante(comps, 'street_number'),
-              voie: composante(comps, 'route'),
-              codePostal: composante(comps, 'postal_code'),
-              ville: composante(comps, 'locality'),
-            };
-            setTexte(lieu.adresseFormatee ?? lieu.nom ?? '');
-            onSelect(lieu);
+          value={value}
+          languageCode="fr"
+          includedRegionCodes={['fr']}
+          placeHolderText="Rechercher une adresse..."
+          onPlaceSelect={handlePlaceSelect}
+          fetchDetails
+          detailsFields={['displayName', 'formattedAddress', 'location', 'addressComponents']}
+          style={{
+            input: styles.input,
+            container: styles.gpContainer,
+            suggestionsContainer: styles.list,
           }}
-          fields="place_id,name,formatted_address,geometry,address_components"
-          onClear={() => {
-            setTexte('');
-            onClear?.();
+          showClearButton
+          onTextChange={(text) => {
+            if (text === '') onClear?.();
           }}
         />
       </View>
