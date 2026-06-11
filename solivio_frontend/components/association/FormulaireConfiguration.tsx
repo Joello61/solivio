@@ -80,165 +80,177 @@ export function FormulaireConfiguration({ association }: Props) {
   }
 
   return (
-    <form onSubmit={soumettre} className="space-y-6 max-w-lg">
+    <form onSubmit={soumettre} className="space-y-6">
       {erreur && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
           {erreur}
         </div>
       )}
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-lg border border-green-500/30 bg-green-50 px-4 py-3 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+        <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
           <CheckCircle className="h-4 w-4 shrink-0" />
           <span className="text-sm">Configuration mise a jour avec succes.</span>
         </div>
       )}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="nom">Nom de l&apos;association</Label>
-        <Input
-          id="nom"
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          minLength={2}
-          maxLength={255}
-        />
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 items-start">
+        {/* Colonne gauche : identite visuelle */}
+        <div className="space-y-6">
+          <p className="text-sm font-semibold text-foreground font-display">Identite visuelle</p>
 
-      <div className="space-y-2">
-        <Label>Logo de l&apos;association</Label>
-        {logoUrl && (
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg border border-border bg-muted/30 p-1.5">
-              <Image
-                src={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}${logoUrl}`}
-                alt="Logo actuel"
-                width={48}
-                height={48}
-                className="rounded object-contain"
-              />
-            </div>
-            <span className="text-sm text-muted-foreground">Logo actuel</span>
+          <div className="space-y-1.5">
+            <Label htmlFor="nom">Nom de l&apos;association</Label>
+            <Input
+              id="nom"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              minLength={2}
+              maxLength={255}
+            />
           </div>
-        )}
-        {logoErreur && <p className="text-sm text-destructive">{logoErreur}</p>}
-        <div className="flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            className="hidden"
-            onChange={handleLogoChange}
-            aria-label="Choisir un fichier logo"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={logoUploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {logoUploading ? (
-              <><Spinner size="sm" /> Telechargement...</>
-            ) : (
-              <><Upload className="mr-2 h-4 w-4" />Choisir un logo</>
+
+          <div className="space-y-2">
+            <Label>Logo</Label>
+            {logoUrl && (
+              <div className="mb-2 flex items-center gap-3">
+                <div className="rounded-lg border border-border/60 bg-neutral-50 dark:bg-neutral-900 p-1.5">
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}${logoUrl}`}
+                    alt="Logo actuel"
+                    width={48}
+                    height={48}
+                    className="rounded object-contain"
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground">Logo actuel</span>
+              </div>
             )}
-          </Button>
-          <span className="text-xs text-muted-foreground">JPG, PNG, GIF ou WEBP - 2 Mo max</span>
-        </div>
-      </div>
+            {logoErreur && <p className="text-sm text-destructive">{logoErreur}</p>}
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleLogoChange}
+                aria-label="Choisir un fichier logo"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={logoUploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {logoUploading ? (
+                  <><Spinner size="sm" /> Telechargement...</>
+                ) : (
+                  <><Upload className="mr-2 h-4 w-4" />Choisir un logo</>
+                )}
+              </Button>
+              <span className="text-xs text-muted-foreground">JPG, PNG, GIF ou WEBP - 2 Mo max</span>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="couleurPrimaire">Couleur primaire</Label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="color"
-              value={couleurPrimaire}
-              onChange={(e) => setCouleurPrimaire(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-lg border border-input p-0.5 bg-background"
-              aria-label="Choisir couleur primaire"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="couleurPrimaire">Couleur primaire</Label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={couleurPrimaire}
+                  onChange={(e) => setCouleurPrimaire(e.target.value)}
+                  className="h-9 w-9 cursor-pointer rounded-lg border border-input p-0.5 bg-background"
+                  aria-label="Choisir couleur primaire"
+                />
+                <Input
+                  id="couleurPrimaire"
+                  value={couleurPrimaire}
+                  onChange={(e) => setCouleurPrimaire(e.target.value)}
+                  pattern="^#[0-9A-Fa-f]{6}$"
+                  className="font-mono text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="couleurSecondaire">Couleur secondaire</Label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={couleurSecondaire}
+                  onChange={(e) => setCouleurSecondaire(e.target.value)}
+                  className="h-9 w-9 cursor-pointer rounded-lg border border-input p-0.5 bg-background"
+                  aria-label="Choisir couleur secondaire"
+                />
+                <Input
+                  id="couleurSecondaire"
+                  value={couleurSecondaire}
+                  onChange={(e) => setCouleurSecondaire(e.target.value)}
+                  pattern="^#[0-9A-Fa-f]{6}$"
+                  className="font-mono text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Colonne droite : parametres */}
+        <div className="space-y-6">
+          <p className="text-sm font-semibold text-foreground font-display">Parametres</p>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="fuseauHoraire">Fuseau horaire</Label>
             <Input
-              id="couleurPrimaire"
-              value={couleurPrimaire}
-              onChange={(e) => setCouleurPrimaire(e.target.value)}
-              pattern="^#[0-9A-Fa-f]{6}$"
-              className="font-mono text-sm"
+              id="fuseauHoraire"
+              value={fuseauHoraire}
+              onChange={(e) => setFuseauHoraire(e.target.value)}
+              placeholder="Europe/Paris"
+            />
+            <p className="text-xs text-muted-foreground">Format IANA : Europe/Paris, America/New_York, etc.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="frequenceMax">Frequence max par semaine</Label>
+            <Input
+              id="frequenceMax"
+              type="number"
+              min="1"
+              max="7"
+              value={frequenceMax}
+              onChange={(e) => setFrequenceMax(e.target.value)}
+              placeholder="Illimitee"
+            />
+            <p className="text-xs text-muted-foreground">Laisser vide pour ne pas limiter.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="contactEmail">Email de contact</Label>
+            <Input
+              id="contactEmail"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="contact@association.fr"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="contactTelephone">Telephone de contact</Label>
+            <Input
+              id="contactTelephone"
+              value={contactTelephone}
+              onChange={(e) => setContactTelephone(e.target.value)}
+              placeholder="+33 1 23 45 67 89"
             />
           </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="couleurSecondaire">Couleur secondaire</Label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="color"
-              value={couleurSecondaire}
-              onChange={(e) => setCouleurSecondaire(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-lg border border-input p-0.5 bg-background"
-              aria-label="Choisir couleur secondaire"
-            />
-            <Input
-              id="couleurSecondaire"
-              value={couleurSecondaire}
-              onChange={(e) => setCouleurSecondaire(e.target.value)}
-              pattern="^#[0-9A-Fa-f]{6}$"
-              className="font-mono text-sm"
-            />
-          </div>
-        </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="fuseauHoraire">Fuseau horaire</Label>
-        <Input
-          id="fuseauHoraire"
-          value={fuseauHoraire}
-          onChange={(e) => setFuseauHoraire(e.target.value)}
-          placeholder="Europe/Paris"
-        />
-        <p className="text-xs text-muted-foreground">Format IANA : Europe/Paris, America/New_York, etc.</p>
+      <div className="pt-2 border-t border-border/60">
+        <Button type="submit" disabled={pending}>
+          {pending ? <><Spinner size="sm" /> Enregistrement...</> : "Enregistrer"}
+        </Button>
       </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="frequenceMax">
-          Frequence max d&apos;inscription par semaine
-        </Label>
-        <Input
-          id="frequenceMax"
-          type="number"
-          min="1"
-          max="7"
-          value={frequenceMax}
-          onChange={(e) => setFrequenceMax(e.target.value)}
-          placeholder="Illimitee"
-        />
-        <p className="text-xs text-muted-foreground">Laisser vide pour ne pas limiter.</p>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="contactEmail">Email de contact</Label>
-        <Input
-          id="contactEmail"
-          type="email"
-          value={contactEmail}
-          onChange={(e) => setContactEmail(e.target.value)}
-          placeholder="contact@association.fr"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="contactTelephone">Telephone de contact</Label>
-        <Input
-          id="contactTelephone"
-          value={contactTelephone}
-          onChange={(e) => setContactTelephone(e.target.value)}
-          placeholder="+33 1 23 45 67 89"
-        />
-      </div>
-
-      <Button type="submit" disabled={pending}>
-        {pending ? <><Spinner size="sm" /> Enregistrement...</> : "Enregistrer"}
-      </Button>
     </form>
   );
 }

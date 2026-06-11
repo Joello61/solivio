@@ -1,10 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Check, X } from "lucide-react";
+import { Pencil, Trash2, Check, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   creerCatalogueDenree,
   modifierCatalogueDenree,
@@ -21,6 +32,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
   const [nouveauLibelle, setNouveauLibelle] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editLibelle, setEditLibelle] = useState("");
+  const [suppressionCible, setSuppressionCible] = useState<{ id: string; libelle: string } | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -74,23 +86,29 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
     }
   }
 
-  async function handleSupprimer(id: string, libelle: string) {
-    if (!window.confirm(`Supprimer "${libelle}" du catalogue ?`)) return;
+  function demanderSuppression(id: string, libelle: string) {
+    setSuppressionCible({ id, libelle });
+  }
+
+  async function confirmerSuppression() {
+    if (!suppressionCible) return;
     setErreur(null);
     setPending(true);
     try {
-      await supprimerCatalogueDenree(id);
-      setDenrees((prev) => prev.filter((d) => d.id !== id));
+      await supprimerCatalogueDenree(suppressionCible.id);
+      setDenrees((prev) => prev.filter((d) => d.id !== suppressionCible.id));
     } catch (err) {
       const e = err as { detail?: string; message?: string };
       setErreur(e.detail ?? e.message ?? "Erreur lors de la suppression.");
     } finally {
       setPending(false);
+      setSuppressionCible(null);
     }
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Formulaire d'ajout */}
       <form onSubmit={handleCreer} className="flex gap-2">
         <Input
@@ -111,7 +129,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
 
       {/* Liste */}
       {denrees.length === 0 ? (
-        <div className="rounded-xl border border-border bg-muted/30 px-6 py-10 text-center">
+        <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">Le catalogue est vide.</p>
         </div>
       ) : (
@@ -123,9 +141,9 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
             </span>
           </div>
 
-          <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
             {denrees.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 bg-card">
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 dark:hover:bg-teal-950/20 transition-colors">
                 {editId === d.id ? (
                   <>
                     <Input
@@ -172,7 +190,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleSupprimer(d.id, d.libelle)}
+                      onClick={() => demanderSuppression(d.id, d.libelle)}
                       disabled={pending}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
@@ -185,6 +203,33 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
           </ul>
         </div>
       )}
-    </div>
+      </div>
+
+      <AlertDialog
+        open={suppressionCible !== null}
+        onOpenChange={(open) => { if (!open) setSuppressionCible(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10">
+              <AlertTriangle className="text-destructive" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Supprimer la denree</AlertDialogTitle>
+            <AlertDialogDescription>
+              &quot;{suppressionCible?.libelle}&quot; sera supprimee du catalogue.
+              Cette action est irreversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSuppressionCible(null)}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmerSuppression}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
