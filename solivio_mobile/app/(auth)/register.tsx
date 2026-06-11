@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react-native';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -55,11 +56,12 @@ export default function RegisterScreen() {
   return (
     <AuthLayout title="Creer un compte" description="Rejoignez votre association sur Solivio.">
       <View className="gap-4">
-        {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <Text className="text-sm text-destructive">{error}</Text>
+        {error ? (
+          <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+            <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-sm text-destructive">{error}</Text>
           </View>
-        )}
+        ) : null}
 
         <View className="flex-row gap-3">
           <View className="flex-1">
@@ -157,21 +159,25 @@ export default function RegisterScreen() {
               onChangeText={onChange}
               onBlur={onBlur}
               error={errors.codeAssociation?.message}
+              helper="Code fourni par votre association pour rejoindre son espace."
               autoCapitalize="characters"
               placeholder="CODE123"
             />
           )}
         />
 
-        <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg">
+        <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg" fullWidth>
           Creer mon compte
         </Button>
       </View>
 
-      <View className="flex-row justify-center gap-1">
+      <View className="flex-row justify-center items-center gap-1.5">
         <Text className="text-sm text-muted-foreground">Deja un compte ?</Text>
-        <Pressable onPress={() => router.replace('/(auth)/login')}>
-          <Text className="text-sm text-primary-600 font-medium">Se connecter</Text>
+        <Pressable
+          onPress={() => router.replace('/(auth)/login')}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+        >
+          <Text className="text-sm text-primary font-semibold">Se connecter</Text>
         </Pressable>
       </View>
     </AuthLayout>

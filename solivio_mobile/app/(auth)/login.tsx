@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react-native';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -55,11 +56,12 @@ export default function LoginScreen() {
   return (
     <AuthLayout title="Connexion" description="Acces a votre espace association">
       <View className="gap-4">
-        {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <Text className="text-sm text-destructive">{error}</Text>
+        {error ? (
+          <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+            <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-sm text-destructive">{error}</Text>
           </View>
-        )}
+        ) : null}
 
         <Controller
           control={control}
@@ -82,10 +84,11 @@ export default function LoginScreen() {
         <View className="gap-1.5">
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-medium text-foreground">Mot de passe</Text>
-            <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
-              <Text className="text-xs text-primary-600 font-medium">
-                Mot de passe oublie ?
-              </Text>
+            <Pressable
+              onPress={() => router.push('/(auth)/forgot-password')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text className="text-xs text-primary font-semibold">Mot de passe oublie ?</Text>
             </Pressable>
           </View>
           <Controller
@@ -105,19 +108,18 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          loading={isSubmitting}
-          size="lg"
-        >
+        <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg" fullWidth>
           Se connecter
         </Button>
       </View>
 
-      <View className="flex-row justify-center gap-1">
+      <View className="flex-row justify-center items-center gap-1.5">
         <Text className="text-sm text-muted-foreground">Pas encore de compte ?</Text>
-        <Pressable onPress={() => router.push('/(auth)/register')}>
-          <Text className="text-sm text-primary-600 font-medium">Creer un compte</Text>
+        <Pressable
+          onPress={() => router.push('/(auth)/register')}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+        >
+          <Text className="text-sm text-primary font-semibold">Creer un compte</Text>
         </Pressable>
       </View>
     </AuthLayout>

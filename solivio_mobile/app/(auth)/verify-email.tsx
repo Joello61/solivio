@@ -1,14 +1,36 @@
 import { useRef, useState } from 'react';
 import { Text, TextInput, View, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { AlertCircle, Mail } from 'lucide-react-native';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button } from '@/components/ui/Button';
 import { verifyEmail } from '@/lib/auth';
+
+function otpBoxStyle(digit: string, focused: boolean) {
+  return {
+    flex: 1,
+    aspectRatio: 1 as const,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    backgroundColor: focused ? '#F0FDFA' : '#FFFFFF',
+    borderColor: focused ? '#0D9488' : digit ? '#0D9488' : '#E2E8F0',
+    textAlign: 'center' as const,
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: '#0F172A',
+    shadowColor: focused ? '#0D9488' : '#0F172A',
+    shadowOffset: { width: 0, height: focused ? 0 : 1 },
+    shadowOpacity: focused ? 0.14 : 0.04,
+    shadowRadius: focused ? 6 : 4,
+    elevation: focused ? 2 : 1,
+  };
+}
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const inputs = useRef<(TextInput | null)[]>([]);
@@ -55,40 +77,57 @@ export default function VerifyEmailScreen() {
   const codeComplet = digits.every((d) => d !== '');
 
   return (
-    <AuthLayout
-      title="Verifier votre email"
-      description={`Un code a 6 chiffres a ete envoye a ${email ?? ''}.`}
-    >
-      <View className="gap-4">
-        {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <Text className="text-sm text-destructive">{error}</Text>
-          </View>
-        )}
-
-        <View className="flex-row justify-between gap-2">
-          {digits.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => { inputs.current[index] = ref; }}
-              className="flex-1 aspect-square border border-input rounded-xl text-center text-xl font-bold text-foreground bg-background focus:border-primary-600"
-              value={digit}
-              onChangeText={(v) => onDigitChange(index, v)}
-              onKeyPress={({ nativeEvent: { key } }) => onKeyPress(index, key)}
-              keyboardType="number-pad"
-              maxLength={6}
-              selectTextOnFocus
-            />
-          ))}
+    <AuthLayout title="Verifier votre email">
+      <View className="gap-5">
+        {/* Email affiché */}
+        <View className="flex-row items-center gap-3 bg-muted rounded-xl px-4 py-3">
+          <Mail size={18} color="#64748B" />
+          <Text className="flex-1 text-sm text-muted-foreground" numberOfLines={1}>
+            Code envoye a{' '}
+            <Text className="font-semibold text-foreground">{email ?? ''}</Text>
+          </Text>
         </View>
 
-        <Button onPress={onSubmit} loading={loading} disabled={!codeComplet} size="lg">
+        {error ? (
+          <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+            <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-sm text-destructive">{error}</Text>
+          </View>
+        ) : null}
+
+        {/* Saisie du code OTP */}
+        <View className="gap-2">
+          <Text className="text-sm font-medium text-foreground">Code a 6 chiffres</Text>
+          <View className="flex-row gap-2">
+            {digits.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => { inputs.current[index] = ref; }}
+                style={otpBoxStyle(digit, focusedIndex === index)}
+                value={digit}
+                onChangeText={(v) => onDigitChange(index, v)}
+                onKeyPress={({ nativeEvent: { key } }) => onKeyPress(index, key)}
+                onFocus={() => setFocusedIndex(index)}
+                onBlur={() => setFocusedIndex(null)}
+                keyboardType="number-pad"
+                maxLength={6}
+                selectTextOnFocus
+              />
+            ))}
+          </View>
+        </View>
+
+        <Button onPress={onSubmit} loading={loading} disabled={!codeComplet} size="lg" fullWidth>
           Verifier
         </Button>
       </View>
 
-      <Pressable onPress={() => router.back()} className="items-center">
-        <Text className="text-sm text-primary-600 font-medium">Retour</Text>
+      <Pressable
+        onPress={() => router.back()}
+        className="items-center"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text className="text-sm text-primary font-semibold">Retour</Text>
       </Pressable>
     </AuthLayout>
   );
