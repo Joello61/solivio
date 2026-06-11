@@ -87,9 +87,9 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:}
-            client-secret: ${GOOGLE_CLIENT_SECRET:}
-            scope: openid,profile,email
+            client-id: ${GOOGLE_CLIENT_ID:326901339653-qqkbuml4g1lj65e9gph0t6rqd8k98hco.apps.googleusercontent.com}
+            client-secret: ${GOOGLE_CLIENT_SECRET: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}
+            scope: profile,email
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
