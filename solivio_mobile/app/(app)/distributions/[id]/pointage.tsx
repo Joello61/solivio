@@ -115,7 +115,7 @@ export default function PointageScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Pointage" showClose />
+      <ScreenHeader title="Pointage" showClose modal />
       <SafeAreaView edges={['bottom']} className="flex-1">
         {/* Barre de recherche */}
         <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border bg-card">

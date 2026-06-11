@@ -11,6 +11,7 @@ import {
   Package,
   ChevronRight,
   AlertCircle,
+  BarChart2,
 } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import {
@@ -22,6 +23,7 @@ import {
   inscrire,
   listerInscrits,
 } from '@/lib/api/distributions';
+import { statsDistribution } from '@/lib/api/association';
 import { StatutBadge } from '@/components/distributions/StatutBadge';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -55,6 +57,12 @@ export default function DistributionDetailScreen() {
     queryKey: ['inscrits', id],
     queryFn: () => listerInscrits(id),
     enabled: !!id && !!estCoordinateur,
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ['stats-distribution', id],
+    queryFn: () => statsDistribution(id),
+    enabled: !!id && distribution?.statut === 'TERMINEE' && !!estCoordinateur,
   });
 
   const invalidate = () => {
@@ -186,6 +194,46 @@ export default function DistributionDetailScreen() {
                     <Text className="text-2xl font-bold text-amber-700">{nbBenevoles}</Text>
                     <Text className="text-xs text-muted-foreground mt-0.5">Benevoles</Text>
                   </View>
+                </View>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {/* Statistiques post-cloture */}
+          {statut === 'TERMINEE' && estCoordinateur && stats ? (
+            <Card>
+              <CardHeader>
+                <View className="flex-row items-center gap-2">
+                  <BarChart2 size={16} color="#0D9488" />
+                  <Text className="font-semibold text-foreground">Statistiques</Text>
+                </View>
+              </CardHeader>
+              <CardContent>
+                <View className="flex-row gap-3 mb-3">
+                  <View className="flex-1 items-center bg-teal-50 rounded-xl py-3 border border-teal-100">
+                    <Text className="text-2xl font-bold text-teal-700">
+                      {stats.nbPresentsBeneficiaires}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Presents</Text>
+                  </View>
+                  <View className="flex-1 items-center bg-red-50 rounded-xl py-3 border border-red-100">
+                    <Text className="text-2xl font-bold text-red-500">
+                      {stats.nbAbsentsBeneficiaires}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Absents</Text>
+                  </View>
+                  <View className="flex-1 items-center bg-amber-50 rounded-xl py-3 border border-amber-100">
+                    <Text className="text-2xl font-bold text-amber-600">
+                      {stats.nbNonPointes}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Non pointes</Text>
+                  </View>
+                </View>
+                <View className="bg-primary/8 rounded-xl px-4 py-3 items-center">
+                  <Text className="text-3xl font-bold text-primary">
+                    {Math.round(stats.tauxPresence)}%
+                  </Text>
+                  <Text className="text-xs text-muted-foreground mt-0.5">Taux de presence</Text>
                 </View>
               </CardContent>
             </Card>

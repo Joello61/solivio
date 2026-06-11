@@ -191,7 +191,7 @@ export default function RepartitionScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Repartition" showClose />
+      <ScreenHeader title="Repartition" showClose modal />
       <SafeAreaView edges={['bottom']} className="flex-1">
         <ScrollView
           className="flex-1"
