@@ -8,6 +8,7 @@ import {
   UserCog,
   Building2,
   Package,
+  Recycle,
 } from "lucide-react";
 
 export interface NavItem {
@@ -27,6 +28,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/distributions", label: "Distributions", icon: CalendarDays },
+      { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
