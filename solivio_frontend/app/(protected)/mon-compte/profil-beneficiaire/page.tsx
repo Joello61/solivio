@@ -42,13 +42,13 @@ export default async function ProfilBeneficiairePage() {
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dossier beneficiaire</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Dossier beneficiaire</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Ces informations sont confidentielles et ne sont pas visibles lors du pointage.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
         <FormulaireProfilBeneficiaire profil={profil} />
       </div>
     </div>

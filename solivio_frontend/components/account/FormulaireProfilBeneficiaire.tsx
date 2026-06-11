@@ -245,7 +245,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       </div>
 
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-lg border border-green-500/30 bg-green-50 px-4 py-3 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+        <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
           <CheckCircle className="h-4 w-4 shrink-0" />
           <span className="text-sm">Dossier mis a jour avec succes.</span>
         </div>

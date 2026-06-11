@@ -73,7 +73,7 @@ export function FormulaireMonCompte({ user }: Props) {
       {/* Photo de profil */}
       <div className="flex items-center gap-5">
         <div className="relative">
-          <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden ring-2 ring-primary/10">
+          <div className="relative h-20 w-20 rounded-full bg-teal-50 dark:bg-teal-950/30 flex items-center justify-center overflow-hidden ring-2 ring-teal-100 dark:ring-teal-800/40">
             {avatarSrc ? (
               <Image src={avatarSrc} alt="Photo de profil" fill sizes="80px" className="object-cover" />
             ) : (
@@ -173,7 +173,7 @@ export function FormulaireMonCompte({ user }: Props) {
         </div>
 
         {succes && (
-          <div className="flex items-center gap-2.5 rounded-lg border border-green-500/30 bg-green-50 px-4 py-3 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+          <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
             <CheckCircle className="h-4 w-4 shrink-0" />
             <span className="text-sm">Profil mis a jour avec succes.</span>
           </div>

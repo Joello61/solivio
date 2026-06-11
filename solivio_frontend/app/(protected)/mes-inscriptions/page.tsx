@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Calendar, MapPin, CalendarSearch, ArrowRight } from "lucide-react";
+import { MapPin, CalendarSearch, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
@@ -54,9 +54,15 @@ function presenceLabel(presence: string): string {
 }
 
 const STATUT_PILL: Record<string, string> = {
-  CONFIRMEE:     "bg-primary/10 text-primary border-primary/20",
-  LISTE_ATTENTE: "bg-ambre-100 text-ambre-800 border-ambre-200 dark:bg-ambre-950/30 dark:text-ambre-300 dark:border-ambre-800/40",
-  ANNULEE:       "bg-destructive/10 text-destructive border-destructive/20",
+  CONFIRMEE:     "bg-teal-50 text-primary border-teal-200 dark:bg-teal-950/30 dark:border-teal-800/40",
+  LISTE_ATTENTE: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/40",
+  ANNULEE:       "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
+};
+
+const STATUT_ACCENT: Record<string, string> = {
+  CONFIRMEE:     "border-l-primary",
+  LISTE_ATTENTE: "border-l-orange-400",
+  ANNULEE:       "border-l-destructive",
 };
 
 const TYPE_PILL: Record<string, string> = {
@@ -88,25 +94,25 @@ export default async function MesInscriptionsPage() {
   );
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Mes inscriptions</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Mes inscriptions</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Vos inscriptions en cours et passees.
         </p>
       </div>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            A venir
-          </p>
+      <section className="space-y-4">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-base font-semibold text-foreground font-display">A venir</h2>
           {avenir.length > 0 && (
-            <span className="text-xs text-muted-foreground">{avenir.length} inscription{avenir.length > 1 ? "s" : ""}</span>
+            <span className="text-sm text-muted-foreground">
+              {avenir.length} inscription{avenir.length > 1 ? "s" : ""}
+            </span>
           )}
         </div>
         {avenir.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
             <EmptyState
               icon={CalendarSearch}
               title="Aucune inscription a venir"
@@ -116,7 +122,7 @@ export default async function MesInscriptionsPage() {
             />
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
             {avenir.map((i) => (
               <CarteInscription key={i.id} inscription={i} />
             ))}
@@ -125,14 +131,14 @@ export default async function MesInscriptionsPage() {
       </section>
 
       {passees.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Historique
-            </p>
-            <span className="text-xs text-muted-foreground">{passees.length} inscription{passees.length > 1 ? "s" : ""}</span>
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-base font-semibold text-foreground font-display">Historique</h2>
+            <span className="text-sm text-muted-foreground">
+              {passees.length} inscription{passees.length > 1 ? "s" : ""}
+            </span>
           </div>
-          <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden opacity-80">
+          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden opacity-80">
             {passees.map((i) => (
               <CarteInscription key={i.id} inscription={i} />
             ))}
@@ -144,29 +150,41 @@ export default async function MesInscriptionsPage() {
 }
 
 function CarteInscription({ inscription: i }: { inscription: InscriptionPersonnelle }) {
-  const dateFormatee = i.distributionDate
-    ? new Date(i.distributionDate + "T00:00:00").toLocaleDateString("fr-FR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
+  const date = i.distributionDate ? new Date(i.distributionDate + "T00:00:00") : null;
+  const jour = date?.getDate();
+  const mois = date?.toLocaleString("fr-FR", { month: "short" });
+
+  const accentClass = STATUT_ACCENT[i.statut] ?? "border-l-border/60";
 
   return (
     <Link
       href={`/distributions/${i.distributionId}`}
-      className="group flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors"
+      className={cn(
+        "group flex items-center gap-4 pl-4 pr-5 py-4",
+        "border-l-[3px]",
+        accentClass,
+        "hover:bg-teal-50/40 dark:hover:bg-teal-950/20 transition-colors",
+      )}
     >
+      {/* Bloc date */}
+      {date ? (
+        <div className="flex-shrink-0 w-10 text-center">
+          <p className="text-xl font-bold text-foreground leading-none tabular-nums">{jour}</p>
+          <p className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider mt-0.5 capitalize">{mois}</p>
+        </div>
+      ) : (
+        <div className="flex-shrink-0 w-10" />
+      )}
+
       <div className="flex-1 min-w-0 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+          <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
             {i.distributionTitre ?? "Distribution"}
           </span>
           <div className="flex gap-1.5">
             <span
               className={cn(
-                "inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium",
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
                 TYPE_PILL[i.type] ?? "bg-muted text-muted-foreground border-border",
               )}
             >
@@ -174,7 +192,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
             </span>
             <span
               className={cn(
-                "inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium",
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
                 STATUT_PILL[i.statut] ?? "bg-muted text-muted-foreground border-border",
               )}
             >
@@ -184,12 +202,6 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1">
-          {dateFormatee && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Calendar className="size-3.5 shrink-0" />
-              <span className="capitalize">{dateFormatee}</span>
-            </div>
-          )}
           {i.distributionLieu && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <MapPin className="size-3.5 shrink-0" />
@@ -204,7 +216,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
         </div>
       </div>
 
-      <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
     </Link>
   );
 }
