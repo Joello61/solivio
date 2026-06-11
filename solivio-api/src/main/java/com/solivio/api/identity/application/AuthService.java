@@ -231,7 +231,11 @@ public class AuthService {
             photoUrl,
             compte.isSuperAdmin(),
             userDetails.getTenantSlug(),
-            roles
+            roles,
+            compte.getDateCreation(),
+            compte.getDateModification(),
+            compte.isEmailVerifie(),
+            compte.getGoogleId() != null ? "google" : "password"
         );
     }
 

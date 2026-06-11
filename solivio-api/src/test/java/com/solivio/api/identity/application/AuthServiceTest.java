@@ -79,6 +79,24 @@ class AuthServiceTest {
         assertThat(response.roles()).contains("beneficiaire");
         assertThat(response.telephone()).isNull();
         assertThat(response.photoUrl()).isNull();
+        assertThat(response.dateCreation()).isNotNull();
+        assertThat(response.dateModification()).isNotNull();
+        assertThat(response.emailVerifie()).isFalse();
+        assertThat(response.authMethod()).isEqualTo("password");
+    }
+
+    @Test
+    void me_retourneAuthMethodGoogleSiCompteGoogle() {
+        compte.setGoogleId("google-uid-123");
+        when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
+        // tenantSlug null : personneRepository n'est pas appele
+        SolivioUserDetails userDetails = new SolivioUserDetails(
+            compteId, "alice@example.com", null, null, false,
+            List.of(), true);
+
+        MeResponse response = service.me(userDetails);
+
+        assertThat(response.authMethod()).isEqualTo("google");
     }
 
     @Test
