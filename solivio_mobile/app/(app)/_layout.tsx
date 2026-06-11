@@ -21,6 +21,8 @@ export default function AppLayout() {
       <Stack.Screen name="association/catalogue-denrees" />
       <Stack.Screen name="mon-compte/index" />
       <Stack.Screen name="mon-compte/profil-beneficiaire" />
+      <Stack.Screen name="admin/utilisateurs" />
+      <Stack.Screen name="admin/associations" />
       <Stack.Screen name="a-propos" />
     </Stack>
   );
