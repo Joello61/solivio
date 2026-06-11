@@ -2,6 +2,7 @@ package com.solivio.api.distribution.application;
 
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
+import com.solivio.api.distribution.domain.Lieu;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
 import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
@@ -11,6 +12,8 @@ import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreneauResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
+import com.solivio.api.distribution.infrastructure.web.dto.LieuRequest;
+import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
@@ -51,7 +54,7 @@ public class DistributionService {
         Distribution distribution = new Distribution(
             request.titre(),
             request.description(),
-            request.lieu(),
+            toLieu(request.lieu()),
             request.date(),
             request.capaciteBeneficiaires(),
             request.capaciteBenevoles(),
@@ -165,7 +168,7 @@ public class DistributionService {
             d.getId(),
             d.getTitre(),
             d.getDescription(),
-            d.getLieu(),
+            toLieuResponse(d.getLieu()),
             d.getDate(),
             d.getStatut().name(),
             d.getCapaciteBeneficiaires(),
@@ -176,5 +179,22 @@ public class DistributionService {
             d.getDateCreation(),
             creneauxReponse
         );
+    }
+
+    private static Lieu toLieu(LieuRequest r) {
+        if (r == null) {
+            return null;
+        }
+        return new Lieu(r.placeId(), r.nom(), r.adresseFormatee(), r.latitude(), r.longitude(),
+            r.numeroRue(), r.voie(), r.codePostal(), r.ville());
+    }
+
+    private static LieuResponse toLieuResponse(Lieu l) {
+        if (l == null) {
+            return null;
+        }
+        return new LieuResponse(l.getPlaceId(), l.getNom(), l.getAdresseFormatee(),
+            l.getLatitude(), l.getLongitude(), l.getNumeroRue(), l.getVoie(),
+            l.getCodePostal(), l.getVille());
     }
 }

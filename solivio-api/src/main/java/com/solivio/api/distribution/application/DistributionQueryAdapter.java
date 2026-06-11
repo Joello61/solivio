@@ -61,7 +61,7 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             d.getId(),
             d.getTitre(),
             d.getDate(),
-            d.getLieu(),
+            d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
             d.getMotifAnnulation()
         );
     }
@@ -81,7 +81,9 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
         }
         return distributionRepository.findAllById(ids).stream()
             .map(d -> new DistributionDetailInfo(
-                d.getId(), d.getTitre(), d.getDate(), d.getLieu(), d.getMotifAnnulation()
+                d.getId(), d.getTitre(), d.getDate(),
+                d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
+                d.getMotifAnnulation()
             ))
             .toList();
     }
