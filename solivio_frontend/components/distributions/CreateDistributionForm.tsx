@@ -73,13 +73,13 @@ export function CreateDistributionForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
       {erreur && (
-        <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
           {erreur}
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Informations generales</h2>
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+        <h2 className="text-base font-semibold text-foreground font-display">Informations generales</h2>
 
         <div className="space-y-1.5">
           <Label htmlFor="titre">Titre <span className="text-destructive">*</span></Label>
@@ -109,8 +109,8 @@ export function CreateDistributionForm() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Capacites</h2>
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+        <h2 className="text-base font-semibold text-foreground font-display">Capacites</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="capaciteBeneficiaires">
@@ -139,9 +139,9 @@ export function CreateDistributionForm() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Creneaux horaires</h2>
+          <h2 className="text-base font-semibold text-foreground font-display">Creneaux horaires</h2>
           <Button
             type="button"
             variant="outline"
@@ -155,7 +155,7 @@ export function CreateDistributionForm() {
 
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div key={field.id} className="flex items-end gap-2 rounded-lg bg-muted/30 p-3">
+            <div key={field.id} className="flex items-end gap-2 rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-800/50 p-3">
               <div className="flex-1 space-y-1">
                 <Label htmlFor={`creneaux.${index}.heureDebut`} className="text-xs">Debut</Label>
                 <Input type="time" {...register(`creneaux.${index}.heureDebut`)} className="h-8 text-sm" />
