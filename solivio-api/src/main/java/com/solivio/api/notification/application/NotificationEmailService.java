@@ -22,6 +22,19 @@ public interface NotificationEmailService {
 
     void envoyerAnnulationSessionReconditionnement(String email, ContexteReconditionnementEmail contexte);
 
+    void envoyerCreationMissionCollecte(String email, ContexteCollecteEmail contexte);
+
+    void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte);
+
+    record ContexteCollecteEmail(
+        String prenom,
+        String missionTitre,
+        java.time.ZonedDateTime dateHeure,
+        String lieuCollecteAdresse,
+        String lieuDepotAdresse,
+        String raisonAnnulation
+    ) {}
+
     record ContexteReconditionnementEmail(
         String prenom,
         String sessionTitre,

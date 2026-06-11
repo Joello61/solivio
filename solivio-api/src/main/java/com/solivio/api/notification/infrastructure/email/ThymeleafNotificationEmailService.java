@@ -1,6 +1,8 @@
 package com.solivio.api.notification.infrastructure.email;
 
 import com.solivio.api.notification.application.NotificationEmailService;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -91,6 +93,29 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
     ) {
         envoyer(email, "Session annulee - " + contexte.sessionTitre(),
             "annulation-session-reconditionnement", contexteReconditionnementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerCreationMissionCollecte(String email, ContexteCollecteEmail contexte) {
+        envoyer(email, "Nouvelle mission de collecte - " + contexte.missionTitre(),
+            "creation-mission-collecte", contexteCollecteThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte) {
+        envoyer(email, "Mission annulee - " + contexte.missionTitre(),
+            "annulation-mission-collecte", contexteCollecteThymeleaf(contexte));
+    }
+
+    private Context contexteCollecteThymeleaf(ContexteCollecteEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("missionTitre", c.missionTitre());
+        ctx.setVariable("dateHeure", c.dateHeure());
+        ctx.setVariable("lieuCollecteAdresse", c.lieuCollecteAdresse());
+        ctx.setVariable("lieuDepotAdresse", c.lieuDepotAdresse());
+        ctx.setVariable("raisonAnnulation", c.raisonAnnulation());
+        return ctx;
     }
 
     private Context contexteReconditionnementThymeleaf(ContexteReconditionnementEmail c) {

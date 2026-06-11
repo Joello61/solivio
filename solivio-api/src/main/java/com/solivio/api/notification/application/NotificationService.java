@@ -1,5 +1,6 @@
 package com.solivio.api.notification.application;
 
+import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import com.solivio.api.notification.domain.Notification;
@@ -12,6 +13,8 @@ import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import com.solivio.api.shared.inscription.InscriptionQueryPort.DestinataireMail;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort.MissionInfo;
 import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort;
 import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort.SessionInfo;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ public class NotificationService {
     private final DistributionQueryPort distributionQueryPort;
     private final InscriptionQueryPort inscriptionQueryPort;
     private final SessionReconditionnementQueryPort sessionReconditionnementQueryPort;
+    private final MissionCollecteQueryPort missionCollecteQueryPort;
 
     public NotificationService(
         NotificationEmailService emailService,
@@ -40,7 +44,8 @@ public class NotificationService {
         PersonneQueryPort personneQueryPort,
         DistributionQueryPort distributionQueryPort,
         InscriptionQueryPort inscriptionQueryPort,
-        SessionReconditionnementQueryPort sessionReconditionnementQueryPort
+        SessionReconditionnementQueryPort sessionReconditionnementQueryPort,
+        MissionCollecteQueryPort missionCollecteQueryPort
     ) {
         this.emailService = emailService;
         this.notificationRepository = notificationRepository;
@@ -48,6 +53,7 @@ public class NotificationService {
         this.distributionQueryPort = distributionQueryPort;
         this.inscriptionQueryPort = inscriptionQueryPort;
         this.sessionReconditionnementQueryPort = sessionReconditionnementQueryPort;
+        this.missionCollecteQueryPort = missionCollecteQueryPort;
     }
 
     @Transactional
@@ -166,6 +172,37 @@ public class NotificationService {
                 TypeEvenementNotification.ANNULATION_SESSION_RECONDITIONNEMENT, sujet,
                 () -> emailService.envoyerAnnulationSessionReconditionnement(personne.email(), contexte));
         }
+    }
+
+    @Transactional
+    public void notifierCreationMissionCollecte(UUID missionId) {
+        MissionInfo mission = missionCollecteQueryPort.trouverMissionDetails(missionId);
+        String sujet = "Nouvelle mission de collecte - " + mission.titre();
+        List<PersonneContactInfo> benevoles = personneQueryPort.trouverContactsParRole("benevole");
+        for (PersonneContactInfo benevole : benevoles) {
+            ContexteCollecteEmail contexte = new ContexteCollecteEmail(
+                benevole.prenom(), mission.titre(), mission.dateHeure(),
+                mission.lieuCollecteAdresse(), mission.lieuDepotAdresse(), null);
+            envoyerEtTracerReco(benevole.id(), missionId,
+                TypeEvenementNotification.CREATION_MISSION_COLLECTE, sujet,
+                () -> emailService.envoyerCreationMissionCollecte(benevole.email(), contexte));
+        }
+    }
+
+    @Transactional
+    public void notifierAnnulationMissionCollecte(UUID missionId, UUID benevoleAssigneId) {
+        if (benevoleAssigneId == null) {
+            return;
+        }
+        MissionInfo mission = missionCollecteQueryPort.trouverMissionDetails(missionId);
+        PersonneContactInfo benevole = personneQueryPort.trouverPersonneParId(benevoleAssigneId);
+        String sujet = "Mission annulee - " + mission.titre();
+        ContexteCollecteEmail contexte = new ContexteCollecteEmail(
+            benevole.prenom(), mission.titre(), mission.dateHeure(),
+            mission.lieuCollecteAdresse(), mission.lieuDepotAdresse(), null);
+        envoyerEtTracerReco(benevole.id(), missionId,
+            TypeEvenementNotification.ANNULATION_MISSION_COLLECTE, sujet,
+            () -> emailService.envoyerAnnulationMissionCollecte(benevole.email(), contexte));
     }
 
     private void envoyerEtTracerReco(
