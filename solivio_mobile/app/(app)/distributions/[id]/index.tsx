@@ -157,10 +157,10 @@ export default function DistributionDetailScreen() {
                 <Calendar size={15} color="#94A3B8" />
                 <Text className="text-base text-foreground">{formatDate(distribution.date)}</Text>
               </View>
-              {distribution.lieu ? (
+              {distribution.lieu?.adresseFormatee ? (
                 <View className="flex-row items-center gap-2">
                   <MapPin size={15} color="#94A3B8" />
-                  <Text className="text-base text-foreground">{distribution.lieu}</Text>
+                  <Text className="text-base text-foreground">{distribution.lieu.adresseFormatee}</Text>
                 </View>
               ) : null}
               <View className="flex-row items-center gap-2">

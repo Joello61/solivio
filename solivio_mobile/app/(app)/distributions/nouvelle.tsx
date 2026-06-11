@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,7 +11,9 @@ import { Plus, Trash2, AlertCircle } from 'lucide-react-native';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { DatePickerInput } from '@/components/ui/DatePickerInput';
+import { AdresseAutocompleteInput } from '@/components/distributions/AdresseAutocompleteInput';
 import { creerDistribution } from '@/lib/api/distributions';
+import type { LieuRequest } from '@/types/distribution';
 
 const creneauSchema = z.object({
   heureDebut: z.string().min(1, 'Heure de debut requise'),
@@ -21,7 +23,6 @@ const creneauSchema = z.object({
 
 const schema = z.object({
   titre: z.string().min(1, 'Titre requis'),
-  lieu: z.string().optional(),
   description: z.string().optional(),
   date: z.string().min(1, 'Date requise'),
   capaciteBeneficiaires: z.string().min(1, 'Capacite requise'),
@@ -35,6 +36,18 @@ export default function NouvelleDistributionScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(undefined);
+  const [mapsApiKey, setMapsApiKey] = useState<string>('');
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetch(`${process.env.EXPO_PUBLIC_API_URL ?? ''}/api/public/config`)
+      .then((r) => r.json())
+      .then((d: { googleMapsApiKey?: string }) => setMapsApiKey(d.googleMapsApiKey ?? ''))
+      .catch(() => {});
+  }, []);
 
   const {
     control,
@@ -66,7 +79,7 @@ export default function NouvelleDistributionScreen() {
     setError(null);
     mutation.mutate({
       titre: data.titre,
-      lieu: data.lieu,
+      lieu: lieu,
       description: data.description,
       date: data.date,
       capaciteBeneficiaires: Number(data.capaciteBeneficiaires),
@@ -127,19 +140,12 @@ export default function NouvelleDistributionScreen() {
               )}
             />
 
-            <Controller
-              control={control}
-              name="lieu"
-              render={({ field: { value, onChange, onBlur } }) => (
-                <Input
-                  label="Lieu"
-                  value={value ?? ''}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.lieu?.message}
-                  placeholder="Salle polyvalente, 12 rue..."
-                />
-              )}
+            <AdresseAutocompleteInput
+              apiKey={mapsApiKey}
+              label="Lieu"
+              value={lieu?.adresseFormatee}
+              onSelect={setLieu}
+              onClear={() => setLieu(undefined)}
             />
 
             <Controller
