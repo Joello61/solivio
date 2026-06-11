@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -135,6 +136,72 @@ public class RegisterService {
         }
 
         envoyerVerificationEmail(compte);
+    }
+
+    /**
+     * Lie un compte Google existant a une association.
+     * Le compte doit avoir un google_id (cree via Google OAuth) et aucune affiliation.
+     * L'utilisateur peut corriger son nom/prenom fournis par Google.
+     */
+    @Transactional
+    public Compte lierAssociationGoogle(String email, String nom, String prenom,
+                                        String codeAssociation, String tokenInvitationStr) {
+        Compte compte = compteRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
+
+        if (compte.getGoogleId() == null) {
+            throw new IllegalArgumentException("Ce compte n'est pas un compte Google");
+        }
+
+        List<MembreAssociation> existantes = membreRepo.findActivesByCompteId(compte.getId());
+        if (!existantes.isEmpty()) {
+            throw new IllegalArgumentException("Ce compte est deja lie a une association");
+        }
+
+        if (nom != null && !nom.isBlank()) {
+            compte.setNom(nom);
+        }
+        if (prenom != null && !prenom.isBlank()) {
+            compte.setPrenom(prenom);
+        }
+
+        if (tokenInvitationStr != null && !tokenInvitationStr.isBlank()) {
+            UUID token = UUID.fromString(tokenInvitationStr);
+            Invitation invitation = invitationRepository.findByTokenWithDetails(token)
+                .filter(Invitation::estValide)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation invalide ou expiree"));
+
+            if (!invitation.getEmail().equalsIgnoreCase(email)) {
+                throw new IllegalArgumentException("L'email ne correspond pas a l'invitation");
+            }
+
+            MembreAssociation membre = new MembreAssociation(compte, invitation.getAssociation(), invitation.getRole());
+            membre.setCoordoType(invitation.getCoordoType());
+            membre.setInvitePar(invitation.getInvitePar());
+            membreRepo.save(membre);
+
+            invitation.setStatut("accepted");
+            invitationRepository.save(invitation);
+
+            personneProvisioningService.provisionner(
+                invitation.getAssociation().getSlug(), email, compte.getNom(), compte.getPrenom());
+        } else {
+            if (codeAssociation == null || codeAssociation.isBlank()) {
+                throw new IllegalArgumentException("Code association requis");
+            }
+
+            Association association = associationRepository.findByCode(codeAssociation.toUpperCase())
+                .orElseThrow(() -> new IllegalArgumentException("Code association inconnu : " + codeAssociation));
+
+            MembreAssociation membre = new MembreAssociation(compte, association, "beneficiaire");
+            membreRepo.save(membre);
+
+            personneProvisioningService.provisionner(
+                association.getSlug(), email, compte.getNom(), compte.getPrenom());
+        }
+
+        compteRepository.save(compte);
+        return compte;
     }
 
     private void envoyerVerificationEmail(Compte compte) {
