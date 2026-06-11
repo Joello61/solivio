@@ -13,8 +13,8 @@ const STATUT_CONFIG: Record<
   },
   PUBLIEE: {
     label: 'Publiee',
-    container: 'bg-primary-50 border border-primary-100',
-    text: 'text-primary-700',
+    container: 'bg-teal-50 border border-teal-200',
+    text: 'text-teal-700',
   },
   EN_COURS: {
     label: 'En cours',
@@ -23,8 +23,8 @@ const STATUT_CONFIG: Record<
   },
   TERMINEE: {
     label: 'Terminee',
-    container: 'bg-muted border border-border',
-    text: 'text-muted-foreground',
+    container: 'bg-slate-100 border border-slate-200',
+    text: 'text-slate-500',
   },
   ANNULEE: {
     label: 'Annulee',
@@ -40,8 +40,8 @@ interface StatutBadgeProps {
 export function StatutBadge({ statut }: StatutBadgeProps) {
   const config = STATUT_CONFIG[statut];
   return (
-    <View className={cn('self-start rounded-md px-2 py-0.5', config.container)}>
-      <Text className={cn('text-xs font-medium', config.text)}>{config.label}</Text>
+    <View className={cn('self-start rounded-lg px-2.5 py-1', config.container)}>
+      <Text className={cn('text-xs font-semibold', config.text)}>{config.label}</Text>
     </View>
   );
 }
