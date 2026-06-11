@@ -54,18 +54,19 @@ describe("GestionComptes", () => {
 
   it("affiche la liste des comptes", () => {
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
-    expect(screen.getByText("Alice Dupont")).toBeInTheDocument();
-    expect(screen.getByText("alice@example.com")).toBeInTheDocument();
+    // Nom et email apparaissent dans la vue mobile et la vue desktop
+    expect(screen.getAllByText("Alice Dupont")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("alice@example.com")[0]).toBeInTheDocument();
   });
 
   it("affiche les associations du compte", () => {
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
-    expect(screen.getByText("Pilote")).toBeInTheDocument();
+    expect(screen.getAllByText("Pilote")[0]).toBeInTheDocument();
   });
 
   it("affiche le badge Actif pour un compte actif", () => {
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
-    expect(screen.getByText("Actif")).toBeInTheDocument();
+    expect(screen.getAllByText("Actif")[0]).toBeInTheDocument();
   });
 
   it("affiche le badge Super admin si applicable", () => {
@@ -74,7 +75,7 @@ describe("GestionComptes", () => {
       content: [{ ...compteActif, superAdmin: true }],
     };
     render(<GestionComptes page={pageSuperAdmin} recherche="" currentPage={0} />);
-    expect(screen.getByText("Super admin")).toBeInTheDocument();
+    expect(screen.getAllByText("Super admin")[0]).toBeInTheDocument();
   });
 
   it("affiche le champ de recherche pre-rempli", () => {
@@ -103,8 +104,8 @@ describe("GestionComptes", () => {
     const { changerStatutCompte } = await import("@/lib/api/profil");
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
 
-    // Ouvre le dialog de confirmation
-    fireEvent.click(screen.getByRole("button", { name: /Desactiver/i }));
+    // Ouvre le dialog via le premier bouton Desactiver (vue mobile)
+    fireEvent.click(screen.getAllByRole("button", { name: /Desactiver/i })[0]);
 
     // Attend l'affichage du dialog et confirme l'action
     await waitFor(() => {

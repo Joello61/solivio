@@ -34,8 +34,9 @@ describe("GestionAssociations", () => {
 
   it("affiche la liste des associations", () => {
     render(<GestionAssociations associations={[assoActive]} />);
-    expect(screen.getByText("Association Pilote")).toBeInTheDocument();
-    expect(screen.getByText("pilote")).toBeInTheDocument();
+    // Le nom et le slug apparaissent dans la vue mobile et la vue desktop
+    expect(screen.getAllByText("Association Pilote")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("pilote")[0]).toBeInTheDocument();
     expect(screen.getByText("PILOTE")).toBeInTheDocument();
   });
 
