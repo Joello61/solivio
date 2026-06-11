@@ -73,7 +73,8 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText("Pommes de terre")).toBeInTheDocument();
-    expect(screen.getByText(/5 kg \/ personne/)).toBeInTheDocument();
+    expect(screen.getByText("5 kg")).toBeInTheDocument();
+    expect(screen.getByText("par personne")).toBeInTheDocument();
   });
 
   it("affiche le message de penurie si dotation insuffisante", () => {
@@ -100,7 +101,9 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/10 beneficiaire/)).toBeInTheDocument();
+    // Le chiffre et le libelle sont dans des <span> distincts
+    expect(screen.getByText("10")).toBeInTheDocument();
+    expect(screen.getByText(/beneficiaire/)).toBeInTheDocument();
   });
 
   it("affiche le bouton d'ajout de denree si modifiable", () => {
@@ -168,7 +171,7 @@ describe("RepartitionPanel", () => {
     });
 
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");
-    expect(await screen.findByText(/7 beneficiaire/)).toBeInTheDocument();
+    expect(await screen.findByText("7")).toBeInTheDocument();
   });
 
   it("affiche le reste si non nul", () => {
@@ -264,6 +267,7 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText("Pommes de terre")).toBeInTheDocument();
-    expect(screen.getByText(/5 kg \/ personne/)).toBeInTheDocument();
+    expect(screen.getByText("5 kg")).toBeInTheDocument();
+    expect(screen.getByText("par personne")).toBeInTheDocument();
   });
 });
