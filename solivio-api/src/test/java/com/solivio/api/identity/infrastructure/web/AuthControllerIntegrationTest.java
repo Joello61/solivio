@@ -8,6 +8,7 @@ import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
+import com.solivio.api.identity.infrastructure.web.dto.GoogleCompleteRegistrationRequest;
 import com.solivio.api.identity.infrastructure.web.dto.LoginRequest;
 import com.solivio.api.identity.infrastructure.web.dto.RegisterRequest;
 import com.solivio.api.support.SolivioIntegrationTest;
@@ -244,5 +245,56 @@ class AuthControllerIntegrationTest {
     void refresh_retourne400SansCookieNiBody() throws Exception {
         mockMvc.perform(post("/api/auth/refresh"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void googleCompleteRegistration_retourne200PourCompteGoogleSansAffiliation() throws Exception {
+        Compte googleCompte = new Compte("google@example.com", null, "Dupont", "Alice");
+        googleCompte.setGoogleId("google-uid-123");
+        compteRepository.save(googleCompte);
+
+        GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
+            "google@example.com", "Dupont", "Alice", "PILOTETEST", null);
+
+        mockMvc.perform(post("/api/auth/google/complete-registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(body)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
+            .andExpect(cookie().exists("access_token"));
+    }
+
+    @Test
+    void googleCompleteRegistration_retourne400SiPasGoogleId() throws Exception {
+        // alice@example.com n'a pas de google_id (compte email/mot de passe)
+        GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
+            "alice@example.com", "Dupont", "Alice", "PILOTETEST", null);
+
+        mockMvc.perform(post("/api/auth/google/complete-registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(body)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void googleCompleteRegistration_retourne400SiDejaAffilie() throws Exception {
+        Compte googleCompteAffilie = new Compte("google2@example.com", null, "Martin", "Bob");
+        googleCompteAffilie.setGoogleId("google-uid-789");
+        compteRepository.save(googleCompteAffilie);
+        membreRepo.save(new MembreAssociation(googleCompteAffilie, association, "beneficiaire"));
+
+        GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
+            "google2@example.com", "Martin", "Bob", "PILOTETEST", null);
+
+        mockMvc.perform(post("/api/auth/google/complete-registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(body)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void googleLinkMobileInit_retourne302VersOAuth2() throws Exception {
+        mockMvc.perform(get("/api/auth/google/link-mobile-init"))
+            .andExpect(status().is3xxRedirection());
     }
 }
