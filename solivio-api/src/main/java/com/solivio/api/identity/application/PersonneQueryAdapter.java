@@ -44,4 +44,12 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
             .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
             .toList();
     }
+
+    @Override
+    public List<PersonneContactInfo> rechercherParNomOuPrenom(String terme) {
+        return personneRepository.rechercherParNomOuPrenom(terme).stream()
+            .limit(10)
+            .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
+            .toList();
+    }
 }
