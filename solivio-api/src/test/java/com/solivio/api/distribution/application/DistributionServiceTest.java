@@ -53,7 +53,7 @@ class DistributionServiceTest {
         distributionId = UUID.randomUUID();
         creeParId = UUID.randomUUID();
         distribution = new Distribution(
-            "Distribution de test", null, "Salle A", LocalDate.now().plusDays(7),
+            "Distribution de test", null, null, LocalDate.now().plusDays(7),
             50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId
         );
         distribution.setId(distributionId);
@@ -77,7 +77,7 @@ class DistributionServiceTest {
             });
 
         CreateDistributionRequest request = new CreateDistributionRequest(
-            "Distribution de test", null, "Salle A", LocalDate.now().plusDays(7),
+            "Distribution de test", null, null, LocalDate.now().plusDays(7),
             50, 10, "CRENEAU_UNIQUE",
             List.of(new AjouterCreneauRequest(LocalTime.of(10, 0), LocalTime.of(12, 0), 50))
         );
@@ -173,7 +173,7 @@ class DistributionServiceTest {
     void demarrer_nEmettreAucunEvenementKafka() {
         // Distribution a la date du jour : demarrage autorise
         Distribution distribAujourdhui = new Distribution(
-            "Distribution de test", null, "Salle A", LocalDate.now(),
+            "Distribution de test", null, null, LocalDate.now(),
             50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId
         );
         distribAujourdhui.setId(distributionId);
@@ -204,7 +204,7 @@ class DistributionServiceTest {
     @Test
     void demarrer_autoriseSiDatePassee() {
         Distribution distribPassee = new Distribution(
-            "Distribution passee", null, "Salle B", LocalDate.now().minusDays(1),
+            "Distribution passee", null, null, LocalDate.now().minusDays(1),
             50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId
         );
         distribPassee.setId(distributionId);
