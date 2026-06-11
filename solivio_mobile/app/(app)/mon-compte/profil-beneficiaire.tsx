@@ -55,25 +55,33 @@ function ChipSelector({
     <View className="gap-1.5">
       <Text className="text-sm font-medium text-foreground">{label}</Text>
       <View className="flex-row flex-wrap gap-2">
-        {options.map((opt) => (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            className={`px-3 py-1.5 rounded-full border ${
-              value === opt.value
-                ? 'bg-primary-600 border-primary-600'
-                : 'border-border bg-background'
-            }`}
-          >
-            <Text
-              className={`text-sm font-medium ${
-                value === opt.value ? 'text-white' : 'text-foreground'
-              }`}
+        {options.map((opt) => {
+          const isSelected = value === opt.value;
+          return (
+            <Pressable
+              key={opt.value}
+              onPress={() => onChange(opt.value)}
+              style={({ pressed }) => ({
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: isSelected ? '#0D9488' : '#E2E8F0',
+                backgroundColor: isSelected ? '#0D9488' : pressed ? '#F8FAFC' : '#FFFFFF',
+              })}
             >
-              {opt.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: isSelected ? '#FFFFFF' : '#0F172A',
+                }}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );

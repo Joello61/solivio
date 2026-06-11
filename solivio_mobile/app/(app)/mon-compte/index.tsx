@@ -70,7 +70,7 @@ export default function MonCompteScreen() {
         >
           {/* Avatar */}
           <View className="items-center gap-3">
-            <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center overflow-hidden">
+            <View className="w-20 h-20 rounded-full bg-teal-100 items-center justify-center overflow-hidden">
               {avatarUri ? (
                 <Image
                   source={{ uri: avatarUri }}
@@ -78,17 +78,17 @@ export default function MonCompteScreen() {
                   resizeMode="cover"
                 />
               ) : (
-                <Text className="text-2xl font-bold text-primary-600">{initiales}</Text>
+                <Text className="text-2xl font-bold text-teal-700">{initiales}</Text>
               )}
             </View>
             <Text className="text-sm text-muted-foreground">{user?.email}</Text>
           </View>
 
-          {success && (
-            <View className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-              <Text className="text-sm text-green-700">Profil mis a jour.</Text>
+          {success ? (
+            <View className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3">
+              <Text className="text-sm text-teal-700 font-medium">Profil mis a jour.</Text>
             </View>
-          )}
+          ) : null}
 
           {/* Formulaire */}
           <View className="gap-4">
