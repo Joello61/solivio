@@ -82,7 +82,7 @@ export default function NouvelleDistributionScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Nouvelle distribution" showClose />
+      <ScreenHeader title="Nouvelle distribution" showClose modal />
       <SafeAreaView edges={['bottom']} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
           <ScrollView
