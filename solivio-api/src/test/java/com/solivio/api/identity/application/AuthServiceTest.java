@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,7 @@ class AuthServiceTest {
     @Mock private AssociationRepository associationRepository;
     @Mock private PersonneProvisioningService personneProvisioningService;
     @Mock private PersonneRepository personneRepository;
+    @Mock private RegisterService registerService;
 
     private AuthService service;
     private Compte compte;
@@ -57,7 +59,7 @@ class AuthServiceTest {
     void setUp() {
         service = new AuthService(authenticationManager, compteRepository, membreRepo,
             refreshTokenRepo, jwtService, associationRepository, personneProvisioningService,
-            personneRepository);
+            personneRepository, registerService);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         compte.setId(compteId);
@@ -190,6 +192,54 @@ class AuthServiceTest {
         assertThatThrownBy(() -> service.refreshToken(tokenBrut, request, response))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("invalide");
+    }
+
+    @Test
+    void completerInscriptionGoogle_retourneTokenApresLiaison() throws Exception {
+        Compte googleCompte = new Compte("google@example.com", null, "Dupont", "Alice");
+        UUID googleCompteId = UUID.randomUUID();
+        googleCompte.setId(googleCompteId);
+        googleCompte.setGoogleId("google-uid");
+        com.solivio.api.association.domain.Association asso =
+            new com.solivio.api.association.domain.Association("pilote", "Pilote");
+        MembreAssociation membre = new MembreAssociation(googleCompte, asso, "beneficiaire");
+
+        when(registerService.lierAssociationGoogle(
+            eq("google@example.com"), eq("Dupont"), eq("Alice"), eq("PILOTE"), isNull()))
+            .thenReturn(googleCompte);
+        when(membreRepo.findActivesByCompteId(googleCompteId)).thenReturn(List.of(membre));
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(),
+            org.mockito.ArgumentMatchers.anyBoolean())).thenReturn("access-token");
+        when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
+        when(jwtService.hasher("refresh-brut")).thenReturn("refresh-hash");
+        when(refreshTokenRepo.save(any())).thenReturn(null);
+        when(jwtService.refreshTokenExpiration()).thenReturn(Instant.now().plusSeconds(2592000));
+        when(jwtService.getAccessTokenMinutes()).thenReturn(15L);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        TokenResponse result = service.completerInscriptionGoogle(
+            "google@example.com", "Dupont", "Alice", "PILOTE", null, request, response);
+
+        assertThat(result.accessToken()).isEqualTo("access-token");
+        assertThat(result.tenants()).hasSize(1);
+        verify(registerService).lierAssociationGoogle(
+            "google@example.com", "Dupont", "Alice", "PILOTE", null);
+    }
+
+    @Test
+    void completerInscriptionGoogle_propageLExceptionDeRegisterService() {
+        when(registerService.lierAssociationGoogle(any(), any(), any(), any(), any()))
+            .thenThrow(new IllegalArgumentException("Code association requis"));
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        assertThatThrownBy(() -> service.completerInscriptionGoogle(
+            "google@example.com", "Dupont", "Alice", null, null, request, response))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Code association requis");
     }
 
     @Test
