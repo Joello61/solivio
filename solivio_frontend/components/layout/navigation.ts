@@ -9,6 +9,7 @@ import {
   Building2,
   Package,
   Recycle,
+  Truck,
 } from "lucide-react";
 
 export interface NavItem {
@@ -29,6 +30,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/distributions", label: "Distributions", icon: CalendarDays },
       { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
+      { href: "/missions-collecte", label: "Missions collecte", icon: Truck },
+      { href: "/mes-missions-collecte", label: "Mes missions", icon: Truck, roles: ["benevole"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
