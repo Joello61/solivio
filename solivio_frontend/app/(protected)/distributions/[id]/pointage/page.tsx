@@ -14,7 +14,7 @@ export default async function PointagePage({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
           href={`/distributions/${id}`}
@@ -24,11 +24,11 @@ export default async function PointagePage({ params }: PageProps) {
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
             <ClipboardList className="size-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Pointage</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">Pointage</h1>
             <p className="text-xs text-muted-foreground">
               Recherchez un inscrit par nom ou prenom. Aucune donnee sensible n&apos;est affichee.
             </p>

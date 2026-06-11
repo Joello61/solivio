@@ -88,10 +88,11 @@ function ResetPasswordForm() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 aria-label={`Chiffre ${i + 1}`}
                 className={[
-                  "h-12 w-10 rounded-xl border-2 bg-card text-center text-lg font-bold font-mono",
-                  "text-foreground caret-transparent transition-all",
-                  "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30",
-                  d ? "border-primary/60 bg-primary/5" : "border-border",
+                  "h-13 w-11 rounded-xl border-2 bg-white text-center text-lg font-bold font-mono",
+                  "text-foreground caret-transparent transition-all duration-150",
+                  "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20",
+                  "dark:bg-neutral-900",
+                  d ? "border-primary bg-teal-50 dark:bg-teal-950/30" : "border-border",
                 ].join(" ")}
               />
             ))}

@@ -21,7 +21,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 text-sm wrap-break-word text-muted-foreground",
+        "flex flex-wrap items-center gap-1.5 text-sm font-medium wrap-break-word text-muted-foreground",
         className
       )}
       {...props}
@@ -48,7 +48,7 @@ function BreadcrumbLink({
     defaultTagName: "a",
     props: mergeProps<"a">(
       {
-        className: cn("transition-colors hover:text-foreground", className),
+        className: cn("transition-colors hover:text-foreground hover:underline underline-offset-4", className),
       },
       props
     ),
@@ -66,7 +66,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn("font-normal text-foreground", className)}
+      className={cn("font-semibold text-foreground", className)}
       {...props}
     />
   )

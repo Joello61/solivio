@@ -5,20 +5,48 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  [
+    "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden",
+    "rounded-full border px-2.5 py-0.5",
+    "text-xs font-semibold leading-none whitespace-nowrap",
+    "transition-colors duration-150",
+    "focus-visible:ring-2 focus-visible:ring-ring/50",
+    "[&>svg]:pointer-events-none [&>svg]:size-3",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        /* Primaire : fond teal plein */
+        default:
+          "bg-primary border-primary text-primary-foreground",
+
+        /* Secondaire : teal pale */
         secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+          "bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/30 dark:border-teal-800/50 dark:text-teal-300",
+
+        /* Succes : identique secondaire (teal = succes dans ce contexte) */
+        success:
+          "bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/30 dark:border-teal-800/50 dark:text-teal-300",
+
+        /* Avertissement : coral/orange */
+        warning:
+          "bg-coral-50 border-coral-200 text-coral-700 dark:bg-coral-950/30 dark:border-coral-800/50 dark:text-coral-300",
+
+        /* Accent : coral plein */
+        accent:
+          "bg-accent border-accent text-accent-foreground",
+
+        /* Destructif : rouge pale */
         destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+          "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/40",
+
+        /* Outline : bordure seulement */
         outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
-        ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-transparent border-border text-foreground",
+
+        /* Muted : gris neutre */
+        muted:
+          "bg-muted border-transparent text-muted-foreground",
       },
     },
     defaultVariants: {
@@ -36,16 +64,11 @@ function Badge({
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
-      {
-        className: cn(badgeVariants({ variant }), className),
-      },
+      { className: cn(badgeVariants({ variant }), className) },
       props
     ),
     render,
-    state: {
-      slot: "badge",
-      variant,
-    },
+    state: { slot: "badge", variant },
   })
 }
 

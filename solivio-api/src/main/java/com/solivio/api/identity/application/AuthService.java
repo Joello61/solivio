@@ -41,6 +41,7 @@ public class AuthService {
     private final AssociationRepository associationRepository;
     private final PersonneProvisioningService personneProvisioningService;
     private final PersonneRepository personneRepository;
+    private final RegisterService registerService;
 
     public AuthService(
             AuthenticationManager authenticationManager,
@@ -50,7 +51,8 @@ public class AuthService {
             JwtService jwtService,
             AssociationRepository associationRepository,
             PersonneProvisioningService personneProvisioningService,
-            PersonneRepository personneRepository) {
+            PersonneRepository personneRepository,
+            RegisterService registerService) {
         this.authenticationManager = authenticationManager;
         this.compteRepository = compteRepository;
         this.membreRepo = membreRepo;
@@ -59,6 +61,7 @@ public class AuthService {
         this.associationRepository = associationRepository;
         this.personneProvisioningService = personneProvisioningService;
         this.personneRepository = personneRepository;
+        this.registerService = registerService;
     }
 
     @Transactional
@@ -208,6 +211,41 @@ public class AuthService {
         supprimerCookies(response);
     }
 
+    /**
+     * Finalise l'inscription Google : lie le compte a une association, emet les tokens.
+     * Retourne les tokens dans le corps (mobile) ET set les cookies (web).
+     */
+    @Transactional
+    public TokenResponse completerInscriptionGoogle(String email, String nom, String prenom,
+            String codeAssociation, String tokenInvitation,
+            HttpServletRequest request, HttpServletResponse response) {
+        Compte compte = registerService.lierAssociationGoogle(
+            email, nom, prenom, codeAssociation, tokenInvitation);
+
+        List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
+        String tenantSlug = affiliations.size() == 1 ? affiliations.get(0).getAssociation().getSlug() : null;
+        String role = affiliations.size() == 1 ? affiliations.get(0).getRole() : null;
+        String coordoType = affiliations.size() == 1 ? affiliations.get(0).getCoordoType() : null;
+
+        String accessToken = jwtService.genererAccessToken(
+            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
+            tenantSlug, role != null ? List.of(role) : List.of(),
+            coordoType, compte.isSuperAdmin()
+        );
+
+        List<TokenResponse.TenantSummary> tenants = affiliations.stream()
+            .map(a -> new TokenResponse.TenantSummary(
+                a.getAssociation().getSlug(), a.getAssociation().getNom(),
+                a.getRole(), a.getCoordoType()))
+            .toList();
+
+        emetAccessTokenCookie(accessToken, request, response);
+        String refreshTokenBrut = emetRefreshTokenCookie(
+            compte, tenantSlug, request, response, false, false);
+
+        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60L, tenants, refreshTokenBrut);
+    }
+
     public MeResponse me(SolivioUserDetails userDetails) {
         Compte compte = compteRepository.findById(userDetails.getCompteId())
             .orElseThrow();
@@ -231,7 +269,11 @@ public class AuthService {
             photoUrl,
             compte.isSuperAdmin(),
             userDetails.getTenantSlug(),
-            roles
+            roles,
+            compte.getDateCreation(),
+            compte.getDateModification(),
+            compte.isEmailVerifie(),
+            compte.getGoogleId() != null ? "google" : "password"
         );
     }
 

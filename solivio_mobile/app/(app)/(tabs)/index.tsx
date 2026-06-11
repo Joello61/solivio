@@ -1,7 +1,7 @@
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Users, Heart, Calendar, Settings, UserCog } from 'lucide-react-native';
+import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import { statsPeriode } from '@/lib/api/association';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -52,19 +52,30 @@ function AccesRapide({
   label,
   icon: Icon,
   href,
+  color = '#0D9488',
 }: {
   label: string;
   icon: React.ElementType;
   href: string;
+  color?: string;
 }) {
   const router = useRouter();
   return (
     <Pressable
       onPress={() => router.push(href as never)}
-      className="flex-row items-center gap-3 border border-border rounded-xl px-4 py-4 bg-background active:bg-muted"
+      style={({ pressed }) =>
+        pressed ? { opacity: 0.78, transform: [{ scale: 0.985 }] } : null
+      }
+      className="flex-row items-center gap-3 border border-border rounded-xl px-4 py-3.5 bg-card"
     >
-      <Icon size={18} color="#6b7280" />
-      <Text className="text-base font-medium text-foreground">{label}</Text>
+      <View
+        className="w-9 h-9 rounded-lg items-center justify-center"
+        style={{ backgroundColor: color + '1a' }}
+      >
+        <Icon size={18} color={color} />
+      </View>
+      <Text className="flex-1 text-base font-medium text-foreground">{label}</Text>
+      <ChevronRight size={16} color="#CBD5E1" />
     </Pressable>
   );
 }
@@ -88,7 +99,7 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader title="Dashboard" />
+      <AppHeader title="Accueil" subtitle={user?.tenantActif ?? undefined} />
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-4 py-6 gap-6"
@@ -96,16 +107,16 @@ export default function DashboardScreen() {
       >
         {/* Salutation */}
         <View>
-          <Text className="text-2xl font-semibold text-foreground">
+          <Text className="text-2xl font-bold text-foreground">
             Bonjour, {user?.prenom ?? 'utilisateur'}
           </Text>
-          <Text className="text-muted-foreground mt-1">
-            Bienvenue sur votre espace{user?.tenantActif ? ` - ${user.tenantActif}` : ''}.
+          <Text className="text-sm text-muted-foreground mt-1">
+            Bienvenue sur votre espace association.
           </Text>
         </View>
 
         {/* Statistiques du mois */}
-        {estGestionnaire && (
+        {estGestionnaire ? (
           <View className="gap-3">
             <Text className="text-sm font-semibold text-foreground">
               Statistiques{' '}
@@ -113,7 +124,7 @@ export default function DashboardScreen() {
             </Text>
             {statsLoading ? (
               <View className="items-center py-4">
-                <Spinner size="small" />
+                <Spinner size="sm" />
               </View>
             ) : stats ? (
               <View className="gap-3">
@@ -122,14 +133,14 @@ export default function DashboardScreen() {
                     titre="Distributions"
                     valeur={stats.nbDistributions}
                     description="ce mois-ci"
-                    color="#16513F"
+                    color="#0D9488"
                     icon={BarChart3}
                   />
                   <StatCard
                     titre="Beneficiaires"
                     valeur={stats.nbBeneficiairesDistinctsServis}
                     description="distincts"
-                    color="#10b981"
+                    color="#D97706"
                     icon={Heart}
                   />
                 </View>
@@ -138,7 +149,7 @@ export default function DashboardScreen() {
                     titre="Benevoles"
                     valeur={stats.nbBenevolesDistincts}
                     description="distincts"
-                    color="#7c3aed"
+                    color="#6366F1"
                     icon={Users}
                   />
                   <View className="flex-1" />
@@ -146,7 +157,7 @@ export default function DashboardScreen() {
               </View>
             ) : null}
           </View>
-        )}
+        ) : null}
 
         {/* Acces rapide */}
         <View className="gap-3">
@@ -156,26 +167,30 @@ export default function DashboardScreen() {
               label="Distributions"
               icon={Calendar}
               href="/(app)/(tabs)/distributions"
+              color="#0D9488"
             />
             <AccesRapide
               label="Mes inscriptions"
               icon={Users}
               href="/(app)/(tabs)/inscriptions"
+              color="#6366F1"
             />
-            {estResponsable && (
+            {estResponsable ? (
               <>
                 <AccesRapide
                   label="Configuration"
                   icon={Settings}
                   href="/(app)/association/configuration"
+                  color="#64748B"
                 />
                 <AccesRapide
                   label="Membres"
                   icon={UserCog}
                   href="/(app)/association/membres"
+                  color="#64748B"
                 />
               </>
-            )}
+            ) : null}
           </View>
         </View>
       </ScrollView>

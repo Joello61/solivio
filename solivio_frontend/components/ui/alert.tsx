@@ -4,13 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "group/alert relative grid w-full gap-0.5 rounded-lg border px-2.5 py-2 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
+  [
+    "group/alert relative grid w-full gap-1 rounded-2xl border px-4 py-3.5 text-left text-sm",
+    "has-data-[slot=alert-action]:pr-16",
+    "has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-3",
+    "*:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current",
+    "*:[svg:not([class*='size-'])]:size-4",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-card text-card-foreground",
+        default:
+          "bg-teal-50 border-teal-200 text-teal-900 *:[svg]:text-teal-600 dark:bg-teal-950/30 dark:border-teal-800/50 dark:text-teal-100",
+        info:
+          "bg-blue-50 border-blue-200 text-blue-900 *:[svg]:text-blue-600 dark:bg-blue-950/30 dark:border-blue-800/50",
+        warning:
+          "bg-coral-50 border-coral-200 text-coral-900 *:[svg]:text-coral-600 dark:bg-coral-950/30 dark:border-coral-800/50",
         destructive:
-          "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
+          "bg-red-50 border-red-200 text-destructive *:[svg]:text-destructive dark:bg-red-950/30 dark:border-red-800/50",
       },
     },
     defaultVariants: {
@@ -21,7 +32,7 @@ const alertVariants = cva(
 
 function Alert({
   className,
-  variant,
+  variant = "default",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
@@ -39,7 +50,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="alert-title"
       className={cn(
-        "font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
+        "font-semibold leading-snug group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
         className
       )}
       {...props}

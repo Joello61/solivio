@@ -11,6 +11,7 @@ import {
   Package,
   ChevronRight,
   AlertCircle,
+  BarChart2,
 } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import {
@@ -22,11 +23,11 @@ import {
   inscrire,
   listerInscrits,
 } from '@/lib/api/distributions';
+import { statsDistribution } from '@/lib/api/association';
 import { StatutBadge } from '@/components/distributions/StatutBadge';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { Badge } from '@/components/ui/Badge';
 import { formatDate } from '@/lib/utils';
 import type { StatutDistribution } from '@/types/distribution';
 
@@ -58,6 +59,12 @@ export default function DistributionDetailScreen() {
     enabled: !!id && !!estCoordinateur,
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ['stats-distribution', id],
+    queryFn: () => statsDistribution(id),
+    enabled: !!id && distribution?.statut === 'TERMINEE' && !!estCoordinateur,
+  });
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['distribution', id] });
     queryClient.invalidateQueries({ queryKey: ['distributions'] });
@@ -78,11 +85,7 @@ export default function DistributionDetailScreen() {
     },
   });
 
-  function confirmerAction(
-    titre: string,
-    message: string,
-    onConfirm: () => void,
-  ) {
+  function confirmerAction(titre: string, message: string, onConfirm: () => void) {
     Alert.alert(titre, message, [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Confirmer', style: 'destructive', onPress: onConfirm },
@@ -92,7 +95,7 @@ export default function DistributionDetailScreen() {
   function demanderMotifAnnulation() {
     Alert.prompt(
       'Annuler la distribution',
-      'Indiquez le motif d\'annulation',
+      "Indiquez le motif d'annulation",
       [
         { text: 'Retour', style: 'cancel' },
         {
@@ -117,185 +120,242 @@ export default function DistributionDetailScreen() {
   const peutAnnuler = estResponsable && ['BROUILLON', 'PUBLIEE', 'EN_COURS'].includes(statut);
   const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur;
 
-  const nbInscrits = inscrits?.length ?? 0;
   const nbBeneficiaires = inscrits?.filter((i) => i.type === 'BENEFICIAIRE').length ?? 0;
   const nbBenevoles = inscrits?.filter((i) => i.type === 'BENEVOLE').length ?? 0;
+  const nbInscrits = nbBeneficiaires + nbBenevoles;
 
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title="Distribution" />
       <SafeAreaView edges={['bottom']} className="flex-1">
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-4 py-4 gap-4"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#16513F" />
-        }
-      >
-        {/* En-tete */}
-        <View className="gap-2">
-          <View className="flex-row items-start gap-2">
-            <Text className="text-xl font-bold text-foreground flex-1">{distribution.titre}</Text>
-            <StatutBadge statut={statut} />
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-4 py-4 gap-4"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#0D9488" />
+          }
+        >
+          {/* En-tete */}
+          <View className="gap-2">
+            <View className="flex-row items-start gap-2">
+              <Text className="text-xl font-bold text-foreground flex-1">{distribution.titre}</Text>
+              <StatutBadge statut={statut} />
+            </View>
+            {distribution.motifAnnulation ? (
+              <View className="flex-row items-center gap-2 bg-destructive/8 border border-destructive/20 rounded-xl px-3 py-2.5">
+                <AlertCircle size={14} color="#DC2626" />
+                <Text className="text-sm text-destructive flex-1">{distribution.motifAnnulation}</Text>
+              </View>
+            ) : null}
           </View>
-          {distribution.motifAnnulation && (
-            <View className="flex-row items-center gap-2 bg-red-50 rounded-lg px-3 py-2">
-              <AlertCircle size={14} color="#ef4444" />
-              <Text className="text-sm text-destructive flex-1">{distribution.motifAnnulation}</Text>
-            </View>
-          )}
-        </View>
 
-        {/* Infos */}
-        <Card>
-          <CardContent>
-            <View className="flex-row items-center gap-2">
-              <Calendar size={17} color="#6b7280" />
-              <Text className="text-base text-foreground">{formatDate(distribution.date)}</Text>
-            </View>
-            {distribution.lieu && (
-              <View className="flex-row items-center gap-2">
-                <MapPin size={17} color="#6b7280" />
-                <Text className="text-base text-foreground">{distribution.lieu}</Text>
-              </View>
-            )}
-            <View className="flex-row items-center gap-2">
-              <Users size={17} color="#6b7280" />
-              <Text className="text-base text-foreground">
-                {distribution.capaciteBeneficiaires} places beneficiaires
-                {distribution.capaciteBenevoles != null &&
-                  ` · ${distribution.capaciteBenevoles} places benevoles`}
-              </Text>
-            </View>
-            {distribution.description && (
-              <Text className="text-sm text-muted-foreground mt-1">{distribution.description}</Text>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Inscrits (gestionnaire) */}
-        {estCoordinateur && nbInscrits > 0 && (
+          {/* Infos */}
           <Card>
-            <CardHeader>
-              <Text className="font-semibold text-foreground">Inscrits</Text>
-            </CardHeader>
             <CardContent>
-              <View className="flex-row gap-3">
-                <View className="flex-1 items-center bg-primary-50 rounded-xl py-3">
-                  <Text className="text-2xl font-bold text-primary-600">{nbBeneficiaires}</Text>
-                  <Text className="text-xs text-muted-foreground">Beneficiaires</Text>
-                </View>
-                <View className="flex-1 items-center bg-purple-50 rounded-xl py-3">
-                  <Text className="text-2xl font-bold text-purple-600">{nbBenevoles}</Text>
-                  <Text className="text-xs text-muted-foreground">Benevoles</Text>
-                </View>
+              <View className="flex-row items-center gap-2">
+                <Calendar size={15} color="#94A3B8" />
+                <Text className="text-base text-foreground">{formatDate(distribution.date)}</Text>
               </View>
+              {distribution.lieu ? (
+                <View className="flex-row items-center gap-2">
+                  <MapPin size={15} color="#94A3B8" />
+                  <Text className="text-base text-foreground">{distribution.lieu}</Text>
+                </View>
+              ) : null}
+              <View className="flex-row items-center gap-2">
+                <Users size={15} color="#94A3B8" />
+                <Text className="text-base text-foreground">
+                  {distribution.capaciteBeneficiaires} places beneficiaires
+                  {distribution.capaciteBenevoles != null
+                    ? ` - ${distribution.capaciteBenevoles} places benevoles`
+                    : ''}
+                </Text>
+              </View>
+              {distribution.description ? (
+                <Text className="text-sm text-muted-foreground mt-1">{distribution.description}</Text>
+              ) : null}
             </CardContent>
           </Card>
-        )}
 
-        {/* Outils (coordinateur) */}
-        {estCoordinateur && (
-          <View className="gap-2">
-            <Text className="text-sm font-semibold text-foreground">Outils</Text>
+          {/* Inscrits (coordinateur) */}
+          {estCoordinateur && nbInscrits > 0 ? (
+            <Card>
+              <CardHeader>
+                <Text className="font-semibold text-foreground">Inscrits</Text>
+              </CardHeader>
+              <CardContent>
+                <View className="flex-row gap-3">
+                  <View className="flex-1 items-center bg-teal-50 rounded-xl py-3 border border-teal-100">
+                    <Text className="text-2xl font-bold text-teal-700">{nbBeneficiaires}</Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Beneficiaires</Text>
+                  </View>
+                  <View className="flex-1 items-center bg-amber-50 rounded-xl py-3 border border-amber-100">
+                    <Text className="text-2xl font-bold text-amber-700">{nbBenevoles}</Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Benevoles</Text>
+                  </View>
+                </View>
+              </CardContent>
+            </Card>
+          ) : null}
 
-            {statut === 'EN_COURS' && (
+          {/* Statistiques post-cloture */}
+          {statut === 'TERMINEE' && estCoordinateur && stats ? (
+            <Card>
+              <CardHeader>
+                <View className="flex-row items-center gap-2">
+                  <BarChart2 size={16} color="#0D9488" />
+                  <Text className="font-semibold text-foreground">Statistiques</Text>
+                </View>
+              </CardHeader>
+              <CardContent>
+                <View className="flex-row gap-3 mb-3">
+                  <View className="flex-1 items-center bg-teal-50 rounded-xl py-3 border border-teal-100">
+                    <Text className="text-2xl font-bold text-teal-700">
+                      {stats.nbPresentsBeneficiaires}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Presents</Text>
+                  </View>
+                  <View className="flex-1 items-center bg-red-50 rounded-xl py-3 border border-red-100">
+                    <Text className="text-2xl font-bold text-red-500">
+                      {stats.nbAbsentsBeneficiaires}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Absents</Text>
+                  </View>
+                  <View className="flex-1 items-center bg-amber-50 rounded-xl py-3 border border-amber-100">
+                    <Text className="text-2xl font-bold text-amber-600">
+                      {stats.nbNonPointes}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">Non pointes</Text>
+                  </View>
+                </View>
+                <View className="bg-primary/8 rounded-xl px-4 py-3 items-center">
+                  <Text className="text-3xl font-bold text-primary">
+                    {Math.round(stats.tauxPresence)}%
+                  </Text>
+                  <Text className="text-xs text-muted-foreground mt-0.5">Taux de presence</Text>
+                </View>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {/* Outils (coordinateur) */}
+          {estCoordinateur ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Outils</Text>
+
+              {statut === 'EN_COURS' ? (
+                <Pressable
+                  onPress={() => router.push(`/(app)/distributions/${id}/pointage` as never)}
+                  style={({ pressed }) =>
+                    pressed ? { opacity: 0.78, transform: [{ scale: 0.985 }] } : null
+                  }
+                  className="flex-row items-center gap-3 bg-card border border-border rounded-xl px-4 py-3.5"
+                >
+                  <View className="w-9 h-9 rounded-lg bg-teal-50 items-center justify-center">
+                    <ScanLine size={18} color="#0D9488" />
+                  </View>
+                  <Text className="flex-1 text-base font-medium text-foreground">Pointage</Text>
+                  <ChevronRight size={16} color="#CBD5E1" />
+                </Pressable>
+              ) : null}
+
               <Pressable
-                onPress={() => router.push(`/(app)/distributions/${id}/pointage` as never)}
-                className="flex-row items-center gap-3 bg-background border border-border rounded-xl px-4 py-3.5 active:bg-muted"
+                onPress={() => router.push(`/(app)/distributions/${id}/repartition` as never)}
+                style={({ pressed }) =>
+                  pressed ? { opacity: 0.78, transform: [{ scale: 0.985 }] } : null
+                }
+                className="flex-row items-center gap-3 bg-card border border-border rounded-xl px-4 py-3.5"
               >
-                <ScanLine size={18} color="#16513F" />
-                <Text className="flex-1 text-base font-medium text-foreground">Pointage</Text>
-                <ChevronRight size={16} color="#9ca3af" />
+                <View className="w-9 h-9 rounded-lg bg-amber-50 items-center justify-center">
+                  <Package size={18} color="#D97706" />
+                </View>
+                <Text className="flex-1 text-base font-medium text-foreground">Repartition</Text>
+                <ChevronRight size={16} color="#CBD5E1" />
               </Pressable>
-            )}
+            </View>
+          ) : null}
 
-            <Pressable
-              onPress={() => router.push(`/(app)/distributions/${id}/repartition` as never)}
-              className="flex-row items-center gap-3 bg-background border border-border rounded-xl px-4 py-3.5 active:bg-muted"
-            >
-              <Package size={18} color="#7c3aed" />
-              <Text className="flex-1 text-base font-medium text-foreground">Repartition</Text>
-              <ChevronRight size={16} color="#9ca3af" />
-            </Pressable>
-          </View>
-        )}
+          {/* Actions gestionnaire */}
+          {estResponsable ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Actions</Text>
+              {peutPublier ? (
+                <Button
+                  onPress={() => confirmerAction('Publier', 'Publier cette distribution ?', () => mutPublier.mutate())}
+                  loading={mutPublier.isPending}
+                  fullWidth
+                >
+                  Publier
+                </Button>
+              ) : null}
+              {peutDemarrer ? (
+                <Button
+                  onPress={() => confirmerAction('Demarrer', 'Demarrer cette distribution ?', () => mutDemarrer.mutate())}
+                  loading={mutDemarrer.isPending}
+                  variant="secondary"
+                  fullWidth
+                >
+                  Demarrer
+                </Button>
+              ) : null}
+              {peutTerminer ? (
+                <Button
+                  onPress={() => confirmerAction('Terminer', 'Terminer cette distribution ?', () => mutTerminer.mutate())}
+                  loading={mutTerminer.isPending}
+                  variant="secondary"
+                  fullWidth
+                >
+                  Terminer
+                </Button>
+              ) : null}
+              {peutAnnuler ? (
+                <Button
+                  onPress={demanderMotifAnnulation}
+                  loading={mutAnnuler.isPending}
+                  variant="destructive"
+                  fullWidth
+                >
+                  Annuler
+                </Button>
+              ) : null}
+            </View>
+          ) : null}
 
-        {/* Actions gestionnaire */}
-        {estResponsable && (
-          <View className="gap-2">
-            <Text className="text-sm font-semibold text-foreground">Actions</Text>
-            {peutPublier && (
+          {/* Inscription beneficiaire */}
+          {peutSInscrire ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Inscription</Text>
               <Button
-                onPress={() => confirmerAction('Publier', 'Publier cette distribution ?', () => mutPublier.mutate())}
-                loading={mutPublier.isPending}
+                onPress={() =>
+                  confirmerAction(
+                    "S'inscrire",
+                    'Vous inscrire comme beneficiaire ?',
+                    () => mutInscrire.mutate('BENEFICIAIRE'),
+                  )
+                }
+                loading={mutInscrire.isPending}
+                fullWidth
               >
-                Publier
+                S'inscrire comme beneficiaire
               </Button>
-            )}
-            {peutDemarrer && (
               <Button
-                onPress={() => confirmerAction('Demarrer', 'Demarrer cette distribution ?', () => mutDemarrer.mutate())}
-                loading={mutDemarrer.isPending}
-                variant="secondary"
+                onPress={() =>
+                  confirmerAction(
+                    "S'inscrire",
+                    'Vous inscrire comme benevole ?',
+                    () => mutInscrire.mutate('BENEVOLE'),
+                  )
+                }
+                loading={mutInscrire.isPending}
+                variant="outline"
+                fullWidth
               >
-                Demarrer
+                S'inscrire comme benevole
               </Button>
-            )}
-            {peutTerminer && (
-              <Button
-                onPress={() => confirmerAction('Terminer', 'Terminer cette distribution ?', () => mutTerminer.mutate())}
-                loading={mutTerminer.isPending}
-                variant="secondary"
-              >
-                Terminer
-              </Button>
-            )}
-            {peutAnnuler && (
-              <Button
-                onPress={demanderMotifAnnulation}
-                loading={mutAnnuler.isPending}
-                variant="destructive"
-              >
-                Annuler
-              </Button>
-            )}
-          </View>
-        )}
-
-        {/* Inscription beneficiaire */}
-        {peutSInscrire && (
-          <View className="gap-2">
-            <Text className="text-sm font-semibold text-foreground">Inscription</Text>
-            <Button
-              onPress={() =>
-                confirmerAction(
-                  'S\'inscrire',
-                  'Vous inscrire comme beneficiaire ?',
-                  () => mutInscrire.mutate('BENEFICIAIRE'),
-                )
-              }
-              loading={mutInscrire.isPending}
-            >
-              S'inscrire comme beneficiaire
-            </Button>
-            <Button
-              onPress={() =>
-                confirmerAction(
-                  'S\'inscrire',
-                  'Vous inscrire comme benevole ?',
-                  () => mutInscrire.mutate('BENEVOLE'),
-                )
-              }
-              loading={mutInscrire.isPending}
-              variant="outline"
-            >
-              S'inscrire comme benevole
-            </Button>
-          </View>
-        )}
-      </ScrollView>
+            </View>
+          ) : null}
+        </ScrollView>
       </SafeAreaView>
     </View>
   );

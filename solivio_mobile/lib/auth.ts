@@ -52,3 +52,13 @@ export async function switchTenant(tenantSlug: string): Promise<TokenResponse> {
   await setTokens(data.accessToken, data.refreshToken ?? undefined);
   return data;
 }
+
+export async function completerInscriptionGoogle(payload: {
+  email: string;
+  nom: string;
+  prenom: string;
+  codeAssociation?: string;
+  tokenInvitation?: string;
+}): Promise<TokenResponse> {
+  return apiPost<TokenResponse>('/api/auth/google/complete-registration', payload);
+}

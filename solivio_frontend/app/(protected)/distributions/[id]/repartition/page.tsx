@@ -47,7 +47,7 @@ export default async function RepartitionPage({ params }: PageProps) {
     data.distribution.statut !== "TERMINEE" && data.distribution.statut !== "ANNULEE";
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
           href={`/distributions/${id}`}
@@ -57,11 +57,11 @@ export default async function RepartitionPage({ params }: PageProps) {
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
             <Package className="size-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Repartition des denrees</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">Repartition des denrees</h1>
             <p className="text-xs text-muted-foreground">
               {data.distribution.titre}
             </p>
@@ -69,7 +69,7 @@ export default async function RepartitionPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
         <RepartitionPanel
           distributionId={id}
           denreesInitiales={data.denrees}

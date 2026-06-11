@@ -1,14 +1,21 @@
 import { useState } from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Text, View, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle, Check } from 'lucide-react-native';
+import * as WebBrowser from 'expo-web-browser';
+import Svg, { Path } from 'react-native-svg';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { login } from '@/lib/auth';
 import { useAuthContext } from '@/context/AuthContext';
+import { API_URL, setTokens } from '@/lib/api';
+import type { TenantSummary } from '@/types/auth';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const schema = z.object({
   email: z.string().email('Email invalide'),
@@ -17,10 +24,50 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+function GoogleIcon() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24">
+      <Path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <Path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <Path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <Path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
+    </Svg>
+  );
+}
+
+function parseQueryParams(url: string): Record<string, string> {
+  const questionIdx = url.indexOf('?');
+  if (questionIdx === -1) return {};
+  const query = url.slice(questionIdx + 1);
+  const params: Record<string, string> = {};
+  query.split('&').forEach((pair) => {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx === -1) return;
+    const key = decodeURIComponent(pair.slice(0, eqIdx));
+    const value = decodeURIComponent(pair.slice(eqIdx + 1));
+    params[key] = value;
+  });
+  return params;
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const { refresh, setTenants } = useAuthContext();
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
     control,
@@ -31,7 +78,7 @@ export default function LoginScreen() {
   async function onSubmit(data: FormData) {
     setError(null);
     try {
-      const response = await login(data.email, data.motDePasse, false);
+      const response = await login(data.email, data.motDePasse, rememberMe);
 
       if (response.tenants.length === 0) {
         setError('Aucune association associee a ce compte.');
@@ -52,14 +99,68 @@ export default function LoginScreen() {
     }
   }
 
+  async function onGoogleLogin() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        `${API_URL}/api/auth/google/mobile-init`,
+        'soliviomobile://',
+      );
+
+      if (result.type !== 'success' || !result.url) return;
+
+      const params = parseQueryParams(result.url);
+
+      if (params.type === 'new_user') {
+        router.push({
+          pathname: '/(auth)/complete-google-registration',
+          params: {
+            email: params.email ?? '',
+            nom: params.nom ?? '',
+            prenom: params.prenom ?? '',
+          },
+        });
+        return;
+      }
+
+      const accessToken = params.accessToken;
+      const refreshToken = params.refreshToken;
+
+      if (!accessToken) {
+        setError('Erreur lors de la connexion avec Google.');
+        return;
+      }
+
+      await setTokens(accessToken, refreshToken || undefined);
+
+      if (params.tenants) {
+        const tenantsParsed: TenantSummary[] = JSON.parse(params.tenants);
+        if (tenantsParsed.length > 1) {
+          setTenants(tenantsParsed);
+          router.replace('/(auth)/tenant-select');
+          return;
+        }
+      }
+
+      await refresh();
+      router.replace('/(app)/(tabs)');
+    } catch {
+      setError('Erreur lors de la connexion avec Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <AuthLayout title="Connexion" description="Acces a votre espace association">
       <View className="gap-4">
-        {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <Text className="text-sm text-destructive">{error}</Text>
+        {error ? (
+          <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+            <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-sm text-destructive">{error}</Text>
           </View>
-        )}
+        ) : null}
 
         <Controller
           control={control}
@@ -82,10 +183,11 @@ export default function LoginScreen() {
         <View className="gap-1.5">
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-medium text-foreground">Mot de passe</Text>
-            <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
-              <Text className="text-xs text-primary-600 font-medium">
-                Mot de passe oublie ?
-              </Text>
+            <Pressable
+              onPress={() => router.push('/(auth)/forgot-password')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text className="text-xs text-primary font-semibold">Mot de passe oublie ?</Text>
             </Pressable>
           </View>
           <Controller
@@ -105,19 +207,68 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          loading={isSubmitting}
-          size="lg"
+        <Pressable
+          onPress={() => setRememberMe((v) => !v)}
+          className="flex-row items-center gap-3"
+          hitSlop={{ top: 8, bottom: 8 }}
         >
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 5,
+              borderWidth: 1.5,
+              borderColor: rememberMe ? '#0D9488' : '#CBD5E1',
+              backgroundColor: rememberMe ? '#0D9488' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {rememberMe ? <Check size={12} color="#fff" strokeWidth={3} /> : null}
+          </View>
+          <Text className="text-sm text-foreground">Rester connecte</Text>
+        </Pressable>
+
+        <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg" fullWidth>
           Se connecter
         </Button>
+
+        {/* Separateur */}
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1 h-px bg-border" />
+          <Text className="text-xs text-muted-foreground">ou</Text>
+          <View className="flex-1 h-px bg-border" />
+        </View>
+
+        {/* Bouton Google */}
+        <Pressable
+          onPress={onGoogleLogin}
+          disabled={googleLoading}
+          style={({ pressed }) =>
+            pressed ? { opacity: 0.78, transform: [{ scale: 0.98 }] } : null
+          }
+          className="flex-row items-center justify-center gap-3 h-12 rounded-xl border border-border bg-white"
+        >
+          {googleLoading ? (
+            <ActivityIndicator size="small" color="#64748B" />
+          ) : (
+            <>
+              <GoogleIcon />
+              <Text className="text-sm font-semibold text-foreground">
+                Se connecter avec Google
+              </Text>
+            </>
+          )}
+        </Pressable>
       </View>
 
-      <View className="flex-row justify-center gap-1">
+      <View className="flex-row justify-center items-center gap-1.5">
         <Text className="text-sm text-muted-foreground">Pas encore de compte ?</Text>
-        <Pressable onPress={() => router.push('/(auth)/register')}>
-          <Text className="text-sm text-primary-600 font-medium">Creer un compte</Text>
+        <Pressable
+          onPress={() => router.push('/(auth)/register')}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+        >
+          <Text className="text-sm text-primary font-semibold">Creer un compte</Text>
         </Pressable>
       </View>
     </AuthLayout>

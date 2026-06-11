@@ -3,38 +3,57 @@ import { useRouter } from 'expo-router';
 import { MapPin, Users, Calendar } from 'lucide-react-native';
 import { StatutBadge } from './StatutBadge';
 import { formatDate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 import type { DistributionResponse } from '@/types/distribution';
+
+const CARD_SHADOW = {
+  shadowColor: '#0F172A',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
+  shadowRadius: 8,
+  elevation: 2,
+} as const;
+
+const ACCENT_COLOR: Record<string, string> = {
+  BROUILLON: '#CBD5E1',
+  PUBLIEE:   '#0D9488',
+  EN_COURS:  '#10B981',
+  TERMINEE:  '#CBD5E1',
+  ANNULEE:   '#EF4444',
+};
 
 interface DistributionCardProps {
   distribution: DistributionResponse;
 }
 
-const STATUT_ACCENT: Record<string, string> = {
-  BROUILLON: 'bg-border',
-  PUBLIEE:   'bg-primary',
-  EN_COURS:  'bg-emerald-500',
-  TERMINEE:  'bg-border',
-  ANNULEE:   'bg-destructive',
-};
-
 export function DistributionCard({ distribution }: DistributionCardProps) {
   const router = useRouter();
-  const accentClass = STATUT_ACCENT[distribution.statut] ?? 'bg-border';
+  const accentColor = ACCENT_COLOR[distribution.statut] ?? '#CBD5E1';
 
   return (
     <Pressable
       onPress={() => router.push(`/(app)/distributions/${distribution.id}`)}
-      className="active:opacity-75"
+      style={({ pressed }) => [
+        CARD_SHADOW,
+        pressed ? { opacity: 0.82, transform: [{ scale: 0.988 }] } : null,
+      ]}
     >
-      <View className="flex-row overflow-hidden rounded-xl border border-border bg-card">
-        {/* Barre coloree gauche identique au web */}
-        <View className={cn('w-1 shrink-0', accentClass)} />
+      <View
+        style={{
+          flexDirection: 'row',
+          overflow: 'hidden',
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          backgroundColor: '#FFFFFF',
+        }}
+      >
+        {/* Barre coloree gauche */}
+        <View style={{ width: 4, backgroundColor: accentColor }} />
 
-        <View className="flex-1 p-4 gap-3">
-          <View className="flex-row items-start justify-between gap-2">
+        <View style={{ flex: 1, padding: 16, gap: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <Text
-              className="text-base font-semibold text-foreground flex-1 leading-snug"
+              style={{ fontSize: 15, fontWeight: '600', color: '#0F172A', flex: 1, lineHeight: 22 }}
               numberOfLines={2}
             >
               {distribution.titre}
@@ -42,29 +61,30 @@ export function DistributionCard({ distribution }: DistributionCardProps) {
             <StatutBadge statut={distribution.statut} />
           </View>
 
-          <View className="gap-2">
-            <View className="flex-row items-center gap-2">
-              <Calendar size={15} color="#5E7A6B" />
-              <Text className="text-sm text-muted-foreground capitalize">
+          <View style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Calendar size={14} color="#94A3B8" />
+              <Text style={{ fontSize: 13, color: '#64748B' }} className="capitalize">
                 {formatDate(distribution.date)}
               </Text>
             </View>
 
-            {distribution.lieu && (
-              <View className="flex-row items-center gap-2">
-                <MapPin size={15} color="#5E7A6B" />
-                <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+            {distribution.lieu ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MapPin size={14} color="#94A3B8" />
+                <Text style={{ fontSize: 13, color: '#64748B' }} numberOfLines={1}>
                   {distribution.lieu}
                 </Text>
               </View>
-            )}
+            ) : null}
 
-            <View className="flex-row items-center gap-2">
-              <Users size={15} color="#5E7A6B" />
-              <Text className="text-sm text-muted-foreground">
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Users size={14} color="#94A3B8" />
+              <Text style={{ fontSize: 13, color: '#64748B' }}>
                 {distribution.capaciteBeneficiaires} beneficiaires
-                {distribution.capaciteBenevoles != null &&
-                  ` - ${distribution.capaciteBenevoles} benevoles`}
+                {distribution.capaciteBenevoles != null
+                  ? ` - ${distribution.capaciteBenevoles} benevoles`
+                  : ''}
               </Text>
             </View>
           </View>

@@ -8,9 +8,9 @@ interface FormErrorProps {
 export function FormError({ message }: FormErrorProps) {
   if (!message) return null;
   return (
-    <Alert variant="destructive" className="py-2">
+    <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
-      <AlertDescription>{message}</AlertDescription>
+      <AlertDescription className="font-medium">{message}</AlertDescription>
     </Alert>
   );
 }

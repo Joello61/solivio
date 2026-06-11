@@ -7,7 +7,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { Plus, Trash2, AlertCircle } from 'lucide-react-native';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { DatePickerInput } from '@/components/ui/DatePickerInput';
@@ -82,7 +82,7 @@ export default function NouvelleDistributionScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Nouvelle distribution" showClose />
+      <ScreenHeader title="Nouvelle distribution" showClose modal />
       <SafeAreaView edges={['bottom']} className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
           <ScrollView
@@ -90,11 +90,12 @@ export default function NouvelleDistributionScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {error && (
-              <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                <Text className="text-sm text-destructive">{error}</Text>
+            {error ? (
+              <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+                <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+                <Text className="flex-1 text-sm text-destructive">{error}</Text>
               </View>
-            )}
+            ) : null}
 
             <Controller
               control={control}
@@ -201,9 +202,12 @@ export default function NouvelleDistributionScreen() {
                 <Text className="text-base font-medium text-foreground">Creneaux horaires *</Text>
                 <Pressable
                   onPress={() => append({ heureDebut: '', heureFin: '', capacite: '50' })}
-                  className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg border border-input active:bg-muted"
+                  style={({ pressed }) =>
+                    pressed ? { opacity: 0.78 } : null
+                  }
+                  className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10"
                 >
-                  <Plus size={15} color="#16513F" />
+                  <Plus size={15} color="#0D9488" />
                   <Text className="text-sm font-medium text-primary">Ajouter</Text>
                 </Pressable>
               </View>
@@ -214,14 +218,14 @@ export default function NouvelleDistributionScreen() {
                     <Text className="text-sm font-semibold text-foreground">
                       Creneau {index + 1}
                     </Text>
-                    {fields.length > 1 && (
+                    {fields.length > 1 ? (
                       <Pressable
                         onPress={() => remove(index)}
                         hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
                       >
-                        <Trash2 size={16} color="#ef4444" />
+                        <Trash2 size={16} color="#EF4444" />
                       </Pressable>
-                    )}
+                    ) : null}
                   </View>
 
                   <View className="flex-row gap-3">
@@ -275,15 +279,16 @@ export default function NouvelleDistributionScreen() {
                 </View>
               ))}
 
-              {errors.creneaux?.root && (
+              {errors.creneaux?.root ? (
                 <Text className="text-sm text-destructive">{errors.creneaux.root.message}</Text>
-              )}
+              ) : null}
             </View>
 
             <Button
               onPress={handleSubmit(onSubmit)}
               loading={isSubmitting || mutation.isPending}
               size="lg"
+              fullWidth
               className="mt-2"
             >
               Creer la distribution

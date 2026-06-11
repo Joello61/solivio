@@ -2,6 +2,7 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.AuthService;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.infrastructure.web.dto.GoogleCompleteRegistrationRequest;
 import com.solivio.api.identity.infrastructure.web.dto.LoginRequest;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.RefreshTokenRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -72,6 +74,47 @@ public class AuthController {
     public ResponseEntity<MeResponse> me(
             @AuthenticationPrincipal SolivioUserDetails userDetails) {
         return ResponseEntity.ok(authService.me(userDetails));
+    }
+
+    /**
+     * Point d'entree mobile pour le login Google.
+     * Pose un cookie de marquage puis redirige vers le flux OAuth2 Spring Security.
+     * Le GoogleOAuth2SuccessHandler detecte ce cookie et redirige vers le scheme de l'app
+     * plutot que vers le frontend web.
+     */
+    @GetMapping("/google/mobile-init")
+    public void googleMobileInit(HttpServletResponse httpResponse) throws IOException {
+        httpResponse.addHeader("Set-Cookie",
+            "solivio_mobile_auth=1; Max-Age=300; Path=/; SameSite=Lax; HttpOnly");
+        httpResponse.sendRedirect("/oauth2/authorization/google");
+    }
+
+    /**
+     * Point d'entree mobile pour lier un compte Google a un compte email/mot de passe existant.
+     * Apres le flux OAuth2, GoogleOAuth2SuccessHandler detecte ce cookie et retourne
+     * soliviomobile://auth?linked=true sans generer de nouveaux tokens.
+     */
+    @GetMapping("/google/link-mobile-init")
+    public void googleLinkMobileInit(HttpServletResponse httpResponse) throws IOException {
+        httpResponse.addHeader("Set-Cookie",
+            "solivio_mobile_link=1; Max-Age=300; Path=/; SameSite=Lax; HttpOnly");
+        httpResponse.sendRedirect("/oauth2/authorization/google");
+    }
+
+    /**
+     * Finalise l'inscription d'un compte Google : lie le compte a une association.
+     * Accessible sans authentification - la legitimite est verifiee par la presence du google_id.
+     */
+    @PostMapping("/google/complete-registration")
+    public ResponseEntity<TokenResponse> googleCompleteRegistration(
+            @Valid @RequestBody GoogleCompleteRegistrationRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        TokenResponse token = authService.completerInscriptionGoogle(
+            request.email(), request.nom(), request.prenom(),
+            request.codeAssociation(), request.tokenInvitation(),
+            httpRequest, httpResponse);
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/switch-tenant")

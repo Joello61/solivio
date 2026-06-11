@@ -97,6 +97,9 @@ public class SecurityConfig {
                     "/api/auth/reset-password",
                     "/api/auth/verify-email",
                     "/api/auth/resend-verification",
+                    "/api/auth/google/mobile-init",
+                    "/api/auth/google/link-mobile-init",
+                    "/api/auth/google/complete-registration",
                     "/api/invitations/*/details",
                     "/api/public/**"
                 ).permitAll()

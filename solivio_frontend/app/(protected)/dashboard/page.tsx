@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { BarChart3, Users, Heart, Calendar, Settings, UserCog } from "lucide-react";
+import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
@@ -61,31 +61,23 @@ interface CarteStatistiqueProps {
 }
 
 const COULEURS = {
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  purple: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  blue:   "bg-teal-50 text-primary border border-teal-100 dark:bg-teal-950/40 dark:border-teal-800/50",
+  green:  "bg-orange-50 text-orange-500 border border-orange-100 dark:bg-orange-950/30 dark:text-orange-400",
+  purple: "bg-teal-100/80 text-teal-700 border border-teal-200 dark:bg-teal-900/40 dark:text-teal-300",
 };
 
-function CarteStatistique({
-  titre,
-  valeur,
-  description,
-  icon: Icon,
-  couleur,
-}: CarteStatistiqueProps) {
+function CarteStatistique({ titre, valeur, description, icon: Icon, couleur }: CarteStatistiqueProps) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-          {titre}
-        </p>
-        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", COULEURS[couleur])}>
-          <Icon className="h-4 w-4" />
+    <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition-shadow duration-200 p-6 flex flex-col gap-4">
+      <div className="flex items-start justify-between">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.12em]">{titre}</p>
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", COULEURS[couleur])}>
+          <Icon className="h-5 w-5" />
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-foreground tabular-nums">{valeur}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        <p className="text-4xl font-bold text-foreground tabular-nums font-display leading-none">{valeur}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       </div>
     </div>
   );
@@ -102,13 +94,18 @@ function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-border bg-background",
-        "px-4 py-3 text-sm font-medium text-foreground",
-        "hover:bg-muted hover:border-primary/20 transition-all duration-150",
+        "group flex items-center gap-3 rounded-xl border border-border/60 bg-white dark:bg-neutral-900",
+        "px-4 py-3.5 shadow-sm",
+        "hover:border-primary/40 hover:shadow-md transition-all duration-150",
       )}
     >
-      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-      {label}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 dark:bg-neutral-800 group-hover:bg-teal-50 dark:group-hover:bg-teal-950/40 transition-colors duration-150">
+        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-150" />
+      </div>
+      <span className="flex-1 text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-150">
+        {label}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
     </Link>
   );
 }
@@ -130,28 +127,29 @@ export default async function DashboardPage() {
   const moisCourant = new Date().toLocaleString("fr-FR", { month: "long", year: "numeric" });
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-10 max-w-5xl">
+
       {/* Salutation */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground font-display">
           Bonjour, {me?.prenom ?? "utilisateur"}
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="text-muted-foreground">
           Bienvenue sur votre espace{me?.tenantActif ? ` - ${me.tenantActif}` : ""}.
         </p>
       </div>
 
-      {/* Statistiques du mois (gestionnaires uniquement) */}
+      {/* Statistiques du mois */}
       {estGestionnaire && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            Statistiques -{" "}
-            <span className="text-muted-foreground font-normal capitalize">{moisCourant}</span>
-          </h2>
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-base font-semibold text-foreground font-display">Statistiques</h2>
+            <span className="text-sm text-muted-foreground capitalize">{moisCourant}</span>
+          </div>
           {statsErreur ? (
-            <p className="text-sm text-muted-foreground">
+            <div className="rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-5 py-4 text-sm text-muted-foreground">
               Statistiques indisponibles. Verifiez que le service est accessible.
-            </p>
+            </div>
           ) : statsMois ? (
             <div className="grid gap-4 sm:grid-cols-3">
               <CarteStatistique
@@ -181,9 +179,9 @@ export default async function DashboardPage() {
       )}
 
       {/* Acces rapide */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground">Acces rapide</h2>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="space-y-4">
+        <h2 className="text-base font-semibold text-foreground font-display">Acces rapide</h2>
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           <AccesRapide href="/distributions" icon={Calendar} label="Distributions" />
           <AccesRapide href="/mes-inscriptions" icon={Users} label="Mes inscriptions" />
           {estResponsable && (
@@ -194,6 +192,7 @@ export default async function DashboardPage() {
           )}
         </div>
       </section>
+
     </div>
   );
 }

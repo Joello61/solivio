@@ -10,7 +10,7 @@ import { rechercherPointage, pointer } from "@/lib/api/distributions";
 import type { PointageInfoResponse } from "@/types/distribution";
 
 const DEBOUNCE_MS = 300;
-const SEUIL_AUTO = 2;
+const SEUIL_AUTO = 1;
 
 interface Props {
   distributionId: string;
@@ -100,7 +100,7 @@ export function PointageListe({ distributionId }: Props) {
           )}
           <Input
             className="pl-9"
-            placeholder="Taper 2 lettres minimum pour rechercher..."
+            placeholder="Rechercher par nom ou prenom..."
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleRechercheImmediate()}
@@ -116,7 +116,7 @@ export function PointageListe({ distributionId }: Props) {
 
       {/* Etat vide apres recherche */}
       {!recherchePending && aRecherche && resultats.length === 0 && recherche && (
-        <div className="rounded-xl border border-border bg-muted/30 px-6 py-8 text-center">
+        <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-8 text-center">
           <p className="text-sm text-muted-foreground">
             Aucun inscrit trouve pour &quot;{recherche}&quot;.
           </p>
@@ -125,58 +125,61 @@ export function PointageListe({ distributionId }: Props) {
 
       {/* Resultats */}
       {resultats.length > 0 && (
-        <div className="divide-y divide-border rounded-xl border border-border bg-card overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
           {resultats.map((r) => (
             <div
               key={r.inscriptionId}
-              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-teal-50/30 dark:hover:bg-teal-950/20 transition-colors"
             >
-              <div className="space-y-1 min-w-0 flex-1 mr-4">
-                <p className="text-sm font-medium truncate">
-                  {r.nom} {r.prenom}
-                </p>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {r.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
-                  </Badge>
-                  {r.presence !== "NON_POINTE" && (
-                    <Badge
-                      variant={r.presence === "PRESENT" ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {r.presence === "PRESENT" ? "Present" : "Absent"}
+              <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+                  {(r.prenom?.[0] ?? "").toUpperCase()}{(r.nom?.[0] ?? "").toUpperCase()}
+                </div>
+                <div className="min-w-0 space-y-1">
+                  <p className="text-sm font-semibold truncate">
+                    {r.nom} {r.prenom}
+                  </p>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {r.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
                     </Badge>
-                  )}
+                    {r.presence !== "NON_POINTE" && (
+                      <Badge
+                        variant={r.presence === "PRESENT" ? "default" : "destructive"}
+                        className="text-xs"
+                      >
+                        {r.presence === "PRESENT" ? "Present" : "Absent"}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="flex gap-2 shrink-0">
                 <Button
-                  size="icon"
+                  size="icon-lg"
                   variant={r.presence === "PRESENT" ? "default" : "outline"}
-                  className="size-9"
                   disabled={pending === r.inscriptionId}
                   onClick={() => handlePointer(r.inscriptionId, "PRESENT")}
-                  title="Marquer present"
+                  aria-label="Marquer present"
                 >
                   {pending === r.inscriptionId ? (
                     <Spinner size="sm" />
                   ) : (
-                    <Check className="size-4" />
+                    <Check className="size-5" />
                   )}
                 </Button>
                 <Button
-                  size="icon"
+                  size="icon-lg"
                   variant={r.presence === "ABSENT" ? "destructive" : "outline"}
-                  className="size-9"
                   disabled={pending === r.inscriptionId}
                   onClick={() => handlePointer(r.inscriptionId, "ABSENT")}
-                  title="Marquer absent"
+                  aria-label="Marquer absent"
                 >
                   {pending === r.inscriptionId ? (
                     <Spinner size="sm" />
                   ) : (
-                    <X className="size-4" />
+                    <X className="size-5" />
                   )}
                 </Button>
               </div>

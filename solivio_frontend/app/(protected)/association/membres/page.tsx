@@ -34,17 +34,15 @@ export default async function MembresPage() {
   const { membres, me } = await fetchMembresEtMe(cookieHeader);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Membres</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+        <h1 className="text-3xl font-bold text-foreground font-display">Membres</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           {membres.length} membre{membres.length !== 1 ? "s" : ""} dans l&apos;association.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
-        <GestionMembres membres={membres} currentUserId={me?.id ?? ""} />
-      </div>
+      <GestionMembres membres={membres} currentUserId={me?.id ?? ""} />
     </div>
   );
 }

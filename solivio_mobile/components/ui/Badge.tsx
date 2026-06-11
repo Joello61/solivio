@@ -1,28 +1,44 @@
+import type { ReactNode } from 'react';
 import { View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
 
 type Variant = 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'outline';
+type Size = 'sm' | 'md';
 
 interface BadgeProps {
-  children: React.ReactNode;
+  children: ReactNode;
   variant?: Variant;
+  size?: Size;
   className?: string;
 }
 
-const variantStyles: Record<Variant, { container: string; text: string }> = {
-  default: { container: 'bg-primary-100', text: 'text-primary-700' },
-  secondary: { container: 'bg-gray-100', text: 'text-gray-700' },
-  success: { container: 'bg-green-100', text: 'text-green-700' },
-  warning: { container: 'bg-amber-100', text: 'text-amber-700' },
-  destructive: { container: 'bg-red-100', text: 'text-red-700' },
-  outline: { container: 'border border-border bg-transparent', text: 'text-foreground' },
+const VARIANT: Record<Variant, { bg: string; text: string }> = {
+  default:     { bg: 'bg-primary/10',        text: 'text-primary-700' },
+  secondary:   { bg: 'bg-slate-100',          text: 'text-slate-600' },
+  success:     { bg: 'bg-teal-50',            text: 'text-teal-700' },
+  warning:     { bg: 'bg-amber-50',           text: 'text-amber-700' },
+  destructive: { bg: 'bg-red-50',             text: 'text-red-600' },
+  outline:     { bg: 'border border-border bg-transparent', text: 'text-foreground' },
 };
 
-export function Badge({ children, variant = 'default', className }: BadgeProps) {
-  const styles = variantStyles[variant];
+const SIZE: Record<Size, { wrap: string; text: string }> = {
+  sm: { wrap: 'px-2 py-0.5',   text: 'text-[11px] leading-4' },
+  md: { wrap: 'px-2.5 py-1',   text: 'text-xs leading-4' },
+};
+
+export function Badge({
+  children,
+  variant = 'default',
+  size = 'sm',
+  className,
+}: BadgeProps) {
+  const v = VARIANT[variant];
+  const s = SIZE[size];
   return (
-    <View className={cn('self-start rounded-full px-2.5 py-0.5', styles.container, className)}>
-      <Text className={cn('text-xs font-medium', styles.text)}>{children}</Text>
+    <View className={cn('self-start rounded-full', v.bg, s.wrap, className)}>
+      <Text className={cn('font-semibold', v.text, s.text)} numberOfLines={1}>
+        {children}
+      </Text>
     </View>
   );
 }

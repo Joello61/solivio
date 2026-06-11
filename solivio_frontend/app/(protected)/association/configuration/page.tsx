@@ -30,9 +30,9 @@ export default async function ConfigurationPage() {
 
   if (!association) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-semibold text-foreground">Configuration</h1>
-        <div className="rounded-xl border border-border bg-card p-8 text-center">
+      <div className="space-y-8">
+        <h1 className="text-3xl font-bold text-foreground font-display">Configuration</h1>
+        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-8 text-center">
           <p className="text-muted-foreground text-sm">
             Impossible de charger la configuration de l&apos;association.
           </p>
@@ -44,13 +44,13 @@ export default async function ConfigurationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Configuration</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+        <h1 className="text-3xl font-bold text-foreground font-display">Configuration</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Parametres de l&apos;association {association.nom}.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
         <FormulaireConfiguration association={association} />
       </div>
     </div>

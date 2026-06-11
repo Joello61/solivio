@@ -103,11 +103,10 @@ function LoginForm() {
         </Button>
       </form>
 
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-          ou
-        </span>
+      <div className="relative flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="shrink-0 text-xs font-medium text-muted-foreground/60">ou</span>
+        <Separator className="flex-1" />
       </div>
 
       <Button

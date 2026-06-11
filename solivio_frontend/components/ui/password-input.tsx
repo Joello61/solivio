@@ -22,9 +22,11 @@ function PasswordInput({
         type="button"
         onClick={() => setVisible((v) => !v)}
         className={cn(
-          "absolute right-2.5 top-1/2 -translate-y-1/2",
-          "text-muted-foreground hover:text-foreground transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-sm",
+          "absolute right-3 top-1/2 -translate-y-1/2",
+          "flex h-7 w-7 items-center justify-center rounded-lg",
+          "text-muted-foreground hover:text-foreground hover:bg-muted",
+          "transition-all duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
         )}
         aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
         tabIndex={-1}

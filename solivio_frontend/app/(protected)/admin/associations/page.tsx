@@ -41,17 +41,15 @@ export default async function AdminAssociationsPage() {
   if (!associations) redirect("/dashboard");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Associations</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Associations</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Gestion des associations et provisionnement des tenants.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
-        <GestionAssociations associations={associations} />
-      </div>
+      <GestionAssociations associations={associations} />
     </div>
   );
 }
