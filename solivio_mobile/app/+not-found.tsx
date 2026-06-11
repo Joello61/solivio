@@ -11,7 +11,10 @@ export default function NotFoundScreen() {
       <Text className="text-muted-foreground mt-2 text-center">Page introuvable.</Text>
       <Pressable
         onPress={() => router.replace('/')}
-        className="mt-6 bg-primary-600 rounded-lg px-6 py-3 active:bg-primary-700"
+        className="mt-6 bg-primary rounded-xl px-6 py-3"
+        style={({ pressed }) =>
+          pressed ? { opacity: 0.86, transform: [{ scale: 0.97 }] } : null
+        }
       >
         <Text className="text-white font-semibold">Retour a l'accueil</Text>
       </Pressable>
