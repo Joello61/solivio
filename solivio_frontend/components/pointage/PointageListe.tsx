@@ -126,15 +126,15 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
             distributionId={distributionId}
             onBenevoleAjoute={(inscription) => {
               setResultats((prev) => {
-                const existe = prev.find((r) => r.inscriptionId === inscription.id);
+                const existe = prev.find((r) => r.inscriptionId === inscription.inscriptionId);
                 if (existe) {
-                  return prev.map((r) => r.inscriptionId === inscription.id
+                  return prev.map((r) => r.inscriptionId === inscription.inscriptionId
                     ? { ...r, presence: inscription.presence }
                     : r
                   );
                 }
                 return [...prev, {
-                  inscriptionId: inscription.id,
+                  inscriptionId: inscription.inscriptionId,
                   nom: inscription.nom,
                   prenom: inscription.prenom,
                   type: inscription.type,

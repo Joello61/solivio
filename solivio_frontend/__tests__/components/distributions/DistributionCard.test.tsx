@@ -24,7 +24,7 @@ const distributionMock: DistributionResponse = {
   id: "abc-123",
   titre: "Distribution de test",
   description: null,
-  lieu: "Salle B",
+  lieu: { placeId: null, nom: "Salle B", adresseFormatee: "Salle B", latitude: null, longitude: null, numeroRue: null, voie: null, codePostal: null, ville: null },
   date: "2026-12-15",
   statut: "PUBLIEE",
   capaciteBeneficiaires: 50,

@@ -141,10 +141,10 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <Calendar className="size-4 shrink-0 text-muted-foreground" />
                 <span className="capitalize text-foreground">{dateFormatee}</span>
               </div>
-              {distribution.lieu && (
+              {distribution.lieu?.adresseFormatee && (
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="text-foreground">{distribution.lieu}</span>
+                  <span className="text-foreground">{distribution.lieu.adresseFormatee}</span>
                 </div>
               )}
               {distribution.description && (

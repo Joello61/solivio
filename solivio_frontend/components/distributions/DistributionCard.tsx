@@ -41,10 +41,10 @@ export function DistributionCard({ distribution, estGestionnaire }: Props) {
           <Calendar className="size-4 shrink-0" />
           <span className="capitalize">{dateFormatee}</span>
         </div>
-        {distribution.lieu && (
+        {distribution.lieu?.adresseFormatee && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <MapPin className="size-4 shrink-0" />
-            <span>{distribution.lieu}</span>
+            <span>{distribution.lieu.adresseFormatee}</span>
           </div>
         )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
