@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AUTH_PATHS = ["/login", "/register", "/verify-email", "/forgot-password", "/reset-password"];
+const AUTH_PATHS = ["/login", "/register", "/verify-email", "/forgot-password", "/reset-password", "/complete-google-registration"];
 
 // Toute route qui n'est pas une page d'auth et n'est pas la racine "/" est protegee.
 // Pas de liste explicite : chaque nouvelle page protegee est couverte automatiquement.

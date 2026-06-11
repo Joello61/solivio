@@ -81,7 +81,9 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                     + "&email=" + encodedEmail
                     + "&nom=" + encodedNom
                     + "&prenom=" + encodedPrenom
-                : frontendUrl + "/complete-google-registration?email=" + encodedEmail;
+                : frontendUrl + "/complete-google-registration?email=" + encodedEmail
+                    + "&nom=" + encodedNom
+                    + "&prenom=" + encodedPrenom;
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
