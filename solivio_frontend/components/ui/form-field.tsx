@@ -22,18 +22,24 @@ function FormField({
   children,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-2", className)}>
       {label && (
-        <Label htmlFor={htmlFor} className={cn(required && "after:content-['*'] after:ml-0.5 after:text-destructive")}>
+        <Label
+          htmlFor={htmlFor}
+          className={cn(
+            "text-sm font-medium text-foreground",
+            required && "after:content-['*'] after:ml-0.5 after:text-destructive"
+          )}
+        >
           {label}
         </Label>
       )}
       {children}
       {hint && !error && (
-        <p className="text-xs text-muted-foreground">{hint}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{hint}</p>
       )}
       {error && (
-        <p className="text-xs text-destructive" role="alert">
+        <p className="flex items-center gap-1.5 text-xs text-destructive font-medium" role="alert">
           {error}
         </p>
       )}

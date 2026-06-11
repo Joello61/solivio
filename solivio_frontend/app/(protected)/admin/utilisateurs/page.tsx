@@ -52,21 +52,19 @@ export default async function AdminUtilisateursPage({ searchParams }: PageProps)
   if (!comptes) redirect("/dashboard");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Utilisateurs</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+        <h1 className="text-3xl font-bold text-foreground font-display">Utilisateurs</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           {comptes.totalElements} compte{comptes.totalElements !== 1 ? "s" : ""} au total.
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
-        <GestionComptes
-          page={comptes}
-          recherche={q ?? ""}
-          currentPage={page}
-        />
-      </div>
+      <GestionComptes
+        page={comptes}
+        recherche={q ?? ""}
+        currentPage={page}
+      />
     </div>
   );
 }

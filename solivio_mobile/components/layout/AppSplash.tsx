@@ -1,30 +1,62 @@
 import { View, Text, Image, ActivityIndicator } from 'react-native';
 
+const LOGO_SHADOW = {
+  shadowColor: '#0D9488',
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.35,
+  shadowRadius: 20,
+  elevation: 10,
+} as const;
+
 export function AppSplash() {
   return (
     <View className="flex-1 bg-primary items-center justify-center" style={{ overflow: 'hidden' }}>
+
       {/* Cercles decoratifs */}
       <View
         pointerEvents="none"
-        className="absolute bg-white/5 rounded-full"
-        style={{ width: 340, height: 340, top: -110, right: -90 }}
+        className="absolute rounded-full"
+        style={{
+          width: 440,
+          height: 440,
+          top: -170,
+          right: -120,
+          backgroundColor: 'rgba(255,255,255,0.06)',
+        }}
       />
       <View
         pointerEvents="none"
-        className="absolute bg-white/5 rounded-full"
-        style={{ width: 220, height: 220, bottom: -70, left: -70 }}
+        className="absolute rounded-full"
+        style={{
+          width: 280,
+          height: 280,
+          bottom: -90,
+          left: -80,
+          backgroundColor: 'rgba(255,255,255,0.05)',
+        }}
       />
       <View
         pointerEvents="none"
-        className="absolute bg-white/[0.03] rounded-full"
-        style={{ width: 180, height: 180, top: '38%', left: -90 }}
+        className="absolute rounded-full"
+        style={{
+          width: 140,
+          height: 140,
+          top: '40%',
+          right: -50,
+          backgroundColor: 'rgba(255,255,255,0.03)',
+        }}
       />
 
-      {/* Logo + nom */}
-      <View className="items-center gap-7">
+      {/* Contenu centré */}
+      <View className="items-center gap-8">
+        {/* Logo */}
         <View
           className="w-24 h-24 rounded-3xl overflow-hidden"
-          style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.18)' }}
+          style={{
+            borderWidth: 1.5,
+            borderColor: 'rgba(255,255,255,0.20)',
+            ...LOGO_SHADOW,
+          }}
         >
           <Image
             source={require('@/assets/images/logo.png')}
@@ -33,18 +65,32 @@ export function AppSplash() {
           />
         </View>
 
-        <View className="items-center gap-2.5">
-          <Text className="text-white text-4xl font-bold tracking-tight">Solivio</Text>
-          <Text className="text-white/55 text-base text-center px-10 leading-relaxed">
-            La solidarite, organisee simplement.
+        {/* Identite */}
+        <View className="items-center gap-3">
+          <Text
+            className="text-white text-4xl font-bold"
+            style={{ letterSpacing: -0.5 }}
+          >
+            Solivio
           </Text>
+          <View
+            className="rounded-full px-4 py-1.5"
+            style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+          >
+            <Text className="text-[11px] font-semibold tracking-widest uppercase"
+              style={{ color: 'rgba(255,255,255,0.75)' }}
+            >
+              Solidarite organisee
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Indicateur bas */}
-      <View className="absolute bottom-16">
+      {/* Indicateur de chargement */}
+      <View className="absolute bottom-20">
         <ActivityIndicator size="small" color="rgba(255,255,255,0.45)" />
       </View>
+
     </View>
   );
 }

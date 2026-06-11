@@ -79,11 +79,11 @@ function DataTable<T>({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div className="overflow-hidden rounded-2xl border border-border/60 shadow-sm bg-white dark:bg-neutral-900">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/40">
+              <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
                 {columns.map((col) => (
                   <th
                     key={col.key}
@@ -122,7 +122,7 @@ function DataTable<T>({
                 paginated.map((row, i) => (
                   <tr
                     key={getRowKey ? getRowKey(row, i) : i}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    className="border-b border-border/40 last:border-0 hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-colors duration-100"
                   >
                     {columns.map((col) => (
                       <td

@@ -136,7 +136,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
       <Dialog open={annulationOpen} onOpenChange={setAnnulationOpen}>
         <DialogContent showCloseButton>
           <DialogHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 mb-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-800/40 mb-1">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <DialogTitle>Annuler la distribution</DialogTitle>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, Mail } from "lucide-react";
+import { CheckCircle, Mail, ArrowRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
@@ -36,13 +36,13 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <AuthLayout title="Email envoye">
-        <div className="flex flex-col items-center gap-4 py-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/30">
-            <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
+        <div className="flex flex-col items-center gap-5 py-2">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/50">
+            <CheckCircle className="h-8 w-8 text-primary" />
           </div>
-          <div className="text-center space-y-1.5">
-            <p className="text-sm text-foreground font-medium">Code envoye</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="text-center space-y-2">
+            <p className="text-base font-semibold text-foreground font-display">Code envoye !</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Si un compte est associe a{" "}
               <strong className="text-foreground">{email}</strong>, vous allez recevoir
               un email avec un code de reinitialisation.
@@ -51,12 +51,13 @@ export default function ForgotPasswordPage() {
         </div>
         <Link
           href={`/reset-password?email=${encodeURIComponent(email)}`}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 h-10 text-sm font-semibold text-primary-foreground shadow-primary hover:opacity-90 active:scale-[0.98] transition-all duration-150"
         >
           Saisir le code de verification
+          <ArrowRight className="h-4 w-4 shrink-0" />
         </Link>
         <p className="text-center text-sm text-muted-foreground">
-          <Link href="/login" className="text-primary hover:underline">
+          <Link href="/login" className="text-primary font-medium hover:underline">
             Retour a la connexion
           </Link>
         </p>

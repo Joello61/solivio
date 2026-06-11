@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatDate } from '@/lib/utils';
-import { MapPin, Calendar, CalendarX, ClipboardList, ChevronRight } from 'lucide-react-native';
+import { MapPin, Calendar, CalendarX, ClipboardList } from 'lucide-react-native';
 import type { StatutInscription, TypeInscription } from '@/types/distribution';
 
 interface MesInscriptionItem {
@@ -26,7 +26,7 @@ const STATUT_INSCRIPTION: Record<
   { label: string; variant: 'default' | 'secondary' | 'success' | 'warning' | 'destructive' }
 > = {
   CONFIRMEE: { label: 'Confirmee', variant: 'success' },
-  LISTE_ATTENTE: { label: 'Liste d\'attente', variant: 'warning' },
+  LISTE_ATTENTE: { label: "Liste d'attente", variant: 'warning' },
   ANNULEE: { label: 'Annulee', variant: 'destructive' },
 };
 
@@ -39,28 +39,28 @@ function InscriptionCard({ item }: { item: MesInscriptionItem }) {
       </Text>
       <View className="gap-1.5 mb-3">
         <View className="flex-row items-center gap-2">
-          <Calendar size={15} color="#6b7280" />
-          <Text className="text-base text-muted-foreground">
+          <Calendar size={14} color="#94A3B8" />
+          <Text className="text-sm text-muted-foreground">
             {formatDate(item.distributionDate)}
           </Text>
         </View>
-        {item.distributionLieu && (
+        {item.distributionLieu ? (
           <View className="flex-row items-center gap-2">
-            <MapPin size={15} color="#6b7280" />
-            <Text className="text-base text-muted-foreground" numberOfLines={1}>
+            <MapPin size={14} color="#94A3B8" />
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
               {item.distributionLieu}
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
-      <View className="flex-row items-center gap-2">
+      <View className="flex-row items-center gap-2 flex-wrap">
         <Badge variant="outline">
           {item.type === 'BENEFICIAIRE' ? 'Beneficiaire' : 'Benevole'}
         </Badge>
         <Badge variant={statut.variant}>{statut.label}</Badge>
-        {item.statut === 'LISTE_ATTENTE' && item.rangListeAttente != null && (
+        {item.statut === 'LISTE_ATTENTE' && item.rangListeAttente != null ? (
           <Text className="text-xs text-muted-foreground">#{item.rangListeAttente}</Text>
-        )}
+        ) : null}
       </View>
     </Card>
   );
@@ -71,8 +71,8 @@ function EmptyGlobal() {
   return (
     <View className="flex-1 items-center justify-center px-8 py-16 gap-6">
       <View className="items-center gap-5">
-        <View className="w-24 h-24 rounded-3xl bg-primary-50 items-center justify-center">
-          <ClipboardList size={40} color="#16513F" strokeWidth={1.5} />
+        <View className="w-24 h-24 rounded-3xl bg-primary/10 items-center justify-center">
+          <ClipboardList size={40} color="#0D9488" strokeWidth={1.5} />
         </View>
         <View className="items-center gap-2">
           <Text className="text-xl font-bold text-foreground text-center">
@@ -85,7 +85,10 @@ function EmptyGlobal() {
       </View>
       <Pressable
         onPress={() => router.push('/(app)/(tabs)/distributions')}
-        className="flex-row items-center gap-2 bg-primary px-6 py-3.5 rounded-xl active:bg-primary-700"
+        style={({ pressed }) =>
+          pressed ? { opacity: 0.86, transform: [{ scale: 0.97 }] } : null
+        }
+        className="flex-row items-center gap-2 bg-primary px-6 py-3.5 rounded-xl"
       >
         <Calendar size={18} color="#fff" />
         <Text className="text-base font-semibold text-white">Voir les distributions</Text>
@@ -98,7 +101,7 @@ function EmptySection({ icon: Icon, message }: { icon: React.ElementType; messag
   return (
     <View className="flex-row items-center gap-3 bg-muted/60 rounded-xl px-4 py-3.5">
       <View className="w-8 h-8 rounded-lg bg-background items-center justify-center">
-        <Icon size={16} color="#9ca3af" strokeWidth={1.75} />
+        <Icon size={16} color="#94A3B8" strokeWidth={1.75} />
       </View>
       <Text className="text-sm text-muted-foreground flex-1">{message}</Text>
     </View>
@@ -132,7 +135,7 @@ export default function InscriptionsScreen() {
         contentContainerClassName={toutVide ? 'flex-1' : 'px-4 py-4 gap-6'}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#16513F" />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#0D9488" />
         }
       >
         {toutVide ? (
@@ -140,7 +143,7 @@ export default function InscriptionsScreen() {
         ) : (
           <>
             <View className="gap-3">
-              <Text className="text-sm font-semibold text-foreground uppercase tracking-widest text-muted-foreground">
+              <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 A venir
               </Text>
               {aVenir.length === 0 ? (
@@ -154,14 +157,11 @@ export default function InscriptionsScreen() {
             </View>
 
             <View className="gap-3">
-              <Text className="text-sm font-semibold text-foreground uppercase tracking-widest text-muted-foreground">
+              <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Historique
               </Text>
               {historique.length === 0 ? (
-                <EmptySection
-                  icon={ClipboardList}
-                  message="Aucune inscription passee."
-                />
+                <EmptySection icon={ClipboardList} message="Aucune inscription passee." />
               ) : (
                 historique.map((item) => <InscriptionCard key={item.id} item={item} />)
               )}

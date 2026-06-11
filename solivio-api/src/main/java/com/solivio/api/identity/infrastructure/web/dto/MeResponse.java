@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.web.dto;
 
+import java.time.Instant;
 import java.util.List;
 
 public record MeResponse(
@@ -11,5 +12,9 @@ public record MeResponse(
     String photoUrl,
     boolean superAdmin,
     String tenantActif,
-    List<String> roles
+    List<String> roles,
+    Instant dateCreation,
+    Instant dateModification,
+    boolean emailVerifie,
+    String authMethod
 ) {}

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Plus, CalendarX, ListFilter } from "lucide-react";
+import { Plus, CalendarX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DistributionCard } from "@/components/distributions/DistributionCard";
@@ -47,11 +47,11 @@ export default async function DistributionsPage() {
   }, {});
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* En-tete */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Distributions</h1>
+          <h1 className="text-3xl font-bold text-foreground font-display">Distributions</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
               ? "Gerez et suivez toutes les distributions de l'association."
@@ -70,21 +70,20 @@ export default async function DistributionsPage() {
       {estGestionnaire && distributions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {[
-            { statut: "BROUILLON", label: "Brouillon" },
-            { statut: "PUBLIEE", label: "Publiee" },
-            { statut: "EN_COURS", label: "En cours" },
-            { statut: "TERMINEE", label: "Terminee" },
-            { statut: "ANNULEE", label: "Annulee" },
+            { statut: "BROUILLON", label: "Brouillon", cls: "bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
+            { statut: "PUBLIEE",   label: "Publiee",   cls: "bg-primary text-primary-foreground border-transparent" },
+            { statut: "EN_COURS",  label: "En cours",  cls: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-800/40" },
+            { statut: "TERMINEE",  label: "Terminee",  cls: "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
+            { statut: "ANNULEE",   label: "Annulee",   cls: "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40" },
           ]
             .filter((s) => (nbParStatut[s.statut] ?? 0) > 0)
             .map((s) => (
               <span
                 key={s.statut}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground"
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${s.cls}`}
               >
-                <ListFilter className="size-3" />
                 {s.label}
-                <span className="font-semibold text-foreground">{nbParStatut[s.statut]}</span>
+                <span className="font-bold">{nbParStatut[s.statut]}</span>
               </span>
             ))}
         </div>
@@ -92,7 +91,7 @@ export default async function DistributionsPage() {
 
       {/* Contenu */}
       {distributions.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card">
+        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
           <EmptyState
             icon={CalendarX}
             title="Aucune distribution"

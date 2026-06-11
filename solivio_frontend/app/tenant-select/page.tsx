@@ -72,15 +72,15 @@ export default function TenantSelectPage() {
       title="Choisir votre association"
       description="Vous etes membre de plusieurs associations. Selectionnez celle dans laquelle vous souhaitez vous connecter."
     >
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {tenants.map((t) => (
           <button
             key={t.slug}
             onClick={() => selectTenant(t.slug)}
             disabled={pending !== null}
-            className="group w-full flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 disabled:opacity-60 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group w-full flex items-center gap-4 rounded-xl border border-border/60 bg-white px-4 py-4 text-left transition-all duration-150 hover:border-primary hover:bg-teal-50/50 hover:shadow-md disabled:opacity-60 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 dark:bg-neutral-900 dark:hover:bg-teal-950/20"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-primary">
               <Building2 className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -94,7 +94,7 @@ export default function TenantSelectPage() {
                 )}
               </div>
             </div>
-            <div className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors">
+            <div className="shrink-0 text-muted-foreground/50 group-hover:text-primary transition-colors duration-150">
               {pending === t.slug ? (
                 <Spinner size="sm" />
               ) : (

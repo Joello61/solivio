@@ -23,8 +23,9 @@ export function ThemeToggle({ className, variant = "compact" }: ThemeToggleProps
       <button
         onClick={toggle}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-          "text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors",
+          "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
+          "text-muted-foreground hover:bg-muted hover:text-foreground",
+          "transition-all duration-150",
           className,
         )}
         aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
@@ -39,8 +40,9 @@ export function ThemeToggle({ className, variant = "compact" }: ThemeToggleProps
     <button
       onClick={toggle}
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-lg",
-        "text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+        "flex h-9 w-9 items-center justify-center rounded-xl",
+        "text-muted-foreground hover:bg-muted hover:text-foreground",
+        "transition-all duration-150",
         className,
       )}
       aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}

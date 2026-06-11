@@ -11,7 +11,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Accueil',
           tabBarIcon: ({ color, size }) => <LayoutDashboard size={size} color={color} />,
         }}
       />
@@ -32,7 +32,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profil"
         options={{
-          title: 'Compte',
+          title: 'Profil',
           tabBarIcon: ({ color, size }) => <CircleUser size={size} color={color} />,
         }}
       />

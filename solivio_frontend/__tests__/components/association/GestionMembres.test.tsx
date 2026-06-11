@@ -49,20 +49,20 @@ describe("GestionMembres", () => {
 
   it("affiche la liste des membres", () => {
     render(<GestionMembres membres={membres} currentUserId="other" />);
-    expect(screen.getByText("Alice Dupont")).toBeInTheDocument();
-    expect(screen.getByText("Bob Martin")).toBeInTheDocument();
+    expect(screen.getAllByText("Alice Dupont")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Bob Martin")[0]).toBeInTheDocument();
   });
 
   it("affiche les emails", () => {
     render(<GestionMembres membres={membres} currentUserId="other" />);
-    expect(screen.getByText("alice@example.com")).toBeInTheDocument();
+    expect(screen.getAllByText("alice@example.com")[0]).toBeInTheDocument();
   });
 
   it("ne montre pas le selecteur de role pour l'utilisateur courant", () => {
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
     const selecteurs = screen.queryAllByRole("combobox");
-    // user-1 (Alice) n'a pas de selecteur, user-2 (Bob) en a un
-    expect(selecteurs).toHaveLength(1);
+    // 2 filtres toolbar + Bob mobile (user-1=Alice pas de selecteur) + Bob desktop = 4
+    expect(selecteurs).toHaveLength(4);
   });
 
   it("appelle mettreAJourRoleMembre quand on change le role", async () => {
@@ -70,8 +70,8 @@ describe("GestionMembres", () => {
     const { mettreAJourRoleMembre } = await import("@/lib/api/association");
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
 
-    // Ouvre le select base-ui via userEvent
-    await user.click(screen.getByRole("combobox"));
+    // Ouvre le select du role de Bob (index 2 : apres les 2 filtres toolbar)
+    await user.click(screen.getAllByRole("combobox")[2]);
 
     // Attend l'ouverture de la liste et clique sur Responsable
     await waitFor(async () => {
@@ -87,22 +87,23 @@ describe("GestionMembres", () => {
   it("ne montre pas le bouton Retirer pour l'utilisateur courant", () => {
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
     const boutons = screen.getAllByRole("button", { name: /retirer/i });
-    // Seul Bob a le bouton Retirer (pas Alice qui est l'utilisateur courant)
-    expect(boutons).toHaveLength(1);
+    // Bob a 2 boutons Retirer : un dans la vue mobile, un dans la vue desktop
+    expect(boutons).toHaveLength(2);
   });
 
   it("affiche les boutons Suspendre pour les membres autres que soi", () => {
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
     const boutons = screen.getAllByRole("button", { name: /suspendre/i });
-    expect(boutons).toHaveLength(1);
+    // Bob a 2 boutons Suspendre : mobile et desktop
+    expect(boutons).toHaveLength(2);
   });
 
   it("appelle changerStatutMembre lors du clic Suspendre", async () => {
     const { changerStatutMembre } = await import("@/lib/api/association");
     render(<GestionMembres membres={membres} currentUserId="user-1" />);
 
-    // Ouvre le dialog de confirmation
-    fireEvent.click(screen.getByRole("button", { name: /suspendre/i }));
+    // Ouvre le dialog via le premier bouton Suspendre (vue mobile)
+    fireEvent.click(screen.getAllByRole("button", { name: /suspendre/i })[0]);
 
     // Attend l'affichage du dialog et confirme
     await waitFor(() => {
@@ -122,6 +123,6 @@ describe("GestionMembres", () => {
       { ...membres[1], statut: "suspendu" },
     ];
     render(<GestionMembres membres={membresSuspendus} currentUserId="user-1" />);
-    expect(screen.getByRole("button", { name: /reactiver/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /reactiver/i })[0]).toBeInTheDocument();
   });
 });

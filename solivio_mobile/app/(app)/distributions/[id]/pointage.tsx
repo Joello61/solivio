@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
   FlatList,
   Text,
@@ -59,20 +59,41 @@ function PointageRow({
         <Pressable
           onPress={() => mutPointer.mutate('PRESENT')}
           disabled={mutPointer.isPending}
-          className={`w-10 h-10 rounded-full items-center justify-center ${
-            item.presence === 'PRESENT' ? 'bg-green-500' : 'bg-green-100 active:bg-green-200'
-          }`}
+          style={({ pressed }) => ({
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            alignItems: 'center' as const,
+            justifyContent: 'center' as const,
+            backgroundColor:
+              item.presence === 'PRESENT'
+                ? '#0D9488'
+                : pressed
+                ? '#CCFBF1'
+                : '#F0FDFA',
+          })}
         >
-          <UserCheck size={18} color={item.presence === 'PRESENT' ? '#fff' : '#10b981'} />
+          <UserCheck size={20} color={item.presence === 'PRESENT' ? '#fff' : '#0D9488'} />
         </Pressable>
+
         <Pressable
           onPress={() => mutPointer.mutate('ABSENT')}
           disabled={mutPointer.isPending}
-          className={`w-10 h-10 rounded-full items-center justify-center ${
-            item.presence === 'ABSENT' ? 'bg-red-500' : 'bg-red-100 active:bg-red-200'
-          }`}
+          style={({ pressed }) => ({
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            alignItems: 'center' as const,
+            justifyContent: 'center' as const,
+            backgroundColor:
+              item.presence === 'ABSENT'
+                ? '#EF4444'
+                : pressed
+                ? '#FEE2E2'
+                : '#FEF2F2',
+          })}
         >
-          <UserX size={18} color={item.presence === 'ABSENT' ? '#fff' : '#ef4444'} />
+          <UserX size={20} color={item.presence === 'ABSENT' ? '#fff' : '#DC2626'} />
         </Pressable>
       </View>
     </View>
@@ -86,7 +107,7 @@ export default function PointageScreen() {
   const { data, isFetching } = useQuery({
     queryKey: ['pointage', id, query],
     queryFn: () => rechercherPointage(id, query),
-    enabled: query.length >= 2,
+    enabled: query.length >= 1,
     placeholderData: [],
   });
 
@@ -94,40 +115,40 @@ export default function PointageScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Pointage" showClose />
+      <ScreenHeader title="Pointage" showClose modal />
       <SafeAreaView edges={['bottom']} className="flex-1">
-      {/* Barre de recherche */}
-      <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border">
-        <Search size={18} color="#6b7280" />
-        <TextInput
-          className="flex-1 text-base text-foreground"
-          placeholder="Rechercher par nom (min. 2 car.)..."
-          placeholderTextColor="#9ca3af"
-          value={query}
-          onChangeText={setQuery}
-          autoFocus
-        />
-        {isFetching && <ActivityIndicator size="small" color="#16513F" />}
-      </View>
+        {/* Barre de recherche */}
+        <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border bg-card">
+          <Search size={18} color="#94A3B8" />
+          <TextInput
+            className="flex-1 text-base text-foreground"
+            placeholder="Rechercher par nom ou prenom..."
+            placeholderTextColor="#94A3B8"
+            value={query}
+            onChangeText={setQuery}
+            autoFocus
+          />
+          {isFetching ? <ActivityIndicator size="small" color="#0D9488" /> : null}
+        </View>
 
-      {query.length < 2 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-muted-foreground text-sm">
-            Saisissez au moins 2 caracteres pour rechercher.
-          </Text>
-        </View>
-      ) : results.length === 0 && !isFetching ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-muted-foreground text-sm">Aucun resultat.</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.inscriptionId}
-          renderItem={({ item }) => <PointageRow item={item} distributionId={id} />}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+        {query.length < 1 ? (
+          <View className="flex-1 items-center justify-center gap-2 px-8">
+            <Text className="text-sm text-muted-foreground text-center">
+              Recherchez un participant par nom ou prenom.
+            </Text>
+          </View>
+        ) : results.length === 0 && !isFetching ? (
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-sm text-muted-foreground">Aucun resultat.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={results}
+            keyExtractor={(item) => item.inscriptionId}
+            renderItem={({ item }) => <PointageRow item={item} distributionId={id} />}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </SafeAreaView>
     </View>
   );

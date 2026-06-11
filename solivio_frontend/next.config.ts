@@ -7,6 +7,7 @@ const apiUrl = new URL(
 const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.1.162'],
   output: "standalone",
   images: {
     unoptimized: isDev,

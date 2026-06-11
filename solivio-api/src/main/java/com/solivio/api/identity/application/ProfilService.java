@@ -75,7 +75,11 @@ public class ProfilService {
             photoUrl,
             compte.isSuperAdmin(),
             userDetails.getTenantSlug(),
-            roles
+            roles,
+            compte.getDateCreation(),
+            compte.getDateModification(),
+            compte.isEmailVerifie(),
+            compte.getGoogleId() != null ? "google" : "password"
         );
     }
 }

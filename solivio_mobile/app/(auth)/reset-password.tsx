@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react-native';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -21,10 +22,31 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
+function otpBoxStyle(digit: string, focused: boolean) {
+  return {
+    flex: 1,
+    aspectRatio: 1 as const,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    backgroundColor: focused ? '#F0FDFA' : '#FFFFFF',
+    borderColor: focused ? '#0D9488' : digit ? '#0D9488' : '#E2E8F0',
+    textAlign: 'center' as const,
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: '#0F172A',
+    shadowColor: focused ? '#0D9488' : '#0F172A',
+    shadowOffset: { width: 0, height: focused ? 0 : 1 },
+    shadowOpacity: focused ? 0.14 : 0.04,
+    shadowRadius: focused ? 6 : 4,
+    elevation: focused ? 2 : 1,
+  };
+}
+
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputs = useRef<(TextInput | null)[]>([]);
 
@@ -72,29 +94,35 @@ export default function ResetPasswordScreen() {
     }
   }
 
+  const codeComplet = digits.every((d) => d !== '');
+
   return (
     <AuthLayout
       title="Reinitialiser le mot de passe"
       description="Saisissez le code recu par email et choisissez un nouveau mot de passe."
     >
       <View className="gap-5">
-        {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <Text className="text-sm text-destructive">{error}</Text>
+        {error ? (
+          <View className="flex-row items-start gap-3 bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-3">
+            <AlertCircle size={16} color="#EF4444" style={{ marginTop: 1 }} />
+            <Text className="flex-1 text-sm text-destructive">{error}</Text>
           </View>
-        )}
+        ) : null}
 
+        {/* Code OTP */}
         <View className="gap-2">
-          <Text className="text-sm font-medium text-foreground">Code de verification</Text>
-          <View className="flex-row justify-between gap-2">
+          <Text className="text-sm font-medium text-foreground">Code a 6 chiffres</Text>
+          <View className="flex-row gap-2">
             {digits.map((digit, index) => (
               <TextInput
                 key={index}
                 ref={(ref) => { inputs.current[index] = ref; }}
-                className="flex-1 aspect-square border border-input rounded-xl text-center text-xl font-bold text-foreground bg-background focus:border-primary-600"
+                style={otpBoxStyle(digit, focusedIndex === index)}
                 value={digit}
                 onChangeText={(v) => onDigitChange(index, v)}
                 onKeyPress={({ nativeEvent: { key } }) => onKeyPress(index, key)}
+                onFocus={() => setFocusedIndex(index)}
+                onBlur={() => setFocusedIndex(null)}
                 keyboardType="number-pad"
                 maxLength={6}
                 selectTextOnFocus
@@ -124,7 +152,7 @@ export default function ResetPasswordScreen() {
           name="confirmer"
           render={({ field: { value, onChange, onBlur } }) => (
             <Input
-              label="Confirmer"
+              label="Confirmer le mot de passe"
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -135,13 +163,23 @@ export default function ResetPasswordScreen() {
           )}
         />
 
-        <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg">
-          Reinitialiser
+        <Button
+          onPress={handleSubmit(onSubmit)}
+          loading={isSubmitting}
+          disabled={!codeComplet}
+          size="lg"
+          fullWidth
+        >
+          Reinitialiser le mot de passe
         </Button>
       </View>
 
-      <Pressable onPress={() => router.back()} className="items-center">
-        <Text className="text-sm text-primary-600 font-medium">Retour</Text>
+      <Pressable
+        onPress={() => router.back()}
+        className="items-center"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text className="text-sm text-primary font-semibold">Retour</Text>
       </Pressable>
     </AuthLayout>
   );

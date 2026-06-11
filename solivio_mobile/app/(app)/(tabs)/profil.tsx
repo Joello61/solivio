@@ -23,24 +23,45 @@ function MenuRow({
   icon: Icon,
   onPress,
   destructive = false,
+  iconColor,
+  iconBg,
 }: {
   label: string;
   icon: React.ElementType;
   onPress: () => void;
   destructive?: boolean;
+  iconColor?: string;
+  iconBg?: string;
 }) {
+  const resolvedIconColor = destructive ? '#EF4444' : (iconColor ?? '#64748B');
+  const resolvedIconBg = destructive ? '#FEF2F2' : (iconBg ?? '#F1F5F9');
+
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center gap-3 py-4 active:bg-muted px-1"
+      style={({ pressed }) =>
+        pressed ? { backgroundColor: '#F8FAFC', opacity: 0.85 } : null
+      }
+      className="flex-row items-center gap-3 py-3.5 px-1"
     >
-      <Icon size={20} color={destructive ? '#ef4444' : '#6b7280'} />
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: resolvedIconBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon size={18} color={resolvedIconColor} />
+      </View>
       <Text
         className={`flex-1 text-base font-medium ${destructive ? 'text-destructive' : 'text-foreground'}`}
       >
         {label}
       </Text>
-      {!destructive && <ChevronRight size={18} color="#9ca3af" />}
+      {!destructive ? <ChevronRight size={16} color="#CBD5E1" /> : null}
     </Pressable>
   );
 }
@@ -74,15 +95,30 @@ export default function ProfilScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader title="Compte" />
+      <AppHeader title="Profil" />
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-4 py-6 gap-6"
         showsVerticalScrollIndicator={false}
       >
-        {/* En-tete */}
+        {/* En-tete utilisateur */}
         <View className="items-center gap-3">
-          <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center overflow-hidden">
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#CCFBF1',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              shadowColor: '#0D9488',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.18,
+              shadowRadius: 12,
+              elevation: 4,
+            }}
+          >
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
@@ -90,38 +126,44 @@ export default function ProfilScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <Text className="text-2xl font-bold text-primary-600">{initiales}</Text>
+              <Text style={{ fontSize: 26, fontWeight: '700', color: '#0D9488' }}>
+                {initiales}
+              </Text>
             )}
           </View>
           <View className="items-center">
-            <Text className="text-xl font-semibold text-foreground">
+            <Text className="text-xl font-bold text-foreground">
               {user?.prenom} {user?.nom}
             </Text>
-            <Text className="text-sm text-muted-foreground">{user?.email}</Text>
+            <Text className="text-sm text-muted-foreground mt-0.5">{user?.email}</Text>
           </View>
-          {user?.roles.map((role) => (
-            <View key={role} className="bg-primary-50 rounded-full px-3 py-1">
-              <Text className="text-xs font-medium text-primary-700">{role}</Text>
-            </View>
-          ))}
+          <View className="flex-row gap-2 flex-wrap justify-center">
+            {user?.roles.map((role) => (
+              <View key={role} className="bg-teal-50 rounded-full px-3 py-1 border border-teal-100">
+                <Text className="text-xs font-semibold text-teal-700 capitalize">{role}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Mon compte */}
-        <Card className="py-0">
+        <Card className="py-0 px-3">
           <MenuRow
             label="Mon compte"
             icon={User}
             onPress={() => router.push('/(app)/mon-compte')}
+            iconColor="#0D9488"
+            iconBg="#CCFBF1"
           />
         </Card>
 
         {/* Association */}
-        {estGestionnaire && (
+        {estGestionnaire ? (
           <View className="gap-2">
             <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1">
               Association
             </Text>
-            <Card className="py-0">
+            <Card className="py-0 px-3">
               <MenuRow
                 label="Configuration"
                 icon={Settings}
@@ -135,15 +177,15 @@ export default function ProfilScreen() {
               />
             </Card>
           </View>
-        )}
+        ) : null}
 
         {/* Administration */}
-        {estSuperAdmin && (
+        {estSuperAdmin ? (
           <View className="gap-2">
             <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1">
               Administration
             </Text>
-            <Card className="py-0">
+            <Card className="py-0 px-3">
               <MenuRow
                 label="Utilisateurs"
                 icon={UserCog}
@@ -157,10 +199,10 @@ export default function ProfilScreen() {
               />
             </Card>
           </View>
-        )}
+        ) : null}
 
         {/* A propos */}
-        <Card className="py-0">
+        <Card className="py-0 px-3">
           <MenuRow
             label="A propos"
             icon={Info}
@@ -169,7 +211,7 @@ export default function ProfilScreen() {
         </Card>
 
         {/* Deconnexion */}
-        <Card className="py-0">
+        <Card className="py-0 px-3">
           <MenuRow
             label="Se deconnecter"
             icon={LogOut}
@@ -178,7 +220,6 @@ export default function ProfilScreen() {
           />
         </Card>
 
-        {/* Version */}
         <Text className="text-xs text-muted-foreground text-center pb-2">
           Solivio v{version}
         </Text>

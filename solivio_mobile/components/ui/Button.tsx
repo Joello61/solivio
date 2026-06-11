@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { cn } from '@/lib/utils';
 
@@ -6,43 +7,59 @@ type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
   onPress?: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
   variant?: Variant;
   size?: Size;
   disabled?: boolean;
   loading?: boolean;
+  fullWidth?: boolean;
   className?: string;
   textClassName?: string;
 }
 
-const variantStyles: Record<Variant, { container: string; text: string }> = {
-  primary: {
-    container: 'bg-primary active:bg-primary-700 border border-transparent',
-    text: 'text-white font-medium',
-  },
-  secondary: {
-    container: 'bg-secondary active:bg-primary-100 border border-transparent',
-    text: 'text-primary font-medium',
-  },
-  destructive: {
-    container: 'bg-destructive/10 active:bg-destructive/20 border border-transparent',
-    text: 'text-destructive font-medium',
-  },
-  ghost: {
-    container: 'bg-transparent active:bg-muted border border-transparent',
-    text: 'text-foreground font-medium',
-  },
-  outline: {
-    container: 'bg-background active:bg-muted border border-border',
-    text: 'text-foreground font-medium',
-  },
+const CONTAINER: Record<Variant, string> = {
+  primary:     'bg-primary active:bg-primary-700',
+  secondary:   'bg-primary/10 active:bg-primary/20',
+  destructive: 'bg-destructive/10 active:bg-destructive/15',
+  ghost:       'bg-transparent active:bg-slate-100',
+  outline:     'bg-transparent border border-border active:bg-slate-100',
 };
 
-const sizeStyles: Record<Size, { container: string; text: string }> = {
-  sm: { container: 'px-4 py-2.5 rounded-lg gap-1', text: 'text-sm' },
-  md: { container: 'px-4 py-3.5 rounded-xl gap-2', text: 'text-base' },
-  lg: { container: 'px-5 py-4 rounded-xl gap-2', text: 'text-base font-semibold' },
+const LABEL: Record<Variant, string> = {
+  primary:     'text-white font-semibold',
+  secondary:   'text-primary font-semibold',
+  destructive: 'text-destructive font-semibold',
+  ghost:       'text-foreground font-medium',
+  outline:     'text-foreground font-medium',
 };
+
+const SIZE_WRAP: Record<Size, string> = {
+  sm: 'h-10 px-4 rounded-xl gap-1.5',
+  md: 'h-12 px-5 rounded-xl gap-2',
+  lg: 'h-14 px-6 rounded-2xl gap-2',
+};
+
+const SIZE_TEXT: Record<Size, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-[17px]',
+};
+
+const SPINNER_COLOR: Record<Variant, string> = {
+  primary:     '#FFFFFF',
+  secondary:   '#0D9488',
+  destructive: '#EF4444',
+  ghost:       '#0F172A',
+  outline:     '#0F172A',
+};
+
+const PRIMARY_SHADOW = {
+  shadowColor: '#0D9488',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.28,
+  shadowRadius: 12,
+  elevation: 6,
+} as const;
 
 export function Button({
   onPress,
@@ -51,11 +68,10 @@ export function Button({
   size = 'md',
   disabled = false,
   loading = false,
+  fullWidth = false,
   className,
   textClassName,
 }: ButtonProps) {
-  const v = variantStyles[variant];
-  const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
   return (
@@ -64,21 +80,24 @@ export function Button({
       disabled={isDisabled}
       className={cn(
         'flex-row items-center justify-center',
-        v.container,
-        s.container,
+        CONTAINER[variant],
+        SIZE_WRAP[size],
+        fullWidth && 'w-full',
         isDisabled && 'opacity-50',
         className,
       )}
+      style={({ pressed }) => [
+        variant === 'primary' && !isDisabled ? PRIMARY_SHADOW : null,
+        pressed && !isDisabled ? { opacity: 0.86, transform: [{ scale: 0.975 }] } : null,
+      ]}
     >
-      {loading && (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'primary' ? '#fff' : '#16513F'}
-          className="mr-2"
-        />
-      )}
+      {loading ? (
+        <ActivityIndicator size="small" color={SPINNER_COLOR[variant]} />
+      ) : null}
       {typeof children === 'string' ? (
-        <Text className={cn(v.text, s.text, textClassName)}>{children}</Text>
+        <Text className={cn(LABEL[variant], SIZE_TEXT[size], textClassName)}>
+          {children}
+        </Text>
       ) : (
         children
       )}

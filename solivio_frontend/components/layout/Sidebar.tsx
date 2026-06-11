@@ -4,11 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -56,35 +52,39 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col border-r border-border bg-card shrink-0",
+        "hidden lg:flex flex-col shrink-0",
+        "bg-white dark:bg-neutral-900 border-r border-border/60",
+        "shadow-sm",
         "transition-[width] duration-200 ease-in-out",
-        collapsed ? "w-[64px]" : "w-[248px]",
+        collapsed ? "w-[64px]" : "w-[256px]",
       )}
     >
-      {/* En-tete : logo + bouton collapse/expand */}
+      {/* En-tete : logo + bouton collapse */}
       <div
         className={cn(
-          "flex items-center border-b border-border shrink-0 gap-2",
-          collapsed ? "h-auto flex-col py-3 px-0" : "h-14 px-4",
+          "flex items-center border-b border-border/60 shrink-0",
+          collapsed ? "h-auto flex-col py-3 px-0 gap-2" : "h-14 px-4 gap-3",
         )}
       >
         <Link
           href="/dashboard"
           title={collapsed ? "Solivio - Tableau de bord" : undefined}
           className={cn(
-            "flex items-center gap-2 min-w-0",
+            "flex items-center gap-2.5 min-w-0",
             collapsed ? "justify-center" : "flex-1",
           )}
         >
-          <Image
-            src="/logo.svg"
-            alt="Solivio"
-            width={28}
-            height={28}
-            className="shrink-0 rounded-md"
-          />
+          <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-xl bg-primary shadow-primary">
+            <Image
+              src="/logo.svg"
+              alt="Solivio"
+              width={18}
+              height={18}
+              style={{ width: 18, height: 18 }}
+            />
+          </div>
           {!collapsed && (
-            <span className="text-base font-bold tracking-tight text-foreground truncate">
+            <span className="text-base font-bold tracking-tight text-foreground font-display truncate">
               Solivio
             </span>
           )}
@@ -92,7 +92,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
 
         <button
           onClick={onCollapseToggle}
-          className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className={cn(
+            "shrink-0 flex h-7 w-7 items-center justify-center rounded-lg",
+            "text-muted-foreground hover:bg-muted hover:text-foreground",
+            "transition-all duration-150",
+          )}
           aria-label={collapsed ? "Agrandir la barre laterale" : "Reduire la barre laterale"}
         >
           {collapsed ? (
@@ -106,8 +110,8 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
       {/* Navigation principale */}
       <nav
         className={cn(
-          "flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-5",
-          collapsed ? "px-2" : "pr-2",
+          "flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-6",
+          collapsed ? "px-2" : "px-3",
         )}
       >
         {NAV_SECTIONS.map((section, sectionIndex) => {
@@ -116,15 +120,15 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
 
           return (
             <div key={sectionIndex} className="space-y-0.5">
-              {/* Libelle de section (expanded uniquement) */}
+              {/* Libelle de section */}
               {!collapsed && section.title && (
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/50">
                   {section.title}
                 </p>
               )}
-              {/* Separateur de section (collapsed) */}
+              {/* Separateur en mode collapsed */}
               {collapsed && section.title && sectionIndex > 0 && (
-                <div className="mb-2 border-t border-border/60" />
+                <div className="mb-2 mx-1 border-t border-border/60" />
               )}
 
               {visibleItems.map((item) => {
@@ -138,9 +142,10 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
                       href={item.href}
                       title={item.label}
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-all",
+                        "flex h-9 w-9 items-center justify-center rounded-xl mx-auto",
+                        "transition-all duration-150",
                         active
-                          ? "bg-primary/10 text-primary"
+                          ? "bg-primary text-primary-foreground shadow-primary"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -154,10 +159,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 border-l-[3px] rounded-r-lg py-2 pr-3 text-sm font-medium transition-all",
+                      "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
+                      "transition-all duration-150",
                       active
-                        ? "border-primary bg-primary/10 text-primary pl-[9px]"
-                        : "border-transparent pl-3 text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                        ? "bg-primary text-primary-foreground shadow-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -171,20 +177,21 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
       </nav>
 
       {/* Section compte en bas */}
-      <div className={cn("border-t border-border py-2 space-y-0.5", collapsed ? "px-2" : "px-2")}>
-        {/* Profil / Mon compte */}
+      <div className={cn("border-t border-border/60 py-3 space-y-1", collapsed ? "px-2" : "px-3")}>
+        {/* Profil */}
         {collapsed ? (
           <Link
             href="/mon-compte"
             title="Mon compte"
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-all",
+              "flex h-9 w-9 items-center justify-center rounded-xl mx-auto",
+              "transition-all duration-150",
               isNavItemActive("/mon-compte", pathname)
-                ? "bg-primary/10 text-primary"
+                ? "bg-primary text-primary-foreground shadow-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-semibold overflow-hidden">
+            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden">
               {avatarSrc ? (
                 <Image src={avatarSrc} alt="" fill sizes="28px" className="object-cover" />
               ) : (
@@ -196,13 +203,13 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           <Link
             href="/mon-compte"
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all",
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150",
               isNavItemActive("/mon-compte", pathname)
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                ? "bg-primary text-primary-foreground shadow-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-semibold overflow-hidden ring-2 ring-primary/15">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image src={avatarSrc} alt="" fill sizes="32px" className="object-cover" />
               ) : (
@@ -210,11 +217,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground leading-tight">
+              <p className="truncate text-sm font-semibold leading-tight">
                 {user.prenom} {user.nom}
               </p>
               {roleLabel && (
-                <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+                <p className="truncate text-xs opacity-70">{roleLabel}</p>
               )}
             </div>
           </Link>
@@ -226,10 +233,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           disabled={pendingLogout}
           title={collapsed ? "Se deconnecter" : undefined}
           className={cn(
-            "flex w-full items-center rounded-lg text-sm font-medium transition-all",
-            "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
-            "disabled:opacity-50 disabled:pointer-events-none",
-            collapsed ? "h-10 justify-center" : "gap-3 px-3 py-2.5",
+            "flex w-full items-center rounded-xl text-sm font-medium",
+            "text-muted-foreground hover:bg-destructive/8 hover:text-destructive",
+            "transition-all duration-150",
+            "disabled:opacity-45 disabled:pointer-events-none",
+            collapsed ? "h-9 justify-center" : "gap-3 px-3 py-2.5",
           )}
         >
           {pendingLogout ? (
@@ -242,16 +250,9 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           )}
         </button>
 
-        {/* Bas : theme toggle + collapse */}
-        <div className="pt-1 border-t border-border/40 space-y-0.5">
-          {/* Toggle dark/light */}
-          {collapsed ? (
-            <div className="flex justify-center">
-              <ThemeToggle />
-            </div>
-          ) : (
-            <ThemeToggle variant="label" />
-          )}
+        {/* Theme toggle */}
+        <div className={cn("pt-1 border-t border-border/40", collapsed ? "flex justify-center" : "")}>
+          <ThemeToggle variant={collapsed ? "compact" : "label"} />
         </div>
       </div>
     </aside>

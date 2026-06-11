@@ -8,6 +8,7 @@ import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.InvitationRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
+import com.solivio.api.identity.domain.MembreAssociation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,9 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -140,6 +143,126 @@ class RegisterServiceTest {
             "wrong@example.com", "pass", "Wrong", "User", token))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("correspond pas");
+    }
+
+    @Test
+    void lierAssociationGoogle_lanceExceptionSiCompteIntrouvable() {
+        when(compteRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.lierAssociationGoogle(
+            "unknown@example.com", "Nom", "Prenom", "PILOTE", null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("introuvable");
+    }
+
+    @Test
+    void lierAssociationGoogle_lanceExceptionSiPasGoogleId() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+
+        assertThatThrownBy(() -> service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", "PILOTE", null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Google");
+    }
+
+    @Test
+    void lierAssociationGoogle_lanceExceptionSiDejaAffilie() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        compte.setGoogleId("google-uid");
+        Association asso = new Association("pilote", "Pilote");
+        MembreAssociation membre = new MembreAssociation(compte, asso, "beneficiaire");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of(membre));
+
+        assertThatThrownBy(() -> service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", "PILOTE", null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("deja lie");
+    }
+
+    @Test
+    void lierAssociationGoogle_lanceExceptionSiCodeAssoManquantSansInvitation() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        compte.setGoogleId("google-uid");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", null, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Code association requis");
+    }
+
+    @Test
+    void lierAssociationGoogle_lanceExceptionSiCodeAssoInconnu() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        compte.setGoogleId("google-uid");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(associationRepository.findByCode("BADCODE")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", "BADCODE", null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Code association inconnu");
+    }
+
+    @Test
+    void lierAssociationGoogle_creerMembreViaCodeAsso() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        compte.setGoogleId("google-uid");
+        Association asso = new Association("pilote", "Pilote");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(associationRepository.findByCode("PILOTE")).thenReturn(Optional.of(asso));
+
+        Compte result = service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", "PILOTE", null);
+
+        assertThat(result).isSameAs(compte);
+        verify(membreRepo).save(any());
+        verify(personneProvisioningService).provisionner(
+            eq(asso.getSlug()), eq("alice@example.com"), eq("Dupont"), eq("Alice"));
+    }
+
+    @Test
+    void lierAssociationGoogle_creerMembreViaInvitation() {
+        UUID tokenUUID = UUID.randomUUID();
+        Compte inviteur = new Compte("boss@example.com", "hash", "Boss", "B");
+        Association asso = new Association("pilote", "Pilote");
+        Invitation invitation = new Invitation("alice@example.com", asso, "benevole", inviteur,
+            Instant.now().plusSeconds(3600));
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        compte.setGoogleId("google-uid");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(invitationRepository.findByTokenWithDetails(tokenUUID)).thenReturn(Optional.of(invitation));
+
+        Compte result = service.lierAssociationGoogle(
+            "alice@example.com", "Dupont", "Alice", null, tokenUUID.toString());
+
+        assertThat(result).isSameAs(compte);
+        assertThat(invitation.getStatut()).isEqualTo("accepted");
+        verify(membreRepo).save(any());
+        verify(personneProvisioningService).provisionner(
+            eq(asso.getSlug()), eq("alice@example.com"), eq("Dupont"), eq("Alice"));
+    }
+
+    @Test
+    void lierAssociationGoogle_miseAJourNomPrenom() {
+        Compte compte = new Compte("alice@example.com", "hash", "AncienNom", "AncienPrenom");
+        compte.setGoogleId("google-uid");
+        Association asso = new Association("pilote", "Pilote");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(associationRepository.findByCode("PILOTE")).thenReturn(Optional.of(asso));
+
+        service.lierAssociationGoogle(
+            "alice@example.com", "NouveauNom", "NouveauPrenom", "PILOTE", null);
+
+        assertThat(compte.getNom()).isEqualTo("NouveauNom");
+        assertThat(compte.getPrenom()).isEqualTo("NouveauPrenom");
     }
 
     @Test

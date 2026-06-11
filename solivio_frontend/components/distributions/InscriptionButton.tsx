@@ -80,12 +80,15 @@ export function InscriptionButton({
 
       {estInscrit ? (
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 px-3 py-1.5">
-            <span className="text-sm font-medium text-primary">
-              {inscriptionExistante?.statut === "LISTE_ATTENTE"
-                ? `Liste d'attente (rang ${inscriptionExistante.rangListeAttente ?? "?"})`
-                : "Inscrit(e)"}
-            </span>
+          <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 px-4 py-2.5">
+            <p className="text-base font-bold text-primary leading-none">
+              {inscriptionExistante?.statut === "LISTE_ATTENTE" ? "Liste d'attente" : "Inscrit(e)"}
+            </p>
+            {inscriptionExistante?.statut === "LISTE_ATTENTE" && (
+              <p className="text-xs text-primary/70 mt-0.5">
+                rang {inscriptionExistante.rangListeAttente ?? "?"}
+              </p>
+            )}
           </div>
           <Button size="sm" variant="outline" onClick={handleDesinscrire} disabled={pending}>
             {pending ? <><Spinner size="sm" /> Annulation...</> : "Se desinscrire"}
