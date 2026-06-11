@@ -49,8 +49,8 @@ function MembreCard({ membre }: { membre: MembreResponse }) {
   return (
     <Card>
       <View className="flex-row items-start gap-3">
-        <View className="w-10 h-10 rounded-full bg-primary-100 items-center justify-center">
-          <Text className="font-bold text-primary-600 text-sm">
+        <View className="w-10 h-10 rounded-full bg-teal-100 items-center justify-center">
+          <Text className="font-bold text-teal-700 text-sm">
             {membre.prenom[0]}{membre.nom[0]}
           </Text>
         </View>
@@ -76,7 +76,7 @@ function MembreCard({ membre }: { membre: MembreResponse }) {
             disabled={mutStatut.isPending}
             className="w-9 h-9 items-center justify-center rounded-lg active:bg-muted"
           >
-            <ShieldCheck size={16} color={estActif ? '#f59e0b' : '#10b981'} />
+            <ShieldCheck size={16} color={estActif ? '#D97706' : '#0D9488'} />
           </Pressable>
           <Pressable
             onPress={confirmerSuppression}
@@ -110,7 +110,7 @@ export default function MembresScreen() {
         contentContainerClassName="px-4 py-4 gap-3"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#16513F" />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#0D9488" />
         }
         ListEmptyComponent={
           <View className="items-center justify-center py-20">

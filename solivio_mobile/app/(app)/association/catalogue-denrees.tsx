@@ -88,7 +88,7 @@ function DenreeItem({ denree }: { denree: CatalogueDenreeResponse }) {
               disabled={mutModifier.isPending || !editLibelle.trim()}
               className="w-9 h-9 items-center justify-center rounded-lg active:bg-muted"
             >
-              <Check size={16} color="#16513F" />
+              <Check size={16} color="#0D9488" />
             </Pressable>
             <Pressable
               onPress={annulerEdition}
@@ -158,7 +158,7 @@ export default function CatalogueDenreesScreen() {
           contentContainerClassName="px-4 py-4 gap-3"
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#16513F" />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#0D9488" />
           }
           ListHeaderComponent={
             <View className="gap-3 mb-3">
