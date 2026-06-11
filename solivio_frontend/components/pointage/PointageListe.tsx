@@ -1,28 +1,38 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Check, X } from "lucide-react";
+import { Search, Check, X, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { rechercherPointage, pointer } from "@/lib/api/distributions";
-import type { PointageInfoResponse } from "@/types/distribution";
+import { DialogAjoutBenevole } from "@/components/pointage/DialogAjoutBenevole";
+import {
+  rechercherPointage,
+  pointer,
+  listerVisiteursAdHoc,
+  envoyerInvitationVisiteur,
+} from "@/lib/api/distributions";
+import type { PointageInfoResponse, PointageAdHocResponse } from "@/types/distribution";
 
 const DEBOUNCE_MS = 300;
 const SEUIL_AUTO = 1;
 
 interface Props {
   distributionId: string;
+  peutAjouter?: boolean;
 }
 
-export function PointageListe({ distributionId }: Props) {
+export function PointageListe({ distributionId, peutAjouter = false }: Props) {
   const [recherche, setRecherche] = useState("");
   const [resultats, setResultats] = useState<PointageInfoResponse[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [recherchePending, setRecherchePending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [aRecherche, setARecherche] = useState(false);
+
+  const [visiteurs, setVisiteurs] = useState<PointageAdHocResponse[]>([]);
+  const [invitationPending, setInvitationPending] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -44,9 +54,6 @@ export function PointageListe({ distributionId }: Props) {
     [distributionId],
   );
 
-  // Recherche automatique declenchee par la frappe, avec debounce.
-  // Toutes les mises a jour d'etat passent par le callback du setTimeout
-  // pour eviter les setState synchrones dans un effect (lint react-hooks/set-state-in-effect).
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -66,6 +73,13 @@ export function PointageListe({ distributionId }: Props) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [recherche, executerRecherche]);
+
+  useEffect(() => {
+    if (!peutAjouter) return;
+    listerVisiteursAdHoc(distributionId)
+      .then(setVisiteurs)
+      .catch(() => {});
+  }, [distributionId, peutAjouter]);
 
   function handleRechercheImmediate() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -88,8 +102,54 @@ export function PointageListe({ distributionId }: Props) {
     }
   }
 
+  async function handleEnvoyerInvitation(visiteur: PointageAdHocResponse) {
+    setInvitationPending(visiteur.id);
+    try {
+      await envoyerInvitationVisiteur(distributionId, visiteur.id);
+      setVisiteurs((prev) =>
+        prev.map((v) => (v.id === visiteur.id ? { ...v, invitationEnvoyee: true } : v)),
+      );
+    } catch (e: unknown) {
+      const err = e as { detail?: string; message?: string };
+      setErreur(err.detail ?? err.message ?? "Erreur lors de l'envoi.");
+    } finally {
+      setInvitationPending(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* En-tete avec bouton d'ajout */}
+      {peutAjouter && (
+        <div className="flex justify-end">
+          <DialogAjoutBenevole
+            distributionId={distributionId}
+            onBenevoleAjoute={(inscription) => {
+              setResultats((prev) => {
+                const existe = prev.find((r) => r.inscriptionId === inscription.id);
+                if (existe) {
+                  return prev.map((r) => r.inscriptionId === inscription.id
+                    ? { ...r, presence: inscription.presence }
+                    : r
+                  );
+                }
+                return [...prev, {
+                  inscriptionId: inscription.id,
+                  nom: inscription.nom,
+                  prenom: inscription.prenom,
+                  type: inscription.type,
+                  statut: inscription.statut,
+                  presence: inscription.presence,
+                  heureCreneauDebut: null,
+                  heureCreneauFin: null,
+                }];
+              });
+            }}
+            onVisiteurAjoute={(visiteur) => setVisiteurs((prev) => [...prev, visiteur])}
+          />
+        </div>
+      )}
+
       {/* Barre de recherche */}
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -123,7 +183,7 @@ export function PointageListe({ distributionId }: Props) {
         </div>
       )}
 
-      {/* Resultats */}
+      {/* Resultats inscrits */}
       {resultats.length > 0 && (
         <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
           {resultats.map((r) => (
@@ -163,11 +223,7 @@ export function PointageListe({ distributionId }: Props) {
                   onClick={() => handlePointer(r.inscriptionId, "PRESENT")}
                   aria-label="Marquer present"
                 >
-                  {pending === r.inscriptionId ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <Check className="size-5" />
-                  )}
+                  {pending === r.inscriptionId ? <Spinner size="sm" /> : <Check className="size-5" />}
                 </Button>
                 <Button
                   size="icon-lg"
@@ -176,15 +232,60 @@ export function PointageListe({ distributionId }: Props) {
                   onClick={() => handlePointer(r.inscriptionId, "ABSENT")}
                   aria-label="Marquer absent"
                 >
-                  {pending === r.inscriptionId ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <X className="size-5" />
-                  )}
+                  {pending === r.inscriptionId ? <Spinner size="sm" /> : <X className="size-5" />}
                 </Button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Section visiteurs ponctuels */}
+      {peutAjouter && visiteurs.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Visiteurs ponctuels ({visiteurs.length})
+          </p>
+          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
+            {visiteurs.map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center justify-between px-4 py-3.5"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[11px] font-semibold dark:bg-amber-950/30 dark:border-amber-800/40">
+                    {(v.prenom?.[0] ?? "").toUpperCase()}{(v.nom?.[0] ?? "").toUpperCase()}
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-semibold truncate">{v.nom} {v.prenom}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="text-xs">Visiteur</Badge>
+                      {v.role && <Badge variant="outline" className="text-xs">{v.role}</Badge>}
+                      <Badge variant="default" className="text-xs">Present</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {v.email && !v.invitationEnvoyee && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={invitationPending === v.id}
+                    onClick={() => handleEnvoyerInvitation(v)}
+                    className="shrink-0"
+                  >
+                    {invitationPending === v.id
+                      ? <><Spinner size="sm" /> Envoi...</>
+                      : <><Mail className="size-4" /> Inviter</>
+                    }
+                  </Button>
+                )}
+                {v.invitationEnvoyee && (
+                  <Badge variant="secondary" className="text-xs shrink-0">Invite</Badge>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
