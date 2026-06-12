@@ -2,19 +2,23 @@ package com.solivio.api.notification.application;
 
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import com.solivio.api.notification.domain.Notification;
 import com.solivio.api.notification.domain.TypeEvenementNotification;
 import com.solivio.api.notification.infrastructure.email.NotificationEmailException;
 import com.solivio.api.notification.infrastructure.persistence.NotificationRepository;
+import com.solivio.api.shared.association.AssociationQueryPort;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort.MissionInfo;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
+import com.solivio.api.shared.evenement.EvenementQueryPort;
+import com.solivio.api.shared.evenement.EvenementQueryPort.EvenementInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import com.solivio.api.shared.inscription.InscriptionQueryPort.DestinataireMail;
-import com.solivio.api.shared.collecte.MissionCollecteQueryPort;
-import com.solivio.api.shared.collecte.MissionCollecteQueryPort.MissionInfo;
 import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort;
 import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort.SessionInfo;
 import org.slf4j.Logger;
@@ -22,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -37,6 +43,8 @@ public class NotificationService {
     private final InscriptionQueryPort inscriptionQueryPort;
     private final SessionReconditionnementQueryPort sessionReconditionnementQueryPort;
     private final MissionCollecteQueryPort missionCollecteQueryPort;
+    private final EvenementQueryPort evenementQueryPort;
+    private final AssociationQueryPort associationQueryPort;
 
     public NotificationService(
         NotificationEmailService emailService,
@@ -45,7 +53,9 @@ public class NotificationService {
         DistributionQueryPort distributionQueryPort,
         InscriptionQueryPort inscriptionQueryPort,
         SessionReconditionnementQueryPort sessionReconditionnementQueryPort,
-        MissionCollecteQueryPort missionCollecteQueryPort
+        MissionCollecteQueryPort missionCollecteQueryPort,
+        EvenementQueryPort evenementQueryPort,
+        AssociationQueryPort associationQueryPort
     ) {
         this.emailService = emailService;
         this.notificationRepository = notificationRepository;
@@ -54,6 +64,8 @@ public class NotificationService {
         this.inscriptionQueryPort = inscriptionQueryPort;
         this.sessionReconditionnementQueryPort = sessionReconditionnementQueryPort;
         this.missionCollecteQueryPort = missionCollecteQueryPort;
+        this.evenementQueryPort = evenementQueryPort;
+        this.associationQueryPort = associationQueryPort;
     }
 
     @Transactional
@@ -203,6 +215,137 @@ public class NotificationService {
         envoyerEtTracerReco(benevole.id(), missionId,
             TypeEvenementNotification.ANNULATION_MISSION_COLLECTE, sujet,
             () -> emailService.envoyerAnnulationMissionCollecte(benevole.email(), contexte));
+    }
+
+    @Transactional
+    public void notifierPublicationEvenement(UUID evenementId) {
+        EvenementInfo evenement = evenementQueryPort.trouverEvenementDetails(evenementId);
+        String sujet = "Nouvel evenement - " + evenement.titre();
+        Set<UUID> notifies = new HashSet<>();
+
+        if (evenement.aBesoiNStaff()) {
+            for (PersonneContactInfo b : personneQueryPort.trouverContactsParRole("benevole")) {
+                if (notifies.add(b.id())) {
+                    ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                        b.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                        evenement.lieuAdresseFormatee(), null);
+                    envoyerEtTracerReco(b.id(), evenementId,
+                        TypeEvenementNotification.PUBLICATION_EVENEMENT, sujet,
+                        () -> emailService.envoyerPublicationEvenement(b.email(), ctx));
+                }
+            }
+        }
+
+        if (evenement.ouvertParticipants() && evenement.publicParticipants() != null) {
+            switch (evenement.publicParticipants()) {
+                case "BENEVOLES" -> {
+                    for (PersonneContactInfo b : personneQueryPort.trouverContactsParRole("benevole")) {
+                        if (notifies.add(b.id())) {
+                            ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                                b.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                                evenement.lieuAdresseFormatee(), null);
+                            envoyerEtTracerReco(b.id(), evenementId,
+                                TypeEvenementNotification.PUBLICATION_EVENEMENT, sujet,
+                                () -> emailService.envoyerPublicationEvenement(b.email(), ctx));
+                        }
+                    }
+                }
+                case "BENEFICIAIRES" -> {
+                    for (PersonneContactInfo p : personneQueryPort.trouverContactsParRole("beneficiaire")) {
+                        if (notifies.add(p.id())) {
+                            ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                                p.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                                evenement.lieuAdresseFormatee(), null);
+                            envoyerEtTracerReco(p.id(), evenementId,
+                                TypeEvenementNotification.PUBLICATION_EVENEMENT, sujet,
+                                () -> emailService.envoyerPublicationEvenement(p.email(), ctx));
+                        }
+                    }
+                }
+                case "TOUS" -> {
+                    for (PersonneContactInfo b : personneQueryPort.trouverContactsParRole("benevole")) {
+                        if (notifies.add(b.id())) {
+                            ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                                b.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                                evenement.lieuAdresseFormatee(), null);
+                            envoyerEtTracerReco(b.id(), evenementId,
+                                TypeEvenementNotification.PUBLICATION_EVENEMENT, sujet,
+                                () -> emailService.envoyerPublicationEvenement(b.email(), ctx));
+                        }
+                    }
+                    for (PersonneContactInfo p : personneQueryPort.trouverContactsParRole("beneficiaire")) {
+                        if (notifies.add(p.id())) {
+                            ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                                p.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                                evenement.lieuAdresseFormatee(), null);
+                            envoyerEtTracerReco(p.id(), evenementId,
+                                TypeEvenementNotification.PUBLICATION_EVENEMENT, sujet,
+                                () -> emailService.envoyerPublicationEvenement(p.email(), ctx));
+                        }
+                    }
+                }
+                default -> log.warn("publicParticipants inconnu : {}", evenement.publicParticipants());
+            }
+        }
+    }
+
+    @Transactional
+    public void notifierAnnulationEvenement(UUID evenementId, String tenantSlug) {
+        EvenementInfo evenement = evenementQueryPort.trouverEvenementDetails(evenementId);
+        String sujet = "Evenement annule - " + evenement.titre();
+        String raison = evenement.raisonAnnulation();
+
+        switch (evenement.modeInscription()) {
+            case "OBLIGATOIRE", "LIBRE" -> {
+                List<UUID> inscrits = evenementQueryPort.trouverInscrits(evenementId);
+                for (UUID personneId : inscrits) {
+                    PersonneContactInfo p = personneQueryPort.trouverPersonneParId(personneId);
+                    ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                        p.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                        evenement.lieuAdresseFormatee(), raison);
+                    envoyerEtTracerReco(p.id(), evenementId,
+                        TypeEvenementNotification.ANNULATION_EVENEMENT, sujet,
+                        () -> emailService.envoyerAnnulationEvenement(p.email(), ctx));
+                }
+                if ("LIBRE".equals(evenement.modeInscription())) {
+                    associationQueryPort.trouverContactEmail(tenantSlug).ifPresent(contactEmail -> {
+                        ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                            null, evenement.titre(), evenement.dateHeureDebut(),
+                            evenement.lieuAdresseFormatee(), raison);
+                        try {
+                            emailService.envoyerAnnulationEvenement(contactEmail, ctx);
+                            log.debug("Annulation evenement notifiee a l'email general {}", contactEmail);
+                        } catch (NotificationEmailException e) {
+                            log.error("Echec envoi annulation evenement a {} : {}", contactEmail, e.getMessage());
+                        }
+                    });
+                }
+            }
+            case "SANS_INSCRIPTION" -> {
+                Set<UUID> notifies = new HashSet<>();
+                for (PersonneContactInfo b : personneQueryPort.trouverContactsParRole("benevole")) {
+                    if (notifies.add(b.id())) {
+                        ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                            b.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                            evenement.lieuAdresseFormatee(), raison);
+                        envoyerEtTracerReco(b.id(), evenementId,
+                            TypeEvenementNotification.ANNULATION_EVENEMENT, sujet,
+                            () -> emailService.envoyerAnnulationEvenement(b.email(), ctx));
+                    }
+                }
+                for (PersonneContactInfo p : personneQueryPort.trouverContactsParRole("beneficiaire")) {
+                    if (notifies.add(p.id())) {
+                        ContexteEvenementEmail ctx = new ContexteEvenementEmail(
+                            p.prenom(), evenement.titre(), evenement.dateHeureDebut(),
+                            evenement.lieuAdresseFormatee(), raison);
+                        envoyerEtTracerReco(p.id(), evenementId,
+                            TypeEvenementNotification.ANNULATION_EVENEMENT, sujet,
+                            () -> emailService.envoyerAnnulationEvenement(p.email(), ctx));
+                    }
+                }
+            }
+            default -> log.warn("modeInscription inconnu : {}", evenement.modeInscription());
+        }
     }
 
     private void envoyerEtTracerReco(
