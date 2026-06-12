@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/evenement';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { StatutBadge } from '@/components/evenement/StatutBadge';
+import { CarteEmplacement } from '@/components/shared/CarteEmplacement';
 import { Spinner } from '@/components/ui/Spinner';
 
 const LABEL_TYPE: Record<string, string> = {
@@ -147,6 +148,15 @@ export default function DetailEvenementScreen() {
               <Text className="text-sm text-foreground flex-1">{evenement.lieuAdresseFormatee}</Text>
             </View>
           ) : null}
+          {evenement.lieuLatitude != null && evenement.lieuLongitude != null ? (
+            <CarteEmplacement
+              lieu={{
+                latitude: evenement.lieuLatitude,
+                longitude: evenement.lieuLongitude,
+                adresseFormatee: evenement.lieuAdresseFormatee,
+              }}
+            />
+          ) : null}
           {evenement.aBesoiNStaff ? (
             <View className="flex-row items-center gap-3">
               <UserCheck size={16} color="#94A3B8" />
@@ -246,7 +256,7 @@ export default function DetailEvenementScreen() {
               onPress={demanderAnnulation}
               className="rounded-2xl border border-red-200 px-4 py-3 items-center"
             >
-              <Text className="text-sm font-semibold text-red-600">Annuler l'evenement</Text>
+              <Text className="text-sm font-semibold text-red-600">{"Annuler l'evenement"}</Text>
             </Pressable>
           )}
         </View>
