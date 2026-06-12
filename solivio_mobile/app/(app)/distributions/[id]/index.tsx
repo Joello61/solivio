@@ -12,6 +12,7 @@ import {
   ChevronRight,
   AlertCircle,
   BarChart2,
+  UserPlus,
 } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import {
@@ -281,6 +282,20 @@ export default function DistributionDetailScreen() {
                   <Package size={18} color="#D97706" />
                 </View>
                 <Text className="flex-1 text-base font-medium text-foreground">Repartition</Text>
+                <ChevronRight size={16} color="#CBD5E1" />
+              </Pressable>
+
+              <Pressable
+                onPress={() => router.push(`/(app)/distributions/${id}/ajout-benevole` as never)}
+                style={({ pressed }) =>
+                  pressed ? { opacity: 0.78, transform: [{ scale: 0.985 }] } : null
+                }
+                className="flex-row items-center gap-3 bg-card border border-border rounded-xl px-4 py-3.5"
+              >
+                <View className="w-9 h-9 rounded-lg bg-violet-50 items-center justify-center">
+                  <UserPlus size={18} color="#7C3AED" />
+                </View>
+                <Text className="flex-1 text-base font-medium text-foreground">Ajouter un benevole</Text>
                 <ChevronRight size={16} color="#CBD5E1" />
               </Pressable>
             </View>
