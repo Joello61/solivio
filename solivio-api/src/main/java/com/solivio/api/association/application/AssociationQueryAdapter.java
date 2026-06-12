@@ -4,6 +4,8 @@ import com.solivio.api.association.infrastructure.persistence.AssociationReposit
 import com.solivio.api.shared.association.AssociationQueryPort;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class AssociationQueryAdapter implements AssociationQueryPort {
 
@@ -18,5 +20,11 @@ public class AssociationQueryAdapter implements AssociationQueryPort {
         return associationRepository.findBySlug(tenantSlug)
             .map(a -> a.getFrequenceMaxParSemaine())
             .orElse(null);
+    }
+
+    @Override
+    public Optional<String> trouverContactEmail(String tenantSlug) {
+        return associationRepository.findBySlug(tenantSlug)
+            .map(a -> a.getContactEmail());
     }
 }

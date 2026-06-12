@@ -1,5 +1,7 @@
 package com.solivio.api.shared.association;
 
+import java.util.Optional;
+
 public interface AssociationQueryPort {
 
     /**
@@ -7,4 +9,6 @@ public interface AssociationQueryPort {
      * Null signifie pas de limite.
      */
     Integer frequenceMaxParSemaine(String tenantSlug);
+
+    Optional<String> trouverContactEmail(String tenantSlug);
 }
