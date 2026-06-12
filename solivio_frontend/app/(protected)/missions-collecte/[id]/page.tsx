@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Calendar, MapPin, Truck, User, Users } from "lucide-react";
 import { StatutBadge } from "@/components/collecte/StatutBadge";
 import { MissionActions } from "@/components/collecte/MissionActions";
+import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { MissionCollecteResponse } from "@/types/collecte";
 import type { MeResponse } from "@/types/auth";
 
@@ -77,12 +78,30 @@ export default async function DetailMissionCollectePage({ params }: Props) {
             <span>Collecte : {mission.lieuCollecte.adresseFormatee}</span>
           </div>
         )}
+        {mission.lieuCollecte?.latitude != null && mission.lieuCollecte?.longitude != null && (
+          <CarteEmplacement
+            lieu={{
+              latitude: mission.lieuCollecte.latitude,
+              longitude: mission.lieuCollecte.longitude,
+              adresseFormatee: mission.lieuCollecte.adresseFormatee,
+            }}
+          />
+        )}
 
         {mission.lieuDepot?.adresseFormatee && (
           <div className="flex items-center gap-3 text-sm">
             <Truck className="size-4 text-muted-foreground shrink-0" />
             <span>Depot : {mission.lieuDepot.adresseFormatee}</span>
           </div>
+        )}
+        {mission.lieuDepot?.latitude != null && mission.lieuDepot?.longitude != null && (
+          <CarteEmplacement
+            lieu={{
+              latitude: mission.lieuDepot.latitude,
+              longitude: mission.lieuDepot.longitude,
+              adresseFormatee: mission.lieuDepot.adresseFormatee,
+            }}
+          />
         )}
 
         <div className="flex items-center gap-3 text-sm">
