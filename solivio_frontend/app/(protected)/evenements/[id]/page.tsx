@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
 import { StatutBadge } from "@/components/evenement/StatutBadge";
 import { EvenementActions } from "@/components/evenement/EvenementActions";
+import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 import type { MeResponse } from "@/types/auth";
 
@@ -105,6 +106,15 @@ export default async function DetailEvenementPage({ params }: Props) {
             <MapPin className="size-4 text-muted-foreground shrink-0" />
             <span>{evenement.lieuAdresseFormatee}</span>
           </div>
+        )}
+        {evenement.lieuLatitude != null && evenement.lieuLongitude != null && (
+          <CarteEmplacement
+            lieu={{
+              latitude: evenement.lieuLatitude,
+              longitude: evenement.lieuLongitude,
+              adresseFormatee: evenement.lieuAdresseFormatee,
+            }}
+          />
         )}
         {evenement.aBesoiNStaff && (
           <div className="flex items-center gap-3 text-sm">
