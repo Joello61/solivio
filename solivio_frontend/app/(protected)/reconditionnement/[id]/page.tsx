@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Users, AlertCircle } from "lucide-react";
 import { SessionActions } from "@/components/reconditionnement/SessionActions";
 import { StatutBadge } from "@/components/reconditionnement/StatutBadge";
 import { ListeInscritsReco } from "@/components/reconditionnement/ListeInscritsReco";
+import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { SessionReconditionnementResponse, InscriptionReconditionnementResponse } from "@/types/reconditionnement";
 import type { MeResponse } from "@/types/auth";
 
@@ -112,6 +113,15 @@ export default async function SessionDetailPage({
             <MapPin className="size-4 shrink-0 text-muted-foreground" />
             <span className="text-muted-foreground">{session.lieu.adresseFormatee}</span>
           </div>
+        )}
+        {session.lieu?.latitude != null && session.lieu?.longitude != null && (
+          <CarteEmplacement
+            lieu={{
+              latitude: session.lieu.latitude,
+              longitude: session.lieu.longitude,
+              adresseFormatee: session.lieu.adresseFormatee,
+            }}
+          />
         )}
         <div className="flex items-center gap-2 text-sm">
           <Users className="size-4 shrink-0 text-muted-foreground" />
