@@ -80,7 +80,7 @@ export default function MesEvenementsScreen() {
               <CalendarDays size={32} color="#0D9488" />
             </View>
             <Text className="text-sm text-muted-foreground text-center">
-              Vous n'etes inscrit a aucun evenement.
+              {"Vous n'etes inscrit a aucun evenement."}
             </Text>
           </View>
         }

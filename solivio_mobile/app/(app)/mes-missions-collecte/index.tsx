@@ -27,7 +27,7 @@ export default function MesMissionsCollecteScreen() {
             Aucune mission
           </Text>
           <Text className="text-sm text-muted-foreground text-center leading-relaxed">
-            Vous n'avez pas encore pris de mission en charge.
+            {"Vous n'avez pas encore pris de mission en charge."}
           </Text>
         </View>
       ) : (

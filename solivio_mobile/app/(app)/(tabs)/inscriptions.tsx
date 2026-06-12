@@ -76,7 +76,7 @@ function EmptyGlobal() {
         </View>
         <View className="items-center gap-2">
           <Text className="text-xl font-bold text-foreground text-center">
-            Pas encore d'inscription
+            {"Pas encore d'inscription"}
           </Text>
           <Text className="text-base text-muted-foreground text-center leading-relaxed">
             Inscrivez-vous aux prochaines distributions pour les retrouver ici.

@@ -16,7 +16,7 @@ export default function NotFoundScreen() {
           pressed ? { opacity: 0.86, transform: [{ scale: 0.97 }] } : null
         }
       >
-        <Text className="text-white font-semibold">Retour a l'accueil</Text>
+        <Text className="text-white font-semibold">{"Retour a l'accueil"}</Text>
       </Pressable>
     </SafeAreaView>
   );
