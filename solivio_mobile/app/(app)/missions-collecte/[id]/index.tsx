@@ -9,6 +9,7 @@ import {
 } from '@/lib/api/collecte';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { StatutBadge } from '@/components/collecte/StatutBadge';
+import { CarteEmplacement } from '@/components/shared/CarteEmplacement';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 
@@ -103,11 +104,29 @@ export default function DetailMissionCollecteScreen() {
               Collecte : {mission.lieuCollecte.adresseFormatee}
             </InfoRow>
           ) : null}
+          {mission.lieuCollecte?.latitude != null && mission.lieuCollecte?.longitude != null ? (
+            <CarteEmplacement
+              lieu={{
+                latitude: mission.lieuCollecte.latitude,
+                longitude: mission.lieuCollecte.longitude,
+                adresseFormatee: mission.lieuCollecte.adresseFormatee,
+              }}
+            />
+          ) : null}
 
           {mission.lieuDepot?.adresseFormatee ? (
             <InfoRow icon={<Truck size={15} color="#94A3B8" />}>
               Depot : {mission.lieuDepot.adresseFormatee}
             </InfoRow>
+          ) : null}
+          {mission.lieuDepot?.latitude != null && mission.lieuDepot?.longitude != null ? (
+            <CarteEmplacement
+              lieu={{
+                latitude: mission.lieuDepot.latitude,
+                longitude: mission.lieuDepot.longitude,
+                adresseFormatee: mission.lieuDepot.adresseFormatee,
+              }}
+            />
           ) : null}
 
           <InfoRow icon={<Users size={15} color="#94A3B8" />}>
