@@ -43,6 +43,8 @@ class NotificationServiceTest {
     @Mock private InscriptionQueryPort inscriptionQueryPort;
     @Mock private com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort sessionReconditionnementQueryPort;
     @Mock private com.solivio.api.shared.collecte.MissionCollecteQueryPort missionCollecteQueryPort;
+    @Mock private com.solivio.api.shared.evenement.EvenementQueryPort evenementQueryPort;
+    @Mock private com.solivio.api.shared.association.AssociationQueryPort associationQueryPort;
 
     private NotificationService service;
 
@@ -56,7 +58,8 @@ class NotificationServiceTest {
         service = new NotificationService(
             emailService, notificationRepository,
             personneQueryPort, distributionQueryPort, inscriptionQueryPort,
-            sessionReconditionnementQueryPort, missionCollecteQueryPort
+            sessionReconditionnementQueryPort, missionCollecteQueryPort,
+            evenementQueryPort, associationQueryPort
         );
         personneId = UUID.randomUUID();
         distributionId = UUID.randomUUID();
