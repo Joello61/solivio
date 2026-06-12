@@ -11,6 +11,7 @@ import {
   Recycle,
   Truck,
   PartyPopper,
+  Mail,
 } from "lucide-react";
 
 export interface NavItem {
@@ -64,6 +65,12 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Administration",
     items: [
+      {
+        href: "/notifications/email-libre",
+        label: "Email aux membres",
+        icon: Mail,
+        roles: ["admin", "responsable", "super_admin"],
+      },
       {
         href: "/admin/utilisateurs",
         label: "Utilisateurs",
