@@ -17,6 +17,7 @@ import {
 } from '@/lib/api/reconditionnement';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { StatutBadge } from '@/components/reconditionnement/StatutBadge';
+import { CarteEmplacement } from '@/components/shared/CarteEmplacement';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -164,6 +165,15 @@ export default function SessionDetailScreen() {
                   <Text className="text-base text-foreground">{session.lieu.adresseFormatee}</Text>
                 </View>
               ) : null}
+              {session.lieu?.latitude != null && session.lieu?.longitude != null ? (
+                <CarteEmplacement
+                  lieu={{
+                    latitude: session.lieu.latitude,
+                    longitude: session.lieu.longitude,
+                    adresseFormatee: session.lieu.adresseFormatee,
+                  }}
+                />
+              ) : null}
               <View className="flex-row items-center gap-2">
                 <Users size={15} color="#94A3B8" />
                 <Text className="text-base text-foreground">
@@ -303,7 +313,7 @@ export default function SessionDetailScreen() {
                 loading={mutInscrire.isPending}
                 fullWidth
               >
-                S'inscrire
+                {"S'inscrire"}
               </Button>
               <Button
                 onPress={() =>
