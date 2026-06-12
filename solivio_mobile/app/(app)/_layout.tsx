@@ -23,6 +23,7 @@ export default function AppLayout() {
       <Stack.Screen name="mon-compte/profil-beneficiaire" />
       <Stack.Screen name="admin/utilisateurs" />
       <Stack.Screen name="admin/associations" />
+      <Stack.Screen name="notifications/email-libre" options={{ presentation: 'modal' }} />
       <Stack.Screen name="a-propos" />
     </Stack>
   );

@@ -1,7 +1,7 @@
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from 'lucide-react-native';
+import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight, Mail } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import { statsPeriode } from '@/lib/api/association';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -187,6 +187,12 @@ export default function DashboardScreen() {
                   label="Membres"
                   icon={UserCog}
                   href="/(app)/association/membres"
+                  color="#64748B"
+                />
+                <AccesRapide
+                  label="Email aux membres"
+                  icon={Mail}
+                  href="/(app)/notifications/email-libre"
                   color="#64748B"
                 />
               </>
