@@ -2,6 +2,7 @@ package com.solivio.api.notification.infrastructure.email;
 
 import com.solivio.api.notification.application.NotificationEmailService;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -105,6 +106,35 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
     public void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte) {
         envoyer(email, "Mission annulee - " + contexte.missionTitre(),
             "annulation-mission-collecte", contexteCollecteThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerPublicationEvenement(String email, ContexteEvenementEmail contexte) {
+        envoyer(email, "Nouvel evenement - " + contexte.evenementTitre(),
+            "creation-evenement", contexteEvenementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationEvenement(String email, ContexteEvenementEmail contexte) {
+        envoyer(email, "Evenement annule - " + contexte.evenementTitre(),
+            "annulation-evenement", contexteEvenementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerEmailLibre(String email, String sujet, String corps) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("corps", corps);
+        envoyer(email, sujet, "email-libre", ctx);
+    }
+
+    private Context contexteEvenementThymeleaf(ContexteEvenementEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("evenementTitre", c.evenementTitre());
+        ctx.setVariable("dateHeureDebut", c.dateHeureDebut());
+        ctx.setVariable("lieuAdresseFormatee", c.lieuAdresseFormatee());
+        ctx.setVariable("raisonAnnulation", c.raisonAnnulation());
+        return ctx;
     }
 
     private Context contexteCollecteThymeleaf(ContexteCollecteEmail c) {

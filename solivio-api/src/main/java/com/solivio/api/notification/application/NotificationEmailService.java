@@ -26,6 +26,20 @@ public interface NotificationEmailService {
 
     void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte);
 
+    void envoyerPublicationEvenement(String email, ContexteEvenementEmail contexte);
+
+    void envoyerAnnulationEvenement(String email, ContexteEvenementEmail contexte);
+
+    void envoyerEmailLibre(String email, String sujet, String corps);
+
+    record ContexteEvenementEmail(
+        String prenom,
+        String evenementTitre,
+        java.time.ZonedDateTime dateHeureDebut,
+        String lieuAdresseFormatee,
+        String raisonAnnulation
+    ) {}
+
     record ContexteCollecteEmail(
         String prenom,
         String missionTitre,
