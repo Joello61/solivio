@@ -20,6 +20,7 @@ import { DistributionStatutBadge } from "@/components/distributions/Distribution
 import { DistributionActions } from "@/components/distributions/DistributionActions";
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
+import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiqueDistributionResponse } from "@/types/association";
@@ -149,6 +150,17 @@ export default async function DistributionDetailPage({ params }: PageProps) {
               )}
               {distribution.description && (
                 <p className="text-sm text-muted-foreground pt-1">{distribution.description}</p>
+              )}
+              {distribution.lieu && (
+                distribution.lieu.latitude != null && distribution.lieu.longitude != null
+              ) && (
+                <CarteEmplacement
+                  lieu={{
+                    latitude: distribution.lieu!.latitude,
+                    longitude: distribution.lieu!.longitude,
+                    adresseFormatee: distribution.lieu!.adresseFormatee,
+                  }}
+                />
               )}
             </div>
           </div>
