@@ -25,6 +25,7 @@ import {
 } from '@/lib/api/distributions';
 import { statsDistribution } from '@/lib/api/association';
 import { StatutBadge } from '@/components/distributions/StatutBadge';
+import { CarteEmplacement } from '@/components/shared/CarteEmplacement';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -162,6 +163,15 @@ export default function DistributionDetailScreen() {
                   <MapPin size={15} color="#94A3B8" />
                   <Text className="text-base text-foreground">{distribution.lieu.adresseFormatee}</Text>
                 </View>
+              ) : null}
+              {distribution.lieu?.latitude != null && distribution.lieu?.longitude != null ? (
+                <CarteEmplacement
+                  lieu={{
+                    latitude: distribution.lieu.latitude,
+                    longitude: distribution.lieu.longitude,
+                    adresseFormatee: distribution.lieu.adresseFormatee,
+                  }}
+                />
               ) : null}
               <View className="flex-row items-center gap-2">
                 <Users size={15} color="#94A3B8" />
@@ -337,7 +347,7 @@ export default function DistributionDetailScreen() {
                 loading={mutInscrire.isPending}
                 fullWidth
               >
-                S'inscrire comme beneficiaire
+                {"S'inscrire comme beneficiaire"}
               </Button>
               <Button
                 onPress={() =>
@@ -351,7 +361,7 @@ export default function DistributionDetailScreen() {
                 variant="outline"
                 fullWidth
               >
-                S'inscrire comme benevole
+                {"S'inscrire comme benevole"}
               </Button>
             </View>
           ) : null}
