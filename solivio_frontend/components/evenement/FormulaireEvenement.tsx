@@ -2,9 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { creerEvenement } from "@/lib/api/evenement";
 import type { TypeEvenement, PublicCible, ModeInscription } from "@/types/evenement";
 
+/* ------------------------------------------------------------------ */
+/*  État du formulaire                                                  */
+/* ------------------------------------------------------------------ */
 interface FormState {
   titre: string;
   description: string;
@@ -37,14 +52,86 @@ const INIT: FormState = {
   modeInscription: "OBLIGATOIRE",
 };
 
+/* ------------------------------------------------------------------ */
+/*  Barre de progression                                                */
+/* ------------------------------------------------------------------ */
+const STEPS = ["Informations & lieu", "Participants & inscription"];
+
+function StepBar({ current }: { current: number }) {
+  return (
+    <div className="flex items-center gap-0 mb-6">
+      {STEPS.map((label, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <div key={i} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={[
+                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold font-display transition-colors",
+                  done
+                    ? "bg-primary text-primary-foreground"
+                    : active
+                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                    : "bg-muted text-muted-foreground",
+                ].join(" ")}
+              >
+                {done ? <Check className="w-4 h-4" /> : i + 1}
+              </div>
+              <span
+                className={[
+                  "text-xs font-medium whitespace-nowrap",
+                  active ? "text-foreground" : "text-muted-foreground",
+                ].join(" ")}
+              >
+                {label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={[
+                  "flex-1 h-0.5 mx-2 mb-4 rounded-full transition-colors",
+                  done ? "bg-primary" : "bg-border",
+                ].join(" ")}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Composant principal                                                 */
+/* ------------------------------------------------------------------ */
 export function FormulaireEvenement() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(INIT);
+  const [step, setStep] = useState(0);
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [erreurStep1, setErreurStep1] = useState<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function allerEtape2() {
+    if (!form.titre.trim()) {
+      setErreurStep1("Le titre est requis.");
+      return;
+    }
+    if (!form.dateHeureDebut || !form.dateHeureFin) {
+      setErreurStep1("Les dates de debut et de fin sont requises.");
+      return;
+    }
+    if (form.dateHeureFin <= form.dateHeureDebut) {
+      setErreurStep1("La date de fin doit etre apres la date de debut.");
+      return;
+    }
+    setErreurStep1(null);
+    setStep(1);
   }
 
   async function soumettre(e: React.FormEvent) {
@@ -77,231 +164,278 @@ export function FormulaireEvenement() {
     }
   }
 
+  const inputCls =
+    "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors";
+
   return (
-    <form onSubmit={soumettre} className="space-y-8 max-w-2xl">
-      {erreur && (
-        <div className="rounded-xl bg-destructive/8 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-          {erreur}
+    <div>
+      <StepBar current={step} />
+
+      {/* ── ETAPE 1 : Informations & lieu ── */}
+      {step === 0 && (
+        <div className="space-y-5 animate-fade-in">
+          {erreurStep1 && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {erreurStep1}
+            </div>
+          )}
+
+          {/* Infos generales */}
+          <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground font-display">
+              Informations generales
+            </h3>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="titre">
+                Titre <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="titre"
+                required
+                value={form.titre}
+                onChange={(e) => set("titre", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="description">Description</Label>
+              <textarea
+                id="description"
+                rows={3}
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="type">Type</Label>
+              <Select
+                value={form.type}
+                onValueChange={(v) => set("type", v as TypeEvenement)}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Choisir un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STAND">Stand</SelectItem>
+                  <SelectItem value="FETE">Fete</SelectItem>
+                  <SelectItem value="AUTRE">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </section>
+
+          {/* Lieu et dates */}
+          <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground font-display">
+              Lieu et dates
+            </h3>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="lieu">Adresse</Label>
+              <Input
+                id="lieu"
+                value={form.lieuAdresseFormatee}
+                onChange={(e) => set("lieuAdresseFormatee", e.target.value)}
+                placeholder="Adresse du lieu"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="debut">
+                  Debut <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="debut"
+                  type="datetime-local"
+                  required
+                  value={form.dateHeureDebut}
+                  onChange={(e) => set("dateHeureDebut", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fin">
+                  Fin <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="fin"
+                  type="datetime-local"
+                  required
+                  value={form.dateHeureFin}
+                  onChange={(e) => set("dateHeureFin", e.target.value)}
+                />
+              </div>
+            </div>
+          </section>
+
+          <div className="flex justify-end">
+            <Button type="button" onClick={allerEtape2} className="gap-1.5">
+              Suivant <ChevronRight className="size-4" />
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Infos generales */}
-      <section className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Informations generales</h2>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="titre">
-            Titre
-          </label>
-          <input
-            id="titre"
-            required
-            value={form.titre}
-            onChange={(e) => set("titre", e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="description">
-            Description
-          </label>
-          <textarea
-            id="description"
-            rows={3}
-            value={form.description}
-            onChange={(e) => set("description", e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="type">
-            Type
-          </label>
-          <select
-            id="type"
-            value={form.type}
-            onChange={(e) => set("type", e.target.value as TypeEvenement)}
-            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-          >
-            <option value="STAND">Stand</option>
-            <option value="FETE">Fete</option>
-            <option value="AUTRE">Autre</option>
-          </select>
-        </div>
-      </section>
-
-      {/* Lieu et dates */}
-      <section className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Lieu et dates</h2>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="lieu">
-            Adresse
-          </label>
-          <input
-            id="lieu"
-            value={form.lieuAdresseFormatee}
-            onChange={(e) => set("lieuAdresseFormatee", e.target.value)}
-            placeholder="Adresse du lieu"
-            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground" htmlFor="debut">
-              Debut
-            </label>
-            <input
-              id="debut"
-              type="datetime-local"
-              required
-              value={form.dateHeureDebut}
-              onChange={(e) => set("dateHeureDebut", e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground" htmlFor="fin">
-              Fin
-            </label>
-            <input
-              id="fin"
-              type="datetime-local"
-              required
-              value={form.dateHeureFin}
-              onChange={(e) => set("dateHeureFin", e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Besoin staff */}
-      <section className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Besoin de staff benevole</h2>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.aBesoiNStaff}
-            onChange={(e) => set("aBesoiNStaff", e.target.checked)}
-            className="size-4 rounded accent-primary"
-          />
-          <span className="text-sm text-foreground">Cet evenement recherche des benevoles staff</span>
-        </label>
-        {form.aBesoiNStaff && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground" htmlFor="capStaff">
-              Nombre de staff max (optionnel)
-            </label>
-            <input
-              id="capStaff"
-              type="number"
-              min={1}
-              value={form.capaciteStaff}
-              onChange={(e) => set("capaciteStaff", e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </div>
-        )}
-      </section>
-
-      {/* Ouverture participants */}
-      <section className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Ouverture aux participants</h2>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.ouvertParticipants}
-            onChange={(e) => set("ouvertParticipants", e.target.checked)}
-            className="size-4 rounded accent-primary"
-          />
-          <span className="text-sm text-foreground">
-            Cet evenement est ouvert aux participants
-          </span>
-        </label>
-        {form.ouvertParticipants && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground" htmlFor="publicCible">
-                Public cible
-              </label>
-              <select
-                id="publicCible"
-                value={form.publicParticipants}
-                onChange={(e) => set("publicParticipants", e.target.value as PublicCible)}
-                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-              >
-                <option value="">-- Choisir --</option>
-                <option value="BENEVOLES">Benevoles uniquement</option>
-                <option value="BENEFICIAIRES">Beneficiaires uniquement</option>
-                <option value="TOUS">Tous</option>
-              </select>
+      {/* ── ETAPE 2 : Participants & inscription ── */}
+      {step === 1 && (
+        <form onSubmit={soumettre} className="space-y-5 animate-fade-in">
+          {erreur && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {erreur}
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground" htmlFor="capParticipants">
-                Nombre de participants max (optionnel)
-              </label>
-              <input
-                id="capParticipants"
-                type="number"
-                min={1}
-                value={form.capaciteParticipants}
-                onChange={(e) => set("capaciteParticipants", e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-            </div>
-          </div>
-        )}
-      </section>
+          )}
 
-      {/* Mode inscription */}
-      <section className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">Mode d&apos;inscription</h2>
-        <div className="space-y-2">
-          {(
-            [
-              { value: "OBLIGATOIRE", label: "Obligatoire", desc: "Inscription requise, pointage disponible" },
-              { value: "LIBRE", label: "Libre", desc: "Inscription sans pointage" },
-              { value: "SANS_INSCRIPTION", label: "Sans inscription", desc: "Participation libre, pas de liste" },
-            ] as const
-          ).map((opt) => (
-            <label key={opt.value} className="flex items-start gap-3 cursor-pointer">
+          {/* Besoin staff */}
+          <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground font-display">
+              Besoin de staff benevole
+            </h3>
+            <label className="flex items-center gap-3 cursor-pointer">
               <input
-                type="radio"
-                name="modeInscription"
-                value={opt.value}
-                checked={form.modeInscription === opt.value}
-                onChange={() => set("modeInscription", opt.value)}
-                className="mt-0.5 accent-primary"
+                type="checkbox"
+                checked={form.aBesoiNStaff}
+                onChange={(e) => set("aBesoiNStaff", e.target.checked)}
+                className="size-4 rounded accent-primary"
               />
-              <div>
-                <p className="text-sm font-medium text-foreground">{opt.label}</p>
-                <p className="text-xs text-muted-foreground">{opt.desc}</p>
+              <span className="text-sm text-foreground">
+                Cet evenement recherche des benevoles staff
+              </span>
+            </label>
+            {form.aBesoiNStaff && (
+              <div className="space-y-1.5">
+                <Label htmlFor="capStaff">Nombre de staff max (optionnel)</Label>
+                <Input
+                  id="capStaff"
+                  type="number"
+                  min={1}
+                  value={form.capaciteStaff}
+                  onChange={(e) => set("capaciteStaff", e.target.value)}
+                />
               </div>
-            </label>
-          ))}
-        </div>
-      </section>
+            )}
+          </section>
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
-        >
-          {pending ? "Creation..." : "Creer l'evenement"}
-        </button>
-      </div>
-    </form>
+          {/* Ouverture participants */}
+          <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground font-display">
+              Ouverture aux participants
+            </h3>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.ouvertParticipants}
+                onChange={(e) => set("ouvertParticipants", e.target.checked)}
+                className="size-4 rounded accent-primary"
+              />
+              <span className="text-sm text-foreground">
+                Cet evenement est ouvert aux participants
+              </span>
+            </label>
+            {form.ouvertParticipants && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="publicCible">Public cible</Label>
+                  <Select
+                    value={form.publicParticipants}
+                    onValueChange={(v) => set("publicParticipants", v as PublicCible)}
+                  >
+                    <SelectTrigger id="publicCible">
+                      <SelectValue placeholder="-- Choisir --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BENEVOLES">Benevoles uniquement</SelectItem>
+                      <SelectItem value="BENEFICIAIRES">Beneficiaires uniquement</SelectItem>
+                      <SelectItem value="TOUS">Tous</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="capParticipants">
+                    Nombre de participants max (optionnel)
+                  </Label>
+                  <Input
+                    id="capParticipants"
+                    type="number"
+                    min={1}
+                    value={form.capaciteParticipants}
+                    onChange={(e) => set("capaciteParticipants", e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Mode inscription */}
+          <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground font-display">
+              Mode d&apos;inscription
+            </h3>
+            <div className="space-y-2">
+              {(
+                [
+                  {
+                    value: "OBLIGATOIRE",
+                    label: "Obligatoire",
+                    desc: "Inscription requise, pointage disponible",
+                  },
+                  {
+                    value: "LIBRE",
+                    label: "Libre",
+                    desc: "Inscription sans pointage",
+                  },
+                  {
+                    value: "SANS_INSCRIPTION",
+                    label: "Sans inscription",
+                    desc: "Participation libre, pas de liste",
+                  },
+                ] as const
+              ).map((opt) => (
+                <label key={opt.value} className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="modeInscription"
+                    value={opt.value}
+                    checked={form.modeInscription === opt.value}
+                    onChange={() => set("modeInscription", opt.value)}
+                    className="mt-0.5 accent-primary"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep(0)}
+              className="gap-1.5"
+            >
+              <ChevronLeft className="size-4" /> Retour
+            </Button>
+            <Button
+              type="submit"
+              disabled={pending}
+              className="flex-1"
+            >
+              {pending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" /> Creation...
+                </>
+              ) : (
+                "Creer l'evenement"
+              )}
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
