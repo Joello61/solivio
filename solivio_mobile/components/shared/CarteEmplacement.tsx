@@ -1,11 +1,22 @@
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 export interface LieuDto {
   latitude: number | null;
   longitude: number | null;
   adresseFormatee: string | null;
 }
+
+// react-native-maps exige un module natif absent de Expo Go.
+// Chargement conditionnel pour eviter l'erreur TurboModuleRegistry en Expo Go.
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let MapViewComp: any = isExpoGo ? null : require('react-native-maps').default;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let MarkerComp: any = isExpoGo ? null : require('react-native-maps').Marker;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let PROVIDER_GOOGLE_CONST: any = isExpoGo ? null : require('react-native-maps').PROVIDER_GOOGLE;
 
 function buildGoogleMapsUrl(lieu: LieuDto): string {
   if (lieu.latitude != null && lieu.longitude != null) {
@@ -28,6 +39,24 @@ export function CarteEmplacement({ lieu, hauteur = 200, interactive = false }: P
     return null;
   }
 
+  function ouvrirGoogleMaps() {
+    Linking.openURL(buildGoogleMapsUrl(lieu));
+  }
+
+  // Expo Go : afficher un bouton vers Google Maps en remplacement de la carte native
+  if (!MapViewComp) {
+    return (
+      <View style={styles.container}>
+        <Pressable
+          onPress={ouvrirGoogleMaps}
+          style={[styles.placeholder, { height: hauteur }]}
+        >
+          <Text style={styles.placeholderTexte}>Voir sur Google Maps</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   const region = {
     latitude: lieu.latitude,
     longitude: lieu.longitude,
@@ -35,14 +64,10 @@ export function CarteEmplacement({ lieu, hauteur = 200, interactive = false }: P
     longitudeDelta: 0.01,
   };
 
-  function ouvrirGoogleMaps() {
-    Linking.openURL(buildGoogleMapsUrl(lieu));
-  }
-
   return (
     <View style={styles.container}>
-      <MapView
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+      <MapViewComp
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE_CONST : undefined}
         initialRegion={region}
         style={[styles.map, { height: hauteur }]}
         scrollEnabled={interactive}
@@ -53,8 +78,8 @@ export function CarteEmplacement({ lieu, hauteur = 200, interactive = false }: P
         showsUserLocation={false}
         showsMyLocationButton={false}
       >
-        <Marker coordinate={{ latitude: lieu.latitude, longitude: lieu.longitude }} />
-      </MapView>
+        <MarkerComp coordinate={{ latitude: lieu.latitude, longitude: lieu.longitude }} />
+      </MapViewComp>
       <Pressable onPress={ouvrirGoogleMaps} style={styles.lien}>
         <Text style={styles.lienTexte}>Voir sur Google Maps</Text>
       </Pressable>
@@ -70,6 +95,20 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  placeholder: {
+    width: '100%',
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderTexte: {
+    fontSize: 13,
+    color: '#16513F',
+    textDecorationLine: 'underline',
   },
   lien: {
     alignSelf: 'flex-start',
