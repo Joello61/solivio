@@ -85,6 +85,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
               longitude: mission.lieuCollecte.longitude,
               adresseFormatee: mission.lieuCollecte.adresseFormatee,
             }}
+            interactive={true}
           />
         )}
 
@@ -101,6 +102,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
               longitude: mission.lieuDepot.longitude,
               adresseFormatee: mission.lieuDepot.adresseFormatee,
             }}
+            interactive={true}
           />
         )}
 

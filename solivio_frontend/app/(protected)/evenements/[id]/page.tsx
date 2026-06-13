@@ -114,6 +114,7 @@ export default async function DetailEvenementPage({ params }: Props) {
               longitude: evenement.lieuLongitude,
               adresseFormatee: evenement.lieuAdresseFormatee,
             }}
+            interactive={true}
           />
         )}
         {evenement.aBesoiNStaff && (

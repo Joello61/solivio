@@ -121,6 +121,7 @@ export default async function SessionDetailPage({
               longitude: session.lieu.longitude,
               adresseFormatee: session.lieu.adresseFormatee,
             }}
+            interactive={true}
           />
         )}
         <div className="flex items-center gap-2 text-sm">

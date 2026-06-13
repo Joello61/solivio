@@ -160,6 +160,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                     longitude: distribution.lieu!.longitude,
                     adresseFormatee: distribution.lieu!.adresseFormatee,
                   }}
+                  interactive={true}
                 />
               )}
             </div>
