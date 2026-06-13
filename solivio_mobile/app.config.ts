@@ -1,6 +1,6 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config';
 
-const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? '';
+const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'AIzaSyARDf3AExqhj8D4K8rkhFWhrVojuBCBCx0';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,

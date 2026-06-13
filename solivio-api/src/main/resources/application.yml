@@ -161,4 +161,4 @@ solivio:
     avatars-dir: ${SOLIVIO_UPLOADS_AVATARS_DIR:/var/solivio/avatars}
   maps:
     # Cle Google Maps Platform injectee depuis OpenBao en production.
-    api-key: ${GOOGLE_MAPS_API_KEY:}
+    api-key: ${GOOGLE_MAPS_API_KEY:AIzaSyARDf3AExqhj8D4K8rkhFWhrVojuBCBCx0}

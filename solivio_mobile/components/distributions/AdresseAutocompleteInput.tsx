@@ -62,29 +62,11 @@ export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, lab
       ) : null}
 
       {/*
-        Le wrapper externe porte TOUS les styles visuels (bordure, fond, radius).
-        L'inputContainer interne est rendu entièrement transparent et sans bordure
-        pour éviter le double-input — maintenant qu'on connaît la bonne clé.
+        Le composant GooglePlacesTextInput est le conteneur principal.
+        Le wrapper visuel (bordure, icône) est rendu via inputContainer + icône dans le style.
+        Les suggestions flottent en dehors grâce à position absolute + zIndex.
       */}
-      <View
-        style={[
-          {
-            flexDirection: 'row',
-            alignItems: 'center',
-            minHeight: 52,
-            borderRadius: 16,         // rounded-xl
-            borderWidth: 1,
-            borderColor,
-            backgroundColor: '#FFFFFF',
-            paddingHorizontal: 16,    // px-4
-            gap: 10,
-          },
-          focused ? FOCUS_SHADOW : undefined,
-        ]}
-      >
-        {/* Icône MapPin — change de couleur avec le focus */}
-        <MapPin size={18} color={iconColor} />
-
+      <View style={{ zIndex: 10 }}>
         <GooglePlacesTextInput
           apiKey={apiKey}
           value={value}
@@ -94,28 +76,30 @@ export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, lab
           onPlaceSelect={handlePlaceSelect}
           fetchDetails
           detailsFields={['displayName', 'formattedAddress', 'location', 'addressComponents']}
+          scrollEnabled={false}
+          nestedScrollEnabled={false}
           style={{
-            /* container : prend le reste de la largeur, transparent */
             container: {
               flex: 1,
               backgroundColor: 'transparent',
             },
-            /* inputContainer : plus de bordure ni fond, le wrapper s'en charge */
             inputContainer: {
-              flex: 1,
               flexDirection: 'row',
               alignItems: 'center',
-              borderWidth: 0,
-              borderColor: 'transparent',
-              backgroundColor: 'transparent',
-              paddingHorizontal: 0,
-              paddingVertical: 0,
+              minHeight: 52,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor,
+              backgroundColor: '#FFFFFF',
+              paddingHorizontal: 16,
+              gap: 10,
+              ...(focused ? FOCUS_SHADOW : {}),
             },
             input: {
               flex: 1,
-              fontSize: 16,          // text-base
-              color: '#0F172A',      // text-foreground
-              paddingVertical: 14,   // py-3.5
+              fontSize: 16,
+              color: '#0F172A',
+              paddingVertical: 14,
               paddingHorizontal: 0,
               backgroundColor: 'transparent',
             },
@@ -123,11 +107,21 @@ export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, lab
               color: '#94A3B8',
             },
             suggestionsContainer: {
+              position: 'absolute',
+              top: 56,           // juste sous l'input (minHeight 52 + marge 4)
+              left: 0,
+              right: 0,
+              zIndex: 999,
+              elevation: 10,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: '#E2E8F0',
-              marginTop: 4,
               backgroundColor: '#FFFFFF',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
+              maxHeight: 250,
             },
           }}
           showClearButton
@@ -137,6 +131,20 @@ export function AdresseAutocompleteInput({ apiKey, value, onSelect, onClear, lab
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
+
+        {/* Icône MapPin positionnée en absolue dans l'inputContainer */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: 0,
+            bottom: 0,
+            justifyContent: 'center',
+          }}
+        >
+          <MapPin size={18} color={iconColor} />
+        </View>
       </View>
 
       {error ? (

@@ -161,17 +161,18 @@ export function CreateDistributionForm() {
       <div>
         <StepBar current={step} />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)}>
           {erreur && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {erreur}
             </div>
           )}
 
           {/* ── ÉTAPE 1 : Informations & lieu ── */}
           {step === 0 && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
+              {/* Section : Informations générales */}
+              <div className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground font-display">
                   Informations générales
                 </h3>
@@ -220,7 +221,10 @@ export function CreateDistributionForm() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
+              <hr className="border-border/60" />
+
+              {/* Section : Capacités */}
+              <div className="p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground font-display">
                   Capacités
                 </h3>
@@ -254,7 +258,10 @@ export function CreateDistributionForm() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <hr className="border-border/60" />
+
+              {/* Boutons */}
+              <div className="px-5 py-4 flex justify-end">
                 <Button type="button" onClick={allerEtape2} className="gap-1.5">
                   Suivant <ChevronRight className="size-4" />
                 </Button>
@@ -264,8 +271,9 @@ export function CreateDistributionForm() {
 
           {/* ── ÉTAPE 2 : Créneaux horaires ── */}
           {step === 1 && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
+              {/* Section : Créneaux horaires */}
+              <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-foreground font-display">
                     Créneaux horaires
@@ -338,7 +346,10 @@ export function CreateDistributionForm() {
                 )}
               </div>
 
-              <div className="flex gap-3">
+              <hr className="border-border/60" />
+
+              {/* Boutons */}
+              <div className="px-5 py-4 flex gap-3">
                 <Button
                   type="button"
                   variant="outline"

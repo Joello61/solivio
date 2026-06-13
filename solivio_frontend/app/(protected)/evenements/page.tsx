@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Plus, CalendarDays } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EvenementCard } from "@/components/evenement/EvenementCard";
 import type { EvenementResponse } from "@/types/evenement";
 import type { MeResponse } from "@/types/auth";
@@ -48,14 +50,18 @@ export default async function EvenementsPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground font-display">Evenements</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground font-display">Evenements</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {estGestionnaire
+              ? "Gerez et suivez tous les evenements de l'association."
+              : "Consultez et inscrivez-vous aux evenements disponibles."}
+          </p>
+        </div>
         {estGestionnaire && (
-          <Link
-            href="/evenements/nouveau"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="size-4" />
+          <Link href="/evenements/nouveau" className={buttonVariants({ size: "sm" })}>
+            <Plus className="mr-2 size-4" />
             Nouvel evenement
           </Link>
         )}
@@ -78,11 +84,21 @@ export default async function EvenementsPage({ searchParams }: Props) {
       </div>
 
       {evenements.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <CalendarDays className="size-7 text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">Aucun evenement pour ce filtre.</p>
+        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <EmptyState
+            icon={CalendarDays}
+            title="Aucun evenement"
+            description={
+              estGestionnaire
+                ? "Aucun evenement n'a ete cree. Commencez par en creer un."
+                : "Aucun evenement n'est disponible pour le moment."
+            }
+            action={
+              estGestionnaire
+                ? { label: "Creer un evenement", href: "/evenements/nouveau" }
+                : undefined
+            }
+          />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

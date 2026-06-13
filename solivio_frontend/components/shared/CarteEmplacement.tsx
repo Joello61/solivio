@@ -51,6 +51,7 @@ export function CarteEmplacement({ lieu, hauteur = "300px", interactive = false 
         {apiKey != null ? (
           <APIProvider apiKey={apiKey}>
             <Map
+              mapId="carte-emplacement"
               defaultCenter={center}
               defaultZoom={15}
               gestureHandling={interactive ? "auto" : "none"}
