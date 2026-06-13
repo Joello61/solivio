@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CalendarDays, Clock } from 'lucide-react-native';
-import { cn } from '@/lib/utils';
+import { CalendarDays, Clock, X, Check } from 'lucide-react-native';
 
 type Mode = 'date' | 'datetime' | 'time';
 
@@ -18,6 +17,9 @@ interface DatePickerInputProps {
   maximumDate?: Date;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                             */
+/* ------------------------------------------------------------------ */
 function toLocalISODate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -52,13 +54,24 @@ function formatDisplay(value: string, mode: Mode): string {
   const date = new Date(value);
   if (isNaN(date.getTime())) return value;
   if (mode === 'date') {
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   }
-  const d = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const d = date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
   const t = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  return `${d} a ${t}`;
+  return `${d} à ${t}`;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Composant                                                           */
+/* ------------------------------------------------------------------ */
 export function DatePickerInput({
   label,
   value,
@@ -70,8 +83,6 @@ export function DatePickerInput({
   maximumDate,
 }: DatePickerInputProps) {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const [show, setShow] = useState(false);
   const [androidStep, setAndroidStep] = useState<'date' | 'time'>('date');
   const [tempDate, setTempDate] = useState<Date>(() =>
@@ -117,92 +128,188 @@ export function DatePickerInput({
 
   const displayText = value ? formatDisplay(value, mode) : null;
   const placeholder =
-    mode === 'date' ? 'Selectionnez une date' :
-    mode === 'time' ? "Selectionnez une heure" :
-    'Selectionnez une date et heure';
+    mode === 'date'
+      ? 'Sélectionner une date'
+      : mode === 'time'
+      ? "Sélectionner une heure"
+      : 'Sélectionner une date et heure';
   const sheetTitle =
-    mode === 'date' ? 'Choisir une date' :
-    mode === 'time' ? "Choisir l'heure" :
-    "Choisir la date et l'heure";
+    mode === 'date'
+      ? 'Choisir une date'
+      : mode === 'time'
+      ? "Choisir l'heure"
+      : "Choisir la date et l'heure";
   const Icon = mode === 'time' ? Clock : CalendarDays;
 
   return (
     <>
-      <View className="gap-1.5">
+      {/* ── Champ déclencheur ───────────────────────────────────── */}
+      <View style={{ gap: 6 }}>
         {label ? (
-          <Text className="text-sm font-medium text-foreground">{label}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '500', color: '#0F172A' }}>{label}</Text>
         ) : null}
 
-        <Pressable
-          onPress={handleOpen}
-          className={cn(
-            'flex-row items-center gap-3 border rounded-xl px-4 min-h-[52px] bg-card active:bg-muted',
-            error ? 'border-destructive' : 'border-input',
+        <Pressable onPress={handleOpen}>
+          {({ pressed }) => (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                borderWidth: 1,
+                borderColor: error ? '#EF4444' : '#E2E8F0',
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                minHeight: 52,
+                backgroundColor: pressed ? '#F1F5F9' : '#FFFFFF',
+              }}
+            >
+              <Icon size={18} color={value ? '#0D9488' : '#94A3B8'} />
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 15,
+                  color: value ? '#0F172A' : '#94A3B8',
+                  paddingVertical: 14,
+                }}
+              >
+                {displayText ?? placeholder}
+              </Text>
+            </View>
           )}
-          style={({ pressed }) =>
-            pressed ? { opacity: 0.85, transform: [{ scale: 0.99 }] } : null
-          }
-        >
-          <Icon size={18} color={value ? '#0F172A' : '#94A3B8'} />
-          <Text
-            className={cn(
-              'flex-1 text-base py-3.5',
-              value ? 'text-foreground' : 'text-muted-foreground',
-            )}
-          >
-            {displayText ?? placeholder}
-          </Text>
         </Pressable>
 
         {error ? (
-          <Text className="text-xs text-destructive ml-0.5">{error}</Text>
+          <Text style={{ fontSize: 12, color: '#EF4444', marginLeft: 2 }}>{error}</Text>
         ) : helper ? (
-          <Text className="text-xs text-muted-foreground ml-0.5">{helper}</Text>
+          <Text style={{ fontSize: 12, color: '#64748B', marginLeft: 2 }}>{helper}</Text>
         ) : null}
       </View>
 
-      {/* iOS : bottom sheet */}
+      {/* ── iOS : bottom sheet ──────────────────────────────────── */}
       {Platform.OS === 'ios' && show ? (
         <Modal transparent animationType="slide" onRequestClose={() => setShow(false)}>
           <View style={{ flex: 1 }}>
+            {/* Overlay */}
             <Pressable
-              style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.4)' }}
+              style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.35)' }}
               onPress={() => setShow(false)}
             />
+
+            {/* Feuille */}
             <View
               style={{
-                backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                backgroundColor: '#FFFFFF',
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                paddingBottom: Math.max(insets.bottom, 16),
+                paddingBottom: Math.max(insets.bottom, 24),
+                // Ombre subtile
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 16,
               }}
             >
-              <View className="flex-row items-center justify-between px-5 pt-5 pb-1">
-                <Pressable onPress={() => setShow(false)} className="px-2 py-1">
-                  <Text className="text-base text-muted-foreground">Annuler</Text>
+              {/* ── En-tête ── */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 20,
+                  paddingTop: 20,
+                  paddingBottom: 8,
+                }}
+              >
+                {/* Annuler */}
+                <Pressable
+                  onPress={() => setShow(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  {({ pressed }) => (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 8,
+                        backgroundColor: pressed ? '#F1F5F9' : 'transparent',
+                      }}
+                    >
+                      <X size={15} color="#64748B" />
+                      <Text style={{ fontSize: 15, color: '#64748B', fontWeight: '500' }}>
+                        Annuler
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
-                <Text className="text-base font-semibold text-foreground">{sheetTitle}</Text>
-                <Pressable onPress={handleConfirmIOS} className="px-2 py-1">
-                  <Text className="text-base font-semibold text-primary">OK</Text>
+
+                {/* Titre centré */}
+                <Text
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: '#0F172A',
+                  }}
+                >
+                  {sheetTitle}
+                </Text>
+
+                {/* Confirmer */}
+                <Pressable
+                  onPress={handleConfirmIOS}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  {({ pressed }) => (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 8,
+                        backgroundColor: pressed ? '#F0FDFA' : 'transparent',
+                      }}
+                    >
+                      <Check size={15} color="#0D9488" strokeWidth={2.5} />
+                      <Text style={{ fontSize: 15, color: '#0D9488', fontWeight: '700' }}>
+                        OK
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               </View>
+
+              {/* Séparateur */}
+              <View style={{ height: 1, backgroundColor: '#F1F5F9', marginHorizontal: 20 }} />
+
+              {/* ── Picker ── */}
               <DateTimePicker
                 value={tempDate}
                 mode={mode}
                 display="spinner"
-                onChange={(_, date) => { if (date) setTempDate(date); }}
+                onChange={(_, date) => {
+                  if (date) setTempDate(date);
+                }}
                 locale="fr-FR"
                 minimumDate={mode === 'time' ? undefined : minimumDate}
                 maximumDate={mode === 'time' ? undefined : maximumDate}
-                textColor={isDark ? '#F1F5F9' : '#0F172A'}
-                style={{ height: 216, width: '100%' }}
+                // Force le thème clair : texte foncé sur fond blanc
+                textColor="#0F172A"
+                accentColor="#0D9488"
+                themeVariant="light"
+                style={{ height: 220, width: '100%' }}
               />
             </View>
           </View>
         </Modal>
       ) : null}
 
-      {/* Android : dialog natif */}
+      {/* ── Android : dialog natif ──────────────────────────────── */}
       {Platform.OS === 'android' && show ? (
         <DateTimePicker
           value={tempDate}
@@ -211,6 +318,8 @@ export function DatePickerInput({
           minimumDate={mode === 'time' ? undefined : minimumDate}
           maximumDate={mode === 'time' ? undefined : maximumDate}
           onChange={handleAndroidChange}
+          accentColor="#0D9488"
+          themeVariant="light"
         />
       ) : null}
     </>
