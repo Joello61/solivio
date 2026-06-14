@@ -79,18 +79,18 @@ export default async function MesInscriptionsPage() {
 
   const inscriptions = await fetchMesInscriptions(cookieHeader);
 
-  const maintenant = new Date();
+  const aujourdhui = new Date().toISOString().split("T")[0];
   const avenir = inscriptions.filter(
     (i) =>
       i.statut !== "ANNULEE" &&
       i.distributionDate &&
-      new Date(i.distributionDate) >= maintenant,
+      i.distributionDate >= aujourdhui,
   );
   const passees = inscriptions.filter(
     (i) =>
       i.statut === "ANNULEE" ||
       !i.distributionDate ||
-      new Date(i.distributionDate) < maintenant,
+      i.distributionDate < aujourdhui,
   );
 
   return (
@@ -102,48 +102,55 @@ export default async function MesInscriptionsPage() {
         </p>
       </div>
 
-      <section className="space-y-4">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-base font-semibold text-foreground font-display">A venir</h2>
-          {avenir.length > 0 && (
-            <span className="text-sm text-muted-foreground">
-              {avenir.length} inscription{avenir.length > 1 ? "s" : ""}
-            </span>
-          )}
+      {inscriptions.length === 0 ? (
+        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <EmptyState
+            icon={CalendarSearch}
+            title="Aucune inscription"
+            description="Vous n'etes inscrit(e) a aucune distribution pour le moment."
+            action={{ label: "Voir les distributions", href: "/distributions" }}
+          />
         </div>
-        {avenir.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
-            <EmptyState
-              icon={CalendarSearch}
-              title="Aucune inscription a venir"
-              description="Inscrivez-vous a une distribution pour la voir apparaitre ici."
-              action={{ label: "Voir les distributions", href: "/distributions" }}
-              size="sm"
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
-            {avenir.map((i) => (
-              <CarteInscription key={i.id} inscription={i} />
-            ))}
-          </div>
-        )}
-      </section>
+      ) : (
+        <>
+          <section className="space-y-4">
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-base font-semibold text-foreground font-display">A venir</h2>
+              {avenir.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {avenir.length} inscription{avenir.length > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            {avenir.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic px-1">
+                Aucune inscription a venir.
+              </p>
+            ) : (
+              <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
+                {avenir.map((i) => (
+                  <CarteInscription key={i.id} inscription={i} />
+                ))}
+              </div>
+            )}
+          </section>
 
-      {passees.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-baseline gap-2">
-            <h2 className="text-base font-semibold text-foreground font-display">Historique</h2>
-            <span className="text-sm text-muted-foreground">
-              {passees.length} inscription{passees.length > 1 ? "s" : ""}
-            </span>
-          </div>
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden opacity-80">
-            {passees.map((i) => (
-              <CarteInscription key={i.id} inscription={i} />
-            ))}
-          </div>
-        </section>
+          {passees.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-base font-semibold text-foreground font-display">Historique</h2>
+                <span className="text-sm text-muted-foreground">
+                  {passees.length} inscription{passees.length > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden opacity-80">
+                {passees.map((i) => (
+                  <CarteInscription key={i.id} inscription={i} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );

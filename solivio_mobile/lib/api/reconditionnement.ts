@@ -67,6 +67,18 @@ export function listerInscrits(id: string): Promise<InscriptionReconditionnement
   );
 }
 
+export function mesInscriptions(id: string): Promise<InscriptionReconditionnementResponse[]> {
+  return apiGet<InscriptionReconditionnementResponse[]>(
+    `/api/sessions-reconditionnement/${id}/inscriptions/mes`,
+  );
+}
+
+export function toutesMesInscriptions(): Promise<InscriptionReconditionnementResponse[]> {
+  return apiGet<InscriptionReconditionnementResponse[]>(
+    '/api/sessions-reconditionnement/mes-inscriptions',
+  );
+}
+
 export function pointerParticipant(
   sessionId: string,
   personneId: string,
