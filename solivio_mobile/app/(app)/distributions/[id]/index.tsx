@@ -22,7 +22,9 @@ import {
   terminerDistribution,
   annulerDistribution,
   inscrire,
+  desinscrire,
   listerInscrits,
+  mesInscriptions,
 } from '@/lib/api/distributions';
 import { statsDistribution } from '@/lib/api/association';
 import { StatutBadge } from '@/components/distributions/StatutBadge';
@@ -61,6 +63,12 @@ export default function DistributionDetailScreen() {
     enabled: !!id && !!estCoordinateur,
   });
 
+  const { data: mesInscr } = useQuery({
+    queryKey: ['mes-inscriptions-distribution', id],
+    queryFn: () => mesInscriptions(id),
+    enabled: !!id,
+  });
+
   const { data: stats } = useQuery({
     queryKey: ['stats-distribution', id],
     queryFn: () => statsDistribution(id),
@@ -70,6 +78,8 @@ export default function DistributionDetailScreen() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['distribution', id] });
     queryClient.invalidateQueries({ queryKey: ['distributions'] });
+    queryClient.invalidateQueries({ queryKey: ['mes-inscriptions-distribution', id] });
+    queryClient.invalidateQueries({ queryKey: ['mes-inscriptions'] });
   };
 
   const mutPublier = useMutation({ mutationFn: () => publierDistribution(id), onSuccess: invalidate });
@@ -81,10 +91,11 @@ export default function DistributionDetailScreen() {
   });
   const mutInscrire = useMutation({
     mutationFn: (type: string) => inscrire(id, type),
-    onSuccess: () => {
-      invalidate();
-      queryClient.invalidateQueries({ queryKey: ['mes-inscriptions'] });
-    },
+    onSuccess: invalidate,
+  });
+  const mutDesinscrire = useMutation({
+    mutationFn: (inscriptionId: string) => desinscrire(id, inscriptionId),
+    onSuccess: invalidate,
   });
 
   function confirmerAction(titre: string, message: string, onConfirm: () => void) {
@@ -120,7 +131,13 @@ export default function DistributionDetailScreen() {
   const peutDemarrer = estResponsable && statut === 'PUBLIEE';
   const peutTerminer = estResponsable && statut === 'EN_COURS';
   const peutAnnuler = estResponsable && ['BROUILLON', 'PUBLIEE', 'EN_COURS'].includes(statut);
-  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur;
+
+  const monInscription = mesInscr?.find(
+    (i) => i.statut === 'CONFIRMEE' || i.statut === 'LISTE_ATTENTE',
+  );
+  const dejaInscrit = !!monInscription;
+  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur && !dejaInscrit;
+  const peutSeDesinscrire = statut === 'PUBLIEE' && !estCoordinateur && dejaInscrit;
 
   const nbBeneficiaires = inscrits?.filter((i) => i.type === 'BENEFICIAIRE').length ?? 0;
   const nbBenevoles = inscrits?.filter((i) => i.type === 'BENEVOLE').length ?? 0;
@@ -377,6 +394,33 @@ export default function DistributionDetailScreen() {
                 fullWidth
               >
                 {"S'inscrire comme benevole"}
+              </Button>
+            </View>
+          ) : null}
+
+          {peutSeDesinscrire && monInscription ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Votre inscription</Text>
+              <View className="bg-teal-50 border border-teal-100 rounded-xl p-4">
+                <Text className="text-teal-800 font-medium">
+                  Vous etes inscrit(e) en tant que{' '}
+                  {monInscription.type === 'BENEFICIAIRE' ? 'beneficiaire' : 'benevole'}.
+                  {monInscription.statut === 'LISTE_ATTENTE' ? " (Liste d'attente)" : ''}
+                </Text>
+              </View>
+              <Button
+                onPress={() =>
+                  confirmerAction(
+                    'Se desinscrire',
+                    'Voulez-vous vraiment annuler votre inscription ?',
+                    () => mutDesinscrire.mutate(monInscription.id),
+                  )
+                }
+                loading={mutDesinscrire.isPending}
+                variant="outline"
+                fullWidth
+              >
+                Se desinscrire
               </Button>
             </View>
           ) : null}

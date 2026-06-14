@@ -144,7 +144,7 @@ public class SessionReconditionnementService {
             })
             .orElse(new InscriptionReconditionnement(sessionId, personne.id()));
         inscriptionRepository.save(inscription);
-        return toInscriptionResponse(inscription, personne.nom() + " " + personne.prenom());
+        return toInscriptionResponse(inscription, session, personne.nom() + " " + personne.prenom());
     }
 
     public void desinscrire(UUID sessionId, String emailPersonne) {
@@ -164,12 +164,12 @@ public class SessionReconditionnementService {
 
     @Transactional(readOnly = true)
     public List<InscriptionReconditionnementResponse> listerInscrits(UUID sessionId) {
-        trouverOuEchouer(sessionId);
+        SessionReconditionnement session = trouverOuEchouer(sessionId);
         return inscriptionRepository.findBySessionId(sessionId).stream()
             .filter(InscriptionReconditionnement::estConfirmee)
             .map(i -> {
                 PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(i.getPersonneId());
-                return toInscriptionResponse(i, personne.nom() + " " + personne.prenom());
+                return toInscriptionResponse(i, session, personne.nom() + " " + personne.prenom());
             })
             .toList();
     }
@@ -195,7 +195,37 @@ public class SessionReconditionnementService {
         inscription.pointer(presence);
         inscriptionRepository.save(inscription);
         PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(request.personneId());
-        return toInscriptionResponse(inscription, personne.nom() + " " + personne.prenom());
+        return toInscriptionResponse(inscription, session, personne.nom() + " " + personne.prenom());
+    }
+
+    @Transactional(readOnly = true)
+    public List<InscriptionReconditionnementResponse> toutesInscriptions(String email) {
+        try {
+            PersonneInfo personne = personneQueryPort.trouverPersonne(email);
+            return inscriptionRepository.findByPersonneId(personne.id()).stream()
+                .filter(InscriptionReconditionnement::estConfirmee)
+                .map(i -> {
+                    SessionReconditionnement s = sessionRepository.findById(i.getSessionId()).orElse(null);
+                    return toInscriptionResponse(i, s, "");
+                })
+                .toList();
+        } catch (NotFoundException e) {
+            return List.of();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<InscriptionReconditionnementResponse> mesInscriptions(UUID sessionId, String email) {
+        try {
+            PersonneInfo personne = personneQueryPort.trouverPersonne(email);
+            SessionReconditionnement s = sessionRepository.findById(sessionId).orElse(null);
+            return inscriptionRepository.findBySessionIdAndPersonneId(sessionId, personne.id()).stream()
+                .filter(InscriptionReconditionnement::estConfirmee)
+                .map(i -> toInscriptionResponse(i, s, personne.nom() + " " + personne.prenom()))
+                .toList();
+        } catch (NotFoundException e) {
+            return List.of();
+        }
     }
 
     SessionReconditionnement trouverOuEchouer(UUID sessionId) {
@@ -224,11 +254,14 @@ public class SessionReconditionnementService {
     }
 
     private static InscriptionReconditionnementResponse toInscriptionResponse(
-        InscriptionReconditionnement i, String nomComplet
+        InscriptionReconditionnement i, SessionReconditionnement s, String nomComplet
     ) {
         return new InscriptionReconditionnementResponse(
             i.getId(),
             i.getSessionId(),
+            s != null ? s.getTitre() : null,
+            s != null ? s.getDateHeureDebut() : null,
+            s != null && s.getLieu() != null ? s.getLieu().getAdresseFormatee() : null,
             i.getPersonneId(),
             nomComplet,
             i.getStatut(),

@@ -146,6 +146,21 @@ public class SessionReconditionnementController {
         return ResponseEntity.ok(sessionService.listerInscrits(id));
     }
 
+    @GetMapping("/{id}/inscriptions/mes")
+    public ResponseEntity<List<InscriptionReconditionnementResponse>> mesInscriptions(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(sessionService.mesInscriptions(id, user.getUsername()));
+    }
+
+    @GetMapping("/mes-inscriptions")
+    public ResponseEntity<List<InscriptionReconditionnementResponse>> toutesMesInscriptions(
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(sessionService.toutesInscriptions(user.getUsername()));
+    }
+
     @PostMapping("/{id}/pointage")
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<InscriptionReconditionnementResponse> pointer(

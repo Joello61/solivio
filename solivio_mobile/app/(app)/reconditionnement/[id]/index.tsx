@@ -13,6 +13,7 @@ import {
   inscrireSession,
   desinscrireSession,
   listerInscrits,
+  mesInscriptions,
   pointerParticipant,
 } from '@/lib/api/reconditionnement';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -60,10 +61,17 @@ export default function SessionDetailScreen() {
     enabled: !!id && !!estCoordinateur,
   });
 
+  const { data: mesInscr } = useQuery({
+    queryKey: ['mes-inscriptions-reco', id],
+    queryFn: () => mesInscriptions(id),
+    enabled: !!id,
+  });
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['session-reco', id] });
     queryClient.invalidateQueries({ queryKey: ['sessions-reco'] });
     queryClient.invalidateQueries({ queryKey: ['inscrits-reco', id] });
+    queryClient.invalidateQueries({ queryKey: ['mes-inscriptions-reco', id] });
   };
 
   const mutPublier = useMutation({ mutationFn: () => publierSession(id), onSuccess: invalidate });
@@ -117,7 +125,11 @@ export default function SessionDetailScreen() {
   const peutDemarrer = estResponsable && statut === 'PUBLIEE';
   const peutTerminer = estResponsable && statut === 'EN_COURS';
   const peutAnnuler = estResponsable && ['BROUILLON', 'PUBLIEE', 'EN_COURS'].includes(statut);
-  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur;
+
+  const monInscription = mesInscr && mesInscr.length > 0 ? mesInscr[0] : null;
+  const dejaInscrit = !!monInscription;
+  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur && !dejaInscrit;
+  const peutSeDesinscrire = statut === 'PUBLIEE' && !estCoordinateur && dejaInscrit;
 
   return (
     <View className="flex-1 bg-background">
@@ -315,6 +327,17 @@ export default function SessionDetailScreen() {
               >
                 {"S'inscrire"}
               </Button>
+            </View>
+          ) : null}
+
+          {peutSeDesinscrire && monInscription ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Votre inscription</Text>
+              <View className="bg-teal-50 border border-teal-100 rounded-xl p-4 mb-2">
+                <Text className="text-teal-800 font-medium">
+                  Vous etes inscrit(e) a cette session de reconditionnement.
+                </Text>
+              </View>
               <Button
                 onPress={() =>
                   confirmerAction('Se desinscrire', 'Annuler votre inscription ?', () =>
