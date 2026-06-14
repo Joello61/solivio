@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
@@ -54,7 +55,8 @@ public class InscriptionQueryAdapter implements InscriptionQueryPort {
         // Batch : une seule requete pour tous les emails
         Map<UUID, String> emailParPersonne = personneRepository.findAllById(personneIds)
             .stream()
-            .collect(Collectors.toMap(p -> p.getId(), p -> p.getEmail()));
+            .collect(Collectors.toMap(Personne::getId,
+                Personne::getEmail));
 
         return inscrits.stream()
             .filter(i -> emailParPersonne.containsKey(i.getPersonneId()))

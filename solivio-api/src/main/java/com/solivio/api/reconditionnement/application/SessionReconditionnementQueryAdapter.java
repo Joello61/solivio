@@ -1,5 +1,6 @@
 package com.solivio.api.reconditionnement.application;
 
+import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.infrastructure.persistence.InscriptionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.persistence.SessionReconditionnementRepository;
 import com.solivio.api.shared.exception.NotFoundException;
@@ -42,7 +43,7 @@ public class SessionReconditionnementQueryAdapter implements SessionReconditionn
     public List<UUID> trouverPersonnesInscritesConfirmees(UUID sessionId) {
         return inscriptionRepository.findBySessionId(sessionId).stream()
             .filter(i -> "CONFIRMEE".equals(i.getStatut()))
-            .map(i -> i.getPersonneId())
+            .map(InscriptionReconditionnement::getPersonneId)
             .toList();
     }
 }

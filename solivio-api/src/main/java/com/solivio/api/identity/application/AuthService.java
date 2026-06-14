@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -85,9 +86,9 @@ public class AuthService {
 
         // Si l'utilisateur appartient a un seul tenant, on emet directement un JWT pour ce tenant.
         // Sinon, on emet un JWT sans tenant (le frontend devra appeler /switch-tenant).
-        String tenantSlug = affiliations.size() == 1 ? affiliations.get(0).getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.get(0).getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.get(0).getCoordoType() : null;
+        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
+        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
+        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
@@ -223,9 +224,9 @@ public class AuthService {
             email, nom, prenom, codeAssociation, tokenInvitation);
 
         List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
-        String tenantSlug = affiliations.size() == 1 ? affiliations.get(0).getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.get(0).getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.get(0).getCoordoType() : null;
+        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
+        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
+        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
@@ -250,7 +251,8 @@ public class AuthService {
         Compte compte = compteRepository.findById(userDetails.getCompteId())
             .orElseThrow();
         List<String> roles = userDetails.getAuthorities().stream()
-            .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
+            .map(a -> Objects.requireNonNull(a.getAuthority())
+                .replace("ROLE_", "").toLowerCase())
             .toList();
         // Telephone et photo tenant (peut etre null si pas de tenant actif ou pas encore provisionne).
         Personne personne = userDetails.getTenantSlug() != null

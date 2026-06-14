@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProfilService {
@@ -58,8 +59,10 @@ public class ProfilService {
             personneRepository.save(personne);
         }
 
-        List<String> roles = userDetails.getAuthorities().stream()
+        List<String> roles = userDetails.getAuthorities()
+            .stream()
             .map(GrantedAuthority::getAuthority)
+            .filter(Objects::nonNull)
             .map(a -> a.replace("ROLE_", "").toLowerCase())
             .toList();
 

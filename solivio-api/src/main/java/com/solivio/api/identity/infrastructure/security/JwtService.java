@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,7 @@ public class JwtService {
     private static final String CLAIM_PRENOM = "prenom";
 
     private final SecretKey signingKey;
+    @Getter
     private final long accessTokenMinutes;
     private final long refreshTokenDays;
 
@@ -109,10 +111,6 @@ public class JwtService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 indisponible", e);
         }
-    }
-
-    public long getAccessTokenMinutes() {
-        return accessTokenMinutes;
     }
 
     public long getRefreshTokenSeconds() {

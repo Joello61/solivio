@@ -1,5 +1,6 @@
 package com.solivio.api.evenement.application;
 
+import com.solivio.api.evenement.domain.ParticipationEvenement;
 import com.solivio.api.evenement.infrastructure.persistence.EvenementRepository;
 import com.solivio.api.evenement.infrastructure.persistence.ParticipationEvenementRepository;
 import com.solivio.api.shared.evenement.EvenementQueryPort;
@@ -46,7 +47,7 @@ public class EvenementQueryAdapter implements EvenementQueryPort {
     public List<UUID> trouverInscrits(UUID evenementId) {
         return participationRepository.findByEvenementIdOrderByDateInscriptionAsc(evenementId)
             .stream()
-            .map(p -> p.getPersonneId())
+            .map(ParticipationEvenement::getPersonneId)
             .toList();
     }
 }

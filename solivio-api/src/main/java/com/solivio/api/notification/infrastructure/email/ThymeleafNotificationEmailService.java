@@ -1,9 +1,6 @@
 package com.solivio.api.notification.infrastructure.email;
 
 import com.solivio.api.notification.application.NotificationEmailService;
-import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
-import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
-import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;

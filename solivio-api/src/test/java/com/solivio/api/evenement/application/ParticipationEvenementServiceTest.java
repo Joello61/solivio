@@ -11,7 +11,6 @@ import com.solivio.api.evenement.infrastructure.persistence.EvenementRepository;
 import com.solivio.api.evenement.infrastructure.persistence.ParticipationEvenementRepository;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
 import com.solivio.api.shared.exception.ConflictException;
-import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;

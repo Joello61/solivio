@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -49,9 +50,14 @@ public class DistributionController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         boolean voitTout = user.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_COORDINATEUR")
-                || a.getAuthority().equals("ROLE_RESPONSABLE")
-                || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+            .anyMatch(a -> Objects.equals(a.getAuthority(),
+                "ROLE_COORDINATEUR")
+                ||
+                Objects.equals(a.getAuthority(),
+                    "ROLE_RESPONSABLE")
+                ||
+                Objects.equals(a.getAuthority(),
+                    "ROLE_SUPER_ADMIN"));
         List<DistributionResponse> liste = voitTout
             ? distributionService.lister()
             : distributionService.listerPubliees();
