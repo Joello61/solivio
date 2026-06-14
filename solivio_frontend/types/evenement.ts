@@ -32,6 +32,9 @@ export interface EvenementResponse {
 export interface ParticipationEvenementResponse {
   id: string;
   evenementId: string;
+  evenementTitre?: string;
+  evenementDate?: string;
+  evenementLieu?: string | null;
   personneId: string;
   personneNomComplet: string | null;
   role: RoleParticipation;
