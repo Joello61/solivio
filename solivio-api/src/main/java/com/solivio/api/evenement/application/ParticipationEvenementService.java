@@ -66,7 +66,7 @@ public class ParticipationEvenementService {
         ParticipationEvenement participation =
             new ParticipationEvenement(evenementId, personne.id(), role);
         participationRepository.save(participation);
-        return toResponse(participation, personne.nom() + " " + personne.prenom());
+        return toResponse(participation, evenement, personne.nom() + " " + personne.prenom());
     }
 
     public void seDesinscrire(UUID evenementId, String emailUser) {
@@ -84,15 +84,15 @@ public class ParticipationEvenementService {
 
     @Transactional(readOnly = true)
     public List<ParticipationEvenementResponse> listerParticipants(UUID evenementId) {
-        trouverOuEchouer(evenementId);
+        Evenement evenement = trouverOuEchouer(evenementId);
         return participationRepository.findByEvenementIdOrderByDateInscriptionAsc(evenementId)
             .stream()
             .map(p -> {
                 try {
                     PersonneContactInfo info = personneQueryPort.trouverPersonneParId(p.getPersonneId());
-                    return toResponse(p, info.nom() + " " + info.prenom());
+                    return toResponse(p, evenement, info.nom() + " " + info.prenom());
                 } catch (NotFoundException e) {
-                    return toResponse(p, null);
+                    return toResponse(p, evenement, null);
                 }
             })
             .toList();
@@ -111,9 +111,9 @@ public class ParticipationEvenementService {
             .map(p -> {
                 try {
                     PersonneContactInfo info = personneQueryPort.trouverPersonneParId(p.getPersonneId());
-                    return toResponse(p, info.nom() + " " + info.prenom());
+                    return toResponse(p, evenement, info.nom() + " " + info.prenom());
                 } catch (NotFoundException e) {
-                    return toResponse(p, null);
+                    return toResponse(p, evenement, null);
                 }
             })
             .toList();
@@ -133,9 +133,9 @@ public class ParticipationEvenementService {
         participationRepository.save(participation);
         try {
             PersonneContactInfo info = personneQueryPort.trouverPersonneParId(participation.getPersonneId());
-            return toResponse(participation, info.nom() + " " + info.prenom());
+            return toResponse(participation, evenement, info.nom() + " " + info.prenom());
         } catch (NotFoundException e) {
-            return toResponse(participation, null);
+            return toResponse(participation, evenement, null);
         }
     }
 
@@ -144,7 +144,10 @@ public class ParticipationEvenementService {
         PersonneInfo personne = personneQueryPort.trouverPersonne(emailUser);
         return participationRepository.findByPersonneIdOrderByDateInscriptionDesc(personne.id())
             .stream()
-            .map(p -> toResponse(p, personne.nom() + " " + personne.prenom()))
+            .map(p -> {
+                Evenement e = evenementRepository.findById(p.getEvenementId()).orElse(null);
+                return toResponse(p, e, personne.nom() + " " + personne.prenom());
+            })
             .toList();
     }
 
@@ -204,10 +207,13 @@ public class ParticipationEvenementService {
             .orElseThrow(() -> new NotFoundException("Evenement introuvable : " + evenementId));
     }
 
-    static ParticipationEvenementResponse toResponse(ParticipationEvenement p, String nomComplet) {
+    static ParticipationEvenementResponse toResponse(ParticipationEvenement p, Evenement e, String nomComplet) {
         return new ParticipationEvenementResponse(
             p.getId(),
             p.getEvenementId(),
+            e != null ? e.getTitre() : null,
+            e != null ? e.getDateHeureDebut() : null,
+            e != null ? e.getLieuAdresseFormatee() : null,
             p.getPersonneId(),
             nomComplet,
             p.getRole().name(),

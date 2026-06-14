@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, Pressable, StyleSheet, Alert } from 'react-native';
+import { ScrollView, Text, View, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, MapPin, Truck, User, Users } from 'lucide-react-native';

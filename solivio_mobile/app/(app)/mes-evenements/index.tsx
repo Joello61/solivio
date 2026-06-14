@@ -1,6 +1,5 @@
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarDays } from 'lucide-react-native';
 import { mesEvenements } from '@/lib/api/evenement';
