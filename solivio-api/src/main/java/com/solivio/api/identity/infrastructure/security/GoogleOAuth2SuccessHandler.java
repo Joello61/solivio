@@ -58,8 +58,8 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     public void onAuthenticationSuccess(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        assert oAuth2User !=
-            null;
+        assert
+            oAuth2User != null;
         String email = oAuth2User.getAttribute("email");
 
         Compte compte = compteRepository.findByEmail(email).orElseThrow();
@@ -74,8 +74,8 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         }
 
         if (affiliations.isEmpty()) {
-            assert email !=
-                null;
+            assert
+                email != null;
             String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
             String encodedNom = URLEncoder.encode(
                 compte.getNom() != null ? compte.getNom() : "", StandardCharsets.UTF_8);
