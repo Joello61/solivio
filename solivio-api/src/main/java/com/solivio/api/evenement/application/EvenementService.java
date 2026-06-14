@@ -15,6 +15,8 @@ import com.solivio.api.evenement.infrastructure.web.dto.UpdateEvenementRequest;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +51,8 @@ public class EvenementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         Evenement evenement = new Evenement(
-            request.titre(),
-            request.description(),
+            Jsoup.clean(request.titre(), Safelist.none()),
+            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
             parseType(request.type()),
             request.lieuPlaceId(),
             request.lieuAdresseFormatee(),
@@ -77,10 +79,10 @@ public class EvenementService {
                 "Modification impossible : seul un evenement en BROUILLON peut etre modifie");
         }
         if (request.titre() != null) {
-            evenement.setTitre(request.titre());
+            evenement.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
         }
         if (request.description() != null) {
-            evenement.setDescription(request.description());
+            evenement.setDescription(Jsoup.clean(request.description(), Safelist.none()));
         }
         if (request.type() != null) {
             evenement.setType(parseType(request.type()));
@@ -140,7 +142,8 @@ public class EvenementService {
 
     public EvenementResponse annuler(UUID evenementId, AnnulerEvenementRequest request, String tenantSlug) {
         Evenement evenement = trouverOuEchouer(evenementId);
-        evenement.transitionnerVers(StatutEvenement.ANNULE, request.raison());
+        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        evenement.transitionnerVers(StatutEvenement.ANNULE, raisonSaine);
         evenementRepository.save(evenement);
         eventPublisher.publierAnnule(evenementId, tenantSlug, evenement.getDateHeureDebut());
         return toResponse(evenement);

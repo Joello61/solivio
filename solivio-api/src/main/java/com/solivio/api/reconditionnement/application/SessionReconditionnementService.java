@@ -20,6 +20,8 @@ import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,8 +59,8 @@ public class SessionReconditionnementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         SessionReconditionnement session = new SessionReconditionnement(
-            request.titre(),
-            request.description(),
+            Jsoup.clean(request.titre(), Safelist.none()),
+            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
             toLieu(request.lieu()),
             request.dateHeureDebut(),
             request.dateHeureFin(),
@@ -93,7 +95,8 @@ public class SessionReconditionnementService {
         UUID sessionId, AnnulerSessionRequest request, String tenantSlug
     ) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
-        session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, request.motif());
+        String motifSain = request.motif() != null ? Jsoup.clean(request.motif(), Safelist.none()) : null;
+        session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, motifSain);
         sessionRepository.save(session);
         eventPublisher.publierAnnulee(sessionId, tenantSlug, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));

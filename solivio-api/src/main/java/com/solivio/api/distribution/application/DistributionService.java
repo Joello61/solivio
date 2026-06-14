@@ -17,6 +17,8 @@ import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,8 +54,8 @@ public class DistributionService {
         ModeCreneauDistribution mode = parseModeCreneauDistribution(request.modeCreneau());
 
         Distribution distribution = new Distribution(
-            request.titre(),
-            request.description(),
+            Jsoup.clean(request.titre(), Safelist.none()),
+            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
             toLieu(request.lieu()),
             request.date(),
             request.capaciteBeneficiaires(),
@@ -102,7 +104,8 @@ public class DistributionService {
 
     public DistributionResponse annuler(UUID distributionId, String motif, String tenantSlug) {
         Distribution d = trouverOuEchouer(distributionId);
-        d.transitionnerVers(StatutDistribution.ANNULEE, motif);
+        String motifSain = motif != null ? Jsoup.clean(motif, Safelist.none()) : null;
+        d.transitionnerVers(StatutDistribution.ANNULEE, motifSain);
         distributionRepository.save(d);
         eventPublisher.publierAnnulee(distributionId, tenantSlug, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));

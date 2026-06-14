@@ -15,6 +15,8 @@ import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +51,8 @@ public class MissionCollecteService {
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         int capacite = request.capacitePersonnes() != null ? request.capacitePersonnes() : 6;
         MissionCollecte mission = new MissionCollecte(
-            request.titre(),
-            request.description(),
+            Jsoup.clean(request.titre(), Safelist.none()),
+            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
             placeId(request.lieuCollecte()),
             adresse(request.lieuCollecte()),
             latitude(request.lieuCollecte()),
@@ -74,10 +76,10 @@ public class MissionCollecteService {
             throw new ConflictException("Modification impossible : la mission n'est pas disponible");
         }
         if (request.titre() != null) {
-            mission.setTitre(request.titre());
+            mission.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
         }
         if (request.description() != null) {
-            mission.setDescription(request.description());
+            mission.setDescription(Jsoup.clean(request.description(), Safelist.none()));
         }
         if (request.dateHeure() != null) {
             mission.setDateHeure(request.dateHeure());
@@ -105,7 +107,8 @@ public class MissionCollecteService {
         PersonneInfo par = personneQueryPort.trouverPersonne(emailPar);
         MissionCollecte mission = trouverOuEchouer(missionId);
         UUID benevoleAssigneId = mission.getBenevoleId();
-        mission.annuler(par.id(), request.raison());
+        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        mission.annuler(par.id(), raisonSaine);
         missionRepository.save(mission);
         eventPublisher.publierAnnulee(mission.getId(), tenantSlug, mission.getDateHeure(), benevoleAssigneId);
         return toResponse(mission, null);
