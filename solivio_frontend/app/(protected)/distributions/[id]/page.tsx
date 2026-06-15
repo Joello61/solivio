@@ -20,6 +20,7 @@ import { DistributionStatutBadge } from "@/components/distributions/Distribution
 import { DistributionActions } from "@/components/distributions/DistributionActions";
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
+import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiqueDistributionResponse } from "@/types/association";
@@ -141,14 +142,26 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <Calendar className="size-4 shrink-0 text-muted-foreground" />
                 <span className="capitalize text-foreground">{dateFormatee}</span>
               </div>
-              {distribution.lieu && (
+              {distribution.lieu?.adresseFormatee && (
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="text-foreground">{distribution.lieu}</span>
+                  <span className="text-foreground">{distribution.lieu.adresseFormatee}</span>
                 </div>
               )}
               {distribution.description && (
                 <p className="text-sm text-muted-foreground pt-1">{distribution.description}</p>
+              )}
+              {distribution.lieu && (
+                distribution.lieu.latitude != null && distribution.lieu.longitude != null
+              ) && (
+                <CarteEmplacement
+                  lieu={{
+                    latitude: distribution.lieu!.latitude,
+                    longitude: distribution.lieu!.longitude,
+                    adresseFormatee: distribution.lieu!.adresseFormatee,
+                  }}
+                  interactive={true}
+                />
               )}
             </div>
           </div>

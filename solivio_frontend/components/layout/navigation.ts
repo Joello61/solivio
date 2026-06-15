@@ -8,6 +8,10 @@ import {
   UserCog,
   Building2,
   Package,
+  Recycle,
+  Truck,
+  PartyPopper,
+  Mail,
 } from "lucide-react";
 
 export interface NavItem {
@@ -27,6 +31,11 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/distributions", label: "Distributions", icon: CalendarDays },
+      { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
+      { href: "/missions-collecte", label: "Missions collecte", icon: Truck },
+      { href: "/mes-missions-collecte", label: "Mes missions", icon: Truck, roles: ["benevole"] },
+      { href: "/evenements", label: "Evenements", icon: PartyPopper },
+      { href: "/mes-evenements", label: "Mes evenements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
@@ -56,6 +65,12 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Administration",
     items: [
+      {
+        href: "/notifications/email-libre",
+        label: "Email aux membres",
+        icon: Mail,
+        roles: ["admin", "responsable", "super_admin"],
+      },
       {
         href: "/admin/utilisateurs",
         label: "Utilisateurs",

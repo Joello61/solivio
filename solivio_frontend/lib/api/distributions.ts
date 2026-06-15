@@ -10,6 +10,8 @@ import type {
   DotationResponse,
   SaisirDenreePayload,
   CatalogueDenreeResponse,
+  MembreSuggestion,
+  PointageAdHocResponse,
 } from "@/types/distribution";
 
 export function listerDistributions(): Promise<DistributionResponse[]> {
@@ -170,6 +172,54 @@ export function retirerRole(
   return apiFetch<void>(
     `/api/distributions/${distributionId}/inscriptions/${inscriptionId}/roles/${roleId}`,
     { method: "DELETE" },
+  );
+}
+
+// --- Pointage ad hoc (visiteurs ponctuels et membres sans inscription) ---
+
+export function rechercherMembresAdHoc(
+  distributionId: string,
+  q: string,
+): Promise<MembreSuggestion[]> {
+  const params = new URLSearchParams({ q });
+  return apiGet<MembreSuggestion[]>(
+    `/api/distributions/${distributionId}/pointage/ad-hoc/membres?${params}`,
+  );
+}
+
+export function ajouterBenevoleExistant(
+  distributionId: string,
+  personneId: string,
+): Promise<PointageInfoResponse> {
+  return apiPost<PointageInfoResponse>(
+    `/api/distributions/${distributionId}/pointage/ad-hoc/benevole-existant`,
+    { personneId },
+  );
+}
+
+export function ajouterVisiteur(
+  distributionId: string,
+  payload: { nom: string; prenom: string; email?: string; role?: string },
+): Promise<PointageAdHocResponse> {
+  return apiPost<PointageAdHocResponse>(
+    `/api/distributions/${distributionId}/pointage/ad-hoc/visiteur`,
+    payload,
+  );
+}
+
+export function listerVisiteursAdHoc(distributionId: string): Promise<PointageAdHocResponse[]> {
+  return apiGet<PointageAdHocResponse[]>(
+    `/api/distributions/${distributionId}/pointage/ad-hoc`,
+  );
+}
+
+export function envoyerInvitationVisiteur(
+  distributionId: string,
+  adHocId: string,
+): Promise<void> {
+  return apiPost<void>(
+    `/api/distributions/${distributionId}/pointage/ad-hoc/${adHocId}/invitation`,
+    {},
   );
 }
 

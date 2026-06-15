@@ -1,22 +1,18 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Arrays;
 import java.util.List;
 
+@Setter
+@Getter
 @ConfigurationProperties(prefix = "solivio.cors")
 public class CorsProperties {
 
     private String allowedOrigins = "";
-
-    public String getAllowedOrigins() {
-        return allowedOrigins;
-    }
-
-    public void setAllowedOrigins(String allowedOrigins) {
-        this.allowedOrigins = allowedOrigins;
-    }
 
     public List<String> getAllowedOriginsList() {
         if (allowedOrigins == null || allowedOrigins.isBlank()) {

@@ -11,6 +11,13 @@ import {
   UserCog,
   Building2,
   Info,
+  Package,
+  Recycle,
+  Truck,
+  PartyPopper,
+  Calendar,
+  ClipboardList,
+  Mail,
 } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
@@ -73,7 +80,10 @@ export default function ProfilScreen() {
   const estGestionnaire = user?.roles.some((r) =>
     ['coordinateur', 'responsable', 'super_admin'].includes(r),
   );
+  const estResponsable = user?.roles.some((r) => ['responsable', 'super_admin'].includes(r));
   const estSuperAdmin = user?.roles.includes('super_admin');
+  const estBenevole = user?.roles.includes('benevole');
+  const estBeneficiaire = user?.roles.includes('beneficiaire');
 
   const initiales =
     user ? `${user.prenom[0] ?? ''}${user.nom[0] ?? ''}`.toUpperCase() : '??';
@@ -157,6 +167,90 @@ export default function ProfilScreen() {
           />
         </Card>
 
+        {/* Navigation */}
+        <View className="gap-2">
+          <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1">
+            Navigation
+          </Text>
+          <Card className="py-0 px-3">
+            <MenuRow
+              label="Distributions"
+              icon={Calendar}
+              onPress={() => router.push('/(app)/(tabs)/distributions' as never)}
+              iconColor="#0D9488"
+              iconBg="#CCFBF1"
+            />
+            <View className="border-t border-border" />
+            <MenuRow
+              label="Reconditionnement"
+              icon={Recycle}
+              onPress={() => router.push('/(app)/reconditionnement' as never)}
+              iconColor="#16A34A"
+              iconBg="#DCFCE7"
+            />
+            <View className="border-t border-border" />
+            <MenuRow
+              label="Missions collecte"
+              icon={Truck}
+              onPress={() => router.push('/(app)/missions-collecte' as never)}
+              iconColor="#D97706"
+              iconBg="#FEF3C7"
+            />
+            <View className="border-t border-border" />
+            <MenuRow
+              label="Evenements"
+              icon={PartyPopper}
+              onPress={() => router.push('/(app)/evenements' as never)}
+              iconColor="#EC4899"
+              iconBg="#FCE7F3"
+            />
+            <View className="border-t border-border" />
+            <MenuRow
+              label="Mes inscriptions"
+              icon={ClipboardList}
+              onPress={() => router.push('/(app)/(tabs)/inscriptions' as never)}
+              iconColor="#6366F1"
+              iconBg="#EEF2FF"
+            />
+            {estBenevole ? (
+              <>
+                <View className="border-t border-border" />
+                <MenuRow
+                  label="Mes missions"
+                  icon={Truck}
+                  onPress={() => router.push('/(app)/mes-missions-collecte' as never)}
+                  iconColor="#D97706"
+                  iconBg="#FEF3C7"
+                />
+              </>
+            ) : null}
+            {estBenevole || estBeneficiaire ? (
+              <>
+                <View className="border-t border-border" />
+                <MenuRow
+                  label="Mes evenements"
+                  icon={PartyPopper}
+                  onPress={() => router.push('/(app)/mes-evenements' as never)}
+                  iconColor="#EC4899"
+                  iconBg="#FCE7F3"
+                />
+              </>
+            ) : null}
+            {estResponsable ? (
+              <>
+                <View className="border-t border-border" />
+                <MenuRow
+                  label="Email aux membres"
+                  icon={Mail}
+                  onPress={() => router.push('/(app)/notifications/email-libre' as never)}
+                  iconColor="#64748B"
+                  iconBg="#F1F5F9"
+                />
+              </>
+            ) : null}
+          </Card>
+        </View>
+
         {/* Association */}
         {estGestionnaire ? (
           <View className="gap-2">
@@ -175,6 +269,16 @@ export default function ProfilScreen() {
                 icon={Users}
                 onPress={() => router.push('/(app)/association/membres')}
               />
+              {estResponsable ? (
+                <>
+                  <View className="border-t border-border" />
+                  <MenuRow
+                    label="Catalogue denrees"
+                    icon={Package}
+                    onPress={() => router.push('/(app)/association/catalogue-denrees')}
+                  />
+                </>
+              ) : null}
             </Card>
           </View>
         ) : null}

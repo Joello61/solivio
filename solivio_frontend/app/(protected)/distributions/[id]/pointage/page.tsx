@@ -36,7 +36,7 @@ export default async function PointagePage({ params }: PageProps) {
         </div>
       </div>
 
-      <PointageListe distributionId={id} />
+      <PointageListe distributionId={id} peutAjouter />
     </div>
   );
 }

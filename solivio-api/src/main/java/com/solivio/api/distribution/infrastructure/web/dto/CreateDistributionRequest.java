@@ -12,7 +12,7 @@ import java.util.List;
 public record CreateDistributionRequest(
     @NotBlank @Size(max = 200) String titre,
     String description,
-    @Size(max = 255) String lieu,
+    @Valid LieuRequest lieu,
     @NotNull LocalDate date,
     @Positive int capaciteBeneficiaires,
     Integer capaciteBenevoles,

@@ -69,11 +69,11 @@ export function DistributionCard({ distribution }: DistributionCardProps) {
               </Text>
             </View>
 
-            {distribution.lieu ? (
+            {distribution.lieu?.adresseFormatee ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <MapPin size={14} color="#94A3B8" />
                 <Text style={{ fontSize: 13, color: '#64748B' }} numberOfLines={1}>
-                  {distribution.lieu}
+                  {distribution.lieu.adresseFormatee}
                 </Text>
               </View>
             ) : null}

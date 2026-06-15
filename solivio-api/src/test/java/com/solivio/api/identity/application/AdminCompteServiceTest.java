@@ -22,7 +22,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,7 +52,7 @@ class AdminCompteServiceTest {
         Page<CompteAdminResponse> result = service.lister(null, 0, 20);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).email()).isEqualTo("alice@example.com");
+        assertThat(result.getContent().getFirst().email()).isEqualTo("alice@example.com");
     }
 
     @Test

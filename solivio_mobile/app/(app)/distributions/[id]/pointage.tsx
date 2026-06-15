@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { Search, UserCheck, UserX } from 'lucide-react-native';
+import { Search, UserCheck, UserX, UserPlus } from 'lucide-react-native';
 import { rechercherPointage, pointer } from '@/lib/api/distributions';
 import { Badge } from '@/components/ui/Badge';
 import type { PointageInfoResponse, StatutPresence } from '@/types/distribution';
@@ -115,7 +115,19 @@ export default function PointageScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScreenHeader title="Pointage" showClose modal />
+      <ScreenHeader
+        title="Pointage"
+        showClose
+        modal
+        right={
+          <Pressable
+            onPress={() => router.push(`/distributions/${id}/ajout-benevole` as never)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <UserPlus size={20} color="rgba(255,255,255,0.9)" />
+          </Pressable>
+        }
+      />
       <SafeAreaView edges={['bottom']} className="flex-1">
         {/* Barre de recherche */}
         <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border bg-card">

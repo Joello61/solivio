@@ -12,6 +12,7 @@ import {
   ChevronRight,
   AlertCircle,
   BarChart2,
+  UserPlus,
 } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import {
@@ -21,10 +22,13 @@ import {
   terminerDistribution,
   annulerDistribution,
   inscrire,
+  desinscrire,
   listerInscrits,
+  mesInscriptions,
 } from '@/lib/api/distributions';
 import { statsDistribution } from '@/lib/api/association';
 import { StatutBadge } from '@/components/distributions/StatutBadge';
+import { CarteEmplacement } from '@/components/shared/CarteEmplacement';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -59,6 +63,12 @@ export default function DistributionDetailScreen() {
     enabled: !!id && !!estCoordinateur,
   });
 
+  const { data: mesInscr } = useQuery({
+    queryKey: ['mes-inscriptions-distribution', id],
+    queryFn: () => mesInscriptions(id),
+    enabled: !!id,
+  });
+
   const { data: stats } = useQuery({
     queryKey: ['stats-distribution', id],
     queryFn: () => statsDistribution(id),
@@ -68,6 +78,8 @@ export default function DistributionDetailScreen() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['distribution', id] });
     queryClient.invalidateQueries({ queryKey: ['distributions'] });
+    queryClient.invalidateQueries({ queryKey: ['mes-inscriptions-distribution', id] });
+    queryClient.invalidateQueries({ queryKey: ['mes-inscriptions'] });
   };
 
   const mutPublier = useMutation({ mutationFn: () => publierDistribution(id), onSuccess: invalidate });
@@ -79,10 +91,11 @@ export default function DistributionDetailScreen() {
   });
   const mutInscrire = useMutation({
     mutationFn: (type: string) => inscrire(id, type),
-    onSuccess: () => {
-      invalidate();
-      queryClient.invalidateQueries({ queryKey: ['mes-inscriptions'] });
-    },
+    onSuccess: invalidate,
+  });
+  const mutDesinscrire = useMutation({
+    mutationFn: (inscriptionId: string) => desinscrire(id, inscriptionId),
+    onSuccess: invalidate,
   });
 
   function confirmerAction(titre: string, message: string, onConfirm: () => void) {
@@ -118,7 +131,13 @@ export default function DistributionDetailScreen() {
   const peutDemarrer = estResponsable && statut === 'PUBLIEE';
   const peutTerminer = estResponsable && statut === 'EN_COURS';
   const peutAnnuler = estResponsable && ['BROUILLON', 'PUBLIEE', 'EN_COURS'].includes(statut);
-  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur;
+
+  const monInscription = mesInscr?.find(
+    (i) => i.statut === 'CONFIRMEE' || i.statut === 'LISTE_ATTENTE',
+  );
+  const dejaInscrit = !!monInscription;
+  const peutSInscrire = statut === 'PUBLIEE' && !estCoordinateur && !dejaInscrit;
+  const peutSeDesinscrire = statut === 'PUBLIEE' && !estCoordinateur && dejaInscrit;
 
   const nbBeneficiaires = inscrits?.filter((i) => i.type === 'BENEFICIAIRE').length ?? 0;
   const nbBenevoles = inscrits?.filter((i) => i.type === 'BENEVOLE').length ?? 0;
@@ -157,11 +176,20 @@ export default function DistributionDetailScreen() {
                 <Calendar size={15} color="#94A3B8" />
                 <Text className="text-base text-foreground">{formatDate(distribution.date)}</Text>
               </View>
-              {distribution.lieu ? (
+              {distribution.lieu?.adresseFormatee ? (
                 <View className="flex-row items-center gap-2">
                   <MapPin size={15} color="#94A3B8" />
-                  <Text className="text-base text-foreground">{distribution.lieu}</Text>
+                  <Text className="text-base text-foreground">{distribution.lieu.adresseFormatee}</Text>
                 </View>
+              ) : null}
+              {distribution.lieu?.latitude != null && distribution.lieu?.longitude != null ? (
+                <CarteEmplacement
+                  lieu={{
+                    latitude: distribution.lieu.latitude,
+                    longitude: distribution.lieu.longitude,
+                    adresseFormatee: distribution.lieu.adresseFormatee,
+                  }}
+                />
               ) : null}
               <View className="flex-row items-center gap-2">
                 <Users size={15} color="#94A3B8" />
@@ -273,6 +301,20 @@ export default function DistributionDetailScreen() {
                 <Text className="flex-1 text-base font-medium text-foreground">Repartition</Text>
                 <ChevronRight size={16} color="#CBD5E1" />
               </Pressable>
+
+              <Pressable
+                onPress={() => router.push(`/(app)/distributions/${id}/ajout-benevole` as never)}
+                style={({ pressed }) =>
+                  pressed ? { opacity: 0.78, transform: [{ scale: 0.985 }] } : null
+                }
+                className="flex-row items-center gap-3 bg-card border border-border rounded-xl px-4 py-3.5"
+              >
+                <View className="w-9 h-9 rounded-lg bg-violet-50 items-center justify-center">
+                  <UserPlus size={18} color="#7C3AED" />
+                </View>
+                <Text className="flex-1 text-base font-medium text-foreground">Ajouter un benevole</Text>
+                <ChevronRight size={16} color="#CBD5E1" />
+              </Pressable>
             </View>
           ) : null}
 
@@ -337,7 +379,7 @@ export default function DistributionDetailScreen() {
                 loading={mutInscrire.isPending}
                 fullWidth
               >
-                S'inscrire comme beneficiaire
+                {"S'inscrire comme beneficiaire"}
               </Button>
               <Button
                 onPress={() =>
@@ -351,7 +393,34 @@ export default function DistributionDetailScreen() {
                 variant="outline"
                 fullWidth
               >
-                S'inscrire comme benevole
+                {"S'inscrire comme benevole"}
+              </Button>
+            </View>
+          ) : null}
+
+          {peutSeDesinscrire && monInscription ? (
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">Votre inscription</Text>
+              <View className="bg-teal-50 border border-teal-100 rounded-xl p-4">
+                <Text className="text-teal-800 font-medium">
+                  Vous etes inscrit(e) en tant que{' '}
+                  {monInscription.type === 'BENEFICIAIRE' ? 'beneficiaire' : 'benevole'}.
+                  {monInscription.statut === 'LISTE_ATTENTE' ? " (Liste d'attente)" : ''}
+                </Text>
+              </View>
+              <Button
+                onPress={() =>
+                  confirmerAction(
+                    'Se desinscrire',
+                    'Voulez-vous vraiment annuler votre inscription ?',
+                    () => mutDesinscrire.mutate(monInscription.id),
+                  )
+                }
+                loading={mutDesinscrire.isPending}
+                variant="outline"
+                fullWidth
+              >
+                Se desinscrire
               </Button>
             </View>
           ) : null}

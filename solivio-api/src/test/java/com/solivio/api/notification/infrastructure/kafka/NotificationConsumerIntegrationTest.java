@@ -74,9 +74,9 @@ class NotificationConsumerIntegrationTest {
         );
         jdbcTemplate.update(
             "INSERT INTO \"" + schema + "\".distribution "
-                + "(id, titre, lieu, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            distributionId, "Distribution Test", "Salle Polyvalente",
+                + "(id, titre, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            distributionId, "Distribution Test",
             LocalDate.now().plusDays(7), "PUBLIEE", 50,
             "CRENEAU_UNIQUE", "INSCRITS", personneId
         );

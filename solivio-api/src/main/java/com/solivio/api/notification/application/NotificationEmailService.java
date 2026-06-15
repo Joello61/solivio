@@ -18,6 +18,46 @@ public interface NotificationEmailService {
                                           String prenomBenevole, String nomBenevole,
                                           DistributionDetailInfo distribution);
 
+    void envoyerConfirmationInscriptionReconditionnement(String email, ContexteReconditionnementEmail contexte);
+
+    void envoyerAnnulationSessionReconditionnement(String email, ContexteReconditionnementEmail contexte);
+
+    void envoyerCreationMissionCollecte(String email, ContexteCollecteEmail contexte);
+
+    void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte);
+
+    void envoyerPublicationEvenement(String email, ContexteEvenementEmail contexte);
+
+    void envoyerAnnulationEvenement(String email, ContexteEvenementEmail contexte);
+
+    void envoyerEmailLibre(String email, String sujet, String corps);
+
+    record ContexteEvenementEmail(
+        String prenom,
+        String evenementTitre,
+        java.time.ZonedDateTime dateHeureDebut,
+        String lieuAdresseFormatee,
+        String raisonAnnulation
+    ) {}
+
+    record ContexteCollecteEmail(
+        String prenom,
+        String missionTitre,
+        java.time.ZonedDateTime dateHeure,
+        String lieuCollecteAdresse,
+        String lieuDepotAdresse,
+        String raisonAnnulation
+    ) {}
+
+    record ContexteReconditionnementEmail(
+        String prenom,
+        String sessionTitre,
+        java.time.ZonedDateTime dateHeureDebut,
+        java.time.ZonedDateTime dateHeureFin,
+        String sessionLieu,
+        String motifAnnulation
+    ) {}
+
     /**
      * Contexte complet pour la generation d'un email de notification.
      * heureDebutCreneau et heureFinCreneau sont null pour les distributions en creneau unique.

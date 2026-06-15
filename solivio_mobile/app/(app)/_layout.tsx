@@ -23,6 +23,20 @@ export default function AppLayout() {
       <Stack.Screen name="mon-compte/profil-beneficiaire" />
       <Stack.Screen name="admin/utilisateurs" />
       <Stack.Screen name="admin/associations" />
+      <Stack.Screen name="notifications/email-libre" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="reconditionnement/index" />
+      <Stack.Screen name="reconditionnement/[id]/index" />
+      <Stack.Screen name="reconditionnement/nouvelle" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="missions-collecte/index" />
+      <Stack.Screen name="missions-collecte/[id]/index" />
+      <Stack.Screen name="missions-collecte/nouvelle" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="evenements/index" />
+      <Stack.Screen name="evenements/[id]/index" />
+      <Stack.Screen name="evenements/[id]/pointage" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="evenements/nouveau" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="mes-evenements/index" />
+      <Stack.Screen name="mes-missions-collecte/index" />
+      <Stack.Screen name="distributions/[id]/ajout-benevole" options={{ presentation: 'modal' }} />
       <Stack.Screen name="a-propos" />
     </Stack>
   );

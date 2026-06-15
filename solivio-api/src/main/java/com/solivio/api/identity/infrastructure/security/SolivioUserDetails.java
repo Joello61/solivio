@@ -1,5 +1,7 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import lombok.Getter;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,10 +15,13 @@ import java.util.UUID;
  */
 public class SolivioUserDetails implements UserDetails {
 
+    @Getter
     private final UUID compteId;
     private final String email;
     private final String password;
+    @Getter
     private final String tenantSlug;
+    @Getter
     private final boolean superAdmin;
     private final Collection<? extends GrantedAuthority> authorities;
     private final boolean enabled;
@@ -38,19 +43,8 @@ public class SolivioUserDetails implements UserDetails {
         this.enabled = enabled;
     }
 
-    public UUID getCompteId() {
-        return compteId;
-    }
-
-    public String getTenantSlug() {
-        return tenantSlug;
-    }
-
-    public boolean isSuperAdmin() {
-        return superAdmin;
-    }
-
     @Override
+    @NullMarked
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
@@ -61,6 +55,7 @@ public class SolivioUserDetails implements UserDetails {
     }
 
     @Override
+    @NullMarked
     public String getUsername() {
         return email;
     }

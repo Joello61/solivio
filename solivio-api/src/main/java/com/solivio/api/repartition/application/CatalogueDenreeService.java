@@ -6,6 +6,8 @@ import com.solivio.api.repartition.infrastructure.persistence.CatalogueDenreeRep
 import com.solivio.api.repartition.infrastructure.web.dto.CatalogueDenreeResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,23 +49,25 @@ public class CatalogueDenreeService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void enregistrerSiInconnu(String libelle) {
-        if (catalogueRepository.existsByLibelleIgnoreCase(libelle)) {
+        String libelleSain = Jsoup.clean(libelle, Safelist.none());
+        if (catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
             return;
         }
         try {
-            catalogueRepository.save(new CatalogueDenree(libelle));
+            catalogueRepository.save(new CatalogueDenree(libelleSain));
         } catch (DataIntegrityViolationException e) {
             // Insertion concurrente : la denree existe deja, rien a faire.
-            log.debug("Catalogue denree deja existante (race condition) : {}", libelle);
+            log.debug("Catalogue denree deja existante (race condition) : {}", libelleSain);
         }
     }
 
     @Transactional
     public CatalogueDenreeResponse creer(String libelle, UUID acteurId) {
-        if (catalogueRepository.existsByLibelleIgnoreCase(libelle)) {
-            throw new ConflictException("Une denree avec ce libelle existe deja : " + libelle);
+        String libelleSain = Jsoup.clean(libelle, Safelist.none());
+        if (catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
+            throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);
         }
-        CatalogueDenree denree = catalogueRepository.save(new CatalogueDenree(libelle));
+        CatalogueDenree denree = catalogueRepository.save(new CatalogueDenree(libelleSain));
         auditService.tracer(acteurId, "CREATION", "CATALOGUE_DENREE", denree.getId());
         return toResponse(denree);
     }
@@ -73,12 +77,13 @@ public class CatalogueDenreeService {
         CatalogueDenree denree = catalogueRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Denree catalogue introuvable : " + id));
 
-        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(newLibelle);
-        if (libelleChange && catalogueRepository.existsByLibelleIgnoreCase(newLibelle)) {
-            throw new ConflictException("Une denree avec ce libelle existe deja : " + newLibelle);
+        String libelleSain = Jsoup.clean(newLibelle, Safelist.none());
+        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(libelleSain);
+        if (libelleChange && catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
+            throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);
         }
 
-        denree.setLibelle(newLibelle);
+        denree.setLibelle(libelleSain);
         denree.setDateModification(Instant.now());
         CatalogueDenree sauvegarde = catalogueRepository.save(denree);
         auditService.tracer(acteurId, "MODIFICATION", "CATALOGUE_DENREE", sauvegarde.getId());

@@ -90,7 +90,7 @@ export default function CompleteGoogleRegistrationScreen() {
         {aInvitation ? (
           <View className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3">
             <Text className="text-sm text-teal-700 font-medium">
-              Invitation detectee - votre compte sera automatiquement lie a l'association.
+              {"Invitation detectee - votre compte sera automatiquement lie a l'association."}
             </Text>
           </View>
         ) : null}
@@ -167,7 +167,7 @@ export default function CompleteGoogleRegistrationScreen() {
         ) : null}
 
         <Button onPress={handleSubmit(onSubmit)} loading={isSubmitting} size="lg" fullWidth>
-          Rejoindre l'association
+          {"Rejoindre l'association"}
         </Button>
       </View>
     </AuthLayout>
