@@ -41,6 +41,12 @@ public class InvitationService {
     @Transactional
     public Invitation inviter(SolivioUserDetails invitant, String email, String role,
                               String coordoType, String tenantSlug) {
+        return inviterParCompteId(invitant.getCompteId(), email, role, coordoType, tenantSlug);
+    }
+
+    @Transactional
+    public Invitation inviterParCompteId(UUID compteId, String email, String role,
+                                         String coordoType, String tenantSlug) {
         Association association = associationRepository.findBySlug(tenantSlug)
             .orElseThrow(() -> new IllegalArgumentException("Association inconnue"));
 
@@ -48,7 +54,7 @@ public class InvitationService {
             throw new IllegalArgumentException("Une invitation est deja en attente pour cet email");
         }
 
-        Compte inviteur = compteRepository.findById(invitant.getCompteId()).orElseThrow();
+        Compte inviteur = compteRepository.findById(compteId).orElseThrow();
 
         Invitation invitation = new Invitation(
             email, association, role, inviteur,

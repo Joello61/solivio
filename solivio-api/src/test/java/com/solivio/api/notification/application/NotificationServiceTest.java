@@ -1,17 +1,27 @@
 package com.solivio.api.notification.application;
 
+import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
+import com.solivio.api.notification.application.NotificationEmailService.ContexteReconditionnementEmail;
 import com.solivio.api.notification.domain.Notification;
 import com.solivio.api.notification.domain.StatutNotification;
 import com.solivio.api.notification.domain.TypeEvenementNotification;
 import com.solivio.api.notification.infrastructure.email.NotificationEmailException;
 import com.solivio.api.notification.infrastructure.persistence.NotificationRepository;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort;
+import com.solivio.api.shared.collecte.MissionCollecteQueryPort.MissionInfo;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
+import com.solivio.api.shared.distribution.DistributionQueryPort.CreneauInfo;
 import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
+import com.solivio.api.shared.evenement.EvenementQueryPort;
+import com.solivio.api.shared.evenement.EvenementQueryPort.EvenementInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import com.solivio.api.shared.inscription.InscriptionQueryPort.DestinataireMail;
+import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort;
+import com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort.SessionInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +30,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +54,10 @@ class NotificationServiceTest {
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private DistributionQueryPort distributionQueryPort;
     @Mock private InscriptionQueryPort inscriptionQueryPort;
+    @Mock private com.solivio.api.shared.reconditionnement.SessionReconditionnementQueryPort sessionReconditionnementQueryPort;
+    @Mock private com.solivio.api.shared.collecte.MissionCollecteQueryPort missionCollecteQueryPort;
+    @Mock private com.solivio.api.shared.evenement.EvenementQueryPort evenementQueryPort;
+    @Mock private com.solivio.api.shared.association.AssociationQueryPort associationQueryPort;
 
     private NotificationService service;
 
@@ -53,7 +70,9 @@ class NotificationServiceTest {
     void setUp() {
         service = new NotificationService(
             emailService, notificationRepository,
-            personneQueryPort, distributionQueryPort, inscriptionQueryPort
+            personneQueryPort, distributionQueryPort, inscriptionQueryPort,
+            sessionReconditionnementQueryPort, missionCollecteQueryPort,
+            evenementQueryPort, associationQueryPort
         );
         personneId = UUID.randomUUID();
         distributionId = UUID.randomUUID();
@@ -164,5 +183,327 @@ class NotificationServiceTest {
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(captor.capture());
         assertThat(captor.getValue().getTypeEvenement()).isEqualTo(TypeEvenementNotification.RAPPEL_VEILLE);
+    }
+
+    @Test
+    void notifierConfirmationInscription_avecCreneau_integreHeuresCreneauDansContexte() {
+        UUID creneauId = UUID.randomUUID();
+        CreneauInfo creneau = new CreneauInfo(creneauId, 20, LocalTime.of(9, 0), LocalTime.of(10, 0));
+        when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(distributionQueryPort.trouverCreneau(creneauId, distributionId)).thenReturn(creneau);
+
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", creneauId);
+
+        ArgumentCaptor<ContexteEmail> captor = ArgumentCaptor.forClass(ContexteEmail.class);
+        verify(emailService).envoyerConfirmationInscription(eq("marie@example.com"), captor.capture());
+        assertThat(captor.getValue().heureArriveeBenevole()).isNull();
+    }
+
+    @Test
+    void notifierDesistementTardifBenevole_notifieLeCoordinateur() {
+        UUID coordId = UUID.randomUUID();
+        PersonneContactInfo coord = new PersonneContactInfo(coordId, "coord@ex.com", "Luc", "Martin");
+        when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of(coord));
+
+        service.notifierDesistementTardifBenevole(personneId, distributionId);
+
+        verify(emailService).envoyerDesistementTardifBenevole(
+            eq("coord@ex.com"), eq("Luc"), eq("Marie"), eq("Dupont"), any(DistributionDetailInfo.class));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        assertThat(captor.getValue().getTypeEvenement())
+            .isEqualTo(TypeEvenementNotification.DESISTEMENT_TARDIF_BENEVOLE);
+        assertThat(captor.getValue().getPersonneId()).isEqualTo(coordId);
+    }
+
+    @Test
+    void notifierConfirmationInscriptionReconditionnement_envoieEtTrace() {
+        UUID sessionId = UUID.randomUUID();
+        SessionInfo session = new SessionInfo(
+            sessionId, "Session mai", ZonedDateTime.now(), ZonedDateTime.now().plusHours(2), "Entrepot A");
+        when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
+        when(sessionReconditionnementQueryPort.trouverSessionDetails(sessionId)).thenReturn(session);
+
+        service.notifierConfirmationInscriptionReconditionnement(personneId, sessionId);
+
+        verify(emailService).envoyerConfirmationInscriptionReconditionnement(
+            eq("marie@example.com"), any(ContexteReconditionnementEmail.class));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        assertThat(captor.getValue().getTypeEvenement())
+            .isEqualTo(TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT);
+        assertThat(captor.getValue().getStatut()).isEqualTo(StatutNotification.ENVOYE);
+    }
+
+    @Test
+    void notifierAnnulationSessionReconditionnement_notifieInscrits() {
+        UUID sessionId = UUID.randomUUID();
+        UUID inscritId = UUID.randomUUID();
+        PersonneContactInfo inscrit = new PersonneContactInfo(inscritId, "i@ex.com", "Paul", "Renard");
+        SessionInfo session = new SessionInfo(
+            sessionId, "Session annulee", ZonedDateTime.now(), ZonedDateTime.now().plusHours(2), "Entrepot B");
+        when(sessionReconditionnementQueryPort.trouverSessionDetails(sessionId)).thenReturn(session);
+        when(sessionReconditionnementQueryPort.trouverPersonnesInscritesConfirmees(sessionId))
+            .thenReturn(List.of(inscritId));
+        when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
+
+        service.notifierAnnulationSessionReconditionnement(sessionId);
+
+        verify(emailService).envoyerAnnulationSessionReconditionnement(
+            eq("i@ex.com"), any(ContexteReconditionnementEmail.class));
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void notifierAnnulationSessionReconditionnement_sansInscrits_nEnvoiePas() {
+        UUID sessionId = UUID.randomUUID();
+        SessionInfo session = new SessionInfo(
+            sessionId, "Session vide", ZonedDateTime.now(), ZonedDateTime.now().plusHours(2), null);
+        when(sessionReconditionnementQueryPort.trouverSessionDetails(sessionId)).thenReturn(session);
+        when(sessionReconditionnementQueryPort.trouverPersonnesInscritesConfirmees(sessionId))
+            .thenReturn(List.of());
+
+        service.notifierAnnulationSessionReconditionnement(sessionId);
+
+        verify(emailService, never()).envoyerAnnulationSessionReconditionnement(anyString(), any());
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void notifierCreationMissionCollecte_notifieBenevoles() {
+        UUID missionId = UUID.randomUUID();
+        UUID b1Id = UUID.randomUUID();
+        PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ex.com", "Ana", "Blanc");
+        MissionInfo mission = new MissionInfo(missionId, "Collecte banque", ZonedDateTime.now(),
+            "12 rue de la Paix", "Entrepot central");
+        when(missionCollecteQueryPort.trouverMissionDetails(missionId)).thenReturn(mission);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+
+        service.notifierCreationMissionCollecte(missionId);
+
+        verify(emailService).envoyerCreationMissionCollecte(eq("b1@ex.com"), any(ContexteCollecteEmail.class));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        assertThat(captor.getValue().getTypeEvenement())
+            .isEqualTo(TypeEvenementNotification.CREATION_MISSION_COLLECTE);
+    }
+
+    @Test
+    void notifierAnnulationMissionCollecte_avecBenevoleAssigne_notifie() {
+        UUID missionId = UUID.randomUUID();
+        UUID benevoleId = UUID.randomUUID();
+        PersonneContactInfo benevole = new PersonneContactInfo(benevoleId, "bev@ex.com", "Tom", "Noir");
+        MissionInfo mission = new MissionInfo(missionId, "Collecte annulee", ZonedDateTime.now(),
+            "Adresse collecte", "Adresse depot");
+        when(missionCollecteQueryPort.trouverMissionDetails(missionId)).thenReturn(mission);
+        when(personneQueryPort.trouverPersonneParId(benevoleId)).thenReturn(benevole);
+
+        service.notifierAnnulationMissionCollecte(missionId, benevoleId);
+
+        verify(emailService).envoyerAnnulationMissionCollecte(eq("bev@ex.com"), any(ContexteCollecteEmail.class));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        assertThat(captor.getValue().getTypeEvenement())
+            .isEqualTo(TypeEvenementNotification.ANNULATION_MISSION_COLLECTE);
+    }
+
+    @Test
+    void notifierAnnulationMissionCollecte_sansBenevoleAssigne_nEnvoiePas() {
+        service.notifierAnnulationMissionCollecte(UUID.randomUUID(), null);
+
+        verify(emailService, never()).envoyerAnnulationMissionCollecte(anyString(), any());
+        verify(notificationRepository, never()).save(any());
+    }
+
+    // --- publication evenement ---
+
+    @Test
+    void notifierPublicationEvenement_avecBesoiNStaff_notifieBenevoles() {
+        UUID evenementId = UUID.randomUUID();
+        UUID b1Id = UUID.randomUUID();
+        PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ev.com", "Bob", "Vert");
+        EvenementInfo info = new EvenementInfo(evenementId, "Stand ete", ZonedDateTime.now(),
+            "Parc", true, false, null, "OBLIGATOIRE", null);
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+
+        service.notifierPublicationEvenement(evenementId);
+
+        verify(emailService).envoyerPublicationEvenement(eq("b1@ev.com"), any(ContexteEvenementEmail.class));
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void notifierPublicationEvenement_publicBeneficiaires_notifieBeneficiaires() {
+        UUID evenementId = UUID.randomUUID();
+        UUID pId = UUID.randomUUID();
+        PersonneContactInfo p = new PersonneContactInfo(pId, "p@ev.com", "Eve", "Bleu");
+        EvenementInfo info = new EvenementInfo(evenementId, "Fete", ZonedDateTime.now(),
+            "Salle", false, true, "BENEFICIAIRES", "LIBRE", null);
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p));
+
+        service.notifierPublicationEvenement(evenementId);
+
+        verify(emailService).envoyerPublicationEvenement(eq("p@ev.com"), any(ContexteEvenementEmail.class));
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void notifierPublicationEvenement_publicTous_notifieBenevolesBeneficiaires() {
+        UUID evenementId = UUID.randomUUID();
+        UUID b1Id = UUID.randomUUID();
+        UUID p1Id = UUID.randomUUID();
+        PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ev.com", "Ben", "Un");
+        PersonneContactInfo p1 = new PersonneContactInfo(p1Id, "p1@ev.com", "Pat", "Deux");
+        EvenementInfo info = new EvenementInfo(evenementId, "Fete ouverte", ZonedDateTime.now(),
+            "Stade", false, true, "TOUS", "OBLIGATOIRE", null);
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p1));
+
+        service.notifierPublicationEvenement(evenementId);
+
+        verify(emailService, times(2)).envoyerPublicationEvenement(anyString(), any(ContexteEvenementEmail.class));
+    }
+
+    @Test
+    void notifierPublicationEvenement_benevoleEnStaffEtPublicBenevoles_envoieUnSeulEmail() {
+        UUID evenementId = UUID.randomUUID();
+        UUID b1Id = UUID.randomUUID();
+        PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ev.com", "Dup", "Lic");
+        // aBesoiNStaff=true ET publicParticipants=BENEVOLES → meme benevole potentiellement dans les deux listes
+        EvenementInfo info = new EvenementInfo(evenementId, "Stand", ZonedDateTime.now(),
+            null, true, true, "BENEVOLES", "OBLIGATOIRE", null);
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+
+        service.notifierPublicationEvenement(evenementId);
+
+        // le set de deduplication garantit un seul envoi
+        verify(emailService, times(1)).envoyerPublicationEvenement(eq("b1@ev.com"), any());
+    }
+
+    @Test
+    void notifierPublicationEvenement_sansStaffSansParticipants_nEnvoiePas() {
+        UUID evenementId = UUID.randomUUID();
+        EvenementInfo info = new EvenementInfo(evenementId, "Info interne", ZonedDateTime.now(),
+            null, false, false, null, "SANS_INSCRIPTION", null);
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+
+        service.notifierPublicationEvenement(evenementId);
+
+        verify(emailService, never()).envoyerPublicationEvenement(anyString(), any());
+    }
+
+    // --- annulation evenement ---
+
+    @Test
+    void notifierAnnulationEvenement_modeObligatoire_notifieInscrits() {
+        UUID evenementId = UUID.randomUUID();
+        UUID inscritId = UUID.randomUUID();
+        PersonneContactInfo inscrit = new PersonneContactInfo(inscritId, "ins@ev.com", "Leo", "Gris");
+        EvenementInfo info = new EvenementInfo(evenementId, "Concert annule", ZonedDateTime.now(),
+            "Salle A", false, false, null, "OBLIGATOIRE", "Manque de public");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
+        when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
+
+        service.notifierAnnulationEvenement(evenementId, "asso-test");
+
+        verify(emailService).envoyerAnnulationEvenement(eq("ins@ev.com"), any(ContexteEvenementEmail.class));
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void notifierAnnulationEvenement_modeLibre_notifieInscritsEtContactEmail() {
+        UUID evenementId = UUID.randomUUID();
+        UUID inscritId = UUID.randomUUID();
+        PersonneContactInfo inscrit = new PersonneContactInfo(inscritId, "ins@ev.com", "Noa", "Rose");
+        EvenementInfo info = new EvenementInfo(evenementId, "Fete annulee", ZonedDateTime.now(),
+            "Parc B", false, false, null, "LIBRE", "Intemperies");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
+        when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
+        when(associationQueryPort.trouverContactEmail("asso-libre"))
+            .thenReturn(Optional.of("contact@asso.fr"));
+
+        service.notifierAnnulationEvenement(evenementId, "asso-libre");
+
+        // inscrit + contactEmail
+        verify(emailService, times(2)).envoyerAnnulationEvenement(anyString(), any(ContexteEvenementEmail.class));
+    }
+
+    @Test
+    void notifierAnnulationEvenement_modeLibre_echecContactEmail_neLevesPasException() {
+        UUID evenementId = UUID.randomUUID();
+        EvenementInfo info = new EvenementInfo(evenementId, "Marche annule", ZonedDateTime.now(),
+            null, false, false, null, "LIBRE", "Pluie");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of());
+        when(associationQueryPort.trouverContactEmail("slug"))
+            .thenReturn(Optional.of("contact@asso.fr"));
+        doThrow(new NotificationEmailException("contact@asso.fr", "sujet", new RuntimeException("SMTP")))
+            .when(emailService).envoyerAnnulationEvenement(eq("contact@asso.fr"), any());
+
+        // ne doit pas lever d'exception
+        service.notifierAnnulationEvenement(evenementId, "slug");
+    }
+
+    @Test
+    void notifierAnnulationEvenement_modeLibre_sansContactEmail_notifieSeulementInscrits() {
+        UUID evenementId = UUID.randomUUID();
+        UUID inscritId = UUID.randomUUID();
+        PersonneContactInfo inscrit = new PersonneContactInfo(inscritId, "i@ev.com", "Kim", "Blanc");
+        EvenementInfo info = new EvenementInfo(evenementId, "Atelier", ZonedDateTime.now(),
+            null, false, false, null, "LIBRE", "Annule");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
+        when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
+        when(associationQueryPort.trouverContactEmail(anyString())).thenReturn(Optional.empty());
+
+        service.notifierAnnulationEvenement(evenementId, "asso-sans-email");
+
+        verify(emailService, times(1)).envoyerAnnulationEvenement(eq("i@ev.com"), any());
+    }
+
+    @Test
+    void notifierAnnulationEvenement_modeSansInscription_notifieBenevolesBeneficiaires() {
+        UUID evenementId = UUID.randomUUID();
+        UUID bId = UUID.randomUUID();
+        UUID pId = UUID.randomUUID();
+        PersonneContactInfo bev = new PersonneContactInfo(bId, "bev@ev.com", "Alex", "Nord");
+        PersonneContactInfo ben = new PersonneContactInfo(pId, "ben@ev.com", "Sam", "Sud");
+        EvenementInfo info = new EvenementInfo(evenementId, "Stand ouvert annule", ZonedDateTime.now(),
+            "Esplanade", false, false, null, "SANS_INSCRIPTION", "Securite");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(bev));
+        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(ben));
+
+        service.notifierAnnulationEvenement(evenementId, "asso-x");
+
+        verify(emailService).envoyerAnnulationEvenement(eq("bev@ev.com"), any(ContexteEvenementEmail.class));
+        verify(emailService).envoyerAnnulationEvenement(eq("ben@ev.com"), any(ContexteEvenementEmail.class));
+        verify(notificationRepository, times(2)).save(any(Notification.class));
+    }
+
+    @Test
+    void notifierAnnulationEvenement_modeSansInscription_deduplicateBenevolesBeneficiaires() {
+        UUID evenementId = UUID.randomUUID();
+        UUID communId = UUID.randomUUID();
+        PersonneContactInfo commun = new PersonneContactInfo(communId, "x@ev.com", "Uni", "Que");
+        EvenementInfo info = new EvenementInfo(evenementId, "Stand deduplique", ZonedDateTime.now(),
+            null, false, false, null, "SANS_INSCRIPTION", "Annule");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(commun));
+        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(commun));
+
+        service.notifierAnnulationEvenement(evenementId, "asso-y");
+
+        // meme id dans benevoles et beneficiaires → un seul email
+        verify(emailService, times(1)).envoyerAnnulationEvenement(eq("x@ev.com"), any());
     }
 }

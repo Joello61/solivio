@@ -1,6 +1,5 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { useAuthContext } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
 import { Spinner } from '@/components/ui/Spinner';
 
 export default function AuthLayout() {

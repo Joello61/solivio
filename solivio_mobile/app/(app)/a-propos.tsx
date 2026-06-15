@@ -66,7 +66,7 @@ export default function AProposScreen() {
           {/* Mention legale */}
           <Text className="text-xs text-muted-foreground text-center leading-relaxed px-2">
             Solivio est un logiciel libre distribue sous licence AGPL v3.{'\n'}
-            Vous etes libre de l'utiliser, le modifier et le redistribuer{'\n'}
+            {"Vous etes libre de l'utiliser, le modifier et le redistribuer"}{'\n'}
             selon les termes de cette licence.
           </Text>
         </ScrollView>

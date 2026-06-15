@@ -80,9 +80,9 @@ class RappelVeilleJobTest {
         // Distribution pour demain, statut PUBLIEE
         jdbcTemplate.update(
             "INSERT INTO \"" + schema + "\".distribution "
-                + "(id, titre, lieu, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            distributionId, "Distribution Rappel", "Gymnase",
+                + "(id, titre, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            distributionId, "Distribution Rappel",
             LocalDate.now().plusDays(1), "PUBLIEE", 30,
             "CRENEAU_UNIQUE", "INSCRITS", personneId
         );

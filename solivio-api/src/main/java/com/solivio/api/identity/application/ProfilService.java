@@ -7,11 +7,14 @@ import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateProfilRequest;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProfilService {
@@ -33,10 +36,10 @@ public class ProfilService {
             .orElseThrow();
 
         if (request.nom() != null && !request.nom().isBlank()) {
-            compte.setNom(request.nom().strip());
+            compte.setNom(Jsoup.clean(request.nom().strip(), Safelist.none()));
         }
         if (request.prenom() != null && !request.prenom().isBlank()) {
-            compte.setPrenom(request.prenom().strip());
+            compte.setPrenom(Jsoup.clean(request.prenom().strip(), Safelist.none()));
         }
         compteRepository.save(compte);
 
@@ -44,10 +47,10 @@ public class ProfilService {
         Personne personne = personneRepository.findByCompteEmail(compte.getEmail()).orElse(null);
         if (personne != null) {
             if (request.nom() != null && !request.nom().isBlank()) {
-                personne.setNom(request.nom().strip());
+                personne.setNom(Jsoup.clean(request.nom().strip(), Safelist.none()));
             }
             if (request.prenom() != null && !request.prenom().isBlank()) {
-                personne.setPrenom(request.prenom().strip());
+                personne.setPrenom(Jsoup.clean(request.prenom().strip(), Safelist.none()));
             }
             if (request.telephone() != null) {
                 // Chaine vide => suppression du telephone
@@ -56,8 +59,10 @@ public class ProfilService {
             personneRepository.save(personne);
         }
 
-        List<String> roles = userDetails.getAuthorities().stream()
+        List<String> roles = userDetails.getAuthorities()
+            .stream()
             .map(GrantedAuthority::getAuthority)
+            .filter(Objects::nonNull)
             .map(a -> a.replace("ROLE_", "").toLowerCase())
             .toList();
 

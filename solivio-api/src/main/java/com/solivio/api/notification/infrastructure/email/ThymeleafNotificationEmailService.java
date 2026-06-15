@@ -77,6 +77,85 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
             "desistement-tardif-benevole", ctx);
     }
 
+    @Override
+    public void envoyerConfirmationInscriptionReconditionnement(
+        String email, ContexteReconditionnementEmail contexte
+    ) {
+        envoyer(email, "Inscription confirmee - " + contexte.sessionTitre(),
+            "confirmation-inscription-reconditionnement", contexteReconditionnementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationSessionReconditionnement(
+        String email, ContexteReconditionnementEmail contexte
+    ) {
+        envoyer(email, "Session annulee - " + contexte.sessionTitre(),
+            "annulation-session-reconditionnement", contexteReconditionnementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerCreationMissionCollecte(String email, ContexteCollecteEmail contexte) {
+        envoyer(email, "Nouvelle mission de collecte - " + contexte.missionTitre(),
+            "creation-mission-collecte", contexteCollecteThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationMissionCollecte(String email, ContexteCollecteEmail contexte) {
+        envoyer(email, "Mission annulee - " + contexte.missionTitre(),
+            "annulation-mission-collecte", contexteCollecteThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerPublicationEvenement(String email, ContexteEvenementEmail contexte) {
+        envoyer(email, "Nouvel evenement - " + contexte.evenementTitre(),
+            "creation-evenement", contexteEvenementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerAnnulationEvenement(String email, ContexteEvenementEmail contexte) {
+        envoyer(email, "Evenement annule - " + contexte.evenementTitre(),
+            "annulation-evenement", contexteEvenementThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerEmailLibre(String email, String sujet, String corps) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("corps", corps);
+        envoyer(email, sujet, "email-libre", ctx);
+    }
+
+    private Context contexteEvenementThymeleaf(ContexteEvenementEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("evenementTitre", c.evenementTitre());
+        ctx.setVariable("dateHeureDebut", c.dateHeureDebut());
+        ctx.setVariable("lieuAdresseFormatee", c.lieuAdresseFormatee());
+        ctx.setVariable("raisonAnnulation", c.raisonAnnulation());
+        return ctx;
+    }
+
+    private Context contexteCollecteThymeleaf(ContexteCollecteEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("missionTitre", c.missionTitre());
+        ctx.setVariable("dateHeure", c.dateHeure());
+        ctx.setVariable("lieuCollecteAdresse", c.lieuCollecteAdresse());
+        ctx.setVariable("lieuDepotAdresse", c.lieuDepotAdresse());
+        ctx.setVariable("raisonAnnulation", c.raisonAnnulation());
+        return ctx;
+    }
+
+    private Context contexteReconditionnementThymeleaf(ContexteReconditionnementEmail c) {
+        Context ctx = new Context(Locale.FRENCH);
+        ctx.setVariable("prenom", c.prenom());
+        ctx.setVariable("sessionTitre", c.sessionTitre());
+        ctx.setVariable("dateHeureDebut", c.dateHeureDebut());
+        ctx.setVariable("dateHeureFin", c.dateHeureFin());
+        ctx.setVariable("sessionLieu", c.sessionLieu());
+        ctx.setVariable("motifAnnulation", c.motifAnnulation());
+        return ctx;
+    }
+
     private Context contexteThymeleaf(ContexteEmail c) {
         Context ctx = new Context(Locale.FRENCH);
         ctx.setVariable("prenom", c.prenom());

@@ -1,7 +1,20 @@
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from 'lucide-react-native';
+import {
+  BarChart3,
+  Users,
+  Heart,
+  Calendar,
+  Settings,
+  UserCog,
+  ChevronRight,
+  Mail,
+  Recycle,
+  Truck,
+  PartyPopper,
+  Package,
+} from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
 import { statsPeriode } from '@/lib/api/association';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -88,6 +101,8 @@ export default function DashboardScreen() {
     ['coordinateur', 'responsable', 'super_admin'].includes(r),
   );
   const estResponsable = user?.roles.some((r) => ['responsable', 'super_admin'].includes(r));
+  const estBenevole = user?.roles.includes('benevole');
+  const estBeneficiaire = user?.roles.includes('beneficiaire');
 
   const moisLabel = new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
 
@@ -170,11 +185,45 @@ export default function DashboardScreen() {
               color="#0D9488"
             />
             <AccesRapide
+              label="Reconditionnement"
+              icon={Recycle}
+              href="/(app)/reconditionnement"
+              color="#16A34A"
+            />
+            <AccesRapide
+              label="Missions collecte"
+              icon={Truck}
+              href="/(app)/missions-collecte"
+              color="#D97706"
+            />
+            <AccesRapide
+              label="Evenements"
+              icon={PartyPopper}
+              href="/(app)/evenements"
+              color="#EC4899"
+            />
+            <AccesRapide
               label="Mes inscriptions"
               icon={Users}
               href="/(app)/(tabs)/inscriptions"
               color="#6366F1"
             />
+            {estBenevole ? (
+              <AccesRapide
+                label="Mes missions"
+                icon={Truck}
+                href="/(app)/mes-missions-collecte"
+                color="#D97706"
+              />
+            ) : null}
+            {estBenevole || estBeneficiaire ? (
+              <AccesRapide
+                label="Mes evenements"
+                icon={PartyPopper}
+                href="/(app)/mes-evenements"
+                color="#EC4899"
+              />
+            ) : null}
             {estResponsable ? (
               <>
                 <AccesRapide
@@ -187,6 +236,18 @@ export default function DashboardScreen() {
                   label="Membres"
                   icon={UserCog}
                   href="/(app)/association/membres"
+                  color="#64748B"
+                />
+                <AccesRapide
+                  label="Catalogue denrees"
+                  icon={Package}
+                  href="/(app)/association/catalogue-denrees"
+                  color="#F59E0B"
+                />
+                <AccesRapide
+                  label="Email aux membres"
+                  icon={Mail}
+                  href="/(app)/notifications/email-libre"
                   color="#64748B"
                 />
               </>

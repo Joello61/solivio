@@ -9,6 +9,7 @@ import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepo
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -54,9 +55,11 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     }
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+    public void onAuthenticationSuccess(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        assert
+            oAuth2User != null;
         String email = oAuth2User.getAttribute("email");
 
         Compte compte = compteRepository.findByEmail(email).orElseThrow();
@@ -71,6 +74,8 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         }
 
         if (affiliations.isEmpty()) {
+            assert
+                email != null;
             String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
             String encodedNom = URLEncoder.encode(
                 compte.getNom() != null ? compte.getNom() : "", StandardCharsets.UTF_8);
@@ -88,9 +93,9 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
-        String tenantSlug = affiliations.size() == 1 ? affiliations.get(0).getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.get(0).getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.get(0).getCoordoType() : null;
+        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
+        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
+        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),

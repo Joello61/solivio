@@ -2,6 +2,7 @@ package com.solivio.api.identity.infrastructure.security;
 
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -26,6 +27,7 @@ public class SolivioUserDetailsService implements UserDetailsService {
     }
 
     @Override
+    @NullMarked
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Compte compte = compteRepository.findByEmail(email)

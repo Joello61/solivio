@@ -16,6 +16,12 @@ public interface PersonneQueryPort {
      */
     List<PersonneContactInfo> trouverContactsParRole(String nomRole);
 
+    /**
+     * Recherche de membres par nom ou prenom pour l'ajout ad hoc au pointage.
+     * Limitee a 10 resultats. Exclut les personnes supprimees.
+     */
+    List<PersonneContactInfo> rechercherParNomOuPrenom(String terme);
+
     record PersonneInfo(UUID id, String nom, String prenom) {}
 
     record PersonneContactInfo(UUID id, String email, String prenom, String nom) {}

@@ -20,11 +20,35 @@ export interface CreneauResponse {
   capacite: number;
 }
 
+export interface LieuResponse {
+  placeId: string | null;
+  nom: string | null;
+  adresseFormatee: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  numeroRue: string | null;
+  voie: string | null;
+  codePostal: string | null;
+  ville: string | null;
+}
+
+export interface LieuRequest {
+  placeId?: string;
+  nom?: string;
+  adresseFormatee?: string;
+  latitude?: number;
+  longitude?: number;
+  numeroRue?: string;
+  voie?: string;
+  codePostal?: string;
+  ville?: string;
+}
+
 export interface DistributionResponse {
   id: string;
   titre: string;
   description: string | null;
-  lieu: string | null;
+  lieu: LieuResponse | null;
   date: string;
   statut: StatutDistribution;
   capaciteBeneficiaires: number;
@@ -118,7 +142,7 @@ export interface SaisirDenreePayload {
 export interface CreateDistributionPayload {
   titre: string;
   description?: string;
-  lieu?: string;
+  lieu?: LieuRequest;
   date: string;
   capaciteBeneficiaires: number;
   capaciteBenevoles?: number;
@@ -131,4 +155,22 @@ export interface CatalogueDenreeResponse {
   libelle: string;
   dateCreation: string;
   dateModification: string;
+}
+
+export interface MembreSuggestion {
+  id: string;
+  email: string;
+  prenom: string;
+  nom: string;
+}
+
+export interface PointageAdHocResponse {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string | null;
+  role: string | null;
+  presence: "PRESENT" | "ABSENT";
+  invitationEnvoyee: boolean;
+  datePointage: string;
 }

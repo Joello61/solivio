@@ -191,7 +191,7 @@ export default function RegisterScreen() {
         {aInvitation ? (
           <View className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3">
             <Text className="text-sm text-teal-700 font-medium">
-              Invitation detectee - votre compte sera automatiquement lie a l'association.
+              {"Invitation detectee - votre compte sera automatiquement lie a l'association."}
             </Text>
           </View>
         ) : null}
@@ -335,7 +335,7 @@ export default function RegisterScreen() {
             <>
               <GoogleIcon />
               <Text className="text-sm font-semibold text-foreground">
-                S'inscrire avec Google
+                {"S'inscrire avec Google"}
               </Text>
             </>
           )}

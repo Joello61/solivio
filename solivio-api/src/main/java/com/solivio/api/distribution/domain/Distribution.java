@@ -1,6 +1,7 @@
 package com.solivio.api.distribution.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,8 +34,8 @@ public class Distribution {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 255)
-    private String lieu;
+    @Embedded
+    private Lieu lieu;
 
     @Column(nullable = false)
     private LocalDate date;
@@ -72,7 +73,7 @@ public class Distribution {
     public Distribution(
         String titre,
         String description,
-        String lieu,
+        Lieu lieu,
         LocalDate date,
         int capaciteBeneficiaires,
         Integer capaciteBenevoles,

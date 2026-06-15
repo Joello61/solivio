@@ -9,6 +9,8 @@ import com.solivio.api.association.infrastructure.web.dto.UpdateRoleMembreReques
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.shared.exception.NotFoundException;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +40,7 @@ public class AssociationConfigService {
     public AssociationResponse mettreAJour(String tenantSlug, UpdateAssociationRequest request) {
         Association asso = trouverOuEchouer(tenantSlug);
         if (request.nom() != null && !request.nom().isBlank()) {
-            asso.setNom(request.nom());
+            asso.setNom(Jsoup.clean(request.nom(), Safelist.none()));
         }
         if (request.logoUrl() != null) {
             asso.setLogoUrl(request.logoUrl());

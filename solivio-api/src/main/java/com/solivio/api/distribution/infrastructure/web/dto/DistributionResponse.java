@@ -9,7 +9,7 @@ public record DistributionResponse(
     UUID id,
     String titre,
     String description,
-    String lieu,
+    LieuResponse lieu,
     LocalDate date,
     String statut,
     int capaciteBeneficiaires,
