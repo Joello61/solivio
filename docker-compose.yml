@@ -1,113 +1,75 @@
-# docker-compose.yml - production
+# Stack deployee de Solivio (preproduction et production), lancee par
+# docker/deploy/ssh-deploy.sh. Le developpement local utilise docker-compose-dev.yml.
 #
-# Usage with Coolify: Coolify reads this file and manages routing and TLS.
-# Usage standalone:   docker compose up -d
+# Les images sont construites et testees une seule fois par la CI, puis tirees de
+# GHCR (BACKEND_IMAGE, FRONTEND_IMAGE, etiquetees par SHA) : jamais de build sur
+# le serveur. Les secrets sont injectes par "infisical run" dans l'environnement de
+# docker compose ; aucun fichier .env rempli n'existe sur le serveur (.env.example
+# liste les variables).
 #
-# Secrets: injected as environment variables (Infisical in production,
-# see .env.example for the full list). Never commit a filled .env file.
-#
-# TLS is handled by Coolify (or Traefik in front). Services communicate over
-# the internal network without TLS between containers.
+# Aucun port n'est publie sur l'hote : Traefik route vers backend et frontend
+# (docker-compose.prod.traefik.yml, cree sur le serveur a partir de l'exemple) et
+# PostgreSQL reste sur le reseau interne du projet.
 
 services:
-
-  # ---------------------------------------------------------------------------
-  # PostgreSQL 18
-  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
-    container_name: solivio_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:?}
+      POSTGRES_USER: ${DB_USER:?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
     volumes:
       - postgres_data:/var/lib/postgresql
-    networks:
-      - solivio_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
 
-  # ---------------------------------------------------------------------------
-  # Backend - Spring Boot 4 / Java 25
-  # ---------------------------------------------------------------------------
   backend:
-    image: registry.gitlab.com/${GITLAB_PROJECT}/solivio-api:${APP_VERSION:-latest}
-    container_name: solivio_backend
+    image: ${BACKEND_IMAGE:?}
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT:?}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SOLIVIO_AUTH_JWT_SECRET: ${SOLIVIO_AUTH_JWT_SECRET}
-      SOLIVIO_POST_LOGIN_REDIRECT_URI: ${FRONTEND_URL}
+      SOLIVIO_AUTH_JWT_SECRET: ${SOLIVIO_AUTH_JWT_SECRET:?}
+      SOLIVIO_POST_LOGIN_REDIRECT_URI: ${FRONTEND_URL:?}
       SOLIVIO_POST_LOGOUT_REDIRECT_URI: ${FRONTEND_URL}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       SOLIVIO_CORS_ALLOWED_ORIGINS: ${FRONTEND_URL}
-      SPRING_MAIL_HOST: ${SMTP_HOST}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      SPRING_MAIL_HOST: ${SMTP_HOST:?}
       SPRING_MAIL_PORT: ${SMTP_PORT:-587}
-      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
-      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-}
+      METRICS_SCRAPE_TOKEN: ${METRICS_SCRAPE_TOKEN:?}
       SOLIVIO_LOGOS_DIR: /var/solivio/uploads/logos
       SOLIVIO_UPLOADS_AVATARS_DIR: /var/solivio/uploads/avatars
-      JAVA_OPTS: "-Xmx512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75"
+    mem_limit: 1g
     volumes:
       - uploads_data:/var/solivio/uploads
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - solivio_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
 
-  # ---------------------------------------------------------------------------
-  # Frontend - Next.js 16
-  # ---------------------------------------------------------------------------
   frontend:
-    image: registry.gitlab.com/${GITLAB_PROJECT}/solivio-frontend:${APP_VERSION:-latest}
-    container_name: solivio_frontend
+    image: ${FRONTEND_IMAGE:?}
     restart: unless-stopped
     environment:
-      NODE_ENV: production
+      # Appels faits par le serveur Next.js (composants serveur, routes /api internes).
       API_URL: http://backend:8080
-      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+    mem_limit: 512m
     depends_on:
       backend:
         condition: service_healthy
-    networks:
-      - solivio_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
-# -----------------------------------------------------------------------------
-# Volumes
-# -----------------------------------------------------------------------------
 volumes:
   postgres_data:
-    driver: local
   uploads_data:
-    driver: local
-
-# -----------------------------------------------------------------------------
-# Networks
-# -----------------------------------------------------------------------------
-networks:
-  solivio_net:
-    driver: bridge
