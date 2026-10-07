@@ -30,6 +30,7 @@ public class JwtService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
+    private static final int MIN_SECRET_BYTES = 32;
     private static final String CLAIM_TENANT = "tenant";
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_COORDO_TYPE = "coordo_type";
@@ -46,9 +47,24 @@ public class JwtService {
             @Value("${solivio.auth.jwt-secret}") String jwtSecret,
             @Value("${solivio.auth.access-token-expiration-minutes:15}") long accessTokenMinutes,
             @Value("${solivio.auth.refresh-token-expiration-days:30}") long refreshTokenDays) {
-        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.signingKey = Keys.hmacShaKeyFor(verifierSecret(jwtSecret));
         this.accessTokenMinutes = accessTokenMinutes;
         this.refreshTokenDays = refreshTokenDays;
+    }
+
+    // Un secret absent donnait une WeakKeyException peu parlante au demarrage :
+    // on echoue tot avec un message qui nomme la variable a fournir.
+    private static byte[] verifierSecret(String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "SOLIVIO_AUTH_JWT_SECRET est obligatoire (32 octets minimum)");
+        }
+        byte[] bytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "SOLIVIO_AUTH_JWT_SECRET doit faire au moins " + MIN_SECRET_BYTES + " octets");
+        }
+        return bytes;
     }
 
     public String genererAccessToken(UUID compteId, String email, String nom, String prenom,

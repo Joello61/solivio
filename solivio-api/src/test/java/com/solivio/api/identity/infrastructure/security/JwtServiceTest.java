@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtServiceTest {
 
@@ -93,5 +94,21 @@ class JwtServiceTest {
         Claims claims = jwtService.valider(token);
         assertThat(claims.get("super_admin", Boolean.class)).isTrue();
         assertThat(claims.get("tenant", String.class)).isNull();
+    }
+
+    @Test
+    void constructeur_refuseSecretAbsent() {
+        assertThatThrownBy(() -> new JwtService("", 15, 30))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("SOLIVIO_AUTH_JWT_SECRET");
+        assertThatThrownBy(() -> new JwtService(null, 15, 30))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void constructeur_refuseSecretTropCourt() {
+        assertThatThrownBy(() -> new JwtService("trop-court", 15, 30))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("32 octets");
     }
 }
