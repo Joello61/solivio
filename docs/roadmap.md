@@ -2,11 +2,11 @@
 
 > Quoi construire, dans quel ordre, et pourquoi : le plan d'exécution qui ordonne toutes les décisions de la série.
 
-**Document de pilotage — version 1.1**
+**Document de pilotage - version 1.2**
 **Statut : référence de travail**
-**Dernière mise à jour : juin 2026**
+**Dernière mise à jour : octobre 2026**
 
-> Changement depuis la version 1.0 : Phase 0 et Phase 1 marquees comme completees (juin 2026). Phase 2 en cours.
+> Changement depuis la version 1.1 : les phases 2 à 5 sont livrées (juin 2026). Solivio sert désormais uniquement Linkee Toulouse ; une phase de refonte du socle (phase 5 bis) est insérée avant la mise en conditions réelles. Les descriptions des phases 1 et 4 restent comme historique : Keycloak, Kafka, OpenBao et le multi-association qu'elles mentionnent sont retirés (`architecture_technique.md`, ADR-001 à ADR-008).
 
 ---
 
@@ -48,7 +48,8 @@ flowchart TD
     P2 --> P4[Phase 4 Notifications]
     P3 --> P5[Phase 5 Statistiques configuration export]
     P4 --> P5
-    P5 --> P6[Phase 6 Mise en conditions reelles]
+    P5 --> P5B[Phase 5 bis Refonte du socle]
+    P5B --> P6[Phase 6 Mise en conditions reelles]
     P6 --> P7[Phase 7 Documentation et ouverture open source]
 ```
 
@@ -60,6 +61,7 @@ flowchart TD
 | 3 | Répartition des denrées | Oui | Moyenne |
 | 4 | Notifications email | Oui | Moyenne |
 | 5 | Statistiques, configuration, export | Oui | Moyenne |
+| 5 bis | Refonte du socle pour une association unique | Non | Lourde |
 | 6 | Mise en conditions réelles | Oui | Moyenne |
 | 7 | Documentation et open source | Oui (externe) | Moyenne |
 
@@ -138,7 +140,7 @@ flowchart TD
 
 ## 7. Phase 4 — Notifications
 
-**Objectif.** Automatiser les communications, via le socle événementiel Kafka.
+**Objectif.** Automatiser les communications, via le socle événementiel (Kafka à l'origine, remplacé par les événements internes Spring Modulith en phase 5 bis).
 
 **Ce qu'on construit :**
 
@@ -164,6 +166,28 @@ flowchart TD
 - l'export complet et la suppression des données de l'association (non-enfermement).
 
 **Critère de sortie.** Le responsable peut configurer son association, piloter par les chiffres, et exercer son droit d'export et de suppression. La V1 est alors fonctionnellement complète.
+
+---
+
+## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - EN COURS
+
+**Objectif.** Partir d'une base simple et solide avant la mise en conditions réelles, maintenant que Solivio ne sert plus que Linkee Toulouse.
+
+**Contenu.** Dans l'ordre, une branche et une demande de fusion par étape :
+
+1. Règles et documentation : `CLAUDE.md` réécrits sur le modèle des projets de référence, architecture version 2.0 avec ADR, documents alignés sur l'association unique.
+2. Retrait d'OpenBao : secrets par variables d'environnement, injectés par Infisical.
+3. Retrait du multi-tenant : un seul schéma, une migration Flyway de base neuve, configuration d'association unique.
+4. Spring Modulith : vérification des frontières de modules, événements internes avec registre de publication à la place de Kafka.
+5. Durcissement de l'authentification : limitation de débit, verrouillage, politique de mot de passe, en-têtes de proxy.
+6. Observabilité et exploitation : journaux JSON, métriques, traces, sauvegardes.
+7. Conteneurs, compose et CI/CD GitHub Actions ; `dev` vers la préproduction, `main` vers la production.
+8. Intégration au dépôt `infrastructure` du VPS : collecte, tableaux de bord, alertes.
+9. Nettoyage du frontend (choix d'association, administration des associations).
+10. Gel de l'application mobile Expo, ruptures d'API documentées.
+11. Audit final : couverture, typographie, secrets, dépendances.
+
+**Critère de sortie.** Plus aucune mention de tenant, Kafka, OpenBao ou Keycloak dans le code ; tests verts, couverture d'au moins 80 pour cent, test de modularité vert ; application déployée en préproduction sur le VPS et visible dans Grafana.
 
 ---
 
