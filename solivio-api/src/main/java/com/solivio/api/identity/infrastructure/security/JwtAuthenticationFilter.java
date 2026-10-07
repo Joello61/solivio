@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.identity.SolivioUserDetails;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -85,7 +86,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private SolivioUserDetails construireUserDetails(Claims claims) {
         UUID compteId = UUID.fromString(claims.getSubject());
         String email = claims.get("email", String.class);
-        String tenantSlug = claims.get("tenant", String.class);
         boolean superAdmin = Boolean.TRUE.equals(claims.get("super_admin", Boolean.class));
 
         List<String> roles = claims.get("roles", List.class);
@@ -98,7 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return new SolivioUserDetails(
-            compteId, email, null, tenantSlug, superAdmin, authorities, true
+            compteId, email, null, superAdmin, authorities, true
         );
     }
 }

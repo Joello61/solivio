@@ -1,7 +1,7 @@
 package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
@@ -51,7 +51,7 @@ public class PointageController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         InscriptionResponse response = inscriptionService.pointer(
-            inscriptionId, request.presence(), user.getUsername(), user.getTenantSlug()
+            inscriptionId, request.presence(), user.getUsername()
         );
         auditService.tracer(user.getCompteId(), "POINTAGE", "inscription", inscriptionId);
         return ResponseEntity.ok(response);

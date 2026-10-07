@@ -135,7 +135,7 @@ export default async function DashboardPage() {
           Bonjour, {me?.prenom ?? "utilisateur"}
         </h1>
         <p className="text-muted-foreground">
-          Bienvenue sur votre espace{me?.tenantActif ? ` - ${me.tenantActif}` : ""}.
+          Bienvenue sur votre espace Linkee Toulouse.
         </p>
       </div>
 

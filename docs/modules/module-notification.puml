@@ -1,0 +1,45 @@
+@startuml
+title <size:24>notification</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Component>
+
+System_Boundary("SolivioApiApplication_boundary", "SolivioApiApplication", $tags="") {
+  Container_Boundary("SolivioApiApplication.SolivioApiApplication_boundary", "SolivioApiApplication", $tags="") {
+    Component(SolivioApiApplication.SolivioApiApplication.inscription, "inscription", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.reconditionnement, "reconditionnement", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.notification, "notification", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.shared, "shared", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.collecte, "collecte", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.distribution, "distribution", $techn="Module", $descr="", $tags="", $link="")
+    Component(SolivioApiApplication.SolivioApiApplication.evenement, "evenement", $techn="Module", $descr="", $tags="", $link="")
+  }
+
+}
+
+Rel(SolivioApiApplication.SolivioApiApplication.evenement, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.reconditionnement, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.inscription, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.collecte, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.distribution, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.inscription, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.evenement, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.distribution, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.reconditionnement, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.collecte, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

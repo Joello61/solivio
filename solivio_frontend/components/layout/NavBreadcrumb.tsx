@@ -23,7 +23,6 @@ const LABELS: Record<string, string> = {
   membres: "Membres",
   admin: "Administration",
   utilisateurs: "Utilisateurs",
-  associations: "Associations",
   pointage: "Pointage",
   repartition: "Repartition",
 };

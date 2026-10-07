@@ -1,0 +1,10 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.statistique`
+|Bean references
+|* `c.s.a.s.statistique.StatistiqueInscriptionPort` (in shared)
+* `c.s.a.s.distribution.DistributionQueryPort` (in shared)
+|Events listened to
+|* `c.s.a.d.events.DistributionTerminee` (async) 
+|===

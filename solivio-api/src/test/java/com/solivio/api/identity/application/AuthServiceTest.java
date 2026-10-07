@@ -1,6 +1,5 @@
 package com.solivio.api.identity.application;
 
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.domain.RefreshToken;
@@ -9,7 +8,7 @@ import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepo
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,10 +44,10 @@ class AuthServiceTest {
     @Mock private MembreAssociationRepository membreRepo;
     @Mock private RefreshTokenRepository refreshTokenRepo;
     @Mock private JwtService jwtService;
-    @Mock private AssociationRepository associationRepository;
     @Mock private PersonneProvisioningService personneProvisioningService;
     @Mock private PersonneRepository personneRepository;
     @Mock private RegisterService registerService;
+    @Mock private TentativesConnexionService tentativesConnexion;
 
     private AuthService service;
     private Compte compte;
@@ -57,8 +56,8 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         service = new AuthService(authenticationManager, compteRepository, membreRepo,
-            refreshTokenRepo, jwtService, associationRepository, personneProvisioningService,
-            personneRepository, registerService);
+            refreshTokenRepo, jwtService, personneProvisioningService,
+            personneRepository, registerService, tentativesConnexion);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         compte.setId(compteId);
@@ -69,14 +68,13 @@ class AuthServiceTest {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.empty());
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false,
+            compteId, "alice@example.com", null, false,
             List.of(new SimpleGrantedAuthority("ROLE_BENEFICIAIRE")), true);
 
         MeResponse response = service.me(userDetails);
 
         assertThat(response.email()).isEqualTo("alice@example.com");
         assertThat(response.nom()).isEqualTo("Dupont");
-        assertThat(response.tenantActif()).isEqualTo("pilote");
         assertThat(response.roles()).contains("beneficiaire");
         assertThat(response.telephone()).isNull();
         assertThat(response.photoUrl()).isNull();
@@ -90,9 +88,9 @@ class AuthServiceTest {
     void me_retourneAuthMethodGoogleSiCompteGoogle() {
         compte.setGoogleId("google-uid-123");
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
-        // tenantSlug null : personneRepository n'est pas appele
+        when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.empty());
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, null, false,
+            compteId, "alice@example.com", null, false,
             List.of(), true);
 
         MeResponse response = service.me(userDetails);
@@ -101,7 +99,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void me_retourneTelephoneEtPhotoDepuisPersonneTenant() {
+    void me_retourneTelephoneEtPhotoDepuisPersonne() {
         compte.setPhotoUrl(null);
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         com.solivio.api.identity.domain.Personne personne = new com.solivio.api.identity.domain.Personne(
@@ -110,7 +108,7 @@ class AuthServiceTest {
         personne.setPhotoUrl("/api/public/avatar/" + compteId);
         when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.of(personne));
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false,
+            compteId, "alice@example.com", null, false,
             List.of(new SimpleGrantedAuthority("ROLE_BENEFICIAIRE")), true);
 
         MeResponse response = service.me(userDetails);
@@ -122,7 +120,7 @@ class AuthServiceTest {
     @Test
     void logout_revoqueTokensEtSupprimeCookies() throws Exception {
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false, List.of(), true);
+            compteId, "alice@example.com", null, false, List.of(), true);
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
@@ -135,12 +133,12 @@ class AuthServiceTest {
     void refreshToken_rotateEtRetourneNouveauToken() throws Exception {
         String tokenBrut = "old-refresh-token";
         String hash = "hashed-token";
-        RefreshToken rt = new RefreshToken(compte, hash, "pilote", "Mozilla", "127.0.0.1",
+        RefreshToken rt = new RefreshToken(compte, hash, "Mozilla", "127.0.0.1",
             Instant.now().plusSeconds(3600), false);
         when(jwtService.hasher(tokenBrut)).thenReturn(hash);
         when(refreshTokenRepo.findByTokenHash(hash)).thenReturn(Optional.of(rt));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
-        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean()))
+        when(membreRepo.findActifByCompteId(any())).thenReturn(Optional.empty());
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean()))
             .thenReturn("new-access-token");
         when(jwtService.genererRefreshTokenBrut()).thenReturn("new-refresh-brut");
         when(jwtService.hasher("new-refresh-brut")).thenReturn("new-hash");
@@ -164,7 +162,7 @@ class AuthServiceTest {
     void refreshToken_lanceExceptionSiTokenRevoque() {
         String tokenBrut = "revoked-token";
         String hash = "revoked-hash";
-        RefreshToken rt = new RefreshToken(compte, hash, "pilote", null, null,
+        RefreshToken rt = new RefreshToken(compte, hash, null, null,
             Instant.now().plusSeconds(3600), false);
         rt.setRevoque(true);
 
@@ -194,80 +192,102 @@ class AuthServiceTest {
     }
 
     @Test
-    void completerInscriptionGoogle_retourneTokenApresLiaison() throws Exception {
+    void completerInscriptionGoogle_retourneTokenAvecLeRoleDuMembre() throws Exception {
         Compte googleCompte = new Compte("google@example.com", null, "Dupont", "Alice");
         UUID googleCompteId = UUID.randomUUID();
         googleCompte.setId(googleCompteId);
         googleCompte.setGoogleId("google-uid");
-        com.solivio.api.association.domain.Association asso =
-            new com.solivio.api.association.domain.Association("pilote", "Pilote");
-        MembreAssociation membre = new MembreAssociation(googleCompte, asso, "beneficiaire");
 
-        when(registerService.lierAssociationGoogle(
-            eq("google@example.com"), eq("Dupont"), eq("Alice"), eq("PILOTE"), isNull()))
+        when(registerService.finaliserCompteGoogle("google@example.com", "Dupont", "Alice", null))
             .thenReturn(googleCompte);
-        when(membreRepo.findActivesByCompteId(googleCompteId)).thenReturn(List.of(membre));
-        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(),
-            org.mockito.ArgumentMatchers.anyBoolean())).thenReturn("access-token");
-        when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
-        when(jwtService.hasher("refresh-brut")).thenReturn("refresh-hash");
-        when(refreshTokenRepo.save(any())).thenReturn(null);
-        when(jwtService.refreshTokenExpiration()).thenReturn(Instant.now().plusSeconds(2592000));
-        when(jwtService.getAccessTokenMinutes()).thenReturn(15L);
-
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(membreRepo.findActifByCompteId(googleCompteId))
+            .thenReturn(Optional.of(new MembreAssociation(googleCompte, "beneficiaire")));
+        stubEmissionJetons();
 
         TokenResponse result = service.completerInscriptionGoogle(
-            "google@example.com", "Dupont", "Alice", "PILOTE", null, request, response);
+            "google@example.com", "Dupont", "Alice", null, mock(HttpServletRequest.class),
+            mock(HttpServletResponse.class));
 
         assertThat(result.accessToken()).isEqualTo("access-token");
-        assertThat(result.tenants()).hasSize(1);
-        verify(registerService).lierAssociationGoogle(
-            "google@example.com", "Dupont", "Alice", "PILOTE", null);
+        verify(jwtService).genererAccessToken(eq(googleCompteId), eq("google@example.com"), eq("Dupont"),
+            eq("Alice"), eq(List.of("beneficiaire")), isNull(), eq(false));
     }
 
     @Test
     void completerInscriptionGoogle_propageLExceptionDeRegisterService() {
-        when(registerService.lierAssociationGoogle(any(), any(), any(), any(), any()))
-            .thenThrow(new IllegalArgumentException("Code association requis"));
-
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(registerService.finaliserCompteGoogle(any(), any(), any(), any()))
+            .thenThrow(new IllegalArgumentException("Ce compte est deja membre de l'association"));
 
         assertThatThrownBy(() -> service.completerInscriptionGoogle(
-            "google@example.com", "Dupont", "Alice", null, null, request, response))
+            "google@example.com", "Dupont", "Alice", null, mock(HttpServletRequest.class),
+            mock(HttpServletResponse.class)))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Code association requis");
+            .hasMessageContaining("deja membre");
     }
 
     @Test
-    void login_retourneTokenAvecTenantSiUnSeulTenant() throws Exception {
-        Authentication auth = mock(Authentication.class);
-        when(authenticationManager.authenticate(any())).thenReturn(auth);
+    void login_emetUnJetonAvecLeRoleEtProvisionneLaPersonne() throws Exception {
+        when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-
-        com.solivio.api.association.domain.Association asso =
-            new com.solivio.api.association.domain.Association("pilote", "Pilote");
-        MembreAssociation membre = new MembreAssociation(compte, asso, "beneficiaire");
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of(membre));
-        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean()))
-            .thenReturn("access-token");
-        when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
-        when(jwtService.hasher(any())).thenReturn("refresh-hash");
-        when(refreshTokenRepo.save(any())).thenReturn(null);
-        when(jwtService.refreshTokenExpiration()).thenReturn(Instant.now().plusSeconds(2592000));
-        when(jwtService.getAccessTokenMinutes()).thenReturn(15L);
-        // getRefreshTokenSeconds n'est pas appele quand rememberMe=false (short-circuit)
-
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
+        MembreAssociation membre = new MembreAssociation(compte, "coordinateur");
+        membre.setCoordoType("coordo_sec");
+        when(membreRepo.findActifByCompteId(compteId)).thenReturn(Optional.of(membre));
+        stubEmissionJetons();
 
         TokenResponse result = service.login("alice@example.com", "password123!", false,
-            request, response);
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class));
 
         assertThat(result.accessToken()).isEqualTo("access-token");
         assertThat(result.refreshToken()).isEqualTo("refresh-brut");
-        assertThat(result.tenants()).hasSize(1);
+        verify(jwtService).genererAccessToken(eq(compteId), any(), any(), any(),
+            eq(List.of("coordinateur")), eq("coordo_sec"), eq(false));
+        verify(personneProvisioningService).provisionner("alice@example.com", "Dupont", "Alice");
+        verify(tentativesConnexion).reinitialiser("alice@example.com");
+    }
+
+    @Test
+    void login_membreSuspendu_emetUnJetonSansRole() throws Exception {
+        when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findActifByCompteId(compteId)).thenReturn(Optional.empty());
+        stubEmissionJetons();
+
+        service.login("alice@example.com", "password123!", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class));
+
+        verify(jwtService).genererAccessToken(eq(compteId), any(), any(), any(),
+            eq(List.of()), isNull(), eq(false));
+    }
+
+    @Test
+    void login_mauvaisMotDePasse_enregistreLEchecEtPropageLErreur() {
+        when(authenticationManager.authenticate(any()))
+            .thenThrow(new org.springframework.security.authentication.BadCredentialsException("ko"));
+
+        assertThatThrownBy(() -> service.login("alice@example.com", "faux", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
+            .isInstanceOf(org.springframework.security.authentication.BadCredentialsException.class);
+        verify(tentativesConnexion).enregistrerEchec("alice@example.com");
+        verify(tentativesConnexion, org.mockito.Mockito.never()).reinitialiser(any());
+    }
+
+    @Test
+    void login_compteVerrouille_neVerifiePasLeMotDePasse() {
+        org.mockito.Mockito.doThrow(new com.solivio.api.shared.exception.TropDeTentativesException("verrouille"))
+            .when(tentativesConnexion).verifierNonVerrouille("alice@example.com");
+
+        assertThatThrownBy(() -> service.login("alice@example.com", "password123!", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
+            .isInstanceOf(com.solivio.api.shared.exception.TropDeTentativesException.class);
+        org.mockito.Mockito.verifyNoInteractions(authenticationManager);
+    }
+
+    private void stubEmissionJetons() {
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(),
+            org.mockito.ArgumentMatchers.anyBoolean())).thenReturn("access-token");
+        when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
+        when(jwtService.hasher("refresh-brut")).thenReturn("refresh-hash");
+        when(jwtService.refreshTokenExpiration()).thenReturn(Instant.now().plusSeconds(2592000));
+        when(jwtService.getAccessTokenMinutes()).thenReturn(15L);
     }
 }

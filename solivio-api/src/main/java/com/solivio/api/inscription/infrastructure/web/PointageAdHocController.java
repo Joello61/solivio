@@ -1,7 +1,7 @@
 package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.PointageAdHocService;
 import com.solivio.api.inscription.infrastructure.web.dto.AjouterBenevoleExistantRequest;
 import com.solivio.api.inscription.infrastructure.web.dto.AjouterVisiteurRequest;
@@ -85,7 +85,7 @@ public class PointageAdHocController {
         @PathVariable UUID adHocId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        service.envoyerInvitation(adHocId, user.getCompteId(), user.getTenantSlug());
+        service.envoyerInvitation(adHocId, user.getCompteId());
         auditService.tracer(user.getCompteId(), "INVITATION_VISITEUR_AD_HOC", "pointage_ad_hoc", adHocId);
         return ResponseEntity.ok().build();
     }

@@ -8,7 +8,9 @@ public interface AssociationQueryPort {
      * Retourne la frequence max d'inscription par semaine pour l'association.
      * Null signifie pas de limite.
      */
-    Integer frequenceMaxParSemaine(String tenantSlug);
+    Integer frequenceMaxParSemaine();
 
-    Optional<String> trouverContactEmail(String tenantSlug);
+    Optional<String> trouverContactEmail();
+
+    String nomAssociation();
 }

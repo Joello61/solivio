@@ -2,8 +2,6 @@ package com.solivio.api.repartition.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -40,9 +38,6 @@ class RepartitionControllerIntegrationTest {
     private AssociationRepository associationRepository;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -58,38 +53,25 @@ class RepartitionControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("repartit-test", "Asso Repartition Test");
-        association.setCode("REPARTTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("repartit-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         // Le DistributionService appelle personneQueryPort.trouverPersonne(email)
-        // lors de la creation. La personne doit exister dans le schema tenant.
+        // lors de la creation. La personne doit donc exister.
         coordId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
-                + "VALUES (?, 'Coord', 'Test', 'coord@test.com', 'coord@test.com')",
+            "INSERT INTO personne (id, nom, prenom, email) "
+                + "VALUES (?, 'Coord', 'Test', 'coord@test.com')",
             coordId
         );
 
         tokenCoordinateur = jwtService.genererAccessToken(
-            coordId, "coord@test.com", "Coord", "Test",
-            "repartit-test", List.of("coordinateur"), null, false
+            coordId, "coord@test.com", "Coord", "Test", List.of("coordinateur"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@test.com", "Benef", "Test",
-            "repartit-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@test.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        String schema = TenantProvisioningService.schemaName("repartit-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     // --- Securite ---

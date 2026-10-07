@@ -3,7 +3,7 @@ package com.solivio.api.reconditionnement.application;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutSessionReconditionnement;
-import com.solivio.api.reconditionnement.infrastructure.kafka.ReconditionnementEventPublisher;
+import com.solivio.api.reconditionnement.infrastructure.evenements.ReconditionnementEventPublisher;
 import com.solivio.api.reconditionnement.infrastructure.persistence.InscriptionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.persistence.SessionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,16 +102,16 @@ class SessionReconditionnementServiceTest {
         when(sessionRepository.save(any(SessionReconditionnement.class))).thenReturn(session);
         when(inscriptionRepository.countBySessionIdAndStatut(sessionId, "CONFIRMEE")).thenReturn(0L);
 
-        SessionReconditionnementResponse response = service.publier(sessionId, "tenant1");
+        SessionReconditionnementResponse response = service.publier(sessionId);
 
         assertThat(response.statut()).isEqualTo("PUBLIEE");
-        verify(eventPublisher).publierPubliee(eq(sessionId), eq("tenant1"), any(ZonedDateTime.class));
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void publier_echoueSiSessionInexistante() {
         when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.publier(sessionId, "tenant1"))
+        assertThatThrownBy(() -> service.publier(sessionId))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -121,12 +122,12 @@ class SessionReconditionnementServiceTest {
         when(inscriptionRepository.countBySessionIdAndStatut(sessionId, "CONFIRMEE")).thenReturn(0L);
 
         SessionReconditionnementResponse response = service.annuler(
-            sessionId, new AnnulerSessionRequest("Manque de benevoles"), "tenant1"
+            sessionId, new AnnulerSessionRequest("Manque de benevoles")
         );
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.motifAnnulation()).isEqualTo("Manque de benevoles");
-        verify(eventPublisher).publierAnnulee(eq(sessionId), eq("tenant1"), any(ZonedDateTime.class));
+        verify(eventPublisher).publierAnnulee(eq(sessionId), any(ZonedDateTime.class));
     }
 
     @Test

@@ -83,7 +83,7 @@ public class AvatarService {
         compte.setPhotoUrl(photoUrl);
         compteRepository.save(compte);
 
-        // Propager aussi sur la Personne du tenant si elle existe.
+        // Propager aussi sur la Personne si elle existe.
         personneRepository.findByCompteEmail(compte.getEmail()).ifPresent(p -> {
             p.setPhotoUrl(photoUrl);
             personneRepository.save(p);

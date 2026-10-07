@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +17,8 @@ public interface PersonneRepository extends JpaRepository<Personne, UUID> {
     Optional<Personne> findByCompteEmail(String compteEmail);
 
     boolean existsByEmail(String email);
+
+    List<Personne> findByCompteEmailIn(Collection<String> comptesEmails);
 
     @Query("SELECT p FROM Personne p WHERE p.dateSuppression IS NULL AND "
         + "(LOWER(p.nom) LIKE LOWER(CONCAT('%', :terme, '%')) "

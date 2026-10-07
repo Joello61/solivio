@@ -5,7 +5,7 @@ import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.PublicCible;
 import com.solivio.api.evenement.domain.StatutEvenement;
 import com.solivio.api.evenement.domain.TypeEvenement;
-import com.solivio.api.evenement.infrastructure.kafka.EvenementEventPublisher;
+import com.solivio.api.evenement.infrastructure.evenements.EvenementEventPublisher;
 import com.solivio.api.evenement.infrastructure.persistence.EvenementRepository;
 import com.solivio.api.evenement.infrastructure.persistence.ParticipationEvenementRepository;
 import com.solivio.api.evenement.infrastructure.web.dto.CreateEvenementRequest;
@@ -106,10 +106,10 @@ class EvenementServiceTest {
         when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenement));
         when(evenementRepository.save(any())).thenReturn(evenement);
 
-        EvenementResponse response = service.publier(evenementId, "asso-test");
+        EvenementResponse response = service.publier(evenementId);
 
         assertThat(response.statut()).isEqualTo("PUBLIE");
-        verify(eventPublisher).publierPublie(evenementId, "asso-test", evenement.getDateHeureDebut());
+        verify(eventPublisher).publierPublie(evenementId, evenement.getDateHeureDebut());
     }
 
     @Test
@@ -117,7 +117,7 @@ class EvenementServiceTest {
         evenement.transitionnerVers(StatutEvenement.PUBLIE, null);
         when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenement));
 
-        assertThatThrownBy(() -> service.publier(evenementId, "asso-test"))
+        assertThatThrownBy(() -> service.publier(evenementId))
             .isInstanceOf(ConflictException.class);
     }
 
@@ -129,11 +129,11 @@ class EvenementServiceTest {
 
         var request = new com.solivio.api.evenement.infrastructure.web.dto.AnnulerEvenementRequest(
             "Manque de benevoles");
-        EvenementResponse response = service.annuler(evenementId, request, "asso-test");
+        EvenementResponse response = service.annuler(evenementId, request);
 
         assertThat(response.statut()).isEqualTo("ANNULE");
         assertThat(response.raisonAnnulation()).isEqualTo("Manque de benevoles");
-        verify(eventPublisher).publierAnnule(evenementId, "asso-test", evenement.getDateHeureDebut());
+        verify(eventPublisher).publierAnnule(evenementId, evenement.getDateHeureDebut());
     }
 
     @Test
@@ -144,7 +144,7 @@ class EvenementServiceTest {
         when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenement));
 
         var request = new com.solivio.api.evenement.infrastructure.web.dto.AnnulerEvenementRequest("raison");
-        assertThatThrownBy(() -> service.annuler(evenementId, request, "asso-test"))
+        assertThatThrownBy(() -> service.annuler(evenementId, request))
             .isInstanceOf(ConflictException.class);
     }
 

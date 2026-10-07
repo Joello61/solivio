@@ -1,19 +1,19 @@
 package com.solivio.api.distribution.application;
 
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
-import com.solivio.api.distribution.domain.Lieu;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
-import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
+import com.solivio.api.distribution.infrastructure.evenements.DistributionEventPublisher;
 import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository;
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreneauResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuRequest;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
@@ -74,11 +74,10 @@ public class DistributionService {
         return toResponse(distribution, creneaux);
     }
 
-    public DistributionResponse publier(UUID distributionId, String tenantSlug) {
+    public DistributionResponse publier(UUID distributionId) {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
-        eventPublisher.publierPubliee(distributionId, tenantSlug, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
@@ -94,20 +93,20 @@ public class DistributionService {
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
-    public DistributionResponse terminer(UUID distributionId, String tenantSlug) {
+    public DistributionResponse terminer(UUID distributionId) {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.TERMINEE, null);
         distributionRepository.save(d);
-        eventPublisher.publierTerminee(distributionId, tenantSlug, d.getDate());
+        eventPublisher.publierTerminee(distributionId, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
-    public DistributionResponse annuler(UUID distributionId, String motif, String tenantSlug) {
+    public DistributionResponse annuler(UUID distributionId, String motif) {
         Distribution d = trouverOuEchouer(distributionId);
         String motifSain = motif != null ? Jsoup.clean(motif, Safelist.none()) : null;
         d.transitionnerVers(StatutDistribution.ANNULEE, motifSain);
         distributionRepository.save(d);
-        eventPublisher.publierAnnulee(distributionId, tenantSlug, d.getDate());
+        eventPublisher.publierAnnulee(distributionId, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 

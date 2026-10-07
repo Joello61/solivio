@@ -290,7 +290,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void notifierAnnulationEvenement(UUID evenementId, String tenantSlug) {
+    public void notifierAnnulationEvenement(UUID evenementId) {
         EvenementInfo evenement = evenementQueryPort.trouverEvenementDetails(evenementId);
         String sujet = "Evenement annule - " + evenement.titre();
         String raison = evenement.raisonAnnulation();
@@ -308,7 +308,7 @@ public class NotificationService {
                         () -> emailService.envoyerAnnulationEvenement(p.email(), ctx));
                 }
                 if ("LIBRE".equals(evenement.modeInscription())) {
-                    associationQueryPort.trouverContactEmail(tenantSlug).ifPresent(contactEmail -> {
+                    associationQueryPort.trouverContactEmail().ifPresent(contactEmail -> {
                         ContexteEvenementEmail ctx = new ContexteEvenementEmail(
                             null, evenement.titre(), evenement.dateHeureDebut(),
                             evenement.lieuAdresseFormatee(), raison);

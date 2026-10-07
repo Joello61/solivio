@@ -2,8 +2,6 @@ package com.solivio.api.reconditionnement.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -37,9 +35,6 @@ class SessionReconditionnementControllerIntegrationTest {
     private AssociationRepository associationRepository;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -49,7 +44,6 @@ class SessionReconditionnementControllerIntegrationTest {
     private Association association;
     private String tokenResponsable;
     private String tokenBenevole;
-    private String schema;
     private UUID personneId;
 
     private static final String TENANT = "reco-test";
@@ -58,34 +52,21 @@ class SessionReconditionnementControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association(TENANT, "Asso Reconditionnement Test");
-        association.setCode("RECOTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName(TENANT);
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         personneId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneId, "Resp", "Test", "resp@reco.com", "resp@reco.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneId, "Resp", "Test", "resp@reco.com");
 
         tokenResponsable = jwtService.genererAccessToken(
-            UUID.randomUUID(), "resp@reco.com", "Resp", "Test",
-            TENANT, List.of("responsable"), null, false
+            UUID.randomUUID(), "resp@reco.com", "Resp", "Test", List.of("responsable"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benev@reco.com", "Benev", "Test",
-            TENANT, List.of("benevole"), null, false
+            UUID.randomUUID(), "benev@reco.com", "Benev", "Test", List.of("benevole"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
@@ -199,9 +180,8 @@ class SessionReconditionnementControllerIntegrationTest {
         // Inscrire le benevole (son email est dans le token)
         UUID benevolePersonneId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            benevolePersonneId, "Benev", "Test", "benev@reco.com", "benev@reco.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            benevolePersonneId, "Benev", "Test", "benev@reco.com");
 
         mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/inscrire")
                 .cookie(new Cookie("access_token", tokenBenevole)))

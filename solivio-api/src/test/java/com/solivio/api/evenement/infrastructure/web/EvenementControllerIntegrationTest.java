@@ -2,8 +2,6 @@ package com.solivio.api.evenement.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -33,13 +31,11 @@ class EvenementControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
     private MockMvc mockMvc;
     private Association association;
-    private String schema;
     private String tokenAdmin;
     private String tokenBenevole;
     private String tokenBeneficiaire;
@@ -53,59 +49,34 @@ class EvenementControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        schema = TenantProvisioningService.schemaName(TENANT);
-        try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        associationRepository.findAll().stream()
-            .filter(a -> TENANT.equals(a.getSlug()))
-            .forEach(associationRepository::delete);
-
-        association = new Association(TENANT, "Asso Evenement Test");
-        association.setCode("EVTEST");
-        associationRepository.save(association);
-
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         personneId = UUID.randomUUID();
         benevoleId = UUID.randomUUID();
         beneficiaireId = UUID.randomUUID();
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneId, "Admin", "Test", "admin@ev.com", "admin@ev.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneId, "Admin", "Test", "admin@ev.com");
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            benevoleId, "Ben", "Evole", "ben@ev.com", "ben@ev.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            benevoleId, "Ben", "Evole", "ben@ev.com");
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            beneficiaireId, "Benef", "Test", "benef@ev.com", "benef@ev.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            beneficiaireId, "Benef", "Test", "benef@ev.com");
 
         tokenAdmin = jwtService.genererAccessToken(
-            UUID.randomUUID(), "admin@ev.com", "Admin", "Test",
-            TENANT, List.of("responsable"), null, false
+            UUID.randomUUID(), "admin@ev.com", "Admin", "Test", List.of("responsable"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "ben@ev.com", "Ben", "Evole",
-            TENANT, List.of("benevole"), null, false
+            UUID.randomUUID(), "ben@ev.com", "Ben", "Evole", List.of("benevole"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@ev.com", "Benef", "Test",
-            TENANT, List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@ev.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
         try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        try {
-            associationRepository.delete(association);
         } catch (Exception ignored) {}
     }
 

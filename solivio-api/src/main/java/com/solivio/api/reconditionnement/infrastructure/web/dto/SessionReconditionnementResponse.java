@@ -1,6 +1,6 @@
 package com.solivio.api.reconditionnement.infrastructure.web.dto;
 
-import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
+import com.solivio.api.shared.lieu.LieuResponse;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;

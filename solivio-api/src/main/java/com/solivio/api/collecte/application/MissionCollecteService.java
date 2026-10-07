@@ -2,7 +2,7 @@ package com.solivio.api.collecte.application;
 
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
-import com.solivio.api.collecte.infrastructure.kafka.CollecteEventPublisher;
+import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
 import com.solivio.api.collecte.infrastructure.persistence.MissionCollecteRepository;
 import com.solivio.api.collecte.infrastructure.web.dto.AnnulerMissionRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.CreateMissionCollecteRequest;
@@ -47,7 +47,7 @@ public class MissionCollecteService {
     }
 
     public MissionCollecteResponse creer(CreateMissionCollecteRequest request,
-                                         String emailCreateur, String tenantSlug) {
+                                         String emailCreateur) {
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         int capacite = request.capacitePersonnes() != null ? request.capacitePersonnes() : 6;
         MissionCollecte mission = new MissionCollecte(
@@ -66,7 +66,7 @@ public class MissionCollecteService {
             createur.id()
         );
         missionRepository.save(mission);
-        eventPublisher.publierCreee(mission.getId(), tenantSlug, mission.getDateHeure());
+        eventPublisher.publierCreee(mission.getId(), mission.getDateHeure());
         return toResponse(mission, null);
     }
 
@@ -103,14 +103,14 @@ public class MissionCollecteService {
     }
 
     public MissionCollecteResponse annuler(UUID missionId, AnnulerMissionRequest request,
-                                           String emailPar, String tenantSlug) {
+                                           String emailPar) {
         PersonneInfo par = personneQueryPort.trouverPersonne(emailPar);
         MissionCollecte mission = trouverOuEchouer(missionId);
         UUID benevoleAssigneId = mission.getBenevoleId();
         String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
         mission.annuler(par.id(), raisonSaine);
         missionRepository.save(mission);
-        eventPublisher.publierAnnulee(mission.getId(), tenantSlug, mission.getDateHeure(), benevoleAssigneId);
+        eventPublisher.publierAnnulee(mission.getId(), mission.getDateHeure(), benevoleAssigneId);
         return toResponse(mission, null);
     }
 

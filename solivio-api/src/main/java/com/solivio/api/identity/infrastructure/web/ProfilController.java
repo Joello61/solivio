@@ -2,7 +2,7 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.AvatarService;
 import com.solivio.api.identity.application.ProfilService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateProfilRequest;
 import jakarta.validation.Valid;

@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -39,7 +37,6 @@ class ProfilControllerIntegrationTest {
     @Autowired private CompteRepository compteRepository;
     @Autowired private AssociationRepository associationRepository;
     @Autowired private MembreAssociationRepository membreRepo;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
     @Autowired private PasswordEncoder passwordEncoder;
@@ -47,20 +44,11 @@ class ProfilControllerIntegrationTest {
     private MockMvc mockMvc;
     private Association association;
     private Compte compte;
-    private String schema;
     private String token;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-
-        association = new Association("profil-test", "Association Profil Test");
-        association.setCode("PROFILTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("profil-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
 
         compte = new Compte("profil@example.com",
             passwordEncoder.encode("password123!"), "Dupont", "Alice");
@@ -68,17 +56,16 @@ class ProfilControllerIntegrationTest {
         compteRepository.save(compte);
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
+            "INSERT INTO personne (id, nom, prenom, email, compte_email) "
                 + "VALUES (?, 'Dupont', 'Alice', 'profil@example.com', 'profil@example.com')",
             UUID.randomUUID()
         );
 
-        MembreAssociation membre = new MembreAssociation(compte, association, "benevole");
+        MembreAssociation membre = new MembreAssociation(compte, "benevole");
         membreRepo.save(membre);
 
         token = jwtService.genererAccessToken(
-            compte.getId(), "profil@example.com", "Dupont", "Alice",
-            "profil-test", List.of("benevole"), null, false
+            compte.getId(), "profil@example.com", "Dupont", "Alice", List.of("benevole"), null, false
         );
     }
 
@@ -86,8 +73,6 @@ class ProfilControllerIntegrationTest {
     void tearDown() {
         membreRepo.deleteAll();
         compteRepository.delete(compte);
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

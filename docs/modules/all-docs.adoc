@@ -1,0 +1,51 @@
+== SolivioApiApplication
+plantuml::components.puml[,,format=svg]
+
+== audit
+plantuml::module-audit.puml[,,format=svg]
+include::module-audit.adoc[]
+
+== shared
+plantuml::module-shared.puml[,,format=svg]
+include::module-shared.adoc[]
+
+== identity
+plantuml::module-identity.puml[,,format=svg]
+include::module-identity.adoc[]
+
+== association
+plantuml::module-association.puml[,,format=svg]
+include::module-association.adoc[]
+
+== collecte
+plantuml::module-collecte.puml[,,format=svg]
+include::module-collecte.adoc[]
+
+== distribution
+plantuml::module-distribution.puml[,,format=svg]
+include::module-distribution.adoc[]
+
+== evenement
+plantuml::module-evenement.puml[,,format=svg]
+include::module-evenement.adoc[]
+
+== inscription
+plantuml::module-inscription.puml[,,format=svg]
+include::module-inscription.adoc[]
+
+== reconditionnement
+plantuml::module-reconditionnement.puml[,,format=svg]
+include::module-reconditionnement.adoc[]
+
+== repartition
+plantuml::module-repartition.puml[,,format=svg]
+include::module-repartition.adoc[]
+
+== notification
+plantuml::module-notification.puml[,,format=svg]
+include::module-notification.adoc[]
+
+== statistique
+plantuml::module-statistique.puml[,,format=svg]
+include::module-statistique.adoc[]
+

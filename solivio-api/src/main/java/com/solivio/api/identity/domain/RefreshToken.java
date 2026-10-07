@@ -22,7 +22,7 @@ import java.util.UUID;
  * revoque    : mis a true lors du logout ou d'une reutilisation detectee.
  */
 @Entity
-@Table(name = "refresh_token", schema = "public")
+@Table(name = "refresh_token")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,9 +38,6 @@ public class RefreshToken {
 
     @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
-
-    @Column(name = "tenant_slug", length = 63)
-    private String tenantSlug;
 
     @Column(name = "user_agent", length = 512)
     private String userAgent;
@@ -62,11 +59,10 @@ public class RefreshToken {
     @Column(name = "cree_a", nullable = false, updatable = false)
     private Instant creeA = Instant.now();
 
-    public RefreshToken(Compte compte, String tokenHash, String tenantSlug,
+    public RefreshToken(Compte compte, String tokenHash,
                         String userAgent, String ipAddress, Instant expireA, boolean longDuree) {
         this.compte = compte;
         this.tokenHash = tokenHash;
-        this.tenantSlug = tenantSlug;
         this.userAgent = userAgent;
         this.ipAddress = ipAddress;
         this.expireA = expireA;

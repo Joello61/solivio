@@ -1,13 +1,13 @@
 package com.solivio.api.reconditionnement.application;
 
-import com.solivio.api.distribution.domain.Lieu;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuRequest;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutPresenceReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutSessionReconditionnement;
-import com.solivio.api.reconditionnement.infrastructure.kafka.ReconditionnementEventPublisher;
+import com.solivio.api.reconditionnement.infrastructure.evenements.ReconditionnementEventPublisher;
 import com.solivio.api.reconditionnement.infrastructure.persistence.InscriptionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.persistence.SessionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
@@ -71,11 +71,10 @@ public class SessionReconditionnementService {
         return toResponse(session, 0);
     }
 
-    public SessionReconditionnementResponse publier(UUID sessionId, String tenantSlug) {
+    public SessionReconditionnementResponse publier(UUID sessionId) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.PUBLIEE, null);
         sessionRepository.save(session);
-        eventPublisher.publierPubliee(sessionId, tenantSlug, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));
     }
 
@@ -92,13 +91,13 @@ public class SessionReconditionnementService {
     }
 
     public SessionReconditionnementResponse annuler(
-        UUID sessionId, AnnulerSessionRequest request, String tenantSlug
+        UUID sessionId, AnnulerSessionRequest request
     ) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         String motifSain = request.motif() != null ? Jsoup.clean(request.motif(), Safelist.none()) : null;
         session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, motifSain);
         sessionRepository.save(session);
-        eventPublisher.publierAnnulee(sessionId, tenantSlug, session.getDateHeureDebut());
+        eventPublisher.publierAnnulee(sessionId, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));
     }
 

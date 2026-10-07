@@ -4,7 +4,7 @@ import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
-import com.solivio.api.inscription.infrastructure.kafka.InscriptionEventPublisher;
+import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
@@ -59,8 +59,7 @@ public class InscriptionService {
         UUID distributionId,
         String emailInscrit,
         String typeStr,
-        UUID creneauId,
-        String tenantSlug
+        UUID creneauId
     ) {
         DistributionQueryPort.DistributionInfo distrib =
             distributionQueryPort.trouverDistribution(distributionId);
@@ -86,7 +85,7 @@ public class InscriptionService {
 
         // RG1 : frequence (beneficiaires uniquement)
         if (type == TypeInscription.BENEFICIAIRE) {
-            verifierFrequence(personne.id(), tenantSlug);
+            verifierFrequence(personne.id());
         }
 
         // Validation du creneau
@@ -119,13 +118,13 @@ public class InscriptionService {
         inscriptionRepository.save(inscription);
 
         if (inscription.getStatut() == StatutInscription.CONFIRMEE) {
-            eventPublisher.publierConfirmee(inscription, tenantSlug);
+            eventPublisher.publierConfirmee(inscription);
         }
 
         return toResponse(inscription);
     }
 
-    public void desinscrire(UUID inscriptionId, String emailDemandeur, String tenantSlug) {
+    public void desinscrire(UUID inscriptionId, String emailDemandeur) {
         Inscription inscription = trouverOuEchouer(inscriptionId);
         PersonneQueryPort.PersonneInfo demandeur = personneQueryPort.trouverPersonne(emailDemandeur);
 
@@ -143,14 +142,13 @@ public class InscriptionService {
         boolean estBenevole = inscription.getType() == TypeInscription.BENEVOLE;
         inscription.annuler();
         inscriptionRepository.save(inscription);
-        eventPublisher.publierAnnulee(inscription, tenantSlug);
 
         // Alerte desistement tardif : benevole confirme se desinscrit dans les 24h avant la distribution.
         if (etaitConfirmee && estBenevole) {
             DistributionQueryPort.DistributionInfo distrib =
                 distributionQueryPort.trouverDistribution(inscription.getDistributionId());
             if (distrib.date() != null && !distrib.date().isAfter(LocalDate.now().plusDays(1))) {
-                eventPublisher.publierDesistementTardifBenevole(inscription, tenantSlug);
+                eventPublisher.publierDesistementTardifBenevole(inscription);
             }
         }
 
@@ -159,8 +157,7 @@ public class InscriptionService {
             promouvoirSuivantEnAttente(
                 inscription.getDistributionId(),
                 inscription.getCreneauId(),
-                inscription.getType(),
-                tenantSlug
+                inscription.getType()
             );
         }
     }
@@ -168,8 +165,7 @@ public class InscriptionService {
     public InscriptionResponse pointer(
         UUID inscriptionId,
         String statutPresenceStr,
-        String emailPointeur,
-        String tenantSlug
+        String emailPointeur
     ) {
         Inscription inscription = trouverOuEchouer(inscriptionId);
         DistributionQueryPort.DistributionInfo distrib =
@@ -257,7 +253,7 @@ public class InscriptionService {
 
     @Transactional(readOnly = true)
     public List<InscriptionResponse> mesinscriptions(String email, UUID distributionId) {
-        // Un utilisateur authentifie peut ne pas encore avoir de personne dans ce tenant.
+        // Un utilisateur authentifie peut ne pas encore avoir de personne provisionnee.
         try {
             PersonneQueryPort.PersonneInfo personne = personneQueryPort.trouverPersonne(email);
             return inscriptionRepository
@@ -285,8 +281,8 @@ public class InscriptionService {
             .toList();
     }
 
-    private void verifierFrequence(UUID personneId, String tenantSlug) {
-        Integer configMax = associationQueryPort.frequenceMaxParSemaine(tenantSlug);
+    private void verifierFrequence(UUID personneId) {
+        Integer configMax = associationQueryPort.frequenceMaxParSemaine();
         // null = pas de limite configuree, on applique la limite par defaut (1 par semaine).
         int maxParSemaine = (configMax != null && configMax > 0) ? configMax : 1;
         Instant debut = Instant.now().minus(FREQUENCE_DEFAUT_JOURS, ChronoUnit.DAYS);
@@ -334,8 +330,7 @@ public class InscriptionService {
     private void promouvoirSuivantEnAttente(
         UUID distributionId,
         UUID creneauId,
-        TypeInscription type,
-        String tenantSlug
+        TypeInscription type
     ) {
         Optional<Inscription> suivant = creneauId != null
             ? inscriptionRepository.findFirstByDistributionIdAndCreneauIdAndTypeAndStatutOrderByRangListeAttenteAsc(
@@ -346,7 +341,7 @@ public class InscriptionService {
         suivant.ifPresent(i -> {
             i.promouvoir();
             inscriptionRepository.save(i);
-            eventPublisher.publierPromue(i, tenantSlug);
+            eventPublisher.publierPromue(i);
         });
     }
 

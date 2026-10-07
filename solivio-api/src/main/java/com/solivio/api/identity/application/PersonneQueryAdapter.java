@@ -1,27 +1,30 @@
 package com.solivio.api.identity.application;
 
 import com.solivio.api.identity.domain.Personne;
-import com.solivio.api.identity.infrastructure.persistence.AffiliationRepository;
+import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PersonneQueryAdapter implements PersonneQueryPort {
 
     private final PersonneRepository personneRepository;
-    private final AffiliationRepository affiliationRepository;
+    private final MembreAssociationRepository membreRepository;
 
     public PersonneQueryAdapter(
         PersonneRepository personneRepository,
-        AffiliationRepository affiliationRepository
+        MembreAssociationRepository membreRepository
     ) {
         this.personneRepository = personneRepository;
-        this.affiliationRepository = affiliationRepository;
+        this.membreRepository = membreRepository;
     }
 
     @Override
@@ -40,7 +43,14 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
 
     @Override
     public List<PersonneContactInfo> trouverContactsParRole(String nomRole) {
-        return affiliationRepository.findPersonnesActivesByRoleNom(nomRole).stream()
+        // Le role est porte par le membre (compte) ; le contact par la personne liee.
+        List<String> emails = membreRepository.findActifsByRole(nomRole).stream()
+            .map(m -> m.getCompte().getEmail())
+            .toList();
+        if (emails.isEmpty()) {
+            return List.of();
+        }
+        return personneRepository.findByCompteEmailIn(emails).stream()
             .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
             .toList();
     }
@@ -51,5 +61,11 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
             .limit(10)
             .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
             .toList();
+    }
+
+    @Override
+    public Map<UUID, String> trouverEmailsParIds(Collection<UUID> personneIds) {
+        return personneRepository.findAllById(personneIds).stream()
+            .collect(Collectors.toMap(Personne::getId, Personne::getEmail));
     }
 }

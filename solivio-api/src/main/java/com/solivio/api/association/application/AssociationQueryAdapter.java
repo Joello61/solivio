@@ -1,31 +1,33 @@
 package com.solivio.api.association.application;
 
-import com.solivio.api.association.domain.Association;
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Component
+@Transactional(readOnly = true)
 public class AssociationQueryAdapter implements AssociationQueryPort {
 
-    private final AssociationRepository associationRepository;
+    private final AssociationConfigService configService;
 
-    public AssociationQueryAdapter(AssociationRepository associationRepository) {
-        this.associationRepository = associationRepository;
+    public AssociationQueryAdapter(AssociationConfigService configService) {
+        this.configService = configService;
     }
 
     @Override
-    public Integer frequenceMaxParSemaine(String tenantSlug) {
-        return associationRepository.findBySlug(tenantSlug)
-            .map(Association::getFrequenceMaxParSemaine)
-            .orElse(null);
+    public Integer frequenceMaxParSemaine() {
+        return configService.charger().getFrequenceMaxParSemaine();
     }
 
     @Override
-    public Optional<String> trouverContactEmail(String tenantSlug) {
-        return associationRepository.findBySlug(tenantSlug)
-            .map(Association::getContactEmail);
+    public Optional<String> trouverContactEmail() {
+        return Optional.ofNullable(configService.charger().getContactEmail());
+    }
+
+    @Override
+    public String nomAssociation() {
+        return configService.charger().getNom();
     }
 }

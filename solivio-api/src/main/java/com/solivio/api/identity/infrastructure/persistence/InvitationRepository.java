@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public interface InvitationRepository extends JpaRepository<Invitation, UUID> {
 
-    @Query("SELECT i FROM Invitation i JOIN FETCH i.association JOIN FETCH i.invitePar WHERE i.token = :token")
+    @Query("SELECT i FROM Invitation i JOIN FETCH i.invitePar WHERE i.token = :token")
     Optional<Invitation> findByTokenWithDetails(UUID token);
 
-    boolean existsByEmailAndAssociationIdAndStatut(String email, UUID associationId, String statut);
+    boolean existsByEmailAndStatut(String email, String statut);
 }

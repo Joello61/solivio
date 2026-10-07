@@ -7,7 +7,7 @@ import com.solivio.api.collecte.infrastructure.web.dto.AnnulerMissionRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.CreateMissionCollecteRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.MissionCollecteResponse;
 import com.solivio.api.collecte.infrastructure.web.dto.UpdateMissionCollecteRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +52,7 @@ public class MissionCollecteController {
         @Valid @RequestBody CreateMissionCollecteRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MissionCollecteResponse response = missionService.creer(request, user.getUsername(), user.getTenantSlug());
+        MissionCollecteResponse response = missionService.creer(request, user.getUsername());
         auditService.tracer(user.getCompteId(), "MISSION_COLLECTE_CREEE", "mission_collecte", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -82,7 +82,7 @@ public class MissionCollecteController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MissionCollecteResponse response = missionService.annuler(id, request,
-            user.getUsername(), user.getTenantSlug());
+            user.getUsername());
         auditService.tracer(user.getCompteId(), "MISSION_COLLECTE_ANNULEE", "mission_collecte", id);
         return ResponseEntity.ok(response);
     }

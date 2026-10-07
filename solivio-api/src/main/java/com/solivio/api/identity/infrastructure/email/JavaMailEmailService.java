@@ -2,6 +2,7 @@ package com.solivio.api.identity.infrastructure.email;
 
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Invitation;
+import com.solivio.api.shared.association.AssociationQueryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,16 +30,19 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
     private final TemplateEngine templateEngine;
     private final String fromAddress;
     private final String appUrl;
+    private final AssociationQueryPort associationQueryPort;
 
     public JavaMailEmailService(
             JavaMailSender mailSender,
             TemplateEngine templateEngine,
             @Value("${solivio.mail.from}") String fromAddress,
-            @Value("${solivio.auth.post-login-redirect-uri}") String appUrl) {
+            @Value("${solivio.auth.post-login-redirect-uri}") String appUrl,
+            AssociationQueryPort associationQueryPort) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
         this.fromAddress = fromAddress;
         this.appUrl = appUrl;
+        this.associationQueryPort = associationQueryPort;
     }
 
     @Override
@@ -75,13 +79,14 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
     @Override
     public void envoyerInvitation(Invitation invitation) {
         Context ctx = nouveauContext();
-        ctx.setVariable("associationNom", invitation.getAssociation().getNom());
+        String associationNom = associationQueryPort.nomAssociation();
+        ctx.setVariable("associationNom", associationNom);
         ctx.setVariable("role", invitation.getRole());
         ctx.setVariable("inviteParPrenom", invitation.getInvitePar().getPrenom());
         ctx.setVariable("lienInscription",
             appUrl + "/register?invitation=" + invitation.getToken());
         envoyer(invitation.getEmail(),
-            "Invitation a rejoindre " + invitation.getAssociation().getNom() + " - Solivio",
+            "Invitation a rejoindre " + associationNom + " - Solivio",
             "invitation", ctx);
     }
 

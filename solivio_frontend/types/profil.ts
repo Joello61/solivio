@@ -46,14 +46,9 @@ export interface CompteAdminResponse {
   actif: boolean;
   superAdmin: boolean;
   dateCreation: string;
-  affiliations: AffiliationSummary[];
-}
-
-export interface AffiliationSummary {
-  associationNom: string;
-  associationSlug: string;
-  role: string;
-  statut: string;
+  // Role et statut du membre dans l'association ; null si le compte n'a pas de role.
+  role: string | null;
+  statutMembre: string | null;
 }
 
 export interface PageResponse<T> {

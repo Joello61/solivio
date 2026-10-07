@@ -2,8 +2,9 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.InvitationService;
 import com.solivio.api.identity.domain.Invitation;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.InviterMembreRequest;
+import com.solivio.api.shared.association.AssociationQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,12 @@ import java.util.UUID;
 public class InvitationController {
 
     private final InvitationService invitationService;
+    private final AssociationQueryPort associationQueryPort;
 
-    public InvitationController(InvitationService invitationService) {
+    public InvitationController(InvitationService invitationService,
+                                AssociationQueryPort associationQueryPort) {
         this.invitationService = invitationService;
+        this.associationQueryPort = associationQueryPort;
     }
 
     @PostMapping
@@ -35,8 +39,7 @@ public class InvitationController {
             @Valid @RequestBody InviterMembreRequest request,
             @AuthenticationPrincipal SolivioUserDetails userDetails) {
         Invitation invitation = invitationService.inviter(
-            userDetails, request.email(), request.role(),
-            request.coordoType(), userDetails.getTenantSlug());
+            userDetails, request.email(), request.role(), request.coordoType());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(Map.of("token", invitation.getToken().toString()));
     }
@@ -46,7 +49,7 @@ public class InvitationController {
         Invitation invitation = invitationService.consulterInvitation(token);
         return ResponseEntity.ok(Map.of(
             "email", invitation.getEmail(),
-            "associationNom", invitation.getAssociation().getNom(),
+            "associationNom", associationQueryPort.nomAssociation(),
             "role", invitation.getRole()
         ));
     }

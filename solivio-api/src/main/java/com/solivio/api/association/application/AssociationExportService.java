@@ -1,9 +1,6 @@
 package com.solivio.api.association.application;
 
-import com.solivio.api.association.domain.Association;
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
-import com.solivio.api.shared.exception.NotFoundException;
+import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,49 +15,52 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Exporte l'integralite des donnees d'une association en ZIP (JSON par entite).
- * Les tables du schema tenant sont lues directement via JDBC pour une
- * exhaustivite independante des couches applicatives.
+ * Exporte les donnees de l'association en ZIP (un JSON par table).
+ * Les tables sont lues directement via JDBC pour une exhaustivite
+ * independante des couches applicatives.
  */
 @Service
 @Transactional(readOnly = true)
 public class AssociationExportService {
 
-    private static final List<String> TABLES_TENANT = List.of(
-        "personne", "profil_beneficiaire", "affiliation", "role",
-        "distribution", "creneau", "inscription", "denree_distribution",
-        "notification", "statistique_distribution", "journal_audit"
+    // Tables metier exportees. Les tables techniques d'authentification (compte,
+    // refresh_token, verification_code, invitation) sont exclues : elles portent
+    // des hash de secrets. Noms constants, jamais derives d'une entree utilisateur.
+    private static final List<String> TABLES_EXPORTEES = List.of(
+        "membre", "personne", "profil_beneficiaire",
+        "distribution", "creneau", "inscription", "type_role", "role_benevole_inscription",
+        "pointage_ad_hoc", "denree_distribution", "catalogue_denree",
+        "notification", "statistique_distribution",
+        "session_reconditionnement", "inscription_reconditionnement",
+        "mission_collecte", "evenement", "participation_evenement", "journal_audit"
     );
 
-    private final AssociationRepository associationRepository;
+    private final AssociationConfigService configService;
     private final JdbcTemplate jdbcTemplate;
     private final JsonMapper jsonMapper;
 
     public AssociationExportService(
-        AssociationRepository associationRepository,
+        AssociationConfigService configService,
         JdbcTemplate jdbcTemplate,
         JsonMapper jsonMapper
     ) {
-        this.associationRepository = associationRepository;
+        this.configService = configService;
         this.jdbcTemplate = jdbcTemplate;
         this.jsonMapper = jsonMapper;
     }
 
-    public byte[] exporterEnZip(String tenantSlug) {
-        Association asso = associationRepository.findBySlug(tenantSlug)
-            .orElseThrow(() -> new NotFoundException("Association introuvable : " + tenantSlug));
-
-        String schema = TenantProvisioningService.schemaName(tenantSlug);
-        return construireZip(asso, schema);
+    @Transactional(readOnly = true)
+    public byte[] exporterEnZip() {
+        return construireZip(configService.lire());
     }
 
-    private byte[] construireZip(Association asso, String schema) {
+    private byte[] construireZip(AssociationResponse asso) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zip = new ZipOutputStream(baos)) {
             ajouterEntree(zip, "association.json", asso);
-            for (String table : TABLES_TENANT) {
+            for (String table : TABLES_EXPORTEES) {
                 List<Map<String, Object>> lignes = jdbcTemplate.queryForList(
-                    "SELECT * FROM \"" + schema + "\"." + table
+                    "SELECT * FROM " + table
                 );
                 ajouterEntree(zip, table + ".json", lignes);
             }

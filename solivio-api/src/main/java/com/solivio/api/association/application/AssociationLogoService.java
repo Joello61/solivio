@@ -3,7 +3,6 @@ package com.solivio.api.association.application;
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
-import com.solivio.api.shared.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +42,8 @@ public class AssociationLogoService {
         "image/webp", "webp"
     );
 
-    private static final String URL_TEMPLATE = "/api/public/logo/";
+    private static final String URL_LOGO = "/api/public/logo";
+    private static final String NOM_FICHIER = "logo";
 
     private final AssociationRepository associationRepository;
     private final AssociationConfigService configService;
@@ -65,47 +65,46 @@ public class AssociationLogoService {
     }
 
     @Transactional
-    public AssociationResponse sauvegarderLogo(String tenantSlug, MultipartFile file) {
+    public AssociationResponse sauvegarderLogo(MultipartFile file) {
         validerFichier(file);
 
         String ext = EXT_PAR_MIME.get(file.getContentType());
-        supprimerAncienLogo(tenantSlug);
+        supprimerAncienLogo();
 
-        Path destination = logosDir.resolve(tenantSlug + "." + ext);
+        Path destination = logosDir.resolve(NOM_FICHIER + "." + ext);
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException("Echec de l'enregistrement du logo", e);
         }
 
-        Association asso = associationRepository.findBySlug(tenantSlug)
-            .orElseThrow(() -> new NotFoundException("Association introuvable : " + tenantSlug));
-        asso.setLogoUrl(URL_TEMPLATE + tenantSlug);
+        Association asso = configService.charger();
+        asso.setLogoUrl(URL_LOGO);
         associationRepository.save(asso);
 
-        log.debug("Logo enregistre pour {} : {}", tenantSlug, destination);
-        return configService.lire(tenantSlug);
+        log.debug("Logo enregistre : {}", destination);
+        return configService.lire();
     }
 
     /**
      * Lit le fichier logo depuis le disque.
-     * Retourne un tableau vide si aucun logo n'existe pour ce tenant.
+     * Retourne un tableau vide si aucun logo n'a ete televerse.
      */
-    public byte[] lireLogo(String tenantSlug) {
-        Optional<Path> logoPath = trouverFichierLogo(tenantSlug);
+    public byte[] lireLogo() {
+        Optional<Path> logoPath = trouverFichierLogo();
         if (logoPath.isEmpty()) {
             return new byte[0];
         }
         try {
             return Files.readAllBytes(logoPath.get());
         } catch (IOException e) {
-            log.warn("Lecture du logo impossible pour {} : {}", tenantSlug, e.getMessage());
+            log.warn("Lecture du logo impossible : {}", e.getMessage());
             return new byte[0];
         }
     }
 
-    public MediaType mediaTypePourTenant(String tenantSlug) {
-        return trouverFichierLogo(tenantSlug)
+    public MediaType mediaTypeLogo() {
+        return trouverFichierLogo()
             .map(p -> {
                 String name = p.getFileName().toString();
                 String ext = name.substring(name.lastIndexOf('.') + 1).toLowerCase();
@@ -130,19 +129,19 @@ public class AssociationLogoService {
         }
     }
 
-    private void supprimerAncienLogo(String tenantSlug) {
-        trouverFichierLogo(tenantSlug).ifPresent(p -> {
+    private void supprimerAncienLogo() {
+        trouverFichierLogo().ifPresent(p -> {
             try {
                 Files.deleteIfExists(p);
             } catch (IOException e) {
-                log.warn("Impossible de supprimer l'ancien logo pour {} : {}", tenantSlug, e.getMessage());
+                log.warn("Impossible de supprimer l'ancien logo : {}", e.getMessage());
             }
         });
     }
 
-    private Optional<Path> trouverFichierLogo(String tenantSlug) {
+    private Optional<Path> trouverFichierLogo() {
         for (String ext : EXT_PAR_MIME.values()) {
-            Path candidate = logosDir.resolve(tenantSlug + "." + ext);
+            Path candidate = logosDir.resolve(NOM_FICHIER + "." + ext);
             if (Files.exists(candidate)) {
                 return Optional.of(candidate);
             }

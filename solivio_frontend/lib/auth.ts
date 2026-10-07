@@ -21,7 +21,6 @@ export async function register(payload: {
   motDePasse: string;
   nom: string;
   prenom: string;
-  codeAssociation?: string;
   tokenInvitation?: string;
 }): Promise<void> {
   return apiPost<void>("/api/auth/register", payload);
@@ -43,15 +42,10 @@ export async function refreshToken(refreshToken: string): Promise<TokenResponse>
   return apiPost<TokenResponse>("/api/auth/refresh", { refreshToken });
 }
 
-export async function switchTenant(tenantSlug: string): Promise<TokenResponse> {
-  return apiPost<TokenResponse>("/api/auth/switch-tenant", { tenantSlug });
-}
-
 export async function completerInscriptionGoogle(payload: {
   email: string;
   nom: string;
   prenom: string;
-  codeAssociation?: string;
   tokenInvitation?: string;
 }): Promise<TokenResponse> {
   return apiPost<TokenResponse>("/api/auth/google/complete-registration", payload);

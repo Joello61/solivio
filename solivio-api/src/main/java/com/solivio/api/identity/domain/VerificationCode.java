@@ -21,7 +21,7 @@ import java.util.UUID;
  * Expire apres 15 minutes. Invalide apres la premiere utilisation reussie.
  */
 @Entity
-@Table(name = "verification_code", schema = "public")
+@Table(name = "verification_code")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,6 +49,9 @@ public class VerificationCode {
 
     @Column(nullable = false)
     private boolean utilise = false;
+
+    @Column(nullable = false)
+    private int tentatives = 0;
 
     @Column(name = "cree_a", nullable = false, updatable = false)
     private Instant creeA = Instant.now();

@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import org.jspecify.annotations.NullMarked;
@@ -37,7 +38,6 @@ public class SolivioUserDetailsService implements UserDetailsService {
             compte.getId(),
             compte.getEmail(),
             compte.getPasswordHash(),
-            null,
             compte.isSuperAdmin(),
             List.of(new SimpleGrantedAuthority("ROLE_USER")),
             compte.isActif() && compte.isEmailVerifie()

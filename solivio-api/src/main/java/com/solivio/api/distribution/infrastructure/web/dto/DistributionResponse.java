@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.infrastructure.web.dto;
 
+import com.solivio.api.shared.lieu.LieuResponse;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

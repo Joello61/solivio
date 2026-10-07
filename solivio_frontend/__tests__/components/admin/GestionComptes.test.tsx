@@ -23,7 +23,8 @@ const compteActif: CompteAdminResponse = {
   actif: true,
   superAdmin: false,
   dateCreation: "2026-01-01T00:00:00Z",
-  affiliations: [{ associationNom: "Pilote", associationSlug: "pilote", role: "benevole", statut: "actif" }],
+  role: "benevole",
+  statutMembre: "actif",
 };
 
 const pageUnSeulCompte: PageResponse<CompteAdminResponse> = {
@@ -59,9 +60,15 @@ describe("GestionComptes", () => {
     expect(screen.getAllByText("alice@example.com")[0]).toBeInTheDocument();
   });
 
-  it("affiche les associations du compte", () => {
+  it("affiche le role du membre", () => {
     render(<GestionComptes page={pageUnSeulCompte} recherche="" currentPage={0} />);
-    expect(screen.getAllByText("Pilote")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Benevole")[0]).toBeInTheDocument();
+  });
+
+  it("signale un membre suspendu", () => {
+    const suspendu = { ...compteActif, statutMembre: "suspendu" };
+    render(<GestionComptes page={{ ...pageUnSeulCompte, content: [suspendu] }} recherche="" currentPage={0} />);
+    expect(screen.getAllByText("Benevole (suspendu)")[0]).toBeInTheDocument();
   });
 
   it("affiche le badge Actif pour un compte actif", () => {

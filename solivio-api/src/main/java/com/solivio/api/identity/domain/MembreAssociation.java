@@ -1,6 +1,5 @@
 package com.solivio.api.identity.domain;
 
-import com.solivio.api.association.domain.Association;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,13 +17,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Appartenance d'un Compte a une Association avec un role specifique.
- * Stockee dans le schema public : visible depuis tous les tenants.
- * Un utilisateur peut avoir plusieurs appartenances (une par association).
+ * Role d'un Compte dans l'association (au plus un par compte).
  * coordo_type : sous-type libre pour les coordinateurs (ex: coordo_sec, coordo_fruit).
  */
 @Entity
-@Table(name = "affiliation", schema = "public")
+@Table(name = "membre")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,10 +34,6 @@ public class MembreAssociation {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "compte_id", nullable = false)
     private Compte compte;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "association_id", nullable = false)
-    private Association association;
 
     @Column(nullable = false, length = 30)
     private String role;
@@ -61,9 +54,8 @@ public class MembreAssociation {
     @Column(name = "date_fin")
     private LocalDate dateFin;
 
-    public MembreAssociation(Compte compte, Association association, String role) {
+    public MembreAssociation(Compte compte, String role) {
         this.compte = compte;
-        this.association = association;
         this.role = role;
     }
 

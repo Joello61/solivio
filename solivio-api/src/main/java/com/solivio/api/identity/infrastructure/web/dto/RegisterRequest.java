@@ -1,6 +1,7 @@
 package com.solivio.api.identity.infrastructure.web.dto;
 
 import jakarta.validation.constraints.Email;
+import com.solivio.api.identity.infrastructure.web.validation.MotDePasseRobuste;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -12,9 +13,8 @@ import jakarta.validation.constraints.Size;
  */
 public record RegisterRequest(
     @NotBlank @Email String email,
-    @NotBlank @Size(min = 8, max = 100) String motDePasse,
+    @NotBlank @MotDePasseRobuste String motDePasse,
     @NotBlank @Size(max = 100) String nom,
     @NotBlank @Size(max = 100) String prenom,
-    String codeAssociation,
     String tokenInvitation
 ) {}

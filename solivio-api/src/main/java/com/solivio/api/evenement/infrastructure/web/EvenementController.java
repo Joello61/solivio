@@ -8,7 +8,7 @@ import com.solivio.api.evenement.infrastructure.web.dto.CreateEvenementRequest;
 import com.solivio.api.evenement.infrastructure.web.dto.EvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.UpdateEvenementRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,7 +86,7 @@ public class EvenementController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        EvenementResponse response = evenementService.publier(id, user.getTenantSlug());
+        EvenementResponse response = evenementService.publier(id);
         auditService.tracer(user.getCompteId(), "EVENEMENT_PUBLIE", "evenement", id);
         return ResponseEntity.ok(response);
     }
@@ -98,7 +98,7 @@ public class EvenementController {
         @Valid @RequestBody AnnulerEvenementRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        EvenementResponse response = evenementService.annuler(id, request, user.getTenantSlug());
+        EvenementResponse response = evenementService.annuler(id, request);
         auditService.tracer(user.getCompteId(), "EVENEMENT_ANNULE", "evenement", id);
         return ResponseEntity.ok(response);
     }

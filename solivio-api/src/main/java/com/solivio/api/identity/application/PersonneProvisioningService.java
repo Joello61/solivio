@@ -1,25 +1,16 @@
 package com.solivio.api.identity.application;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cree l'enregistrement Personne dans le schema tenant lors de l'inscription
- * ou a la premiere connexion (JIT).
- *
- * Utilise TransactionTemplate PROPAGATION_REQUIRES_NEW (et non @Transactional)
- * pour garantir que TenantContext est positionne AVANT le demarrage de la
- * transaction : Hibernate lit le tenant identifier a l'ouverture de la
- * connexion, donc un @Transactional REQUIRES_NEW sur la methode elle-meme
- * lirait TenantContext avant que le corps de methode ait pu le renseigner.
+ * Cree l'enregistrement Personne d'un compte lors de l'inscription ou a la
+ * premiere connexion (JIT). Execute dans la transaction de l'appelant : la cle
+ * etrangere personne.compte_email exige que le compte soit visible.
  */
 @Service
 public class PersonneProvisioningService {
@@ -27,33 +18,16 @@ public class PersonneProvisioningService {
     private static final Logger log = LoggerFactory.getLogger(PersonneProvisioningService.class);
 
     private final PersonneRepository personneRepository;
-    private final TransactionTemplate requiresNewTemplate;
 
-    public PersonneProvisioningService(
-        PersonneRepository personneRepository,
-        PlatformTransactionManager transactionManager
-    ) {
+    public PersonneProvisioningService(PersonneRepository personneRepository) {
         this.personneRepository = personneRepository;
-        this.requiresNewTemplate = new TransactionTemplate(transactionManager);
-        this.requiresNewTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    public void provisionner(String associationSlug, String email, String nom, String prenom) {
-        String schema = TenantProvisioningService.schemaName(associationSlug);
-        // TenantContext positionne avant execute() : Hibernate le lit a l'ouverture
-        // de la connexion dans la nouvelle transaction.
-        TenantContext.setTenantId(schema);
-        try {
-            requiresNewTemplate.execute(status -> {
-                if (!personneRepository.existsByEmail(email)) {
-                    Personne personne = new Personne(nom, prenom, email);
-                    personneRepository.save(personne);
-                    log.debug("Personne provisionnee dans {} pour {}", schema, email);
-                }
-                return null;
-            });
-        } finally {
-            TenantContext.clear();
+    @Transactional
+    public void provisionner(String email, String nom, String prenom) {
+        if (!personneRepository.existsByEmail(email)) {
+            personneRepository.save(new Personne(nom, prenom, email));
+            log.debug("Personne provisionnee pour le compte {}", email);
         }
     }
 }

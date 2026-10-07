@@ -245,8 +245,8 @@ export default function LandingPage() {
       a: "C'est précisément le problème que Solivio résout. La base de données est centralisée et structurée pour que le nouveau bureau prenne les rênes sans perdre l'historique.",
     },
     {
-      q: "Comment fonctionne l'isolation entre associations ?",
-      a: "Architecture multi-tenant stricte. Les données de chaque association sont isolées en base. Il est techniquement impossible pour un utilisateur d'une organisation d'accéder aux données d'une autre.",
+      q: "Qui peut voir les données sensibles des bénéficiaires ?",
+      a: "Uniquement les rôles qui en ont besoin. Le profil social d'un bénéficiaire n'apparaît jamais au pointage, et les statistiques sont toujours agrégées et pseudonymisées.",
     },
     {
       q: "Puis-je exporter mes données à tout moment ?",
@@ -596,8 +596,8 @@ export default function LandingPage() {
             {[
               {
                 icon: <Database className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
-                title: "Isolation multi-tenant",
-                desc: "Chaque association dispose d'un espace hermétique en base de données. Aucune fuite possible entre organisations.",
+                title: "Instance dédiée",
+                desc: "Solivio est déployé pour Linkee Toulouse sur sa propre base de données, partagée avec aucune autre structure.",
               },
               {
                 icon: <ShieldCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
@@ -628,7 +628,7 @@ export default function LandingPage() {
               { icon: <GitBranch className="h-3.5 w-3.5" />, label: "AGPL-3.0 open source" },
               { icon: <Globe className="h-3.5 w-3.5" />, label: "Hébergement Union Européenne" },
               { icon: <ShieldCheck className="h-3.5 w-3.5" />, label: "Conforme RGPD" },
-              { icon: <Database className="h-3.5 w-3.5" />, label: "Multi-tenant isolé" },
+              { icon: <Database className="h-3.5 w-3.5" />, label: "Instance dédiée" },
             ].map((b) => (
               <span
                 key={b.label}

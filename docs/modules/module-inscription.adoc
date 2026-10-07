@@ -1,0 +1,11 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.inscription`
+|Bean references
+|* `c.s.a.s.identity.PersonneQueryPort` (in shared)
+* `c.s.a.s.distribution.DistributionQueryPort` (in shared)
+* `c.s.a.s.association.AssociationQueryPort` (in shared)
+* `c.s.a.s.identity.InvitationPort` (in shared)
+* `c.s.a.a.application.AuditService` (in audit)
+|===

@@ -1,6 +1,7 @@
 package com.solivio.api.identity.application;
 
 import com.solivio.api.identity.domain.Compte;
+import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
@@ -47,19 +48,32 @@ class AdminCompteServiceTest {
     void lister_retournePageDeComptes() {
         Page<Compte> page = new PageImpl<>(List.of(compte));
         when(compteRepository.rechercherComptes(any(), any(Pageable.class))).thenReturn(page);
-        when(membreRepository.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
         Page<CompteAdminResponse> result = service.lister(null, 0, 20);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().getFirst().email()).isEqualTo("alice@example.com");
+        assertThat(result.getContent().getFirst().role()).isNull();
+    }
+
+    @Test
+    void lireParId_exposeLeRoleEtLeStatutDuMembre() {
+        MembreAssociation membre = new MembreAssociation(compte, "coordinateur");
+        when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.of(membre));
+
+        CompteAdminResponse result = service.lireParId(compteId);
+
+        assertThat(result.role()).isEqualTo("coordinateur");
+        assertThat(result.statutMembre()).isEqualTo("actif");
     }
 
     @Test
     void mettreAJourStatut_desactiveEtRevoqueTokens() {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(compteRepository.save(any())).thenReturn(compte);
-        when(membreRepository.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
         service.mettreAJourStatut(compteId, false);
 
@@ -72,7 +86,7 @@ class AdminCompteServiceTest {
         compte.setActif(false);
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(compteRepository.save(any())).thenReturn(compte);
-        when(membreRepository.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
         service.mettreAJourStatut(compteId, true);
 
@@ -85,7 +99,7 @@ class AdminCompteServiceTest {
     void mettreAJourSuperAdmin_basculeLeFlag() {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(compteRepository.save(any())).thenReturn(compte);
-        when(membreRepository.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
         service.mettreAJourSuperAdmin(compteId, true);
 

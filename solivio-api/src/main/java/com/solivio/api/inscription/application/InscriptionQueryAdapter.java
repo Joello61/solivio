@@ -1,7 +1,6 @@
 package com.solivio.api.inscription.application;
 
-import com.solivio.api.identity.domain.Personne;
-import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
+import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.TypeInscription;
@@ -13,21 +12,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class InscriptionQueryAdapter implements InscriptionQueryPort {
 
     private final InscriptionRepository inscriptionRepository;
-    private final PersonneRepository personneRepository;
+    private final PersonneQueryPort personneQueryPort;
 
     public InscriptionQueryAdapter(
         InscriptionRepository inscriptionRepository,
-        PersonneRepository personneRepository
+        PersonneQueryPort personneQueryPort
     ) {
         this.inscriptionRepository = inscriptionRepository;
-        this.personneRepository = personneRepository;
+        this.personneQueryPort = personneQueryPort;
     }
 
     @Override
@@ -53,10 +51,7 @@ public class InscriptionQueryAdapter implements InscriptionQueryPort {
             .toList();
 
         // Batch : une seule requete pour tous les emails
-        Map<UUID, String> emailParPersonne = personneRepository.findAllById(personneIds)
-            .stream()
-            .collect(Collectors.toMap(Personne::getId,
-                Personne::getEmail));
+        Map<UUID, String> emailParPersonne = personneQueryPort.trouverEmailsParIds(personneIds);
 
         return inscrits.stream()
             .filter(i -> emailParPersonne.containsKey(i.getPersonneId()))

@@ -5,7 +5,7 @@ import com.solivio.api.evenement.application.ParticipationEvenementService;
 import com.solivio.api.evenement.domain.RoleParticipation;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

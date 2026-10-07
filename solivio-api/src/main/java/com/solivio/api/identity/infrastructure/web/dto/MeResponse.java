@@ -11,7 +11,6 @@ public record MeResponse(
     String telephone,
     String photoUrl,
     boolean superAdmin,
-    String tenantActif,
     List<String> roles,
     Instant dateCreation,
     Instant dateModification,
