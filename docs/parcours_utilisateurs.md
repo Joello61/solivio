@@ -74,7 +74,7 @@ C'est le parcours le plus important et le plus exigeant en simplicité. Il doit 
 flowchart TD
     A[Ouverture de Solivio sur mobile] --> B{Compte existant ?}
     B -- Non --> C[Création de compte rapide]
-    B -- Oui --> D[Connexion via Keycloak]
+    B -- Oui --> D[Connexion email ou Google]
     C --> D
     D --> E[Liste des distributions à venir]
     E --> F[Sélection de la distribution]
@@ -94,7 +94,7 @@ flowchart TD
 
 ### 4.2 Les étapes en détail
 
-**Étape 1 — Accès et compte.** Le bénéficiaire arrive sur la page de son association (avec le logo et les couleurs de celle-ci). S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact). La connexion passe par Keycloak, de façon transparente pour lui. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
+**Étape 1 — Accès et compte.** Le bénéficiaire arrive sur Solivio, aux couleurs de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
 
 **Étape 2 — Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
 
