@@ -8,10 +8,6 @@
 #
 # TLS is handled by Coolify (or Traefik in front). Services communicate over
 # the internal network without TLS between containers.
-#
-# CLUSTER_ID for Kafka must be generated once and kept stable:
-#   docker run --rm apache/kafka:4 /opt/kafka/bin/kafka-storage.sh random-uuid
-# Then set KAFKA_CLUSTER_ID in .env with that value.
 
 services:
 
@@ -38,40 +34,6 @@ services:
       start_period: 20s
 
   # ---------------------------------------------------------------------------
-  # Apache Kafka 4.0.2 - KRaft mode (no ZooKeeper)
-  # Single broker for small-scale production.
-  # KAFKA_CLUSTER_ID must be generated once and kept stable in .env.
-  # ---------------------------------------------------------------------------
-  kafka:
-    image: apache/kafka:4.0.2
-    container_name: solivio_kafka
-    restart: unless-stopped
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LOG_DIRS: /var/lib/kafka/data
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    networks:
-      - solivio_net
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  # ---------------------------------------------------------------------------
   # Backend - Spring Boot 4 / Java 25
   # ---------------------------------------------------------------------------
   backend:
@@ -84,7 +46,6 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SOLIVIO_AUTH_JWT_SECRET: ${SOLIVIO_AUTH_JWT_SECRET}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SOLIVIO_POST_LOGIN_REDIRECT_URI: ${FRONTEND_URL}
       SOLIVIO_POST_LOGOUT_REDIRECT_URI: ${FRONTEND_URL}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -102,8 +63,6 @@ services:
       - uploads_data:/var/solivio/uploads
     depends_on:
       postgres:
-        condition: service_healthy
-      kafka:
         condition: service_healthy
     networks:
       - solivio_net
@@ -142,8 +101,6 @@ services:
 # -----------------------------------------------------------------------------
 volumes:
   postgres_data:
-    driver: local
-  kafka_data:
     driver: local
   uploads_data:
     driver: local
