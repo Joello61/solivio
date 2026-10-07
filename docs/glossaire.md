@@ -68,9 +68,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Module.** Un domaine fonctionnel cohérent du produit (par exemple le module Distributions, le module Notifications). Dans l'architecture, les modules sont aussi les briques internes du backend, aux frontières nettes.
 
-**Multi-association (ou « multi-tenant »).** Le fait qu'une seule installation de Solivio puisse servir plusieurs associations indépendantes, sans qu'elles ne voient jamais les données les unes des autres. « Tenant » est le terme technique pour « association » dans ce contexte.
-
-**Isolation.** La garantie qu'aucune association n'accède aux données d'une autre. C'est une exigence critique, vérifiée par une suite de tests dédiée.
+**Instance.** Une installation de Solivio. Depuis octobre 2026, une instance sert une seule association : Linkee Toulouse (`architecture_technique.md`, ADR-001). Une autre association utiliserait sa propre instance. Les anciennes notions de "multi-association", "multi-tenant" et "isolation entre associations" ne s'appliquent plus.
 
 **Configuration.** L'ensemble des réglages propres à une association : nom, logo, couleurs, paramètres. Elle permet d'adapter l'apparence sans développement.
 
@@ -88,7 +86,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Microservice.** Une application autonome, déployée séparément, responsable d'un domaine précis. Solivio n'en utilise pas en V1, mais son architecture est conçue pour en extraire plus tard, à partir des modules existants.
 
-**Schema-per-tenant (un schéma par association).** La technique d'isolation retenue : chaque association a son propre schéma dans la base de données PostgreSQL, ce qui rend les données physiquement séparées.
+**Spring Modulith.** La bibliothèque qui décrit les modules du backend, vérifie automatiquement qu'aucun module n'accède aux internes d'un autre, et fournit les événements internes fiables.
 
 **RBAC (contrôle d'accès par rôle).** Un modèle où les droits dépendent du rôle de la personne (responsable, coordinateur, etc.). C'est la base du contrôle d'accès de la V1.
 
@@ -96,13 +94,17 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Événementiel (ou « asynchrone »).** Un mode de communication où un module signale qu'un événement s'est produit (par exemple « inscription confirmée ») sans attendre de réponse, et où un autre module y réagit (par exemple en envoyant un email). Cela découple les modules.
 
-**Kafka.** L'outil qui transporte ces événements entre les modules. Dans sa génération actuelle, il fonctionne sans le composant ZooKeeper d'autrefois, ce qui simplifie son exploitation.
+**Registre de publication.** La table de la base de données où chaque événement interne est enregistré dans la même transaction que la donnée métier, puis marqué terminé une fois traité. Il garantit qu'un événement n'est jamais perdu, même en cas d'arrêt de l'application.
 
-**Keycloak.** L'outil open source qui gère l'authentification (connexion, identités, rôles, jetons). Solivio délègue l'authentification à Keycloak plutôt que de la reconstruire.
+**JWT (JSON Web Token).** Le jeton signé que le backend délivre après la connexion et qui prouve l'identité et les rôles de l'utilisateur à chaque requête. Solivio gère lui-même son authentification, sans outil externe.
 
-**OIDC (OpenID Connect).** Le protocole standard par lequel le produit dialogue avec Keycloak pour authentifier les utilisateurs.
+**OIDC (OpenID Connect).** Le protocole standard utilisé pour la connexion avec un compte Google.
 
-**Vault / OpenBao.** Des outils de gestion des secrets (mots de passe, clés). Ils chiffrent et distribuent les secrets de façon contrôlée. Solivio privilégie OpenBao, le fork open source de Vault, pour rester cohérent avec sa licence (voir section 4).
+**Infisical.** L'outil de gestion des secrets (mots de passe, clés) hébergé sur le serveur. Il injecte les secrets dans l'application au moment de son lancement, sans qu'ils soient jamais écrits dans le code.
+
+**Expo.** La plateforme utilisée pour construire l'application mobile en React Native.
+
+**Observabilité.** La capacité à comprendre ce qui se passe dans l'application en production grâce à ses journaux (Loki), ses métriques (Prometheus) et ses traces (Tempo), consultés dans Grafana.
 
 **Spring Boot.** Le cadre de développement du backend, en langage Java.
 
@@ -112,9 +114,9 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Docker.** L'outil de conteneurisation : il empaquette chaque composant dans un « conteneur » standardisé, ce qui rend l'application reproductible et facile à déployer ou à auto-héberger.
 
-**CI/CD (intégration et déploiement continus).** La chaîne automatisée qui teste, construit et déploie le code à chaque modification. Assurée ici par GitLab. Elle permet d'avancer sans régression.
+**CI/CD (intégration et déploiement continus).** La chaîne automatisée qui teste, construit et déploie le code à chaque modification. Assurée ici par GitHub Actions. Elle permet d'avancer sans régression.
 
-**Testcontainers.** Un outil qui lance de vraies dépendances (base de données, Kafka) dans des conteneurs jetables le temps des tests d'intégration.
+**Testcontainers.** Un outil qui lance de vraies dépendances (ici la base de données PostgreSQL) dans des conteneurs jetables le temps des tests d'intégration.
 
 **Flyway.** L'outil qui gère les évolutions de la structure de la base de données de façon versionnée et contrôlée.
 
@@ -148,9 +150,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Copyleft.** Le principe selon lequel les versions dérivées d'un logiciel libre doivent rester libres. L'AGPL est une licence à fort copyleft.
 
-**BSL (Business Source License).** Une licence dite « source ouverte mais non open source » : le code est visible et utilisable, mais avec des restrictions (notamment l'interdiction d'en faire un service concurrent), et il devient open source après un délai. C'est la licence actuelle de Vault, raison pour laquelle Solivio lui préfère OpenBao.
-
-**MPL 2.0.** Une licence open source à copyleft faible, reconnue par l'Open Source Initiative. C'est la licence d'OpenBao.
+**BSL (Business Source License).** Une licence dite "source ouverte mais non open source" : le code est visible et utilisable, mais avec des restrictions (notamment l'interdiction d'en faire un service concurrent), et il devient open source après un délai.
 
 ---
 
@@ -166,7 +166,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 | CI/CD | Intégration et déploiement continus | Section 3 |
 | AGPL | Affero General Public License | Section 4 |
 | BSL | Business Source License | Section 4 |
-| MPL | Mozilla Public License | Section 4 |
+| JWT | JSON Web Token | Section 3 |
 | V1 / V2 / V3 | Versions successives du produit | Section 2 |
 
 ---
@@ -175,9 +175,9 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Pourquoi ce document.** Parce que Solivio parle à des publics différents, et qu'un vocabulaire commun évite les malentendus entre le porteur, les associations, les recruteurs et les contributeurs.
 
-**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation…), le produit (multi-association, V1, isolation, non-enfermement…), la technique (monolithe modulaire, schema-per-tenant, ABAC, Kafka, Keycloak, OpenBao…), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation…).
+**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation…), le produit (instance, V1, non-enfermement, etc.), la technique (monolithe modulaire, Spring Modulith, registre de publication, JWT, ABAC, Infisical, etc.), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation, etc.).
 
-**Les distinctions à ne pas confondre.** Bénéficiaire et bénévole (une même personne peut être les deux) ; mobile-first et mobile-only ; RBAC et ABAC ; données sensibles au sens courant et catégories particulières du RGPD ; AGPL, BSL et MPL.
+**Les distinctions à ne pas confondre.** Bénéficiaire et bénévole (une même personne peut être les deux) ; mobile-first et mobile-only ; RBAC et ABAC ; données sensibles au sens courant et catégories particulières du RGPD ; AGPL et BSL.
 
 **La règle.** En cas de doute sur un terme ailleurs dans la série, c'est ici qu'on tranche.
 
