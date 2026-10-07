@@ -17,10 +17,7 @@
 #   spring.mail.host: localhost / port: 1025
 
 services:
-
-  # ---------------------------------------------------------------------------
   # PostgreSQL 18
-  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
     container_name: solivio_dev_postgres
@@ -41,12 +38,9 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
-
-  # ---------------------------------------------------------------------------
   # Mailpit - SMTP local + visualiseur d'emails
   # Intercepte tous les emails sortants (aucun email reel envoye en dev).
   # UI: http://localhost:8025
-  # ---------------------------------------------------------------------------
   mailpit:
     image: axllent/mailpit:v1.31.4
     container_name: solivio_dev_mailpit
@@ -56,17 +50,11 @@ services:
       - "8025:8025"
     networks:
       - solivio_dev_net
-
-# -----------------------------------------------------------------------------
 # Volumes
-# -----------------------------------------------------------------------------
 volumes:
   dev_postgres_data:
     driver: local
-
-# -----------------------------------------------------------------------------
 # Networks
-# -----------------------------------------------------------------------------
 networks:
   solivio_dev_net:
     driver: bridge

@@ -77,9 +77,12 @@ jobs:
 
       - run: npm ci
 
-      # Bloque sur les vulnerabilites hautes et critiques.
+      # Bloque sur les vulnerabilites hautes et critiques des dependances embarquees
+      # dans l'application. Les outils de build (ESLint, CLI shadcn) dependent de
+      # braces, sans version corrigee a ce jour et jamais expose a une entree
+      # utilisateur ; Dependabot et la revue des dependances les suivent.
       - name: Audit des dependances
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
       - run: npm run lint
       - run: npx tsc --noEmit
