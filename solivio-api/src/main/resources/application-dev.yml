@@ -3,13 +3,6 @@
 # Infrastructure attendue : docker compose -f docker-compose-dev.yml up -d
 
 spring:
-  config:
-    import: "optional:vault://"
-
-  cloud:
-    vault:
-      uri: http://localhost:8200
-
   datasource:
     url: jdbc:postgresql://localhost:5436/solivio
     username: solivio
@@ -37,9 +30,9 @@ spring:
             enable: false
             required: false
 
-  # En dev, Google OAuth est optionnel.
-  # Renseigner GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans .env.local
-  # ou dans OpenBao dev pour tester le flux Google.
+  # En dev, la connexion Google est optionnelle : sans GOOGLE_CLIENT_ID et
+  # GOOGLE_CLIENT_SECRET en variables d'environnement, l'application demarre
+  # avec des valeurs factices et seul le bouton Google echoue.
   security:
     oauth2:
       client:
@@ -50,9 +43,8 @@ spring:
 
 solivio:
   auth:
-    # Cle de dev uniquement - generee pour le profil dev.
-    # En production la cle est injectee depuis OpenBao.
-    jwt-secret: dev-jwt-secret-key-must-be-at-least-32-bytes-long-for-hmac256
+    # Cle de developpement uniquement, sans valeur hors de la machine locale.
+    jwt-secret: ${SOLIVIO_AUTH_JWT_SECRET:dev-jwt-secret-key-must-be-at-least-32-bytes-long-for-hmac256}
     post-login-redirect-uri: http://localhost:3000
     post-logout-redirect-uri: http://localhost:3000
   cors:

@@ -1,6 +1,8 @@
 # application.yml
 # Configuration de base chargee dans tous les profils.
-# Les valeurs sensibles viennent des variables d'environnement ou de Spring Cloud Vault.
+# Les valeurs sensibles viennent uniquement des variables d'environnement
+# (injectees par Infisical en production, voir .env.example). Aucun secret
+# n'a de valeur par defaut ici : l'application refuse de demarrer s'il manque.
 #
 # Surcharges par profil : application-dev.yml, application-test.yml
 # En production : SPRING_PROFILES_ACTIVE=prod + toutes les ${ENV_VAR} fournies.
@@ -8,19 +10,6 @@
 spring:
   application:
     name: solivio-api
-
-  config:
-    import: "optional:vault://"
-
-  cloud:
-    vault:
-      uri: ${SPRING_CLOUD_VAULT_URI:http://localhost:8200}
-      token: ${SPRING_CLOUD_VAULT_TOKEN:}
-      scheme: http
-      kv:
-        enabled: true
-        backend: secret
-        default-context: ${spring.application.name}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/solivio}
@@ -81,7 +70,7 @@ spring:
             required: true
 
   # Google OAuth2 : seul fournisseur externe supporte.
-  # Les credentials Google sont injectes depuis OpenBao en production.
+  # Spring refuse de demarrer si GOOGLE_CLIENT_ID est vide.
   security:
     oauth2:
       client:
@@ -144,9 +133,8 @@ solivio:
     access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:15}
     # Duree de vie du JWT refresh token (jours).
     refresh-token-expiration-days: ${SOLIVIO_REFRESH_TOKEN_EXPIRATION:30}
-    # Cle secrete HMAC-SHA256 pour signer les JWT (32 octets minimum, base64).
-    # En prod : injectee depuis OpenBao (secret/solivio-api, cle jwt.secret).
-    jwt-secret: ${jwt.secret:}
+    # Cle HMAC-SHA256 de signature des JWT, 32 octets minimum.
+    jwt-secret: ${SOLIVIO_AUTH_JWT_SECRET:}
     # URI de redirection apres login Google reussi (vers le frontend).
     post-login-redirect-uri: ${SOLIVIO_POST_LOGIN_REDIRECT_URI:http://localhost:3000}
     # URI de redirection apres logout (vers le frontend).
@@ -160,5 +148,6 @@ solivio:
     logos-dir: ${SOLIVIO_LOGOS_DIR:/var/solivio/logos}
     avatars-dir: ${SOLIVIO_UPLOADS_AVATARS_DIR:/var/solivio/avatars}
   maps:
-    # Cle Google Maps Platform injectee depuis OpenBao en production.
+    # Cle Google Maps Platform, publique cote navigateur : la restreindre par
+    # referent HTTP dans la console Google. Vide = carte desactivee.
     api-key: ${GOOGLE_MAPS_API_KEY:AIzaSyARDf3AExqhj8D4K8rkhFWhrVojuBCBCx0}
