@@ -1,24 +1,20 @@
-# Note d'intention — Solivio
+# Note d'intention - Solivio
 
 > Plateforme de gestion opérationnelle pour les associations de solidarité étudiante.
 
-**Document fondateur — version 1.0**
+**Document fondateur - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
 > **Mise à jour d'octobre 2026.** Ce document fondateur décrit l'ambition d'origine : une plateforme mutualisée pour plusieurs associations du réseau Linkee. Depuis octobre 2026, Solivio sert uniquement Linkee Toulouse (`architecture_technique.md`, ADR-001). Les passages sur le multi-association, la mutualisation et les choix techniques d'origine (Keycloak, Kafka, OpenBao) sont conservés comme historique et ne font plus foi ; en cas d'écart, les spécifications, l'architecture et `CLAUDE.md` priment.
 
----
-
 ## Avertissement de lecture
 
 Ce document est le premier d'une série de dix. Il définit le *pourquoi* et le *pour qui* du projet. Il ne décrit ni les fonctionnalités précises, ni le modèle de données, ni l'architecture technique : ces aspects sont traités dans les documents dédiés (`specifications_fonctionnelles.md`, `modele_donnees.md`, `architecture_technique.md`).
 
-Son rôle est de poser un cadre stable. Toutes les décisions des documents suivants doivent pouvoir se justifier par rapport aux intentions exposées ici. Si une décision technique entre en contradiction avec cette note, c'est soit la décision qui est mauvaise, soit cette note qui doit être révisée consciemment — jamais ignorée silencieusement.
+Son rôle est de poser un cadre stable. Toutes les décisions des documents suivants doivent pouvoir se justifier par rapport aux intentions exposées ici. Si une décision technique entre en contradiction avec cette note, c'est soit la décision qui est mauvaise, soit cette note qui doit être révisée consciemment - jamais ignorée silencieusement.
 
 Les chiffres cités sont sourcés et datés. Ils ont vocation à être réactualisés : un chiffre sur la précarité étudiante a une durée de vie de douze à dix-huit mois.
-
----
 
 ## 1. Résumé exécutif
 
@@ -35,8 +31,6 @@ Le projet repose sur trois partis pris structurants :
 3. **Ouverture et pérennité.** Le code est destiné à être ouvert, afin qu'aucune association ne soit prisonnière de l'outil ni dépendante de la disponibilité d'une seule personne.
 
 L'association fondatrice de référence est une association étudiante d'aide alimentaire basée à Toulouse, qui sert de terrain d'observation et de validation. Elle n'est pas le client unique du produit : elle en est le laboratoire.
-
----
 
 ## 2. Contexte
 
@@ -69,7 +63,7 @@ C'est ici que se situe le véritable problème que Solivio entend résoudre.
 
 Les grandes structures disposent de moyens : équipes salariées, applications dédiées, partenariats technologiques, budgets. Elles ont les ressources pour se doter d'outils sur mesure ou pour adopter des solutions du marché.
 
-À l'opposé, la grande majorité des associations de solidarité étudiante — antennes locales, petites associations indépendantes, collectifs naissants — fonctionnent avec :
+À l'opposé, la grande majorité des associations de solidarité étudiante - antennes locales, petites associations indépendantes, collectifs naissants - fonctionnent avec :
 
 - des tableurs partagés pour les inscriptions et les stocks ;
 - des messageries instantanées pour coordonner les bénévoles ;
@@ -77,14 +71,12 @@ Les grandes structures disposent de moyens : équipes salariées, applications d
 - des outils de paiement tiers pour les dons ;
 - la mémoire des personnes en poste pour tout le reste.
 
-Cet assemblage fonctionne — jusqu'à ce qu'il ne fonctionne plus. Les points de rupture sont connus et récurrents :
+Cet assemblage fonctionne - jusqu'à ce qu'il ne fonctionne plus. Les points de rupture sont connus et récurrents :
 
 - **La montée en charge** : un tableur tient pour 50 inscrits, pas pour 500.
 - **Le renouvellement annuel des équipes** : dans une association étudiante, le bureau change chaque année. Les personnes qui maîtrisaient l'assemblage d'outils partent, et leurs successeurs héritent d'un système qu'ils ne comprennent pas. C'est l'une des premières causes de mortalité des outils associatifs.
 - **La dispersion de l'information** : les données vivent dans cinq endroits différents, sans cohérence ni historique fiable.
 - **La gestion amateur de données sensibles** : des informations sur des étudiants en situation de précarité circulent dans des tableurs et des messageries, sans cadre de confidentialité ni conformité réglementaire sérieuse.
-
----
 
 ## 3. Le problème que Solivio adresse
 
@@ -94,19 +86,17 @@ Le problème central tient en une phrase :
 
 Ce problème se décompose en quatre manques précis :
 
-**Manque 1 — L'absence d'outil métier centralisé.**
+**Manque 1 - L'absence d'outil métier centralisé.**
 Aucune solution ne couvre spécifiquement le cycle de vie d'une distribution de solidarité : planification, inscription des bénéficiaires et des bénévoles, gestion des créneaux, pointage le jour J, suivi des stocks consommés, statistiques. Les outils existants sont soit trop généralistes (tableurs, formulaires), soit conçus pour d'autres usages (billetterie, gestion d'adhérents classique), soit réservés aux structures qui ont les moyens de les déployer.
 
-**Manque 2 — La non-prise en compte du renouvellement des équipes.**
+**Manque 2 - La non-prise en compte du renouvellement des équipes.**
 Aucun outil grand public ne pense la passation de pouvoir, qui est pourtant le rythme cardiaque de la vie associative étudiante. Un outil qui ne survit pas à un changement de bureau ne sert à rien sur le long terme.
 
-**Manque 3 — La gestion non conforme des données sensibles.**
+**Manque 3 - La gestion non conforme des données sensibles.**
 Les données de bénéficiaires en situation de précarité sont des données sociales sensibles. Leur gestion dans des tableurs partagés expose les associations à des risques réels, sans qu'elles en aient toujours conscience. Il manque un outil qui intègre la confidentialité et la conformité par conception.
 
-**Manque 4 — L'enfermement et la fragilité.**
+**Manque 4 - L'enfermement et la fragilité.**
 Les solutions sur mesure développées en interne meurent avec leur développeur. Les solutions propriétaires enferment les associations. Il manque une option qui garantisse aux associations de ne jamais perdre l'accès à leurs propres données ni dépendre de la survie d'un acteur unique.
-
----
 
 ## 4. Vision et proposition de valeur
 
@@ -133,8 +123,6 @@ Trois caractéristiques distinguent Solivio des outils généralistes existants 
 1. **Un outil métier, pas un outil générique détourné.** Solivio parle le langage des associations de solidarité (distributions, bénéficiaires, bénévoles, créneaux, stocks), là où les tableurs et les outils de billetterie obligent à tordre des concepts inadaptés.
 2. **La configurabilité sans le sur-mesure.** Chaque association adapte l'outil à son fonctionnement par paramétrage, sans développement spécifique. Le détail de ce qui est configurable est défini dans les spécifications fonctionnelles ; le principe est posé ici.
 3. **La pérennité comme engagement de conception.** Open source, multi-association, données exportables : ces choix ne sont pas des détails techniques mais des promesses faites aux associations.
-
----
 
 ## 5. Périmètre : ce que Solivio est, et ce qu'il n'est pas
 
@@ -176,8 +164,6 @@ Pour éviter toute ambiguïté, les éléments suivants ne font **pas** partie d
 - La billetterie événementielle commerciale.
 - Tout dispositif d'aide à la décision automatisée concernant l'attribution d'aide à un bénéficiaire. Solivio outille des humains ; il ne décide pas à leur place qui a droit à quoi.
 
----
-
 ## 6. Public cible
 
 ### 6.1 Les associations visées
@@ -202,36 +188,32 @@ Solivio sert quatre grands types d'utilisateurs, dont les besoins et les niveaux
 | Bénévole | Donne de son temps | S'inscrire à des créneaux, connaître ses missions | Accès restreint à ce qui le concerne |
 | Bénéficiaire | Reçoit l'aide | S'inscrire simplement et sans stigmatisation | Données les plus sensibles, accès minimal, confidentialité maximale |
 
-Un même individu peut cumuler plusieurs rôles — un bénéficiaire peut être bénévole, un coordinateur reste un bénévole. Cette réalité est centrale et conditionne le modèle de droits ; elle est développée dans les documents techniques.
-
----
+Un même individu peut cumuler plusieurs rôles - un bénéficiaire peut être bénévole, un coordinateur reste un bénévole. Cette réalité est centrale et conditionne le modèle de droits ; elle est développée dans les documents techniques.
 
 ## 7. Principes directeurs
 
 Ces principes sont les invariants du projet. Ils s'appliquent à toutes les décisions ultérieures.
 
-**P1 — Architecture mutualisée dès le départ, fonctionnalités d'une association d'abord.**
+**P1 - Architecture mutualisée dès le départ, fonctionnalités d'une association d'abord.**
 Le socle est conçu pour plusieurs associations, mais on construit et on valide avec une association pilote avant de généraliser. On ne généralise jamais une fonctionnalité qui n'a pas été éprouvée sur le terrain.
 
-**P2 — Déléguer la commodité, construire le cœur.**
+**P2 - Déléguer la commodité, construire le cœur.**
 Tout ce qui n'est pas le cœur métier de la solidarité opérationnelle est délégué à des services tiers. Cette règle prime sur la tentation de tout maîtriser.
 
-**P3 — Le métier précède la technique.**
+**P3 - Le métier précède la technique.**
 Les concepts métier (organisation, personne, événement, ressource, don) sont modélisés avant toute table de base de données. Un modèle métier juste permet d'évoluer dix ans ; un modèle métier faux impose une réécriture sous deux ou trois ans, quelle que soit la qualité de l'architecture technique.
 
-**P4 — Le contrôle d'accès est contextuel.**
-Les droits ne se résument pas à « lire / écrire / supprimer ». Ils dépendent du contexte : un coordinateur agit sur ses distributions, un bénévole voit ce à quoi il participe, un responsable d'antenne ne voit que son antenne. Ce contrôle d'accès fin et contextuel est un différenciant du produit, pas un détail.
+**P4 - Le contrôle d'accès est contextuel.**
+Les droits ne se résument pas à "lire / écrire / supprimer". Ils dépendent du contexte : un coordinateur agit sur ses distributions, un bénévole voit ce à quoi il participe, un responsable d'antenne ne voit que son antenne. Ce contrôle d'accès fin et contextuel est un différenciant du produit, pas un détail.
 
-**P5 — La confidentialité et la conformité par conception.**
+**P5 - La confidentialité et la conformité par conception.**
 La protection des données sensibles des bénéficiaires n'est pas une fonctionnalité ajoutée a posteriori. Elle est intégrée à la conception : minimisation des données, pseudonymisation dans les statistiques, accès restreint par défaut, traçabilité des actions sensibles, hébergement en Union européenne.
 
-**P6 — La pérennité avant la fonctionnalité.**
+**P6 - La pérennité avant la fonctionnalité.**
 Mieux vaut un périmètre restreint mais durable qu'un périmètre ambitieux mais fragile. Le code est ouvert, les données sont exportables, l'association n'est jamais prisonnière.
 
-**P7 — La sobriété contre la sur-ingénierie.**
+**P7 - La sobriété contre la sur-ingénierie.**
 Chaque fonctionnalité, chaque couche technique, chaque option de configuration doit justifier son existence par un besoin réel et observé. La sophistication n'est jamais un objectif en soi. En cas de doute, on retire plutôt qu'on ajoute.
-
----
 
 ## 8. Positionnement par rapport à l'existant
 
@@ -243,8 +225,6 @@ Solivio ne se positionne pas frontalement contre les outils existants, mais dans
 - Face aux **outils internes des grandes structures** : Solivio s'adresse à celles qui n'ont pas ces moyens.
 
 L'analyse détaillée de la concurrence, avec acteurs nommés et comparaison fonctionnelle, fait l'objet du document `archive/analyse_concurrence.md`.
-
----
 
 ## 9. Objectifs et critères de succès
 
@@ -279,8 +259,6 @@ Il est sain de nommer ce qui constituerait un échec :
 - un périmètre devenu si vaste qu'il n'est jamais livré ;
 - une fuite de données sensibles.
 
----
-
 ## 10. Risques majeurs identifiés
 
 Cette section nomme honnêtement les risques. Les stratégies de réponse détaillées relèvent de `etude_faisabilite.md` ; l'objectif ici est de ne rien laisser dans l'angle mort.
@@ -297,8 +275,6 @@ Cette section nomme honnêtement les risques. Les stratégies de réponse détai
 
 La conception du produit intègre des réponses à plusieurs de ces risques : la sobriété de périmètre (P7) répond à la dérive, l'ouverture du code (P6) répond à la dépendance à une personne, la confidentialité par conception (P5) répond au risque sur les données.
 
----
-
 ## 11. Modèle de pérennité
 
 Le modèle retenu est **ouvert et hybride** :
@@ -310,22 +286,18 @@ Le modèle retenu est **ouvert et hybride** :
 
 Ce modèle répond à une exigence morale autant que stratégique : une association qui confie sa gestion à Solivio ne doit jamais se retrouver bloquée si le projet ralentit ou s'arrête.
 
----
-
 ## 12. Ce que ce document ne tranche pas
 
 Pour rester dans son rôle, cette note d'intention laisse délibérément ouverts des sujets traités ailleurs :
 
-- la liste précise des fonctionnalités et leur découpage en versions → `specifications_fonctionnelles.md` et `roadmap.md` ;
-- la comparaison nommée avec les outils concurrents → `archive/analyse_concurrence.md` ;
-- le choix de licence et le modèle de soutien financier → `archive/modele_economique.md` ;
-- la faisabilité au regard des ressources réelles → `etude_faisabilite.md` ;
-- les concepts métier détaillés et le schéma de données → `modele_donnees.md` ;
-- les choix de technologies et d'infrastructure → `architecture_technique.md` ;
-- l'expérience concrète des utilisateurs → `parcours_utilisateurs.md` ;
-- la définition partagée des termes → `glossaire.md`.
-
----
+- la liste précise des fonctionnalités et leur découpage en versions -> `specifications_fonctionnelles.md` et `roadmap.md` ;
+- la comparaison nommée avec les outils concurrents -> `archive/analyse_concurrence.md` ;
+- le choix de licence et le modèle de soutien financier -> `archive/modele_economique.md` ;
+- la faisabilité au regard des ressources réelles -> `etude_faisabilite.md` ;
+- les concepts métier détaillés et le schéma de données -> `modele_donnees.md` ;
+- les choix de technologies et d'infrastructure -> `architecture_technique.md` ;
+- l'expérience concrète des utilisateurs -> `parcours_utilisateurs.md` ;
+- la définition partagée des termes -> `glossaire.md`.
 
 ## 13. Synthèse en une page
 
@@ -340,7 +312,5 @@ Pour rester dans son rôle, cette note d'intention laisse délibérément ouvert
 **Avec qui.** Une association étudiante toulousaine d'aide alimentaire comme terrain de validation fondateur, avant toute généralisation.
 
 **Engagement.** Sobriété, pérennité, et refus de l'enfermement.
-
----
 
 *Fin de la note d'intention. Document suivant : `archive/analyse_concurrence.md`.*

@@ -6,8 +6,6 @@ Plateforme de gestion opérationnelle de Linkee Toulouse, association de solidar
 [![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
----
-
 ## Description
 
 Solivio est une plateforme open source (web et mobile) qui permet à Linkee Toulouse de gérer son activité opérationnelle : organisation des distributions alimentaires, inscriptions des bénéficiaires et bénévoles, pointage, répartition équitable des denrées, événements, missions de collecte, reconditionnement, notifications automatiques et suivi statistique.
@@ -15,8 +13,6 @@ Solivio est une plateforme open source (web et mobile) qui permet à Linkee Toul
 Il remplace les tableurs et messageries utilisés jusqu'ici, respecte la confidentialité des données des personnes en situation de précarité et permet d'exporter toutes les données de l'association. Une autre association peut déployer sa propre instance (licence AGPL).
 
 La documentation complète du projet (note d'intention, spécifications fonctionnelles, modèle de données, architecture) est disponible dans le dossier [`docs/`](docs/).
-
----
 
 ## Fonctionnalités (V1)
 
@@ -28,8 +24,6 @@ La documentation complète du projet (note d'intention, spécifications fonction
 - Statistiques agrégées et pseudonymisées
 - Événements, missions de collecte et sessions de reconditionnement
 - Export des données de l'association
-
----
 
 ## Stack technique
 
@@ -46,16 +40,12 @@ La documentation complète du projet (note d'intention, spécifications fonction
 
 Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](docs/architecture_technique.md) (ADR-001 à ADR-008).
 
----
-
 ## Prérequis
 
 - Docker et Docker Compose
 - Java 25 et Maven (ou utiliser le Maven wrapper inclus `./mvnw`)
 - Node.js 24 LTS et npm
 - Git
-
----
 
 ## Démarrage rapide
 
@@ -109,8 +99,6 @@ L'application est disponible sur `http://localhost:3000`.
 | API | http://localhost:8080 | - |
 | Mailpit (emails) | http://localhost:8025 | - |
 
----
-
 ## Structure du projet
 
 - `solivio-api/` : backend Spring Boot (`src/`, `pom.xml`, `Dockerfile`)
@@ -120,8 +108,6 @@ L'application est disponible sur `http://localhost:3000`.
 - `docker-compose-dev.yml` : services de développement
 - `docker-compose.yml` : stack de production
 - `CLAUDE.md` : règles de développement du projet
-
----
 
 ## Tests
 
@@ -135,8 +121,6 @@ cd solivio_frontend && npm run test:coverage
 # Frontend : tests de bout en bout (nécessite l'application en cours d'exécution)
 cd solivio_frontend && npm run test:e2e
 ```
-
----
 
 ## Documentation
 
@@ -154,8 +138,6 @@ La documentation complète est dans le dossier [`docs/`](docs/) :
 | [`glossaire.md`](docs/glossaire.md) | Vocabulaire partagé |
 | [`archive/`](docs/archive/) | Analyse de concurrence et modèle économique (périmètre national, historique) |
 
----
-
 ## Contribution
 
 Les contributions sont les bienvenues.
@@ -168,15 +150,11 @@ Les contributions sont les bienvenues.
 
 Les tests doivent passer et la couverture backend doit rester supérieure à 80 %. Les règles de développement sont dans [`CLAUDE.md`](CLAUDE.md).
 
----
-
 ## Licence
 
 Ce projet est distribué sous licence **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 Cela signifie que toute version modifiée proposée comme service en ligne doit également être publiée en open source. Voir le fichier [LICENSE](LICENSE) pour les détails.
-
----
 
 ## Auteur
 

@@ -1,22 +1,18 @@
-# Glossaire — Solivio
+# Glossaire - Solivio
 
 > Le vocabulaire partagé du projet, pour que chaque terme veuille dire la même chose pour tout le monde.
 
-**Document de pilotage — version 1.0**
+**Document de pilotage - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
----
-
 ## Avertissement de lecture
 
-Ce glossaire existe parce que Solivio s'adresse à des publics très différents : le porteur, les associations, des recruteurs, de futurs contributeurs. Un même mot peut signifier des choses différentes selon qui le lit. « Distribution » n'évoque pas la même chose pour un développeur et pour un bénévole ; « bénéficiaire » porte une charge sociale ; « tenant » est du jargon technique.
+Ce glossaire existe parce que Solivio s'adresse à des publics très différents : le porteur, les associations, des recruteurs, de futurs contributeurs. Un même mot peut signifier des choses différentes selon qui le lit. "Distribution" n'évoque pas la même chose pour un développeur et pour un bénévole ; "bénéficiaire" porte une charge sociale ; "tenant" est du jargon technique.
 
 Ce document fixe le sens des termes tels qu'ils sont employés dans toute la série. En cas de doute sur un mot dans un autre document, c'est ici que l'on tranche. Lorsqu'un terme a un sens particulier dans Solivio, il est précisé.
 
 Les définitions sont volontairement accessibles : un membre de bureau non technique doit pouvoir comprendre l'essentiel, et un développeur y retrouver la précision nécessaire.
-
----
 
 ## 1. Termes du domaine associatif
 
@@ -44,7 +40,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Présence.** Le résultat du pointage pour une inscription : présent, absent, ou non encore pointé.
 
-**Absence (ou « no-show »).** Le fait, pour une personne inscrite, de ne pas se présenter. Solivio compte les absences pour aider l'association à les suivre.
+**Absence (ou "no-show").** Le fait, pour une personne inscrite, de ne pas se présenter. Solivio compte les absences pour aider l'association à les suivre.
 
 **Denrée.** Un bien distribué lors d'une distribution (par exemple des pommes de terre, des yaourts). Dans Solivio, une denrée est rattachée à une distribution précise, avec une quantité.
 
@@ -57,8 +53,6 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 **Reste à vivre.** L'argent dont dispose une personne par mois une fois ses charges fixes déduites. C'est un indicateur clé de précarité, recueilli dans le profil bénéficiaire.
 
 **Passation de bureau.** Le renouvellement, souvent annuel, de l'équipe dirigeante d'une association. C'est un moment critique : beaucoup d'outils associatifs meurent à cette occasion, faute d'être repris par la nouvelle équipe.
-
----
 
 ## 2. Termes du produit
 
@@ -78,8 +72,6 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Responsive.** Se dit d'une interface qui s'adapte automatiquement à toutes les tailles d'écran (téléphone, tablette, ordinateur).
 
----
-
 ## 3. Termes techniques
 
 **Monolithe modulaire.** Le style d'architecture du backend : une seule application déployable, mais découpée à l'intérieur en modules indépendants. À mi-chemin entre le monolithe classique (un seul bloc) et les microservices (plusieurs applications).
@@ -92,7 +84,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **ABAC (contrôle d'accès par attributs).** Un modèle plus fin où les droits dépendent du contexte : qui agit, sur quoi, dans quelle situation (par exemple, un coordinateur n'agit que sur ses distributions). C'est un différenciateur de Solivio, déployé progressivement au-delà de la V1.
 
-**Événementiel (ou « asynchrone »).** Un mode de communication où un module signale qu'un événement s'est produit (par exemple « inscription confirmée ») sans attendre de réponse, et où un autre module y réagit (par exemple en envoyant un email). Cela découple les modules.
+**Événementiel (ou "asynchrone").** Un mode de communication où un module signale qu'un événement s'est produit (par exemple "inscription confirmée") sans attendre de réponse, et où un autre module y réagit (par exemple en envoyant un email). Cela découple les modules.
 
 **Registre de publication.** La table de la base de données où chaque événement interne est enregistré dans la même transaction que la donnée métier, puis marqué terminé une fois traité. Il garantit qu'un événement n'est jamais perdu, même en cas d'arrêt de l'application.
 
@@ -112,7 +104,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **PostgreSQL.** Le système de base de données relationnelle utilisé pour stocker les données.
 
-**Docker.** L'outil de conteneurisation : il empaquette chaque composant dans un « conteneur » standardisé, ce qui rend l'application reproductible et facile à déployer ou à auto-héberger.
+**Docker.** L'outil de conteneurisation : il empaquette chaque composant dans un "conteneur" standardisé, ce qui rend l'application reproductible et facile à déployer ou à auto-héberger.
 
 **CI/CD (intégration et déploiement continus).** La chaîne automatisée qui teste, construit et déploie le code à chaque modification. Assurée ici par GitHub Actions. Elle permet d'avancer sans régression.
 
@@ -121,8 +113,6 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 **Flyway.** L'outil qui gère les évolutions de la structure de la base de données de façon versionnée et contrôlée.
 
 **Migration.** Une modification versionnée de la structure de la base de données (ajout d'une table, d'un champ). Appliquée de façon contrôlée, y compris sur tous les schémas des associations.
-
----
 
 ## 4. Termes juridiques, données et licences
 
@@ -136,7 +126,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Données sensibles.** Dans ce projet, les données sociales et financières des bénéficiaires (situation, reste à vivre, statut). Elles sont protégées strictement et à accès restreint.
 
-**Catégories particulières (au sens du RGPD).** Les données les plus protégées par le RGPD (origine, opinions, santé, etc.). À ne pas confondre avec les « données sensibles » au sens courant employé ci-dessus : les données collectées par Solivio sont sensibles socialement mais ne relèvent pas, en principe, de ces catégories particulières.
+**Catégories particulières (au sens du RGPD).** Les données les plus protégées par le RGPD (origine, opinions, santé, etc.). À ne pas confondre avec les "données sensibles" au sens courant employé ci-dessus : les données collectées par Solivio sont sensibles socialement mais ne relèvent pas, en principe, de ces catégories particulières.
 
 **Pseudonymisation.** Le fait de traiter des données sans exposer l'identité des personnes (par exemple dans les statistiques, où l'on compte les bénéficiaires sans les nommer). Différent de l'anonymisation, qui rend l'identification impossible de façon irréversible.
 
@@ -151,8 +141,6 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 **Copyleft.** Le principe selon lequel les versions dérivées d'un logiciel libre doivent rester libres. L'AGPL est une licence à fort copyleft.
 
 **BSL (Business Source License).** Une licence dite "source ouverte mais non open source" : le code est visible et utilisable, mais avec des restrictions (notamment l'interdiction d'en faire un service concurrent), et il devient open source après un délai.
-
----
 
 ## 5. Acronymes en un coup d'œil
 
@@ -169,18 +157,14 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 | JWT | JSON Web Token | Section 3 |
 | V1 / V2 / V3 | Versions successives du produit | Section 2 |
 
----
-
 ## 6. Synthèse en une page
 
 **Pourquoi ce document.** Parce que Solivio parle à des publics différents, et qu'un vocabulaire commun évite les malentendus entre le porteur, les associations, les recruteurs et les contributeurs.
 
-**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation…), le produit (instance, V1, non-enfermement, etc.), la technique (monolithe modulaire, Spring Modulith, registre de publication, JWT, ABAC, Infisical, etc.), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation, etc.).
+**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation...), le produit (instance, V1, non-enfermement, etc.), la technique (monolithe modulaire, Spring Modulith, registre de publication, JWT, ABAC, Infisical, etc.), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation, etc.).
 
 **Les distinctions à ne pas confondre.** Bénéficiaire et bénévole (une même personne peut être les deux) ; mobile-first et mobile-only ; RBAC et ABAC ; données sensibles au sens courant et catégories particulières du RGPD ; AGPL et BSL.
 
 **La règle.** En cas de doute sur un terme ailleurs dans la série, c'est ici qu'on tranche.
-
----
 
 *Fin du glossaire. Fin de la série documentaire de Solivio.*

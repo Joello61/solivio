@@ -1,4 +1,4 @@
-# Roadmap — Solivio
+# Roadmap - Solivio
 
 > Quoi construire, dans quel ordre, et pourquoi : le plan d'exécution qui ordonne toutes les décisions de la série.
 
@@ -8,8 +8,6 @@
 
 > Changement depuis la version 1.1 : les phases 2 à 5 sont livrées (juin 2026). Solivio sert désormais uniquement Linkee Toulouse ; une phase de refonte du socle (phase 5 bis) est insérée avant la mise en conditions réelles. Les descriptions des phases 1 et 4 restent comme historique : Keycloak, Kafka, OpenBao et le multi-association qu'elles mentionnent sont retirés (`architecture_technique.md`, ADR-001 à ADR-008).
 
----
-
 ## Avertissement de lecture
 
 Ce document est le plan d'exécution. Il ne réintroduit aucune décision nouvelle : il ordonne dans le temps ce que les autres documents ont défini. Si une priorité ici contredit un document fondateur ou structurant, c'est ce document qui a tort.
@@ -18,25 +16,21 @@ Deux mises au point essentielles, héritées de l'étude de faisabilité :
 
 1. **L'ordre compte plus que les dates.** Les durées indiquées sont des ordres de grandeur, pas des engagements. Le calendrier réel dépend du temps disponible, qui est la ressource rare du projet. Ce qui est ferme, c'est la **séquence** et le **périmètre**, pas le nombre de semaines.
 
-2. **La fenêtre de disponibilité est maintenant.** Contre l'intuition, le temps disponible va probablement diminuer avec la prise de poste, pas augmenter. Les fondations lourdes — celles qui n'apportent rien de visible mais conditionnent tout — doivent donc être posées pendant la période de plus forte disponibilité, c'est-à-dire le plus tôt possible. Ce qui vient après peut avancer par petites touches.
-
----
+2. **La fenêtre de disponibilité est maintenant.** Contre l'intuition, le temps disponible va probablement diminuer avec la prise de poste, pas augmenter. Les fondations lourdes - celles qui n'apportent rien de visible mais conditionnent tout - doivent donc être posées pendant la période de plus forte disponibilité, c'est-à-dire le plus tôt possible. Ce qui vient après peut avancer par petites touches.
 
 ## 1. Les principes qui gouvernent l'ordre
 
-**O1 — Les fondations d'abord, même invisibles.** Le socle multi-association, l'authentification, la conteneurisation, l'isolation : rien de tout cela ne se voit, mais tout repose dessus. On le construit avant les fonctionnalités, pendant la fenêtre de disponibilité.
+**O1 - Les fondations d'abord, même invisibles.** Le socle multi-association, l'authentification, la conteneurisation, l'isolation : rien de tout cela ne se voit, mais tout repose dessus. On le construit avant les fonctionnalités, pendant la fenêtre de disponibilité.
 
-**O2 — Le préalable terrain est non négociable.** Avant la moindre ligne de code, on observe l'association pilote. C'est la condition encore non remplie pointée par l'étude de faisabilité, et la moins coûteuse à lever.
+**O2 - Le préalable terrain est non négociable.** Avant la moindre ligne de code, on observe l'association pilote. C'est la condition encore non remplie pointée par l'étude de faisabilité, et la moins coûteuse à lever.
 
-**O3 — Le premier incrément utile le plus tôt possible.** Après les fondations, on vise rapidement la première tranche réellement utilisable par le pilote (inscription et pointage), pour obtenir du retour réel et de la motivation.
+**O3 - Le premier incrément utile le plus tôt possible.** Après les fondations, on vise rapidement la première tranche réellement utilisable par le pilote (inscription et pointage), pour obtenir du retour réel et de la motivation.
 
-**O4 — Incréments courts et livrables.** Chaque phase produit quelque chose de cohérent et testable. Pas de chantier de plusieurs mois sans rien de montrable.
+**O4 - Incréments courts et livrables.** Chaque phase produit quelque chose de cohérent et testable. Pas de chantier de plusieurs mois sans rien de montrable.
 
-**O5 — Le périmètre V1 est verrouillé.** La roadmap construit exactement les neuf points de la V1 définis dans les spécifications, et rien d'autre. Toute idée nouvelle va dans la réserve d'après-V1, pas dans le plan.
+**O5 - Le périmètre V1 est verrouillé.** La roadmap construit exactement les neuf points de la V1 définis dans les spécifications, et rien d'autre. Toute idée nouvelle va dans la réserve d'après-V1, pas dans le plan.
 
-**O6 — La documentation est un livrable.** Conformément au modèle économique, la documentation d'installation et d'usage n'est pas une corvée de fin de projet : c'est ce qui rend l'auto-hébergement et la pérennité possibles.
-
----
+**O6 - La documentation est un livrable.** Conformément au modèle économique, la documentation d'installation et d'usage n'est pas une corvée de fin de projet : c'est ce qui rend l'auto-hébergement et la pérennité possibles.
 
 ## 2. Vue d'ensemble des phases
 
@@ -65,9 +59,7 @@ flowchart TD
 | 6 | Mise en conditions réelles | Oui | Moyenne |
 | 7 | Documentation et open source | Oui (externe) | Moyenne |
 
----
-
-## 3. Phase 0 — Observation terrain (préalable) — COMPLETE
+## 3. Phase 0 - Observation terrain (préalable) - COMPLETE
 
 **Objectif.** Confirmer que le besoin est réel et bien compris, avant d'écrire du code.
 
@@ -77,9 +69,7 @@ flowchart TD
 
 **Pourquoi c'est en premier.** C'est quelques heures d'investissement qui peuvent éviter des mois de travail sur le mauvais problème. C'est le meilleur rapport valeur/effort de tout le projet.
 
----
-
-## 4. Phase 1 — Fondations techniques — COMPLETE (juin 2026)
+## 4. Phase 1 - Fondations techniques - COMPLETE (juin 2026)
 
 **Objectif.** Poser le socle invisible sur lequel tout reposera. À faire pendant la fenêtre de disponibilité maximale.
 
@@ -101,9 +91,7 @@ flowchart TD
 
 **Risque principal.** La tentation d'abandonner faute de résultat visible. La parade : se rappeler que c'est cette phase qui rend tout le reste possible, et qu'elle est le meilleur usage de la fenêtre de disponibilité actuelle.
 
----
-
-## 5. Phase 2 — Distributions, inscriptions et pointage
+## 5. Phase 2 - Distributions, inscriptions et pointage
 
 **Objectif.** Livrer la première tranche réellement utilisable : le cœur du produit, et les parcours les plus critiques.
 
@@ -120,25 +108,21 @@ flowchart TD
 
 **Pourquoi cet ordre.** Une distribution doit exister avant qu'on puisse s'y inscrire ; une inscription avant qu'on puisse pointer. Et ce sont les parcours désignés comme les plus critiques par le document des parcours utilisateurs.
 
----
-
-## 6. Phase 3 — Répartition des denrées
+## 6. Phase 3 - Répartition des denrées
 
 **Objectif.** Ajouter la fonction distinctive de Solivio, celle qu'aucun concurrent n'offre.
 
 **Ce qu'on construit :**
 
-- la saisie des denrées d'une distribution en conditionnement (nombre de contenants × quantité par contenant), avec calcul automatique du total ;
+- la saisie des denrées d'une distribution en conditionnement (nombre de contenants x quantité par contenant), avec calcul automatique du total ;
 - le calcul de la dotation par bénéficiaire (division par les inscrits ou les présents, arrondi à l'inférieur, plancher à 1) ;
-- l'affichage clair du reste et du cas de pénurie (« 1 par personne pour X bénéficiaires sur Y »).
+- l'affichage clair du reste et du cas de pénurie ("1 par personne pour X bénéficiaires sur Y").
 
 **Critère de sortie.** Le coordinateur peut, le jour de la distribution, saisir ce qui est disponible et savoir immédiatement combien donner par personne. C'est la valeur unique du produit, livrée.
 
 **Pourquoi après la phase 2.** La répartition s'appuie sur les distributions et le nombre d'inscrits ou de présents, qui doivent exister d'abord.
 
----
-
-## 7. Phase 4 — Notifications
+## 7. Phase 4 - Notifications
 
 **Objectif.** Automatiser les communications, via le socle événementiel (Kafka à l'origine, remplacé par les événements internes Spring Modulith en phase 5 bis).
 
@@ -152,9 +136,7 @@ flowchart TD
 
 **Pourquoi en parallèle possible de la phase 3.** Les notifications dépendent des inscriptions et distributions (phase 2), mais pas de la répartition (phase 3). Les phases 3 et 4 peuvent donc s'enchaîner dans l'ordre le plus motivant, sans dépendance entre elles.
 
----
-
-## 8. Phase 5 — Statistiques, configuration et maîtrise des données
+## 8. Phase 5 - Statistiques, configuration et maîtrise des données
 
 **Objectif.** Donner au responsable la vue d'ensemble et la maîtrise de son association.
 
@@ -166,8 +148,6 @@ flowchart TD
 - l'export complet et la suppression des données de l'association (non-enfermement).
 
 **Critère de sortie.** Le responsable peut configurer son association, piloter par les chiffres, et exercer son droit d'export et de suppression. La V1 est alors fonctionnellement complète.
-
----
 
 ## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - EN COURS
 
@@ -189,9 +169,7 @@ flowchart TD
 
 **Critère de sortie.** Plus aucune mention de tenant, Kafka, OpenBao ou Keycloak dans le code ; tests verts, couverture d'au moins 80 pour cent, test de modularité vert ; application déployée en préproduction sur le VPS et visible dans Grafana.
 
----
-
-## 9. Phase 6 — Mise en conditions réelles
+## 9. Phase 6 - Mise en conditions réelles
 
 **Objectif.** Confronter la V1 au terrain, et corriger sur la base du réel.
 
@@ -199,14 +177,12 @@ flowchart TD
 
 - déployer pour l'association pilote ;
 - l'utiliser sur plusieurs distributions consécutives ;
-- recueillir le retour de façon systématique — non pas « c'est bien ? » mais « qu'est-ce qui te fait perdre du temps ? » ;
+- recueillir le retour de façon systématique - non pas "c'est bien ?" mais "qu'est-ce qui te fait perdre du temps ?" ;
 - corriger les frictions, en priorité sur les moments de vérité (première inscription, pointage, répartition, annulation).
 
 **Critère de sortie.** L'association utilise Solivio en routine et y trouve un gain de temps réel par rapport à sa méthode précédente. C'est l'objectif à court terme de la note d'intention, atteint.
 
----
-
-## 10. Phase 7 — Documentation et ouverture open source
+## 10. Phase 7 - Documentation et ouverture open source
 
 **Objectif.** Rendre le projet pérenne et partageable.
 
@@ -219,8 +195,6 @@ flowchart TD
 
 **Critère de sortie.** Une autre personne pourrait installer Solivio à partir de la documentation, et le projet survit à son auteur. La promesse de non-enfermement et de pérennité est tenue.
 
----
-
 ## 11. Au-delà de la V1 : l'horizon
 
 Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions réelles (phase 6). L'ordre ci-dessous est indicatif et sera arbitré à la lumière du retour terrain.
@@ -229,7 +203,7 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 
 - gestion des stocks permanents, branchée sur la répartition ;
 - gestion des dons et connexion à la plateforme de collecte externe ;
-- configurabilité étendue (champs, types, modèles de messages) — premier vrai pas vers d'autres associations ;
+- configurabilité étendue (champs, types, modèles de messages) - premier vrai pas vers d'autres associations ;
 - statistiques avancées et exports pour les financeurs ;
 - notifications multicanal (SMS, push) et messages groupés ;
 - onboarding d'une deuxième association pilote, au fonctionnement différent, pour valider la généricité.
@@ -243,8 +217,6 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 - campagnes ;
 - première extraction d'un microservice (le module Notifications), comme exercice délibéré sur une base stable.
 
----
-
 ## 12. Points de contrôle et règles de pilotage
 
 **Après chaque phase, un point de contrôle.** On se pose trois questions : la phase a-t-elle atteint son critère de sortie ? le périmètre a-t-il dérivé ? le rythme est-il tenable sans épuisement ?
@@ -252,8 +224,6 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 **La règle d'arrêt face à une idée nouvelle.** Toute fonctionnalité non prévue va dans la réserve d'après-V1. On ne l'ajoute au plan que si elle est jugée indispensable à la V1, ce qui doit rester exceptionnel. La répartition des denrées, ajoutée en cours de route, est l'exception qui confirme la règle : elle a été acceptée parce qu'elle relève d'un besoin opérationnel réel et central, après examen explicite.
 
 **Le signal d'alerte à surveiller.** Si plusieurs semaines passent sans progrès ni motivation, ce n'est pas un problème de volonté mais de découpage : il faut alors réduire encore la taille de l'incrément en cours, jusqu'à retrouver un pas franchissable.
-
----
 
 ## 13. Synthèse en une page
 
@@ -268,7 +238,5 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 **La pérennité.** La documentation et l'open source ne sont pas la fin du projet : ils sont ce qui lui permet de survivre à son auteur.
 
 **Le cap.** On ne généralise vers la plateforme qu'après avoir réussi pour une seule association. Réussir petit d'abord, grandir ensuite.
-
----
 
 *Fin de la roadmap. Document suivant et dernier : `glossaire.md`.*
