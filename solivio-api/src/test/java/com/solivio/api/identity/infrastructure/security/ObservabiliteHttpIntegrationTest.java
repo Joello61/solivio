@@ -72,7 +72,7 @@ class ObservabiliteHttpIntegrationTest {
         assertThat(reponse.body())
             .contains("solivio_inscriptions_confirmees_total")
             .contains("solivio_evenements_publications_echouees")
-            .contains("http_server_requests_seconds")
+            .contains("http_server_requests_seconds_bucket")
             .contains("hikaricp_connections");
     }
 

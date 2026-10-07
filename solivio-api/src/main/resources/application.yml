@@ -150,6 +150,11 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    # Buckets d'histogramme pour calculer les percentiles de latence dans Prometheus
+    # (tableau de bord et alerte p95 du depot infrastructure).
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 springdoc:
   api-docs:
