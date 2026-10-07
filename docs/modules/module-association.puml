@@ -25,11 +25,11 @@ System_Boundary("SolivioApiApplication_boundary", "SolivioApiApplication", $tags
 
 }
 
+Rel(SolivioApiApplication.SolivioApiApplication.identity, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.identity, SolivioApiApplication.SolivioApiApplication.audit, "uses", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.association, SolivioApiApplication.SolivioApiApplication.shared, "depends on", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.association, SolivioApiApplication.SolivioApiApplication.identity, "depends on", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.association, SolivioApiApplication.SolivioApiApplication.audit, "uses", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.identity, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.identity, SolivioApiApplication.SolivioApiApplication.audit, "uses", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

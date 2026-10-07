@@ -29,16 +29,16 @@ System_Boundary("SolivioApiApplication_boundary", "SolivioApiApplication", $tags
 }
 
 Rel(SolivioApiApplication.SolivioApiApplication.evenement, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.reconditionnement, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.inscription, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.collecte, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.distribution, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.evenement, "listens to", $techn="", $tags="", $link="")
+Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.reconditionnement, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.inscription, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.collecte, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
 Rel(SolivioApiApplication.SolivioApiApplication.distribution, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.inscription, "listens to", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.evenement, "listens to", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.distribution, "listens to", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.reconditionnement, "listens to", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.collecte, "listens to", $techn="", $tags="", $link="")
-Rel(SolivioApiApplication.SolivioApiApplication.notification, SolivioApiApplication.SolivioApiApplication.shared, "uses", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

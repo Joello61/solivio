@@ -32,12 +32,22 @@ function buildInit(init: RequestInit, noCredentials: boolean): RequestInit {
   };
 }
 
-function parseErrorResponse(body: unknown, status: number): Error {
-  const b = body as { title?: string; detail?: string } | null;
-  return Object.assign(new Error(b?.detail ?? b?.title ?? "Erreur"), {
+type ApiErrorBody = {
+  error?: { code?: string; message?: string; details?: unknown; request_id?: string };
+};
+
+/**
+ * Convertit l'enveloppe d'erreur du backend ({"error": {code, message, details, request_id}})
+ * en Error. `detail` reprend le message pour les composants qui l'affichent.
+ */
+export function parseErrorResponse(body: unknown, status: number): Error {
+  const e = (body as ApiErrorBody | null)?.error;
+  return Object.assign(new Error(e?.message ?? "Erreur"), {
     status,
-    title: b?.title,
-    detail: b?.detail,
+    code: e?.code,
+    detail: e?.message,
+    details: e?.details,
+    requestId: e?.request_id,
   });
 }
 

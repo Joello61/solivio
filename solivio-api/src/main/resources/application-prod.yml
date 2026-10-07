@@ -1,0 +1,34 @@
+# application-prod.yml
+# Profil des environnements deployes (staging et production) : SPRING_PROFILES_ACTIVE=prod.
+# DEPLOYMENT_ENVIRONMENT (staging ou production) distingue les deux dans les
+# journaux, les metriques et les traces.
+
+spring:
+  jpa:
+    show-sql: false
+
+# Journaux JSON sur la sortie standard, collectes par Alloy vers Loki. Le format
+# ECS reprend les cles du MDC (request_id, account_id, traceId, spanId).
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        environment: ${DEPLOYMENT_ENVIRONMENT:production}
+
+management:
+  tracing:
+    export:
+      enabled: true
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://tempo:4318/v1/traces}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

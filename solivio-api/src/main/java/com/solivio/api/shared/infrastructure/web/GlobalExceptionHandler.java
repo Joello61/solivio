@@ -3,25 +3,32 @@ package com.solivio.api.shared.infrastructure.web;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.exception.TropDeTentativesException;
+import com.solivio.api.shared.web.ApiError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
- * Traduit les exceptions metier en reponses HTTP coherentes.
- * Utilise RFC 7807 (ProblemDetail) pour les corps d'erreur.
+ * Traduit les exceptions en reponses HTTP au format {@link ApiError}.
+ * Un message d'erreur n'expose jamais de trace, de requete SQL ni de donnee personnelle.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -29,105 +36,122 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
-        pd.setTitle("Identifiants invalides");
-        pd.setDetail("Email ou mot de passe incorrect.");
-        return pd;
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
+        return reponse(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Email ou mot de passe incorrect.");
     }
 
     @ExceptionHandler(DisabledException.class)
-    public ProblemDetail handleDisabled(DisabledException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        pd.setTitle("Compte desactive");
-        pd.setDetail("Votre compte est desactive ou l'email n'a pas ete verifie.");
-        return pd;
+    public ResponseEntity<ApiError> handleDisabled(DisabledException ex) {
+        return reponse(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED",
+            "Votre compte est desactive ou l'email n'a pas ete verifie.");
     }
 
     // Spring Security 7 : AuthorizationDeniedException est une RuntimeException qui echappe
     // a ExceptionTranslationFilter quand elle remonte via le DispatcherServlet.
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ProblemDetail handleAuthorizationDenied(AuthorizationDeniedException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        pd.setTitle("Acces refuse");
-        pd.setDetail("Vous n'avez pas les droits necessaires pour cette operation.");
-        return pd;
+    public ResponseEntity<ApiError> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        return reponse(HttpStatus.FORBIDDEN, "FORBIDDEN",
+            "Vous n'avez pas les droits necessaires pour cette operation.");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ProblemDetail handleMessageNotReadable(HttpMessageNotReadableException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        pd.setTitle("Corps de requete invalide");
-        pd.setDetail("Le corps de la requete est mal forme ou contient des valeurs invalides.");
-        return pd;
+    public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        return reponse(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
+            "Le corps de la requete est mal forme ou contient des valeurs invalides.");
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ProblemDetail handleAuthentication(AuthenticationException ex) {
+    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
         log.debug("Echec d'authentification : {}", ex.getMessage());
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
-        pd.setTitle("Non authentifie");
-        pd.setDetail("Authentification requise.");
-        return pd;
+        return reponse(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise.");
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ProblemDetail handleNotFound(NotFoundException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        pd.setTitle("Ressource introuvable");
-        pd.setDetail(ex.getMessage());
-        return pd;
+    public ResponseEntity<ApiError> handleNotFound(NotFoundException ex) {
+        return reponse(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage());
     }
 
     @ExceptionHandler(TropDeTentativesException.class)
-    public ProblemDetail handleTropDeTentatives(TropDeTentativesException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
-        pd.setTitle("Trop de tentatives");
-        pd.setDetail(ex.getMessage());
-        return pd;
+    public ResponseEntity<ApiError> handleTropDeTentatives(TropDeTentativesException ex) {
+        return reponse(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", ex.getMessage());
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ProblemDetail handleConflict(ConflictException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
-        pd.setTitle("Conflit");
-        pd.setDetail(ex.getMessage());
-        return pd;
+    public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
+        return reponse(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        pd.setTitle("Requete invalide");
-        pd.setDetail(ex.getMessage());
-        return pd;
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+        return reponse(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", ex.getMessage());
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ProblemDetail handleMissingParam(MissingServletRequestParameterException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        pd.setTitle("Parametre manquant");
-        pd.setDetail("Parametre obligatoire manquant : " + ex.getParameterName());
-        return pd;
+    public ResponseEntity<ApiError> handleMissingParam(MissingServletRequestParameterException ex) {
+        return reponse(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER",
+            "Parametre obligatoire manquant : " + ex.getParameterName());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
-        String details = ex.getBindingResult().getFieldErrors().stream()
-            .map(e -> e.getField() + " : " + e.getDefaultMessage())
-            .collect(Collectors.joining(", "));
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        pd.setTitle("Validation echouee");
-        pd.setDetail(details);
-        return pd;
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+        List<ApiError.ChampInvalide> champs = ex.getBindingResult().getFieldErrors().stream()
+            .map(e -> new ApiError.ChampInvalide(e.getField(), e.getDefaultMessage()))
+            .toList();
+        String message = champs.stream()
+            .map(c -> c.champ() + " : " + c.message())
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("Donnees invalides.");
+        return ResponseEntity.badRequest().body(ApiError.of("VALIDATION_FAILED", message, champs));
+    }
+
+    // Exceptions du framework portant deja un statut : route inconnue, methode
+    // non supportee, type de contenu refuse, ResponseStatusException.
+    @ExceptionHandler({
+        ErrorResponseException.class,
+        HttpRequestMethodNotSupportedException.class,
+        HttpMediaTypeNotSupportedException.class,
+        MaxUploadSizeExceededException.class
+    })
+    public ResponseEntity<ApiError> handleFramework(Exception ex) {
+        HttpStatusCode statut = ex instanceof ErrorResponse er ? er.getStatusCode() : HttpStatus.CONTENT_TOO_LARGE;
+        if (statut.is5xxServerError()) {
+            log.error("Erreur du framework", ex);
+            return erreurInterne();
+        }
+        return ResponseEntity.status(statut).body(ApiError.of(codePourStatut(statut), messagePourStatut(statut)));
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnexpected(Exception ex) {
+    public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
         log.error("Erreur inattendue non geree", ex);
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        pd.setTitle("Erreur interne");
-        pd.setDetail("Une erreur inattendue s'est produite.");
-        return pd;
+        return erreurInterne();
+    }
+
+    private static ResponseEntity<ApiError> erreurInterne() {
+        return reponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Une erreur inattendue s'est produite.");
+    }
+
+    private static ResponseEntity<ApiError> reponse(HttpStatus statut, String code, String message) {
+        return ResponseEntity.status(statut).body(ApiError.of(code, message));
+    }
+
+    private static String codePourStatut(HttpStatusCode statut) {
+        return switch (statut.value()) {
+            case 404 -> "NOT_FOUND";
+            case 405 -> "METHOD_NOT_ALLOWED";
+            case 413 -> "PAYLOAD_TOO_LARGE";
+            case 415 -> "UNSUPPORTED_MEDIA_TYPE";
+            default -> "INVALID_REQUEST";
+        };
+    }
+
+    private static String messagePourStatut(HttpStatusCode statut) {
+        return switch (statut.value()) {
+            case 404 -> "Ressource introuvable.";
+            case 405 -> "Methode non autorisee pour cette ressource.";
+            case 413 -> "Fichier ou requete trop volumineux.";
+            case 415 -> "Type de contenu non supporte.";
+            default -> "Requete invalide.";
+        };
     }
 }

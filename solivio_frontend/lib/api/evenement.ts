@@ -1,3 +1,4 @@
+import { parseErrorResponse } from "@/lib/api";
 import type {
   EvenementResponse,
   ParticipationEvenementResponse,
@@ -14,11 +15,7 @@ const BASE = "/api/evenements";
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: "include", ...init });
   if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as {
-      detail?: string;
-      message?: string;
-    };
-    throw Object.assign(new Error(err.detail ?? err.message ?? "Erreur reseau"), err);
+    throw parseErrorResponse(await res.json().catch(() => null), res.status);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

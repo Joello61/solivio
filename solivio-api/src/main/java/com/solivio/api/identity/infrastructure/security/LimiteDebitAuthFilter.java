@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.shared.web.ApiError;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,12 +62,9 @@ public class LimiteDebitAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
         if (!autoriser(request.getRemoteAddr() + "|" + request.getRequestURI())) {
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", String.valueOf(FENETRE.toSeconds()));
-            response.setContentType("application/problem+json");
-            response.getWriter().write(
-                "{\"title\":\"Trop de tentatives\",\"status\":429,"
-                    + "\"detail\":\"Trop de tentatives. Reessayez dans une minute.\"}");
+            ApiError.ecrire(response, HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS",
+                "Trop de tentatives. Reessayez dans une minute.");
             return;
         }
         chain.doFilter(request, response);

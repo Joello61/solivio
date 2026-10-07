@@ -83,7 +83,7 @@ JPA/Hibernate, avec **Flyway** comme seul maître du schéma : toute modificatio
 
 ### 3.3 L'API
 
-API REST, documentée automatiquement par OpenAPI (springdoc), exposée uniquement dans les profils de développement et de test. Les réponses d'erreur suivent une enveloppe unique portant un identifiant de requête (`request_id`) pour relier une erreur visible à ses journaux et traces. Une ressource inexistante ou non autorisée répond `404`, jamais une confirmation de son existence.
+API REST, documentée automatiquement par OpenAPI (springdoc), exposée uniquement dans les profils de développement et de test. Les réponses d'erreur suivent une enveloppe unique, `{"error": {"code", "message", "details", "request_id"}}` : `code` est un identifiant stable destiné au client (`VALIDATION_FAILED`, `NOT_FOUND`, `UNAUTHENTICATED`...), `message` est lisible par l'utilisateur, `details` liste les champs invalides d'une validation, et `request_id` relie une erreur visible à ses journaux et traces. Une ressource inexistante ou non autorisée répond `404`, jamais une confirmation de son existence.
 
 ## 4. Les événements internes : Spring Modulith
 
@@ -169,9 +169,13 @@ Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'A
 
 L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `infrastructure`) :
 
-- **Journaux** : JSON sur la sortie standard, collectés par Grafana Alloy vers Loki. Chaque ligne porte le `request_id` et, si la requête est authentifiée, l'identifiant (UUID) du compte. Aucune donnée personnelle ni aucune donnée de `profil_beneficiaire` n'est journalisée.
-- **Métriques** : Micrometer, exposées au format Prometheus sur un port de gestion distinct non routé par Traefik et protégé par un jeton. Métriques techniques (HTTP, JVM, pool de connexions) et métiers préfixées `solivio_`.
-- **Traces** : OpenTelemetry (OTLP) vers Tempo, y compris les interactions entre modules publiées par Spring Modulith.
+- **Journaux** : JSON au format ECS sur la sortie standard (profil `prod`), collectés par Grafana Alloy vers Loki. Chaque ligne porte le `request_id`, l'identifiant de trace (`traceId`, `spanId`) et, si la requête est authentifiée, l'identifiant (UUID) du compte (`account_id`). Aucune donnée personnelle ni aucune donnée de `profil_beneficiaire` n'est journalisée.
+- **Identifiant de requête** : attribué à chaque requête (ou repris de l'en-tête `X-Request-Id` s'il est sûr), renvoyé dans l'en-tête de réponse et dans le corps de chaque erreur, pour relier une erreur signalée à ses journaux.
+- **Métriques** : Micrometer, exposées au format Prometheus sur `/actuator/prometheus`, sur le port de gestion `8081` non routé par Traefik et protégé par le jeton `METRICS_SCRAPE_TOKEN` (en-tête `Authorization: Bearer`, comparaison à temps constant ; sans jeton configuré, les métriques sont inaccessibles). Le port de gestion expose aussi les sondes `/actuator/health/liveness` et `/actuator/health/readiness`, publiques et sans détail. Métriques techniques (HTTP, JVM, pool de connexions) et métiers :
+  - `solivio_inscriptions_confirmees_total`, `solivio_inscriptions_promues_total`, `solivio_desistements_tardifs_total` ;
+  - `solivio_distributions_terminees_total`, `solivio_distributions_annulees_total` ;
+  - `solivio_evenements_publications_incompletes` et `solivio_evenements_publications_echouees`, état du registre des événements internes, support de l'alerte sur les emails non envoyés.
+- **Traces** : OpenTelemetry (OTLP HTTP) vers Tempo dans le profil `prod` (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, par défaut `http://tempo:4318/v1/traces`), y compris les interactions entre modules publiées par Spring Modulith. Seule la propagation W3C est acceptée. L'attribut `deployment.environment.name` vient de `DEPLOYMENT_ENVIRONMENT` (`staging` ou `production`).
 - **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana).
 - **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques.
 

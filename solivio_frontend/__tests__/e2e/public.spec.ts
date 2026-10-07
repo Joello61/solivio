@@ -42,7 +42,7 @@ test.describe("Page login", () => {
 
   test("identifiants incorrects : affiche un message d'erreur", async ({ page }) => {
     await page.route("**/api/auth/login", (route) =>
-      route.fulfill({ status: 401, json: { detail: "Identifiants invalides" } }),
+      route.fulfill({ status: 401, json: { error: { code: "INVALID_CREDENTIALS", message: "Identifiants invalides" } } }),
     );
 
     await page.getByLabel(/email/i).fill("inconnu@example.com");
