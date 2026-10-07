@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { changerStatutCompte, changerSuperAdmin, supprimerCompteAdmin } from "@/lib/api/profil";
+import { libelleRole } from "@/lib/roles";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 
 interface Props {
@@ -95,9 +96,9 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
                 </Badge>
               )}
             </div>
-            {compte.affiliations.length > 0 && (
+            {compte.role && (
               <p className="text-xs text-muted-foreground mt-1.5">
-                {compte.affiliations.map((a) => a.associationNom).join(", ")}
+                {libelleRole(compte.role, compte.statutMembre)}
               </p>
             )}
           </div>
@@ -198,7 +199,7 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
             <AlertDialogDescription>
               {compte.superAdmin
                 ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de toutes les associations.`}
+                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -298,8 +299,8 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
         </td>
 
         <td className="py-3.5 pr-4 text-xs text-muted-foreground max-w-[160px]">
-          {compte.affiliations.length > 0
-            ? compte.affiliations.map((a) => a.associationNom).join(", ")
+          {compte.role
+            ? libelleRole(compte.role, compte.statutMembre)
             : <span className="text-border">-</span>}
         </td>
 
@@ -398,7 +399,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
             <AlertDialogDescription>
               {compte.superAdmin
                 ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de toutes les associations.`}
+                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

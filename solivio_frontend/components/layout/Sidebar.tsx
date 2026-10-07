@@ -11,17 +11,9 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NAV_SECTIONS, filterNavItems, isNavItemActive } from "./navigation";
 import { logout } from "@/lib/auth";
 import type { MeResponse } from "@/types/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  admin: "Administrateur",
-  responsable: "Responsable",
-  coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
-};
 
 interface SidebarProps {
   user: MeResponse;
