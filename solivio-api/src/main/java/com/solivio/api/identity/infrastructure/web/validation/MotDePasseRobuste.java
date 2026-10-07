@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MotDePasseRobuste {
 
-    String message() default "Le mot de passe doit contenir entre 8 et 128 caracteres et ne pas etre un mot de passe courant";
+    String message() default
+        "Le mot de passe doit contenir entre 8 et 128 caracteres et ne pas etre un mot de passe courant";
 
     Class<?>[] groups() default {};
 
