@@ -1,6 +1,7 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config';
 
-const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'AIzaSyARDf3AExqhj8D4K8rkhFWhrVojuBCBCx0';
+// Fournie au build (EAS ou variable locale), jamais ecrite dans le code.
+const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? '';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
