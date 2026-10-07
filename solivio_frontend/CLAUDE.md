@@ -14,6 +14,7 @@ Le frontend est responsable de l'expérience utilisateur, jamais de l'autorité 
 | `../docs/specifications_fonctionnelles.md` | Règles métier affichées, exigence mobile prioritaire |
 | `../docs/glossaire.md` | Vocabulaire affiché à l'utilisateur |
 | `../docs/architecture_technique.md` | Authentification, communication avec le backend |
+| `../DESIGN.md` | Tokens, typographie, composants, règles d'évolution du système de design |
 
 ## 2. Versions
 

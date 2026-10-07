@@ -18,6 +18,8 @@ Ce fichier définit des **règles de comportement**, pas des spécifications. Le
 | `docs/glossaire.md` | Vocabulaire métier, noms d'entités |
 | `docs/roadmap.md` | Séquencement et état d'avancement |
 | `docs/modules/` | Documentation des modules générée par Spring Modulith |
+| `PRODUCT.md` | Public, problème, principes produit, voix, hors périmètre |
+| `DESIGN.md` | Système de design du frontend : tokens, typographie, composants, accessibilité |
 
 Avant une fonctionnalité importante :
 
