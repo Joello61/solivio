@@ -1,0 +1,9 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.audit`
+|Spring components
+|_Services_
+
+* `c.s.a.a.application.AuditService`
+|===

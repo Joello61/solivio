@@ -1,0 +1,8 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.collecte`
+|Bean references
+|* `c.s.a.s.identity.PersonneQueryPort` (in shared)
+* `c.s.a.a.application.AuditService` (in audit)
+|===

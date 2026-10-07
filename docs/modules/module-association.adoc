@@ -1,0 +1,7 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.association`
+|Bean references
+|* `c.s.a.a.application.AuditService` (in audit)
+|===
