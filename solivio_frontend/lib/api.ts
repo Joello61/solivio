@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Vide dans les images deployees : appels relatifs, sur le domaine de la page.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 type FetchOptions = RequestInit & { noCredentials?: boolean };
 

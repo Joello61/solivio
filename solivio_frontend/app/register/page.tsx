@@ -11,10 +11,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { register } from "@/lib/auth";
-
-const GOOGLE_AUTH_URL =
-  process.env.NEXT_PUBLIC_AUTH_LOGIN_URL ?? "http://localhost:8080/oauth2/authorization/google";
+import { AUTH_LOGIN_URL, register } from "@/lib/auth";
 
 function RegisterForm() {
   const router = useRouter();
@@ -135,7 +132,7 @@ function RegisterForm() {
       <Button
         variant="outline"
         className="w-full gap-2"
-        onClick={() => { window.location.href = GOOGLE_AUTH_URL; }}
+        onClick={() => { window.location.href = AUTH_LOGIN_URL; }}
         type="button"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">
