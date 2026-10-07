@@ -47,6 +47,15 @@ function buildInit(init: RequestInit, noCredentials: boolean): RequestInit {
   };
 }
 
+// Rechargement complet volontaire apres une session expiree : il vide l'etat
+// client et le cache des requetes. Hors composant, aucun routeur n'est disponible.
+function allerALaConnexion(): void {
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/login";
+  }
+}
+
 type ApiErrorBody = {
   error?: { code?: string; message?: string; details?: unknown; request_id?: string };
 };
@@ -92,9 +101,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     }
 
     // Refresh impossible (refresh token expire ou invalide) : retour au login.
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
+    allerALaConnexion();
     throw Object.assign(new Error("Session expiree"), { status: 401 });
   }
 
@@ -137,7 +144,7 @@ export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T
         return retry.json() as Promise<T>;
       }
     }
-    if (typeof window !== "undefined") window.location.href = "/login";
+    allerALaConnexion();
     throw Object.assign(new Error("Session expiree"), { status: 401 });
   }
 
