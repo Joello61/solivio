@@ -122,6 +122,7 @@ Avant d'ajouter une dépendance : vérifier si Spring Boot, Spring Modulith ou N
 
 ## 13. Git
 
+- Dépôt : `github.com/Joello61/solivio`, migré depuis GitLab en octobre 2026 ; les PR #1 à #32 reprennent les MR GitLab du même numéro.
 - Branches : tout travail part de `dev`. `dev` correspond à la préproduction (staging), `main` à la production. Faire un `git fetch` avant toute fusion ou création de branche.
 - Commits granulaires : un changement cohérent par commit, sans mélanger plusieurs sujets.
 - Messages clairs et factuels, décrivant le quoi et le pourquoi.

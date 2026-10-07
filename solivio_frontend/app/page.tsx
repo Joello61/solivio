@@ -742,7 +742,7 @@ export default function LandingPage() {
                 </a>
 
                 <a
-                  href="https://gitlab.com/tchindajoel61/solivio"
+                  href="https://github.com/Joello61/solivio"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-teal-500/30 hover:bg-teal-500/[0.02] transition-all duration-150 group"
@@ -751,8 +751,8 @@ export default function LandingPage() {
                     <GitBranch className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Code source sur GitLab</p>
-                    <p className="text-xs text-muted-foreground">gitlab.com/tchindajoel61/solivio</p>
+                    <p className="text-sm font-semibold text-foreground">Code source sur GitHub</p>
+                    <p className="text-xs text-muted-foreground">github.com/Joello61/solivio</p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
                 </a>

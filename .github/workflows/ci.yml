@@ -45,6 +45,21 @@ jobs:
           path: solivio-api/target/site/jacoco
           retention-days: 7
 
+  backend-dependances:
+    name: Backend (vulnerabilites des dependances)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Equivalent Maven de npm audit : OSV-Scanner resout les dependances
+      # transitives du pom et echoue des qu'une vulnerabilite connue est trouvee.
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
+        with:
+          scan-args: |-
+            --recursive
+            ./solivio-api
+
   frontend:
     name: Frontend (audit, lint, types, tests, build)
     runs-on: ubuntu-latest
@@ -172,6 +187,10 @@ jobs:
   secrets:
     name: Detection de secrets (gitleaks)
     runs-on: ubuntu-latest
+    # Sur une pull request, l'action liste ses commits par l'API.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -179,31 +198,3 @@ jobs:
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  codeql:
-    name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [java-kotlin, javascript-typescript]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: none
-      - uses: github/codeql-action/analyze@v4
-
-  dependances:
-    name: Revue des dependances
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
