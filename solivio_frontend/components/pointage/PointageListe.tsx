@@ -161,6 +161,7 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
           <Input
             className="pl-9"
             placeholder="Rechercher par nom ou prenom..."
+            aria-label="Rechercher un inscrit"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleRechercheImmediate()}
