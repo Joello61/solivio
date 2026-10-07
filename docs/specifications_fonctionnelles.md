@@ -35,7 +35,7 @@ Chaque fonction est classée selon trois niveaux de priorité, qui correspondent
 
 La règle d'or, héritée de l'étude de faisabilité : **on ne commence rien d'un niveau inférieur tant que le niveau supérieur ne tourne pas en conditions réelles.** On ne touche pas à la V2 tant que la V1 n'est pas utilisée par l'association pilote sur de vraies distributions.
 
-Une distinction supplémentaire traverse tout le document : certaines fonctions sont **visibles** (l'utilisateur les voit et les utilise) et d'autres sont **fondatrices** (invisibles mais nécessaires au socle — isolation entre associations, contrôle d'accès, traçabilité). Les fonctions fondatrices sont en V1 même si elles n'apportent rien de visible, parce que tout le reste repose dessus.
+Une distinction supplémentaire traverse tout le document : certaines fonctions sont **visibles** (l'utilisateur les voit et les utilise) et d'autres sont **fondatrices** (invisibles mais nécessaires au socle : confidentialité, contrôle d'accès, traçabilité). Les fonctions fondatrices sont en V1 même si elles n'apportent rien de visible, parce que tout le reste repose dessus.
 
 ---
 
@@ -61,7 +61,6 @@ Voici la carte complète des modules, tous niveaux confondus. Les sections suiva
 | Module | Rôle | Niveau |
 |---|---|---|
 | Comptes et accès | Authentification, rôles, droits | V1 (fondateur) |
-| Socle multi-association | Isolation et configuration par association | V1 (fondateur) |
 | Configuration de l'association | Identité visuelle, paramètres de base | V1 |
 | Distributions | Créer, planifier, gérer les distributions | V1 |
 | Inscriptions | Inscrire bénéficiaires et bénévoles | V1 |
@@ -101,17 +100,15 @@ Voici la carte complète des modules, tous niveaux confondus. Les sections suiva
 
 **Précision sur le contrôle d'accès.** La V1 met en place un contrôle d'accès par rôle enrichi de ces quelques règles contextuelles. Le contrôle d'accès par attributs pleinement configurable (où l'association définit elle-même des règles fines) est un objectif de maturation, pas un prérequis de la V1. On commence par les règles contextuelles essentielles, on généralise ensuite. Ce choix concilie le différenciateur du produit avec la discipline de périmètre.
 
-### 4.2 Module Socle multi-association (fondateur)
+### 4.2 Une seule association (décision d'octobre 2026)
 
-**Objectif.** Permettre, à terme, à plusieurs associations de coexister sur une même instance sans jamais voir les données les unes des autres — tout en ne construisant les fonctionnalités que pour une association d'abord.
+Cette section décrivait à l'origine un socle multi-association (isolation de plusieurs associations sur une même instance). Depuis octobre 2026, Solivio sert uniquement Linkee Toulouse : ce socle est retiré (`architecture_technique.md`, ADR-001).
 
-**Fonctions indispensables (V1) :**
+**Ce qui reste exigé en V1 :**
 
-- Chaque donnée appartient à une association et une seule ; l'accès est automatiquement limité à l'association de l'utilisateur connecté.
-- Isolation stricte : il est techniquement impossible, par construction, qu'une association accède aux données d'une autre.
-- Une association peut exporter l'intégralité de ses données, et demander leur suppression complète (traduction concrète de la promesse de non-enfermement).
-
-**Précision.** Même si la V1 est utilisée par une seule association (la pilote), le socle multi-association est en place dès le départ. C'est l'application directe du principe « architecture mutualisée dès le départ, fonctionnalités d'une association d'abord ». Ce qui n'est pas construit en V1, c'est l'inscription en autonomie de nouvelles associations (onboarding self-service), repoussée à plus tard.
+- L'association peut exporter l'intégralité de ses données (traduction concrète de la promesse de non-enfermement).
+- Toute donnée personnelle peut être supprimée à la demande de la personne concernée (RGPD).
+- Une autre association qui voudrait utiliser Solivio déploie sa propre instance (code sous licence AGPL), sans partager de base.
 
 ### 4.3 Module Configuration de l'association
 
@@ -316,7 +313,7 @@ Ces exigences ne sont pas des fonctionnalités mais des qualités que le produit
 | Simplicité d'usage | Plus simple à utiliser que le tableau qu'il remplace. C'est la condition d'adoption (analyse de la concurrence). Priorité absolue. |
 | Accessibilité mobile | Approche responsive et mobile-first, mais jamais mobile-only : conçu pour le téléphone d'abord (surtout l'inscription des bénéficiaires et le pointage), tout en restant pleinement utilisable sur ordinateur, où se font la plupart des tâches de gestion. |
 | Confidentialité | Données sensibles protégées par défaut, conformité RGPD par conception. |
-| Isolation | Aucune fuite possible entre associations. |
+| Cloisonnement des données sensibles | Le profil social d'un bénéficiaire n'est visible que des rôles autorisés, jamais au pointage ni dans les statistiques. |
 | Fiabilité | Le produit doit fonctionner le jour J : une panne pendant une distribution est inacceptable. |
 | Performance | Réactif même quand une distribution a plusieurs centaines d'inscrits. |
 | Traçabilité | Les actions sensibles sont journalisées. |
@@ -354,7 +351,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 6. de calculer la répartition des denrées par bénéficiaire pour une distribution, à partir du conditionnement et du nombre d'inscrits ou de présents ;
 7. d'envoyer automatiquement par email les confirmations, rappels et annulations ;
 8. de consulter des statistiques de base agrégées et pseudonymisées ;
-9. le tout sur un socle multi-association isolé et traçable, avec export et suppression des données.
+9. le tout de façon traçable, avec export des données de l'association et suppression des données personnelles.
 
 **La V1 ne fait rien d'autre.** Elle inclut le calcul de répartition des denrées pour une distribution (point 6), mais **pas** la gestion d'un stock permanent. Et elle ne fait ni dons, ni campagnes, ni workflow configurable, ni formulaires sur mesure, ni multi-antennes, ni interface de programmation, ni SMS. Ces fonctions viendront, dans l'ordre, après que la V1 aura prouvé sa valeur en conditions réelles.
 
@@ -363,7 +360,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 ## 10. Ce que ce document implique pour la suite
 
 - Le **modèle de données** (`modele_donnees.md`) doit structurer en priorité les entités de la V1 (personnes, rôles, distributions, créneaux, inscriptions, présences), tout en anticipant les entités ultérieures (ressources, dons, antennes) pour ne pas se fermer de portes.
-- L'**architecture technique** doit garantir l'isolation entre associations et la fiabilité le jour J, qui sont des exigences non négociables.
+- L'**architecture technique** doit garantir la confidentialité des données des bénéficiaires et la fiabilité le jour J, qui sont des exigences non négociables.
 - Les **parcours utilisateurs** (`parcours_utilisateurs.md`) doivent se concentrer sur les parcours de la V1, et viser la simplicité comme priorité de conception.
 - La **roadmap** (`roadmap.md`) doit ordonner la construction : fondations d'abord, puis le cœur visible, puis les notifications et les statistiques.
 
@@ -373,7 +370,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 
 **Le cœur.** Le module Distributions et le module Inscriptions sont le cœur du produit. C'est là qu'est la différence, et c'est là que doit aller le soin.
 
-**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, sur un socle multi-association isolé. Rien de plus.
+**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, avec export des données. Rien de plus.
 
 **Le reste.** Stocks, dons, configurabilité étendue, statistiques avancées et SMS viennent en V2. Workflow configurable, formulaires sur mesure, multi-antennes, interface de programmation et campagnes viennent en V3 — décrits ici pour que le modèle de données les anticipe, pas pour les construire maintenant.
 
