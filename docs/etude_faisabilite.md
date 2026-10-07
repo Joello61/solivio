@@ -6,6 +6,8 @@
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
+> **Mise à jour d'octobre 2026.** Ce document fondateur décrit l'ambition d'origine : une plateforme mutualisée pour plusieurs associations du réseau Linkee. Depuis octobre 2026, Solivio sert uniquement Linkee Toulouse (`architecture_technique.md`, ADR-001). Les passages sur le multi-association, la mutualisation et les choix techniques d'origine (Keycloak, Kafka, OpenBao) sont conservés comme historique et ne font plus foi ; en cas d'écart, les spécifications, l'architecture et `CLAUDE.md` priment.
+
 ---
 
 ## Avertissement de lecture
@@ -153,7 +155,7 @@ Faisable, à condition de traiter la conformité comme un invariant de conceptio
 
 ## 6. Faisabilité économique
 
-Cette dimension est traitée en détail dans `modele_economique.md`. En synthèse : les coûts d'infrastructure sont de l'ordre d'une dizaine d'euros par mois au démarrage, couvrables par l'autofinancement. La faisabilité économique n'est pas un point dur. Le coût réel est le temps du porteur (traité en section 3), pas l'argent.
+Cette dimension est traitée en détail dans `archive/modele_economique.md`. En synthèse : les coûts d'infrastructure sont de l'ordre d'une dizaine d'euros par mois au démarrage, couvrables par l'autofinancement. La faisabilité économique n'est pas un point dur. Le coût réel est le temps du porteur (traité en section 3), pas l'argent.
 
 Verdict partiel : faisable sans réserve sur le plan financier.
 

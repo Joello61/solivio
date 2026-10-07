@@ -6,6 +6,8 @@
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
+> **Mise à jour d'octobre 2026.** Ce document fondateur décrit l'ambition d'origine : une plateforme mutualisée pour plusieurs associations du réseau Linkee. Depuis octobre 2026, Solivio sert uniquement Linkee Toulouse (`architecture_technique.md`, ADR-001). Les passages sur le multi-association, la mutualisation et les choix techniques d'origine (Keycloak, Kafka, OpenBao) sont conservés comme historique et ne font plus foi ; en cas d'écart, les spécifications, l'architecture et `CLAUDE.md` priment.
+
 ---
 
 ## Avertissement de lecture
@@ -240,7 +242,7 @@ Solivio ne se positionne pas frontalement contre les outils existants, mais dans
 - Face aux **suites de gestion associative généralistes** : Solivio est plus spécialisé, plus léger, gratuit pour les petites structures, et ouvert.
 - Face aux **outils internes des grandes structures** : Solivio s'adresse à celles qui n'ont pas ces moyens.
 
-L'analyse détaillée de la concurrence, avec acteurs nommés et comparaison fonctionnelle, fait l'objet du document `analyse_concurrence.md`.
+L'analyse détaillée de la concurrence, avec acteurs nommés et comparaison fonctionnelle, fait l'objet du document `archive/analyse_concurrence.md`.
 
 ---
 
@@ -301,10 +303,10 @@ La conception du produit intègre des réponses à plusieurs de ces risques : la
 
 Le modèle retenu est **ouvert et hybride** :
 
-- le **code est ouvert**, hébergé publiquement, sous une licence à déterminer dans `modele_economique.md` ;
+- le **code est ouvert**, hébergé publiquement, sous une licence à déterminer dans `archive/modele_economique.md` ;
 - une **instance hébergée** est proposée gratuitement aux petites associations, dont l'infrastructure est gérée par le porteur du projet ;
 - les associations qui en ont les moyens techniques peuvent **héberger elles-mêmes** l'outil ;
-- un éventuel modèle de soutien financier, pour les structures les plus exigeantes ou pour assurer la maintenance, est étudié dans `modele_economique.md`.
+- un éventuel modèle de soutien financier, pour les structures les plus exigeantes ou pour assurer la maintenance, est étudié dans `archive/modele_economique.md`.
 
 Ce modèle répond à une exigence morale autant que stratégique : une association qui confie sa gestion à Solivio ne doit jamais se retrouver bloquée si le projet ralentit ou s'arrête.
 
@@ -315,8 +317,8 @@ Ce modèle répond à une exigence morale autant que stratégique : une associat
 Pour rester dans son rôle, cette note d'intention laisse délibérément ouverts des sujets traités ailleurs :
 
 - la liste précise des fonctionnalités et leur découpage en versions → `specifications_fonctionnelles.md` et `roadmap.md` ;
-- la comparaison nommée avec les outils concurrents → `analyse_concurrence.md` ;
-- le choix de licence et le modèle de soutien financier → `modele_economique.md` ;
+- la comparaison nommée avec les outils concurrents → `archive/analyse_concurrence.md` ;
+- le choix de licence et le modèle de soutien financier → `archive/modele_economique.md` ;
 - la faisabilité au regard des ressources réelles → `etude_faisabilite.md` ;
 - les concepts métier détaillés et le schéma de données → `modele_donnees.md` ;
 - les choix de technologies et d'infrastructure → `architecture_technique.md` ;
@@ -341,4 +343,4 @@ Pour rester dans son rôle, cette note d'intention laisse délibérément ouvert
 
 ---
 
-*Fin de la note d'intention. Document suivant : `analyse_concurrence.md`.*
+*Fin de la note d'intention. Document suivant : `archive/analyse_concurrence.md`.*
