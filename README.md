@@ -2,8 +2,6 @@
 
 Plateforme de gestion opérationnelle de Linkee Toulouse, association de solidarité étudiante.
 
-[![pipeline status](https://gitlab.com/tchindajoel61/solivio/badges/main/pipeline.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
-[![coverage](https://gitlab.com/tchindajoel61/solivio/badges/main/coverage.svg)](https://gitlab.com/tchindajoel61/solivio/-/pipelines)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## Description
@@ -36,7 +34,7 @@ La documentation complète du projet (note d'intention, spécifications fonction
 | Authentification | JWT intégré au backend, connexion Google |
 | Secrets | Variables d'environnement injectées par Infisical |
 | Exploitation | Docker, Traefik, Loki, Prometheus, Tempo, Grafana |
-| CI/CD | GitHub Actions (migration depuis GitLab en cours) |
+| CI/CD | GitHub Actions et GHCR (le dépôt doit encore migrer de GitLab vers GitHub) |
 
 Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](docs/architecture_technique.md) (ADR-001 à ADR-008).
 
@@ -105,8 +103,11 @@ L'application est disponible sur `http://localhost:3000`.
 - `solivio_frontend/` : frontend Next.js (`app/`, `components/`, `lib/`, `Dockerfile`)
 - `solivio_mobile/` : application mobile Expo (gelée pendant la refonte du socle)
 - `docs/` : documentation du projet (`archive/` pour les documents historiques)
-- `docker-compose-dev.yml` : services de développement
-- `docker-compose.yml` : stack de production
+- `docker-compose-dev.yml` : services de développement (PostgreSQL, Mailpit)
+- `docker-compose.yml` : stack déployée (préproduction et production), complétée sur le serveur par le routage Traefik (`docker-compose.prod.traefik.yml.example`) et le rattachement à l'observabilité (`docker-compose.*.observability.yml`)
+- `docker/deploy/` : script et procédure de déploiement
+- `docker/backup/` : sauvegarde, restauration et test de restauration
+- `.github/workflows/` : intégration continue (`ci.yml`) et déploiement (`deploy.yml`)
 - `CLAUDE.md` : règles de développement du projet
 
 ## Tests

@@ -88,6 +88,7 @@ export function Header({ user }: HeaderProps) {
             <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image
+                  unoptimized
                   src={avatarSrc}
                   alt={`${user.prenom} ${user.nom}`}
                   fill

@@ -161,7 +161,8 @@ Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'A
 
 - Images Docker multi-étapes, exécutées sans privilège root, avec contrôle de santé.
 - En développement, Docker Compose lance PostgreSQL (et un serveur SMTP de test) ; backend et frontend tournent sur la machine ou en conteneur.
-- En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api` est routé vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS.
+- En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api`, `/oauth2` et `/login/oauth2` sont routés vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS. Deux routes `/api` appartiennent au serveur Next.js (`/api/auth/server-refresh`, `/api/health`) et passent en priorité. Le frontend est donc construit sans URL d'API : une même image sert la préproduction et la production.
+- Sauvegarde quotidienne chiffrée de la base et des fichiers déposés, copiée hors du VPS, avec un test de restauration trimestriel (`docker/backup/README.md`).
 - Environnements : la branche `dev` alimente l'environnement de préproduction (staging), la branche `main` la production.
 - Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008). Les images ne sont jamais construites sur le serveur.
 

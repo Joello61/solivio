@@ -1,34 +1,21 @@
-# Dockerfile - solivio-frontend (Next.js 16 / Node.js 24 LTS)
-# Place this file at: solivio-frontend/Dockerfile
+# Image du frontend Solivio (Next.js 16, Node.js 24 LTS).
 #
-# Multi-stage build:
-#   deps    - install production and dev dependencies
-#   build   - compile Next.js with standalone output
-#   final   - minimal image with standalone output only
+# Sortie "standalone" de Next.js (next.config.ts) : l'image finale ne contient
+# que le serveur et ses dependances, executes sans root.
 #
-# IMPORTANT: next.config.ts must have output: 'standalone'
-# Without it the standalone directory is not generated and this Dockerfile fails.
-#
-# Example next.config.ts:
-#   const nextConfig: NextConfig = {
-#     output: 'standalone',
-#   }
-#   export default nextConfig
+# Les variables NEXT_PUBLIC_* sont figees a la construction. NEXT_PUBLIC_API_URL
+# reste vide pour les images deployees : le navigateur appelle /api sur son
+# propre domaine (route vers le backend par Traefik), la meme image sert donc la
+# preproduction et la production. Le code serveur joint le backend par API_URL,
+# lu a l'execution.
 
-# -----------------------------------------------------------------------------
-# Stage 1: install dependencies
-# -----------------------------------------------------------------------------
 FROM node:24-alpine AS deps
 
 WORKDIR /app
 
-# copy lockfile before package.json for better cache invalidation
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# -----------------------------------------------------------------------------
-# Stage 2: build
-# -----------------------------------------------------------------------------
 FROM node:24-alpine AS build
 
 WORKDIR /app
@@ -36,25 +23,23 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# NEXT_TELEMETRY_DISABLED prevents Next.js from sending build telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_API_URL=""
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN npm run build
 
-# -----------------------------------------------------------------------------
-# Stage 3: final runtime image
-# -----------------------------------------------------------------------------
 FROM node:24-alpine AS final
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# non-root user
 RUN addgroup -S solivio && adduser -S solivio -G solivio
 
-# standalone output includes only what is needed to run the server
 COPY --from=build /app/public ./public
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
@@ -63,14 +48,9 @@ USER solivio
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
-
-HEALTHCHECK \
-  --interval=30s \
-  --timeout=5s \
-  --start-period=30s \
-  --retries=3 \
-  CMD wget -qO- http://localhost:3000/api/health || exit 1
+# 127.0.0.1 et non localhost : dans Alpine, localhost resout d'abord en IPv6 alors
+# que le serveur Next.js n'ecoute qu'en IPv4 (HOSTNAME=0.0.0.0).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
 ENTRYPOINT ["node", "server.js"]

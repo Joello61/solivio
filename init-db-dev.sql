@@ -1,4 +1,0 @@
--- init-db-dev.sql
--- Executed once by PostgreSQL on first container start.
--- The main "solivio" database is created automatically via POSTGRES_DB.
--- No additional databases are needed.
