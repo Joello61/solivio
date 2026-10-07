@@ -21,7 +21,7 @@ setup("etablir l'etat d'authentification", async ({ page }) => {
 
   await page.goto("/login");
   await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/mot de passe/i).fill(password);
+  await page.getByLabel("Mot de passe", { exact: true }).fill(password);
   await page.getByRole("button", { name: /se connecter/i }).click();
   await page.waitForURL(/dashboard/, { timeout: 15_000 });
 
