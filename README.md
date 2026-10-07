@@ -76,7 +76,7 @@ cd solivio-api
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Le profil `dev` fournit des valeurs locales non secrètes. Les variables attendues (dont la connexion Google, optionnelle en local) sont listées dans `solivio-api/.env.example` et se passent en variables d'environnement.
+Le profil `dev` fournit des valeurs locales non secrètes. Les variables attendues (dont la connexion Google, optionnelle en local) sont listées dans `.env.example` (racine du dépôt) et se passent en variables d'environnement.
 
 L'API est disponible sur `http://localhost:8080`.
 La documentation OpenAPI est disponible sur `http://localhost:8080/swagger-ui.html`.

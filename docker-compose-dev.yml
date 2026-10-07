@@ -10,7 +10,6 @@
 # Exposed ports:
 #   PostgreSQL  : localhost:5436  (5432 occupied by system PostgreSQL)
 #   Kafka       : localhost:9093  (external listener for host access)
-#   OpenBao     : localhost:8200
 #   Mailpit UI  : localhost:8025
 #   Mailpit SMTP: localhost:1025
 #
@@ -18,8 +17,6 @@
 #   spring.datasource.url: jdbc:postgresql://localhost:5436/solivio
 #   spring.kafka.bootstrap-servers: localhost:9093
 #   spring.mail.host: localhost / port: 1025
-#   spring.cloud.vault.uri: http://localhost:8200
-#   SPRING_CLOUD_VAULT_TOKEN=root (env var)
 
 services:
 
@@ -85,29 +82,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-
-  # ---------------------------------------------------------------------------
-  # OpenBao 2 - dev mode
-  # Auto-unsealed, root token = "root", in-memory storage.
-  # UI: http://localhost:8200 (token: root)
-  # ---------------------------------------------------------------------------
-  openbao:
-    image: openbao/openbao:2
-    container_name: solivio_dev_openbao
-    restart: unless-stopped
-    command: server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
-    cap_add:
-      - IPC_LOCK
-    ports:
-      - "8200:8200"
-    networks:
-      - solivio_dev_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/v1/sys/health || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
 
   # ---------------------------------------------------------------------------
   # Mailpit - SMTP local + visualiseur d'emails

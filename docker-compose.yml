@@ -3,8 +3,8 @@
 # Usage with Coolify: Coolify reads this file and manages routing and TLS.
 # Usage standalone:   docker compose up -d
 #
-# Required: copy .env.example to .env and fill all values before starting.
-# Required: initialize OpenBao manually after first start (vault operator init).
+# Secrets: injected as environment variables (Infisical in production,
+# see .env.example for the full list). Never commit a filled .env file.
 #
 # TLS is handled by Coolify (or Traefik in front). Services communicate over
 # the internal network without TLS between containers.
@@ -72,42 +72,6 @@ services:
       start_period: 30s
 
   # ---------------------------------------------------------------------------
-  # OpenBao 2 - secrets management
-  # Production server mode: secrets persisted to a named volume.
-  # After first start, initialize manually:
-  #   docker exec solivio_openbao bao operator init
-  # Store the unseal keys and root token securely.
-  # ---------------------------------------------------------------------------
-  openbao:
-    image: openbao/openbao:2
-    container_name: solivio_openbao
-    restart: unless-stopped
-    command: server
-    cap_add:
-      - IPC_LOCK
-    environment:
-      BAO_LOCAL_CONFIG: |
-        storage "file" {
-          path = "/openbao/data"
-        }
-        listener "tcp" {
-          address     = "0.0.0.0:8200"
-          tls_disable = true
-        }
-        default_lease_ttl = "168h"
-        max_lease_ttl     = "720h"
-    volumes:
-      - openbao_data:/openbao/data
-    networks:
-      - solivio_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8200/v1/sys/health || true"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  # ---------------------------------------------------------------------------
   # Backend - Spring Boot 4 / Java 25
   # ---------------------------------------------------------------------------
   backend:
@@ -116,15 +80,17 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_CLOUD_VAULT_URI: http://openbao:8200
-      SPRING_CLOUD_VAULT_TOKEN: ${OPENBAO_APP_TOKEN}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SOLIVIO_AUTH_JWT_SECRET: ${SOLIVIO_AUTH_JWT_SECRET}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SOLIVIO_POST_LOGIN_REDIRECT_URI: ${FRONTEND_URL}
       SOLIVIO_POST_LOGOUT_REDIRECT_URI: ${FRONTEND_URL}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      SOLIVIO_CORS_ALLOWED_ORIGINS: ${FRONTEND_URL}
       SPRING_MAIL_HOST: ${SMTP_HOST}
       SPRING_MAIL_PORT: ${SMTP_PORT:-587}
       SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
@@ -138,8 +104,6 @@ services:
       postgres:
         condition: service_healthy
       kafka:
-        condition: service_healthy
-      openbao:
         condition: service_healthy
     networks:
       - solivio_net
@@ -180,8 +144,6 @@ volumes:
   postgres_data:
     driver: local
   kafka_data:
-    driver: local
-  openbao_data:
     driver: local
   uploads_data:
     driver: local
