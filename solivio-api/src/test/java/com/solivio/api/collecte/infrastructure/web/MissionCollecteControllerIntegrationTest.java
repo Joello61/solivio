@@ -91,7 +91,7 @@ class MissionCollecteControllerIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        // Le DROP SCHEMA peut provoquer un deadlock sous execution parallele — on absorbe l'erreur.
+        // Le DROP SCHEMA peut provoquer un deadlock sous execution parallele - on absorbe l'erreur.
         try {
             jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
         } catch (Exception ignored) {}

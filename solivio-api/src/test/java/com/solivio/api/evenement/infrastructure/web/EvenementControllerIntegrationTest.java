@@ -217,7 +217,7 @@ class EvenementControllerIntegrationTest {
                 .cookie(new Cookie("access_token", tokenAdmin)))
             .andExpect(status().isOk());
 
-        // Beneficiaire essaie de s'inscrire comme staff → 409 attendu
+        // Beneficiaire essaie de s'inscrire comme staff -> 409 attendu
         mockMvc.perform(post("/api/evenements/" + id + "/participations")
                 .cookie(new Cookie("access_token", tokenBeneficiaire))
                 .contentType(MediaType.APPLICATION_JSON)

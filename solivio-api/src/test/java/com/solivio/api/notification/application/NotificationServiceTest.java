@@ -375,7 +375,7 @@ class NotificationServiceTest {
         UUID evenementId = UUID.randomUUID();
         UUID b1Id = UUID.randomUUID();
         PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ev.com", "Dup", "Lic");
-        // aBesoiNStaff=true ET publicParticipants=BENEVOLES → meme benevole potentiellement dans les deux listes
+        // aBesoiNStaff=true ET publicParticipants=BENEVOLES -> meme benevole potentiellement dans les deux listes
         EvenementInfo info = new EvenementInfo(evenementId, "Stand", ZonedDateTime.now(),
             null, true, true, "BENEVOLES", "OBLIGATOIRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
@@ -503,7 +503,7 @@ class NotificationServiceTest {
 
         service.notifierAnnulationEvenement(evenementId, "asso-y");
 
-        // meme id dans benevoles et beneficiaires → un seul email
+        // meme id dans benevoles et beneficiaires -> un seul email
         verify(emailService, times(1)).envoyerAnnulationEvenement(eq("x@ev.com"), any());
     }
 }
