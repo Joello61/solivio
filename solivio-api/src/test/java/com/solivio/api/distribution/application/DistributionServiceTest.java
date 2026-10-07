@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -119,7 +120,8 @@ class DistributionServiceTest {
         DistributionResponse response = service.publier(distributionId);
 
         assertThat(response.statut()).isEqualTo("PUBLIEE");
-        verify(eventPublisher).publierPubliee(eq(distributionId), any(LocalDate.class));
+        // La publication n'a aucun consommateur : aucun evenement n'est emis.
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -170,7 +172,7 @@ class DistributionServiceTest {
     }
 
     @Test
-    void demarrer_nEmettreAucunEvenementKafka() {
+    void demarrer_nEmetAucunEvenement() {
         // Distribution a la date du jour : demarrage autorise
         Distribution distribAujourdhui = new Distribution(
             "Distribution de test", null, null, LocalDate.now(),
@@ -186,7 +188,6 @@ class DistributionServiceTest {
         DistributionResponse response = service.demarrer(distributionId);
 
         assertThat(response.statut()).isEqualTo("EN_COURS");
-        verify(eventPublisher, never()).publierPubliee(any(), any());
         verify(eventPublisher, never()).publierAnnulee(any(), any());
     }
 

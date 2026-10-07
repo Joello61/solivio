@@ -239,7 +239,6 @@ class InscriptionServiceTest {
 
         service.desinscrire(inscriptionId, "marie@example.com");
 
-        verify(eventPublisher).publierAnnulee(confirmee);
         verify(eventPublisher).publierPromue(enAttente);
         assertThat(enAttente.getStatut()).isEqualTo(StatutInscription.CONFIRMEE);
         assertThat(enAttente.getRangListeAttente()).isNull();

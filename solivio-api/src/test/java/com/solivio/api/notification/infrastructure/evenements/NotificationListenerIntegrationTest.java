@@ -1,20 +1,18 @@
-package com.solivio.api.notification.infrastructure.kafka;
+package com.solivio.api.notification.infrastructure.evenements;
 
-import com.solivio.api.association.domain.Association;
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.distribution.infrastructure.kafka.DistributionEvent;
-import com.solivio.api.inscription.infrastructure.kafka.InscriptionEvent;
+import com.solivio.api.distribution.events.DistributionAnnulee;
+import com.solivio.api.inscription.events.InscriptionConfirmee;
+import com.solivio.api.inscription.events.InscriptionPromue;
 import com.solivio.api.support.SolivioIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -24,24 +22,22 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+/**
+ * Chaine complete : publication dans une transaction, registre d'evenements,
+ * ecouteur asynchrone apres validation, email recu par Mailpit.
+ */
 @SolivioIntegrationTest
-class NotificationConsumerIntegrationTest {
+class NotificationListenerIntegrationTest {
 
     @Value("${solivio.test.mailpit.api.base-url}")
     private String mailpitApiBaseUrl;
 
-    @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private AssociationRepository associationRepository;
+    @Autowired private ApplicationEventPublisher events;
+    @Autowired private TransactionTemplate transactionTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private Association association;
     private UUID personneId;
     private UUID distributionId;
 
@@ -72,81 +68,77 @@ class NotificationConsumerIntegrationTest {
         );
     }
 
-    @AfterEach
-    void tearDown() {
-    }
-
     @Test
     void inscriptionConfirmee_envoieEmailDeConfirmation() {
-        InscriptionEvent event = new InscriptionEvent(
-            "inscription.confirmee", UUID.randomUUID(),
-            distributionId, personneId, "BENEFICIAIRE", null, Instant.now()
-        );
-        kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
+        publierDansUneTransaction(new InscriptionConfirmee(
+            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
 
         await().atMost(15, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") >= 1);
 
         List<Map<String, Object>> messages = messagesMailpitPour("marie@example.com");
         assertThat(messages).hasSize(1);
-        String sujet = sujetDu(messages.get(0));
-        assertThat(sujet).contains("inscription").containsIgnoringCase("confirmee")
+        assertThat(sujetDu(messages.get(0))).contains("inscription").containsIgnoringCase("confirmee")
             .contains("Distribution Test");
     }
 
     @Test
     void inscriptionPromue_envoieEmailDePromotion() {
-        InscriptionEvent event = new InscriptionEvent(
-            "inscription.promue", UUID.randomUUID(),
-            distributionId, personneId, "BENEVOLE", null, Instant.now()
-        );
-        kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
+        publierDansUneTransaction(new InscriptionPromue(
+            UUID.randomUUID(), distributionId, personneId, "BENEVOLE", null));
 
         await().atMost(15, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") >= 1);
 
-        List<Map<String, Object>> messages = messagesMailpitPour("marie@example.com");
-        assertThat(messages).hasSize(1);
-        assertThat(sujetDu(messages.get(0))).contains("place").contains("Distribution Test");
+        assertThat(sujetDu(messagesMailpitPour("marie@example.com").get(0)))
+            .contains("place").contains("Distribution Test");
     }
 
     @Test
-    void inscriptionAnnulee_nenvoiePasDemail() {
-        InscriptionEvent event = new InscriptionEvent(
-            "inscription.annulee", UUID.randomUUID(),
-            distributionId, personneId, "BENEFICIAIRE", null, Instant.now()
-        );
-        kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
-
-        // Attente courte pour laisser le temps au consumer de traiter si bug
-        await().during(3, TimeUnit.SECONDS).atMost(4, TimeUnit.SECONDS)
-            .until(() -> compterEmailsPour("marie@example.com") == 0);
-    }
-
-    @Test
-    void distributionAnnulee_envoieEmailATousLesInscritsConfirmes() {
-        DistributionEvent event = new DistributionEvent(
-            "distribution.annulee", distributionId, LocalDate.now(), Instant.now()
-        );
-        kafkaTemplate.send("distributions", distributionId.toString(), event);
+    void distributionAnnulee_envoieEmailAuxInscritsConfirmes() {
+        publierDansUneTransaction(new DistributionAnnulee(distributionId, LocalDate.now()));
 
         await().atMost(15, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") >= 1);
 
-        List<Map<String, Object>> messages = messagesMailpitPour("marie@example.com");
-        assertThat(messages).hasSize(1);
-        assertThat(sujetDu(messages.get(0))).contains("annulee").contains("Distribution Test");
+        assertThat(sujetDu(messagesMailpitPour("marie@example.com").get(0)))
+            .contains("annulee").contains("Distribution Test");
     }
 
+    // Avec Kafka, l'envoi partait avant la validation : un rollback notifiait quand meme.
     @Test
-    void distributionPubliee_nenvoiePasDemail() {
-        DistributionEvent event = new DistributionEvent(
-            "distribution.publiee", distributionId, LocalDate.now(), Instant.now()
-        );
-        kafkaTemplate.send("distributions", distributionId.toString(), event);
+    void transactionAnnulee_nEnvoieAucunEmail() {
+        transactionTemplate.executeWithoutResult(status -> {
+            events.publishEvent(new InscriptionConfirmee(
+                UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
+            status.setRollbackOnly();
+        });
 
         await().during(3, TimeUnit.SECONDS).atMost(4, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") == 0);
+        assertThat(publicationsEnAttente()).isZero();
+    }
+
+    @Test
+    void publicationTraitee_estArchiveeEtPlusEnAttente() {
+        publierDansUneTransaction(new InscriptionConfirmee(
+            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
+
+        await().atMost(15, TimeUnit.SECONDS).until(() -> publicationsArchivees() >= 1);
+        assertThat(publicationsEnAttente()).isZero();
+    }
+
+    private void publierDansUneTransaction(Object event) {
+        transactionTemplate.executeWithoutResult(status -> events.publishEvent(event));
+    }
+
+    private int publicationsEnAttente() {
+        return jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM event_publication WHERE completion_date IS NULL", Integer.class);
+    }
+
+    private int publicationsArchivees() {
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM event_publication_archive", Integer.class);
     }
 
     // --- Helpers Mailpit ---

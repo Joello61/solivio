@@ -11,7 +11,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -20,19 +19,13 @@ public class TestcontainersConfiguration {
 
     @Bean
     @ServiceConnection
-    KafkaContainer kafkaContainer() {
-        return new KafkaContainer(DockerImageName.parse("apache/kafka-native:latest"));
-    }
-
-    @Bean
-    @ServiceConnection
     PostgreSQLContainer postgresContainer() {
-        return new PostgreSQLContainer(DockerImageName.parse("postgres:latest"));
+        return new PostgreSQLContainer(DockerImageName.parse("postgres:18-alpine"));
     }
 
     @Bean
     GenericContainer<?> mailpitContainer() {
-        return new GenericContainer<>(DockerImageName.parse("axllent/mailpit:latest"))
+        return new GenericContainer<>(DockerImageName.parse("axllent/mailpit:v1.31.4"))
             .withExposedPorts(1025, 8025)
             .waitingFor(Wait.forHttp("/api/v1/messages").forPort(8025));
     }

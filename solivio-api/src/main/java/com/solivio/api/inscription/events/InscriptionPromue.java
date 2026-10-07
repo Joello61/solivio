@@ -5,4 +5,10 @@ import java.util.UUID;
 /**
  * Une inscription passe de la liste d'attente a confirmee.
  */
-public record InscriptionPromue(UUID inscriptionId, UUID distributionId, UUID personneId, String typeInscription, UUID creneauId) {}
+public record InscriptionPromue(
+    UUID inscriptionId,
+    UUID distributionId,
+    UUID personneId,
+    String typeInscription,
+    UUID creneauId
+) {}
