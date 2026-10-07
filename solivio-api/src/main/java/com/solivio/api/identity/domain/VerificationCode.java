@@ -50,6 +50,9 @@ public class VerificationCode {
     @Column(nullable = false)
     private boolean utilise = false;
 
+    @Column(nullable = false)
+    private int tentatives = 0;
+
     @Column(name = "cree_a", nullable = false, updatable = false)
     private Instant creeA = Instant.now();
 

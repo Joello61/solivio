@@ -26,6 +26,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.Instant;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -112,5 +113,28 @@ class PasswordControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
+    }
+
+    // Non-regression : sans limite, un code a 6 chiffres se devinait par force brute.
+    // Le compteur doit survivre a l'annulation de la transaction de reinitialisation.
+    @Test
+    void resetPassword_bruleLeCodeApresCinqEssaisRates() throws Exception {
+        verificationCodeRepository.save(new VerificationCode(
+            compte, "654321", VerificationCode.TYPE_PASSWORD_RESET, Instant.now().plusSeconds(900)));
+
+        for (int i = 0; i < 5; i++) {
+            envoyerReset("000000").andExpect(status().isBadRequest());
+        }
+
+        envoyerReset("654321").andExpect(status().isBadRequest());
+        assertThat(passwordEncoder.matches("password123!",
+            compteRepository.findByEmail("alice@example.com").orElseThrow().getPasswordHash())).isTrue();
+    }
+
+    private org.springframework.test.web.servlet.ResultActions envoyerReset(String code) throws Exception {
+        return mockMvc.perform(post("/api/auth/reset-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonMapper.writeValueAsString(
+                new ResetPasswordRequest("alice@example.com", code, "Nouveau-Mot-De-Passe-42"))));
     }
 }
