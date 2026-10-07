@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -65,10 +66,37 @@ public class Compte {
     @Column(name = "photo_url", length = 500)
     private String photoUrl;
 
+    @Column(name = "echecs_connexion", nullable = false)
+    private int echecsConnexion = 0;
+
+    @Column(name = "verrouille_jusqu_a")
+    private Instant verrouilleJusqua;
+
     public Compte(String email, String passwordHash, String nom, String prenom) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.nom = nom;
         this.prenom = prenom;
+    }
+
+    public boolean estVerrouille(Instant maintenant) {
+        return verrouilleJusqua != null && maintenant.isBefore(verrouilleJusqua);
+    }
+
+    /**
+     * Compte un echec de connexion ; au seuil, verrouille le compte pour la
+     * duree donnee et repart de zero.
+     */
+    public void enregistrerEchecConnexion(Instant maintenant, int seuil, Duration duree) {
+        echecsConnexion++;
+        if (echecsConnexion >= seuil) {
+            verrouilleJusqua = maintenant.plus(duree);
+            echecsConnexion = 0;
+        }
+    }
+
+    public void reinitialiserEchecsConnexion() {
+        echecsConnexion = 0;
+        verrouilleJusqua = null;
     }
 }

@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class AuthService {
     private final PersonneProvisioningService personneProvisioningService;
     private final PersonneRepository personneRepository;
     private final RegisterService registerService;
+    private final TentativesConnexionService tentativesConnexion;
 
     public AuthService(
             AuthenticationManager authenticationManager,
@@ -49,7 +51,8 @@ public class AuthService {
             JwtService jwtService,
             PersonneProvisioningService personneProvisioningService,
             PersonneRepository personneRepository,
-            RegisterService registerService) {
+            RegisterService registerService,
+            TentativesConnexionService tentativesConnexion) {
         this.authenticationManager = authenticationManager;
         this.compteRepository = compteRepository;
         this.membreRepo = membreRepo;
@@ -58,12 +61,20 @@ public class AuthService {
         this.personneProvisioningService = personneProvisioningService;
         this.personneRepository = personneRepository;
         this.registerService = registerService;
+        this.tentativesConnexion = tentativesConnexion;
     }
 
     @Transactional
     public TokenResponse login(String email, String motDePasse, boolean rememberMe,
                                HttpServletRequest request, HttpServletResponse response) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, motDePasse));
+        tentativesConnexion.verifierNonVerrouille(email);
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, motDePasse));
+        } catch (BadCredentialsException e) {
+            tentativesConnexion.enregistrerEchec(email);
+            throw e;
+        }
+        tentativesConnexion.reinitialiser(email);
 
         Compte compte = compteRepository.findByEmail(email)
             .orElseThrow(() -> new AuthenticationException("Compte introuvable") {});

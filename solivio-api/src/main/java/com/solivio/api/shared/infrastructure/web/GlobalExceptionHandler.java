@@ -2,6 +2,7 @@ package com.solivio.api.shared.infrastructure.web;
 
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
+import com.solivio.api.shared.exception.TropDeTentativesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -74,6 +75,14 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleNotFound(NotFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         pd.setTitle("Ressource introuvable");
+        pd.setDetail(ex.getMessage());
+        return pd;
+    }
+
+    @ExceptionHandler(TropDeTentativesException.class)
+    public ProblemDetail handleTropDeTentatives(TropDeTentativesException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.TOO_MANY_REQUESTS);
+        pd.setTitle("Trop de tentatives");
         pd.setDetail(ex.getMessage());
         return pd;
     }

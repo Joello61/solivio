@@ -47,6 +47,7 @@ class AuthServiceTest {
     @Mock private PersonneProvisioningService personneProvisioningService;
     @Mock private PersonneRepository personneRepository;
     @Mock private RegisterService registerService;
+    @Mock private TentativesConnexionService tentativesConnexion;
 
     private AuthService service;
     private Compte compte;
@@ -56,7 +57,7 @@ class AuthServiceTest {
     void setUp() {
         service = new AuthService(authenticationManager, compteRepository, membreRepo,
             refreshTokenRepo, jwtService, personneProvisioningService,
-            personneRepository, registerService);
+            personneRepository, registerService, tentativesConnexion);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         compte.setId(compteId);
@@ -241,6 +242,7 @@ class AuthServiceTest {
         verify(jwtService).genererAccessToken(eq(compteId), any(), any(), any(),
             eq(List.of("coordinateur")), eq("coordo_sec"), eq(false));
         verify(personneProvisioningService).provisionner("alice@example.com", "Dupont", "Alice");
+        verify(tentativesConnexion).reinitialiser("alice@example.com");
     }
 
     @Test
@@ -255,6 +257,29 @@ class AuthServiceTest {
 
         verify(jwtService).genererAccessToken(eq(compteId), any(), any(), any(),
             eq(List.of()), isNull(), eq(false));
+    }
+
+    @Test
+    void login_mauvaisMotDePasse_enregistreLEchecEtPropageLErreur() {
+        when(authenticationManager.authenticate(any()))
+            .thenThrow(new org.springframework.security.authentication.BadCredentialsException("ko"));
+
+        assertThatThrownBy(() -> service.login("alice@example.com", "faux", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
+            .isInstanceOf(org.springframework.security.authentication.BadCredentialsException.class);
+        verify(tentativesConnexion).enregistrerEchec("alice@example.com");
+        verify(tentativesConnexion, org.mockito.Mockito.never()).reinitialiser(any());
+    }
+
+    @Test
+    void login_compteVerrouille_neVerifiePasLeMotDePasse() {
+        org.mockito.Mockito.doThrow(new com.solivio.api.shared.exception.TropDeTentativesException("verrouille"))
+            .when(tentativesConnexion).verifierNonVerrouille("alice@example.com");
+
+        assertThatThrownBy(() -> service.login("alice@example.com", "password123!", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
+            .isInstanceOf(com.solivio.api.shared.exception.TropDeTentativesException.class);
+        org.mockito.Mockito.verifyNoInteractions(authenticationManager);
     }
 
     private void stubEmissionJetons() {

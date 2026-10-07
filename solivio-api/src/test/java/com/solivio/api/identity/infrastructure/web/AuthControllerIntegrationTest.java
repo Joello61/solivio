@@ -106,6 +106,39 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void login_verrouilleLeCompteApresCinqEchecs() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "faux-mdp", false))))
+                .andExpect(status().isUnauthorized());
+        }
+
+        // Meme le bon mot de passe est refuse tant que le verrouillage dure.
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void login_reussiRemetLeCompteurAZero() throws Exception {
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "faux-mdp", false))))
+                .andExpect(status().isUnauthorized());
+        }
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isOk());
+
+        org.assertj.core.api.Assertions.assertThat(
+            compteRepository.findByEmail("alice@example.com").orElseThrow().getEchecsConnexion()).isZero();
+    }
+
+    @Test
     void login_retourne401PourEmailInconnu() throws Exception {
         LoginRequest request = new LoginRequest("unknown@example.com", "password123!", false);
 
