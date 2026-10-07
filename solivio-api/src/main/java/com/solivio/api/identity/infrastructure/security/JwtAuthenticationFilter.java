@@ -1,6 +1,7 @@
 package com.solivio.api.identity.infrastructure.security;
 
 import com.solivio.api.identity.SolivioUserDetails;
+import com.solivio.api.shared.web.ContexteRequete;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,6 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                MDC.put(ContexteRequete.MDC_ACCOUNT_ID, userDetails.getCompteId().toString());
             } catch (Exception e) {
                 log.debug("Echec construction UserDetails depuis JWT : {}", e.getMessage());
             }
