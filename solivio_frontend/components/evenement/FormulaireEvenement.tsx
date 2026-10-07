@@ -20,9 +20,7 @@ import { creerEvenement } from "@/lib/api/evenement";
 import type { TypeEvenement, PublicCible, ModeInscription } from "@/types/evenement";
 import type { LieuRequest } from "@/types/distribution";
 
-/* ------------------------------------------------------------------ */
-/*  État du formulaire                                                  */
-/* ------------------------------------------------------------------ */
+// État du formulaire
 interface FormState {
   titre: string;
   description: string;
@@ -51,9 +49,7 @@ const INIT: FormState = {
   modeInscription: "OBLIGATOIRE",
 };
 
-/* ------------------------------------------------------------------ */
-/*  Barre de progression                                                */
-/* ------------------------------------------------------------------ */
+// Barre de progression
 const STEPS = ["Informations & lieu", "Participants & inscription"];
 
 function StepBar({ current }: { current: number }) {
@@ -101,9 +97,7 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Composant principal                                                 */
-/* ------------------------------------------------------------------ */
+// Composant principal
 export function FormulaireEvenement() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(INIT);
