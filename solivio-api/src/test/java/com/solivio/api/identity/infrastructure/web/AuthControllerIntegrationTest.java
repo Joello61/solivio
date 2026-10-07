@@ -162,6 +162,19 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void register_refuseUnMotDePasseCourant() throws Exception {
+        RegisterRequest request = new RegisterRequest(
+            "carole@example.com", "azertyuiop", "Durand", "Carole", null);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        assertThat(compteRepository.existsByEmail("carole@example.com")).isFalse();
+    }
+
+    @Test
     void register_retourne4xxPourEmailDejaPris() throws Exception {
         RegisterRequest request = new RegisterRequest(
             "alice@example.com", "password123!", "Autre", "Personne", null);
