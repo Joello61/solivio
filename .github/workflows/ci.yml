@@ -169,6 +169,10 @@ jobs:
   secrets:
     name: Detection de secrets (gitleaks)
     runs-on: ubuntu-latest
+    # Sur une pull request, l'action liste ses commits par l'API.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -197,7 +201,9 @@ jobs:
 
   dependances:
     name: Revue des dependances
-    if: github.event_name == 'pull_request'
+    # Indisponible sur un depot prive sans GitHub Advanced Security : actif une
+    # fois le depot public.
+    if: github.event_name == 'pull_request' && !github.event.repository.private
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
