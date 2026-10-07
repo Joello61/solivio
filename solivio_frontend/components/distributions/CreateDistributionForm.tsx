@@ -15,9 +15,7 @@ import { creerDistribution } from "@/lib/api/distributions";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
 import type { LieuRequest } from "@/types/distribution";
 
-/* ------------------------------------------------------------------ */
-/*  Schéma                                                              */
-/* ------------------------------------------------------------------ */
+// Schéma
 const creneauSchema = z.object({
   heureDebut: z.string().min(1, "Heure de debut requise"),
   heureFin: z.string().min(1, "Heure de fin requise"),
@@ -36,9 +34,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-/* ------------------------------------------------------------------ */
-/*  Barre de progression                                                */
-/* ------------------------------------------------------------------ */
+// Barre de progression
 const STEPS = ["Informations & lieu", "Créneaux horaires"];
 
 function StepBar({ current }: { current: number }) {
@@ -86,9 +82,7 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Composant principal                                                 */
-/* ------------------------------------------------------------------ */
+// Composant principal
 export function CreateDistributionForm() {
   const router = useRouter();
   const [step, setStep] = useState(0);
