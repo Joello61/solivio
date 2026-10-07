@@ -254,7 +254,13 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 
 - **Statut** : acceptée (octobre 2026). Remplace la mention de Capacitor de la version 1.0 de ce document.
 - **Décision** : l'application mobile reste une application Expo / React Native, distincte du frontend web, qui consomme l'API en mode Bearer.
-- **Conséquences** : gelée pendant la refonte du socle ; à sa reprise : mise à jour du SDK, adaptation aux changements d'API de l'ADR-001, ajout de tests et d'un job d'intégration continue, builds via EAS.
+- **Conséquences** : gelée pendant la refonte du socle (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
+- **Ruptures d'API à reprendre dans le mobile** (refonte d'octobre 2026) :
+  - `POST /api/auth/switch-tenant` et `/api/admin/associations` n'existent plus : retirer l'écran `tenant-select`, `switchTenant()` et l'écran d'administration des associations ;
+  - `TokenResponse` ne contient plus `tenants`, `MeResponse` ne contient plus `tenantActif` ;
+  - l'inscription et la finalisation d'un compte Google ne prennent plus de `codeAssociation` ;
+  - les erreurs suivent l'enveloppe `{"error": {"code", "message", "details", "request_id"}}` : le mobile lit encore `detail` (ProblemDetail) et n'affiche plus que des messages génériques ;
+  - les mots de passe suivent la nouvelle politique (8 à 128 caractères, mots de passe courants refusés), et la connexion peut répondre `429` (limite de débit ou compte temporairement verrouillé).
 
 ### ADR-008 - GitHub Actions et GHCR
 
