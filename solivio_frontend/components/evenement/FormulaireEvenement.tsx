@@ -193,7 +193,7 @@ export function FormulaireEvenement() {
       <div>
         <StepBar current={step} />
 
-        {/* ── ETAPE 1 : Informations & lieu ── */}
+        {/* ETAPE 1 : Informations et lieu */}
         {step === 0 && (
           <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
             {erreurStep1 && (
@@ -308,7 +308,7 @@ export function FormulaireEvenement() {
           </div>
         )}
 
-        {/* ── ETAPE 2 : Participants & inscription ── */}
+        {/* ETAPE 2 : Participants et inscription */}
         {step === 1 && (
           <form onSubmit={soumettre} className="animate-fade-in">
             <div className="rounded-2xl border border-border/60 bg-card shadow-sm">

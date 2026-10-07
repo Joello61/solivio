@@ -168,7 +168,7 @@ export function CreateDistributionForm() {
             </div>
           )}
 
-          {/* ── ÉTAPE 1 : Informations & lieu ── */}
+          {/* ÉTAPE 1 : Informations et lieu */}
           {step === 0 && (
             <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
               {/* Section : Informations générales */}
@@ -269,7 +269,7 @@ export function CreateDistributionForm() {
             </div>
           )}
 
-          {/* ── ÉTAPE 2 : Créneaux horaires ── */}
+          {/* ÉTAPE 2 : Créneaux horaires */}
           {step === 1 && (
             <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
               {/* Section : Créneaux horaires */}
