@@ -52,7 +52,7 @@ public class MissionCollecteController {
         @Valid @RequestBody CreateMissionCollecteRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MissionCollecteResponse response = missionService.creer(request, user.getUsername(), user.getTenantSlug());
+        MissionCollecteResponse response = missionService.creer(request, user.getUsername());
         auditService.tracer(user.getCompteId(), "MISSION_COLLECTE_CREEE", "mission_collecte", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -82,7 +82,7 @@ public class MissionCollecteController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MissionCollecteResponse response = missionService.annuler(id, request,
-            user.getUsername(), user.getTenantSlug());
+            user.getUsername());
         auditService.tracer(user.getCompteId(), "MISSION_COLLECTE_ANNULEE", "mission_collecte", id);
         return ResponseEntity.ok(response);
     }

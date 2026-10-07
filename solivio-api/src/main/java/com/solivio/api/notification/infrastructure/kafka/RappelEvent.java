@@ -6,6 +6,5 @@ import java.util.UUID;
 public record RappelEvent(
     String type,
     UUID distributionId,
-    String tenantSlug,
     Instant occurredAt
 ) {}

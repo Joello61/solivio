@@ -1,7 +1,5 @@
 package com.solivio.api.identity.application;
 
-import com.solivio.api.association.domain.Association;
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Invitation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -21,6 +19,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,75 +27,64 @@ import static org.mockito.Mockito.when;
 class InvitationServiceTest {
 
     @Mock private InvitationRepository invitationRepository;
-    @Mock private AssociationRepository associationRepository;
     @Mock private CompteRepository compteRepository;
     @Mock private EmailService emailService;
 
     private InvitationService service;
     private SolivioUserDetails invitantDetails;
     private Compte invitant;
-    private Association association;
 
     @BeforeEach
     void setUp() {
-        service = new InvitationService(invitationRepository, associationRepository,
-            compteRepository, emailService);
+        service = new InvitationService(invitationRepository, compteRepository, emailService);
         invitant = new Compte("boss@example.com", "hash", "Boss", "B");
-        UUID invitantId = UUID.randomUUID();
         invitantDetails = new SolivioUserDetails(
-            invitantId, "boss@example.com", null, "pilote", false, List.of(), true);
-        association = new Association("pilote", "Association Pilote");
+            UUID.randomUUID(), "boss@example.com", null, false, List.of(), true);
     }
 
     @Test
     void inviter_creeInvitationEtEnvoieEmail() {
-        when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
-        when(invitationRepository.existsByEmailAndAssociationIdAndStatut(any(), any(), any())).thenReturn(false);
+        when(invitationRepository.existsByEmailAndStatut("guest@example.com", "pending")).thenReturn(false);
         when(compteRepository.findById(any())).thenReturn(Optional.of(invitant));
-        Invitation saved = new Invitation("guest@example.com", association, "benevole",
-            invitant, Instant.now().plusSeconds(3600));
-        when(invitationRepository.save(any())).thenReturn(saved);
 
-        Invitation result = service.inviter(invitantDetails, "guest@example.com",
-            "benevole", null, "pilote");
+        Invitation result = service.inviter(invitantDetails, "guest@example.com", "coordinateur", "coordo_sec");
 
-        assertThat(result).isNotNull();
-        verify(invitationRepository).save(any());
-        verify(emailService).envoyerInvitation(any());
-    }
-
-    @Test
-    void inviter_lanceExceptionSiAssociationInconnue() {
-        when(associationRepository.findBySlug("unknown")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> service.inviter(invitantDetails, "guest@example.com",
-            "benevole", null, "unknown"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Association inconnue");
+        assertThat(result.getRole()).isEqualTo("coordinateur");
+        assertThat(result.getCoordoType()).isEqualTo("coordo_sec");
+        assertThat(result.getInvitePar()).isSameAs(invitant);
+        verify(invitationRepository).save(result);
+        verify(emailService).envoyerInvitation(result);
     }
 
     @Test
     void inviter_lanceExceptionSiInvitationEnAttente() {
-        when(associationRepository.findBySlug("pilote")).thenReturn(Optional.of(association));
-        when(invitationRepository.existsByEmailAndAssociationIdAndStatut(
-            "guest@example.com", association.getId(), "pending")).thenReturn(true);
+        when(invitationRepository.existsByEmailAndStatut("guest@example.com", "pending")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.inviter(invitantDetails, "guest@example.com",
-            "benevole", null, "pilote"))
+        assertThatThrownBy(() -> service.inviter(invitantDetails, "guest@example.com", "benevole", null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("deja en attente");
+        verify(emailService, never()).envoyerInvitation(any());
     }
 
     @Test
     void consulterInvitation_retourneInvitationValide() {
         UUID token = UUID.randomUUID();
-        Invitation invitation = new Invitation("guest@example.com", association, "benevole",
+        Invitation invitation = new Invitation("guest@example.com", "benevole",
             invitant, Instant.now().plusSeconds(3600));
         when(invitationRepository.findByTokenWithDetails(token)).thenReturn(Optional.of(invitation));
 
-        Invitation result = service.consulterInvitation(token);
+        assertThat(service.consulterInvitation(token).getEmail()).isEqualTo("guest@example.com");
+    }
 
-        assertThat(result.getEmail()).isEqualTo("guest@example.com");
+    @Test
+    void consulterInvitation_lanceExceptionSiExpiree() {
+        UUID token = UUID.randomUUID();
+        Invitation invitation = new Invitation("guest@example.com", "benevole",
+            invitant, Instant.now().minusSeconds(60));
+        when(invitationRepository.findByTokenWithDetails(token)).thenReturn(Optional.of(invitation));
+
+        assertThatThrownBy(() -> service.consulterInvitation(token))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

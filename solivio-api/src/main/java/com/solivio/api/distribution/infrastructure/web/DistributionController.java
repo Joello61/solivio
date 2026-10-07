@@ -75,7 +75,7 @@ public class DistributionController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        DistributionResponse response = distributionService.publier(id, user.getTenantSlug());
+        DistributionResponse response = distributionService.publier(id);
         auditService.tracer(user.getCompteId(), "DISTRIBUTION_PUBLIEE", "distribution", id);
         return ResponseEntity.ok(response);
     }
@@ -97,7 +97,7 @@ public class DistributionController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        DistributionResponse response = distributionService.terminer(id, user.getTenantSlug());
+        DistributionResponse response = distributionService.terminer(id);
         auditService.tracer(user.getCompteId(), "DISTRIBUTION_TERMINEE", "distribution", id);
         return ResponseEntity.ok(response);
     }
@@ -109,7 +109,7 @@ public class DistributionController {
         @Valid @RequestBody AnnulerDistributionRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        DistributionResponse response = distributionService.annuler(id, request.motif(), user.getTenantSlug());
+        DistributionResponse response = distributionService.annuler(id, request.motif());
         auditService.tracer(user.getCompteId(), "DISTRIBUTION_ANNULEE", "distribution", id);
         return ResponseEntity.ok(response);
     }

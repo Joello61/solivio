@@ -21,19 +21,19 @@ public class CollecteEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierCreee(UUID missionId, String tenantSlug, ZonedDateTime dateHeure) {
-        emettreEvenement("mission-collecte.creee", missionId, tenantSlug, dateHeure, null);
+    public void publierCreee(UUID missionId, ZonedDateTime dateHeure) {
+        emettreEvenement("mission-collecte.creee", missionId, dateHeure, null);
     }
 
-    public void publierAnnulee(UUID missionId, String tenantSlug, ZonedDateTime dateHeure, UUID benevoleId) {
-        emettreEvenement("mission-collecte.annulee", missionId, tenantSlug, dateHeure, benevoleId);
+    public void publierAnnulee(UUID missionId, ZonedDateTime dateHeure, UUID benevoleId) {
+        emettreEvenement("mission-collecte.annulee", missionId, dateHeure, benevoleId);
     }
 
     private void emettreEvenement(
-        String type, UUID missionId, String tenantSlug, ZonedDateTime dateHeure, UUID benevoleId
+        String type, UUID missionId, ZonedDateTime dateHeure, UUID benevoleId
     ) {
         CollecteEvent event = new CollecteEvent(
-            type, missionId, tenantSlug, dateHeure, benevoleId, Instant.now());
+            type, missionId, dateHeure, benevoleId, Instant.now());
         kafkaTemplate.send(TOPIC, missionId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

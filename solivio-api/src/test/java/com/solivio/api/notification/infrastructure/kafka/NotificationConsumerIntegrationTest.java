@@ -2,8 +2,6 @@ package com.solivio.api.notification.infrastructure.kafka;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.distribution.infrastructure.kafka.DistributionEvent;
 import com.solivio.api.inscription.infrastructure.kafka.InscriptionEvent;
 import com.solivio.api.support.SolivioIntegrationTest;
@@ -41,14 +39,9 @@ class NotificationConsumerIntegrationTest {
     @Autowired
     private AssociationRepository associationRepository;
 
-    @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
     private final RestTemplate restTemplate = new RestTemplate();
 
     private Association association;
-    private String tenantSlug;
-    private String schema;
     private UUID personneId;
     private UUID distributionId;
 
@@ -56,24 +49,14 @@ class NotificationConsumerIntegrationTest {
     void setUp() {
         purgerMailpit();
 
-        tenantSlug = "notif-it";
-        association = new Association(tenantSlug, "Asso Notification Test");
-        association.setCode("NOTIFIT");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName(tenantSlug);
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         personneId = UUID.randomUUID();
         distributionId = UUID.randomUUID();
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneId, "Dupont", "Marie", "marie@example.com", "marie@example.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneId, "Dupont", "Marie", "marie@example.com");
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".distribution "
+            "INSERT INTO distribution "
                 + "(id, titre, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             distributionId, "Distribution Test",
@@ -81,7 +64,7 @@ class NotificationConsumerIntegrationTest {
             "CRENEAU_UNIQUE", "INSCRITS", personneId
         );
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".inscription "
+            "INSERT INTO inscription "
                 + "(id, distribution_id, personne_id, nom, prenom, type, statut, presence) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             UUID.randomUUID(), distributionId, personneId,
@@ -91,15 +74,13 @@ class NotificationConsumerIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
     void inscriptionConfirmee_envoieEmailDeConfirmation() {
         InscriptionEvent event = new InscriptionEvent(
             "inscription.confirmee", UUID.randomUUID(),
-            distributionId, personneId, "BENEFICIAIRE", null, tenantSlug, Instant.now()
+            distributionId, personneId, "BENEFICIAIRE", null, Instant.now()
         );
         kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
 
@@ -117,7 +98,7 @@ class NotificationConsumerIntegrationTest {
     void inscriptionPromue_envoieEmailDePromotion() {
         InscriptionEvent event = new InscriptionEvent(
             "inscription.promue", UUID.randomUUID(),
-            distributionId, personneId, "BENEVOLE", null, tenantSlug, Instant.now()
+            distributionId, personneId, "BENEVOLE", null, Instant.now()
         );
         kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
 
@@ -133,7 +114,7 @@ class NotificationConsumerIntegrationTest {
     void inscriptionAnnulee_nenvoiePasDemail() {
         InscriptionEvent event = new InscriptionEvent(
             "inscription.annulee", UUID.randomUUID(),
-            distributionId, personneId, "BENEFICIAIRE", null, tenantSlug, Instant.now()
+            distributionId, personneId, "BENEFICIAIRE", null, Instant.now()
         );
         kafkaTemplate.send("inscriptions", event.inscriptionId().toString(), event);
 
@@ -145,7 +126,7 @@ class NotificationConsumerIntegrationTest {
     @Test
     void distributionAnnulee_envoieEmailATousLesInscritsConfirmes() {
         DistributionEvent event = new DistributionEvent(
-            "distribution.annulee", distributionId, tenantSlug, LocalDate.now(), Instant.now()
+            "distribution.annulee", distributionId, LocalDate.now(), Instant.now()
         );
         kafkaTemplate.send("distributions", distributionId.toString(), event);
 
@@ -160,7 +141,7 @@ class NotificationConsumerIntegrationTest {
     @Test
     void distributionPubliee_nenvoiePasDemail() {
         DistributionEvent event = new DistributionEvent(
-            "distribution.publiee", distributionId, tenantSlug, LocalDate.now(), Instant.now()
+            "distribution.publiee", distributionId, LocalDate.now(), Instant.now()
         );
         kafkaTemplate.send("distributions", distributionId.toString(), event);
 

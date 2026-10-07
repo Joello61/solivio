@@ -1,7 +1,5 @@
 package com.solivio.api.notification.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.evenement.infrastructure.kafka.EvenementEvent;
 import com.solivio.api.notification.application.NotificationService;
 import org.slf4j.Logger;
@@ -23,15 +21,10 @@ public class EvenementNotificationConsumer {
     @KafkaListener(topics = "evenement", groupId = "notifications-evenement")
     public void traiter(EvenementEvent event) {
         log.debug("Traitement notification evenement {} pour {}", event.type(), event.evenementId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            if ("evenement.publie".equals(event.type())) {
-                notificationService.notifierPublicationEvenement(event.evenementId());
-            } else if ("evenement.annule".equals(event.type())) {
-                notificationService.notifierAnnulationEvenement(event.evenementId(), event.tenantSlug());
-            }
-        } finally {
-            TenantContext.clear();
+        if ("evenement.publie".equals(event.type())) {
+            notificationService.notifierPublicationEvenement(event.evenementId());
+        } else if ("evenement.annule".equals(event.type())) {
+            notificationService.notifierAnnulationEvenement(event.evenementId());
         }
     }
 }

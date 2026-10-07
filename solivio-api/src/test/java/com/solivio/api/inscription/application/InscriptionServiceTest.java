@@ -79,7 +79,7 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(existante));
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja inscrit");
@@ -96,7 +96,7 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(enAttente));
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja inscrit");
@@ -114,7 +114,7 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.of(ancienne));
 
-        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
+        when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(0L);
@@ -124,7 +124,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         );
 
         // La ligne reactivee est la meme instance (pas de new Inscription)
@@ -143,13 +143,13 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.empty());
 
-        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
+        when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(1L);
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("frequence");
@@ -176,7 +176,7 @@ class InscriptionServiceTest {
         });
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "ben@example.com", "BENEVOLE", null, "tenant1"
+            distributionId, "ben@example.com", "BENEVOLE", null
         );
 
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
@@ -193,7 +193,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.empty());
-        when(associationQueryPort.frequenceMaxParSemaine("tenant1")).thenReturn(1);
+        when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
         when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
             eq(personneId), any(Instant.class), any(Instant.class))
         ).thenReturn(0L);
@@ -212,12 +212,12 @@ class InscriptionServiceTest {
         });
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         );
 
         assertThat(response.statut()).isEqualTo("LISTE_ATTENTE");
         assertThat(response.rangListeAttente()).isEqualTo(4);
-        verify(eventPublisher, never()).publierConfirmee(any(), any());
+        verify(eventPublisher, never()).publierConfirmee(any());
     }
 
     @Test
@@ -237,10 +237,10 @@ class InscriptionServiceTest {
 
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
 
-        service.desinscrire(inscriptionId, "marie@example.com", "tenant1");
+        service.desinscrire(inscriptionId, "marie@example.com");
 
-        verify(eventPublisher).publierAnnulee(confirmee, "tenant1");
-        verify(eventPublisher).publierPromue(enAttente, "tenant1");
+        verify(eventPublisher).publierAnnulee(confirmee);
+        verify(eventPublisher).publierPromue(enAttente);
         assertThat(enAttente.getStatut()).isEqualTo(StatutInscription.CONFIRMEE);
         assertThat(enAttente.getRangListeAttente()).isNull();
     }
@@ -252,7 +252,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(annulee));
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
-        assertThatThrownBy(() -> service.desinscrire(inscriptionId, "marie@example.com", "tenant1"))
+        assertThatThrownBy(() -> service.desinscrire(inscriptionId, "marie@example.com"))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja annulee");
     }
@@ -277,7 +277,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
 
         InscriptionResponse response =
-            service.pointer(inscriptionId, "PRESENT", "coord@example.com", "tenant1");
+            service.pointer(inscriptionId, "PRESENT", "coord@example.com");
 
         assertThat(response.presence()).isEqualTo("PRESENT");
     }
@@ -293,7 +293,7 @@ class InscriptionServiceTest {
                 java.time.LocalDate.now().plusDays(5));
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
-        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com", "tenant1"))
+        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com"))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("en cours");
     }
@@ -301,7 +301,7 @@ class InscriptionServiceTest {
     @Test
     void pointer_echoueSiInscriptionInexistante() {
         when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com", "tenant1"))
+        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com"))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -315,7 +315,7 @@ class InscriptionServiceTest {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(brouillon);
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null, "tenant1"
+            distributionId, "marie@example.com", "BENEFICIAIRE", null
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("publiee");
@@ -326,7 +326,7 @@ class InscriptionServiceTest {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "INCONNU", null, "tenant1"
+            distributionId, "marie@example.com", "INCONNU", null
         ))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("invalide");
@@ -384,9 +384,9 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
             any(), any(), any())).thenReturn(Optional.empty());
 
-        service.desinscrire(inscriptionId, "ben@example.com", "tenant1");
+        service.desinscrire(inscriptionId, "ben@example.com");
 
-        verify(eventPublisher).publierDesistementTardifBenevole(benevoleConfirme, "tenant1");
+        verify(eventPublisher).publierDesistementTardifBenevole(benevoleConfirme);
     }
 
     @Test
@@ -404,9 +404,9 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
             any(), any(), any())).thenReturn(Optional.empty());
 
-        service.desinscrire(inscriptionId, "ben@example.com", "tenant1");
+        service.desinscrire(inscriptionId, "ben@example.com");
 
-        verify(eventPublisher, never()).publierDesistementTardifBenevole(any(), any());
+        verify(eventPublisher, never()).publierDesistementTardifBenevole(any());
     }
 
     // --- Helpers ---

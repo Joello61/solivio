@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -38,7 +36,6 @@ class ProfilBeneficiaireControllerIntegrationTest {
     @Autowired private CompteRepository compteRepository;
     @Autowired private AssociationRepository associationRepository;
     @Autowired private MembreAssociationRepository membreRepo;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
     @Autowired private PasswordEncoder passwordEncoder;
@@ -46,7 +43,6 @@ class ProfilBeneficiaireControllerIntegrationTest {
     private MockMvc mockMvc;
     private Association association;
     private Compte compte;
-    private String schema;
     private String tokenBeneficiaire;
     private String tokenBenevole;
 
@@ -54,35 +50,25 @@ class ProfilBeneficiaireControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("beneficiaire-test", "Association Beneficiaire Test");
-        association.setCode("BENEFTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("beneficiaire-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         compte = new Compte("benef@example.com",
             passwordEncoder.encode("password123!"), "Dupont", "Alice");
         compte.setEmailVerifie(true);
         compteRepository.save(compte);
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
+            "INSERT INTO personne (id, nom, prenom, email, compte_email) "
                 + "VALUES (?, 'Dupont', 'Alice', 'benef@example.com', 'benef@example.com')",
             UUID.randomUUID()
         );
 
-        MembreAssociation membre = new MembreAssociation(compte, association, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compte, "beneficiaire");
         membreRepo.save(membre);
 
         tokenBeneficiaire = jwtService.genererAccessToken(
-            compte.getId(), "benef@example.com", "Dupont", "Alice",
-            "beneficiaire-test", List.of("beneficiaire"), null, false
+            compte.getId(), "benef@example.com", "Dupont", "Alice", List.of("beneficiaire"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "autre@example.com", "Autre", "User",
-            "beneficiaire-test", List.of("benevole"), null, false
+            UUID.randomUUID(), "autre@example.com", "Autre", "User", List.of("benevole"), null, false
         );
     }
 
@@ -90,8 +76,6 @@ class ProfilBeneficiaireControllerIntegrationTest {
     void tearDown() {
         membreRepo.deleteAll();
         compteRepository.delete(compte);
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

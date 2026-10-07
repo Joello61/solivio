@@ -15,13 +15,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Identite unifiee d'un utilisateur, independante des tenants.
- * Un compte peut etre lie a plusieurs associations (via public.affiliation).
+ * Identite de connexion d'un utilisateur. Son role dans l'association est
+ * porte par MembreAssociation.
  * password_hash : null pour les comptes crees uniquement via Google.
  * google_id     : null pour les comptes email/mot de passe.
  */
 @Entity
-@Table(name = "compte", schema = "public")
+@Table(name = "compte")
 @Getter
 @Setter
 @NoArgsConstructor

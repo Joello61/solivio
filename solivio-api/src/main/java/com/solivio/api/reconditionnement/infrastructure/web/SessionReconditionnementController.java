@@ -82,7 +82,7 @@ public class SessionReconditionnementController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        SessionReconditionnementResponse response = sessionService.publier(id, user.getTenantSlug());
+        SessionReconditionnementResponse response = sessionService.publier(id);
         auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_PUBLIEE",
             "session_reconditionnement", id);
         return ResponseEntity.ok(response);
@@ -120,7 +120,7 @@ public class SessionReconditionnementController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         SessionReconditionnementResponse response =
-            sessionService.annuler(id, request, user.getTenantSlug());
+            sessionService.annuler(id, request);
         auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_ANNULEE",
             "session_reconditionnement", id);
         return ResponseEntity.ok(response);

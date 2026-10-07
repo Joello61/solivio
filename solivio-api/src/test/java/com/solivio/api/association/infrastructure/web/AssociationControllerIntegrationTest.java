@@ -1,13 +1,8 @@
 package com.solivio.api.association.infrastructure.web;
 
-import com.solivio.api.association.domain.Association;
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AssociationControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
-    @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
     private MockMvc mockMvc;
-    private Association association;
-    private String schema;
     private String tokenResponsable;
     private String tokenBeneficiaire;
     private UUID compteResponsableId;
@@ -47,48 +38,23 @@ class AssociationControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("asso-config-test", "Association Config Test");
-        association.setCode("ASSOCFG");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("asso-config-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         compteResponsableId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
-                + "VALUES (?, 'Resp', 'Config', 'resp@cfg.com', 'resp@cfg.com')",
-            compteResponsableId
-        );
-        // Affiliation dans public.affiliation
-        jdbcTemplate.update(
-            "INSERT INTO public.compte (id, email, password_hash, nom, prenom, email_verifie) "
+            "INSERT INTO compte (id, email, password_hash, nom, prenom, email_verifie) "
                 + "VALUES (?, ?, 'hash', 'Resp', 'Config', true)",
             compteResponsableId, "resp@cfg.com"
         );
         jdbcTemplate.update(
-            "INSERT INTO public.affiliation (compte_id, association_id, role) "
-                + "VALUES (?, ?, 'responsable')",
-            compteResponsableId, association.getId()
+            "INSERT INTO membre (compte_id, role) VALUES (?, 'responsable')",
+            compteResponsableId
         );
 
         tokenResponsable = jwtService.genererAccessToken(
-            compteResponsableId, "resp@cfg.com", "Resp", "Config",
-            "asso-config-test", List.of("responsable"), null, false
+            compteResponsableId, "resp@cfg.com", "Resp", "Config", List.of("responsable"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@cfg.com", "Benef", "Test",
-            "asso-config-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@cfg.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
-    }
-
-    @AfterEach
-    void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        jdbcTemplate.update("DELETE FROM public.affiliation WHERE compte_id = ?", compteResponsableId);
-        jdbcTemplate.update("DELETE FROM public.compte WHERE id = ?", compteResponsableId);
-        associationRepository.delete(association);
     }
 
     @Test
@@ -96,8 +62,8 @@ class AssociationControllerIntegrationTest {
         mockMvc.perform(get("/api/association")
                 .cookie(new Cookie("access_token", tokenResponsable)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.slug").value("asso-config-test"))
-            .andExpect(jsonPath("$.nom").value("Association Config Test"))
+            .andExpect(jsonPath("$.slug").doesNotExist())
+            .andExpect(jsonPath("$.nom").value("Linkee Toulouse"))
             .andExpect(jsonPath("$.couleurPrimaire").value("#16513F"));
     }
 
@@ -195,5 +161,23 @@ class AssociationControllerIntegrationTest {
                     result.getResponse().getContentType()
                 ).contains("application/octet-stream")
             );
+    }
+
+    @Test
+    void exporterAssociation_exclutLesTablesDAuthentification() throws Exception {
+        byte[] zip = mockMvc.perform(get("/api/association/export")
+                .cookie(new Cookie("access_token", tokenResponsable)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsByteArray();
+
+        java.util.Set<String> entrees = new java.util.HashSet<>();
+        try (java.util.zip.ZipInputStream in = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(zip))) {
+            for (java.util.zip.ZipEntry e = in.getNextEntry(); e != null; e = in.getNextEntry()) {
+                entrees.add(e.getName());
+            }
+        }
+        org.assertj.core.api.Assertions.assertThat(entrees)
+            .contains("association.json", "membre.json", "personne.json", "distribution.json")
+            .doesNotContain("compte.json", "refresh_token.json", "verification_code.json", "invitation.json");
     }
 }

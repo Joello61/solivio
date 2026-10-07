@@ -2,8 +2,6 @@ package com.solivio.api.notification.infrastructure.scheduler;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.notification.infrastructure.kafka.RappelEventPublisher;
 import com.solivio.api.support.SolivioIntegrationTest;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -44,16 +42,11 @@ class RappelVeilleJobTest {
     private AssociationRepository associationRepository;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     private Association association;
-    private String tenantSlug;
-    private String schema;
     private UUID distributionId;
     private UUID personneId;
 
@@ -61,25 +54,15 @@ class RappelVeilleJobTest {
     void setUp() {
         restTemplate.delete(mailpitApiBaseUrl + "/api/v1/messages");
 
-        tenantSlug = "rappel-it";
-        association = new Association(tenantSlug, "Asso Rappel Test");
-        association.setCode("RAPPELIT");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName(tenantSlug);
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         personneId = UUID.randomUUID();
         distributionId = UUID.randomUUID();
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneId, "Martin", "Paul", "paul@example.com", "paul@example.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneId, "Martin", "Paul", "paul@example.com");
         // Distribution pour demain, statut PUBLIEE
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".distribution "
+            "INSERT INTO distribution "
                 + "(id, titre, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             distributionId, "Distribution Rappel",
@@ -87,7 +70,7 @@ class RappelVeilleJobTest {
             "CRENEAU_UNIQUE", "INSCRITS", personneId
         );
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".inscription "
+            "INSERT INTO inscription "
                 + "(id, distribution_id, personne_id, nom, prenom, type, statut, presence) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             UUID.randomUUID(), distributionId, personneId,
@@ -97,8 +80,6 @@ class RappelVeilleJobTest {
 
     @AfterEach
     void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
@@ -119,11 +100,11 @@ class RappelVeilleJobTest {
     void emettreRappelsPourAssociation_distributionPassee_nEmetPasDeRappel() {
         // Modifier la date de la distribution pour qu'elle soit aujourd'hui (pas demain)
         jdbcTemplate.update(
-            "UPDATE \"" + schema + "\".distribution SET date = ? WHERE id = ?",
+            "UPDATE distribution SET date = ? WHERE id = ?",
             LocalDate.now(), distributionId
         );
 
-        rappelVeilleJob.emettreRappelsPourAssociation(tenantSlug, LocalDate.now().plusDays(1));
+        rappelVeilleJob.emettreRappels(LocalDate.now().plusDays(1));
 
         await().during(3, TimeUnit.SECONDS).atMost(4, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("paul@example.com") == 0);

@@ -33,12 +33,12 @@ public class AssociationConfigService {
     }
 
     @Transactional(readOnly = true)
-    public AssociationResponse lire(String tenantSlug) {
-        return toResponse(trouverOuEchouer(tenantSlug));
+    public AssociationResponse lire() {
+        return toResponse(charger());
     }
 
-    public AssociationResponse mettreAJour(String tenantSlug, UpdateAssociationRequest request) {
-        Association asso = trouverOuEchouer(tenantSlug);
+    public AssociationResponse mettreAJour(UpdateAssociationRequest request) {
+        Association asso = charger();
         if (request.nom() != null && !request.nom().isBlank()) {
             asso.setNom(Jsoup.clean(request.nom(), Safelist.none()));
         }
@@ -69,53 +69,48 @@ public class AssociationConfigService {
     }
 
     @Transactional(readOnly = true)
-    public List<MembreResponse> listerMembres(String tenantSlug) {
-        Association asso = trouverOuEchouer(tenantSlug);
-        return membreRepository.findAllByAssociationId(asso.getId())
+    public List<MembreResponse> listerMembres() {
+        return membreRepository.findAllAvecCompte()
             .stream()
             .map(this::toMembreResponse)
             .toList();
     }
 
-    public MembreResponse changerStatutMembre(String tenantSlug, UUID compteId, String statut) {
-        Association asso = trouverOuEchouer(tenantSlug);
+    public MembreResponse changerStatutMembre(UUID compteId, String statut) {
         MembreAssociation membre = membreRepository
-            .findByCompteIdAndAssociationId(compteId, asso.getId())
+            .findByCompteId(compteId)
             .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
         membre.setStatut(statut);
         return toMembreResponse(membreRepository.save(membre));
     }
 
-    public MembreResponse mettreAJourRole(
-        String tenantSlug, UUID compteId, UpdateRoleMembreRequest request
-    ) {
-        Association asso = trouverOuEchouer(tenantSlug);
+    public MembreResponse mettreAJourRole(UUID compteId, UpdateRoleMembreRequest request) {
         MembreAssociation membre = membreRepository
-            .findByCompteIdAndAssociationId(compteId, asso.getId())
+            .findByCompteId(compteId)
             .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
         membre.setRole(request.role());
         membre.setCoordoType(request.coordoType());
         return toMembreResponse(membreRepository.save(membre));
     }
 
-    public void supprimerMembre(String tenantSlug, UUID compteId) {
-        Association asso = trouverOuEchouer(tenantSlug);
+    public void supprimerMembre(UUID compteId) {
         MembreAssociation membre = membreRepository
-            .findByCompteIdAndAssociationId(compteId, asso.getId())
+            .findByCompteId(compteId)
             .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
-        // Cloture logique : le membre ne peut plus se connecter a ce tenant.
+        // Cloture logique : le membre perd son role mais garde son historique.
         membre.setStatut("suspendu");
         membreRepository.save(membre);
     }
 
-    private Association trouverOuEchouer(String tenantSlug) {
-        return associationRepository.findBySlug(tenantSlug)
-            .orElseThrow(() -> new NotFoundException("Association introuvable : " + tenantSlug));
+    // La ligne est creee par la migration V2 : son absence est une erreur d'installation.
+    Association charger() {
+        return associationRepository.findUnique()
+            .orElseThrow(() -> new IllegalStateException("Configuration de l'association absente"));
     }
 
     private AssociationResponse toResponse(Association a) {
         return new AssociationResponse(
-            a.getId(), a.getSlug(), a.getCode(), a.getNom(), a.getStatut(),
+            a.getId(), a.getNom(),
             a.getLogoUrl(), a.getCouleurPrimaire(), a.getCouleurSecondaire(),
             a.getFuseauHoraire(), a.getFrequenceMaxParSemaine(),
             a.getContactEmail(), a.getContactTelephone(), a.getDateCreation()

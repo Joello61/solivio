@@ -57,7 +57,6 @@ class GoogleOAuth2SuccessHandlerTest {
         compte = new Compte("alice@example.com", null, "Dupont", "Alice");
         compte.setId(UUID.randomUUID());
         compte.setGoogleId("google-uid");
-        asso = new Association("pilote", "Pilote");
     }
 
     @Test
@@ -66,7 +65,7 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("solivio_mobile_link", "1")});
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.empty());
 
         handler.onAuthenticationSuccess(request, response, buildAuth("alice@example.com"));
 
@@ -81,7 +80,7 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("solivio_mobile_auth", "1")});
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.empty());
 
         handler.onAuthenticationSuccess(request, response, buildAuth("alice@example.com"));
 
@@ -100,7 +99,7 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
         // Pas de cookies => comportement web
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.empty());
 
         handler.onAuthenticationSuccess(request, response, buildAuth("alice@example.com"));
 
@@ -116,10 +115,10 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("solivio_mobile_auth", "1")});
-        MembreAssociation membre = new MembreAssociation(compte, asso, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compte, "beneficiaire");
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of(membre));
-        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.of(membre));
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), anyBoolean()))
             .thenReturn("access-token");
         when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
         when(jwtService.hasher("refresh-brut")).thenReturn("refresh-hash");
@@ -133,7 +132,7 @@ class GoogleOAuth2SuccessHandlerTest {
         String url = urlCaptor.getValue();
         assertThat(url).startsWith("soliviomobile://auth?accessToken=access-token");
         assertThat(url).contains("refreshToken=");
-        assertThat(url).contains("tenants=");
+        assertThat(url).doesNotContain("tenants=");
     }
 
     @Test
@@ -141,10 +140,10 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(request.isSecure()).thenReturn(false);
-        MembreAssociation membre = new MembreAssociation(compte, asso, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compte, "beneficiaire");
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of(membre));
-        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.of(membre));
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(), anyBoolean()))
             .thenReturn("access-token");
         when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
         when(jwtService.hasher("refresh-brut")).thenReturn("refresh-hash");
@@ -166,7 +165,7 @@ class GoogleOAuth2SuccessHandlerTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("solivio_mobile_auth", "1")});
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
-        when(membreRepo.findActivesByCompteId(any())).thenReturn(List.of());
+        when(membreRepo.findByCompteId(any())).thenReturn(Optional.empty());
 
         handler.onAuthenticationSuccess(request, response, buildAuth("alice@example.com"));
 

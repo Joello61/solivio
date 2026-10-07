@@ -71,11 +71,11 @@ public class SessionReconditionnementService {
         return toResponse(session, 0);
     }
 
-    public SessionReconditionnementResponse publier(UUID sessionId, String tenantSlug) {
+    public SessionReconditionnementResponse publier(UUID sessionId) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.PUBLIEE, null);
         sessionRepository.save(session);
-        eventPublisher.publierPubliee(sessionId, tenantSlug, session.getDateHeureDebut());
+        eventPublisher.publierPubliee(sessionId, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));
     }
 
@@ -92,13 +92,13 @@ public class SessionReconditionnementService {
     }
 
     public SessionReconditionnementResponse annuler(
-        UUID sessionId, AnnulerSessionRequest request, String tenantSlug
+        UUID sessionId, AnnulerSessionRequest request
     ) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         String motifSain = request.motif() != null ? Jsoup.clean(request.motif(), Safelist.none()) : null;
         session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, motifSain);
         sessionRepository.save(session);
-        eventPublisher.publierAnnulee(sessionId, tenantSlug, session.getDateHeureDebut());
+        eventPublisher.publierAnnulee(sessionId, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));
     }
 

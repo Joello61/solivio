@@ -1,6 +1,7 @@
 package com.solivio.api.support;
 
 import com.solivio.api.TestcontainersConfiguration;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -11,7 +12,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Meta-annotation pour tous les tests d'integration.
+ * Meta-annotation pour tous les tests d'integration : contexte Spring complet,
+ * vraie base PostgreSQL (Testcontainers) videe avant chaque test.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -24,5 +26,6 @@ import java.lang.annotation.Target;
 )
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
+@ExtendWith(NettoyageBaseExtension.class)
 public @interface SolivioIntegrationTest {
 }

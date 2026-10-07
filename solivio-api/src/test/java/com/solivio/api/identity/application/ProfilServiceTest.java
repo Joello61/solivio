@@ -52,7 +52,7 @@ class ProfilServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(personneRepository.save(any())).thenReturn(personne);
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false,
+            compteId, "alice@example.com", null, false,
             List.of(new SimpleGrantedAuthority("ROLE_BENEFICIAIRE")), true);
 
         MeResponse response = service.mettreAJour(userDetails,
@@ -73,7 +73,7 @@ class ProfilServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(personneRepository.save(any())).thenReturn(personne);
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false, List.of(), true);
+            compteId, "alice@example.com", null, false, List.of(), true);
 
         service.mettreAJour(userDetails, new UpdateProfilRequest(null, null, ""));
 
@@ -81,12 +81,12 @@ class ProfilServiceTest {
     }
 
     @Test
-    void mettreAJour_sansPersonneTenant_modifieSeulementLeCompte() {
+    void mettreAJour_sansPersonne_modifieSeulementLeCompte() {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(personneRepository.findByCompteEmail("alice@example.com")).thenReturn(Optional.empty());
         when(compteRepository.save(any())).thenReturn(compte);
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, null, false, List.of(), true);
+            compteId, "alice@example.com", null, false, List.of(), true);
 
         MeResponse response = service.mettreAJour(userDetails,
             new UpdateProfilRequest("Durand", null, null));
@@ -102,7 +102,7 @@ class ProfilServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(personneRepository.save(any())).thenReturn(personne);
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            compteId, "alice@example.com", null, "pilote", false, List.of(), true);
+            compteId, "alice@example.com", null, false, List.of(), true);
 
         service.mettreAJour(userDetails, new UpdateProfilRequest(null, null, null));
 

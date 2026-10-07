@@ -1,7 +1,5 @@
 package com.solivio.api.notification.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.collecte.infrastructure.kafka.CollecteEvent;
 import com.solivio.api.notification.application.NotificationService;
 import org.slf4j.Logger;
@@ -23,15 +21,10 @@ public class CollecteNotificationConsumer {
     @KafkaListener(topics = "mission-collecte", groupId = "notifications-collecte")
     public void traiter(CollecteEvent event) {
         log.debug("Traitement notification collecte {} pour mission {}", event.type(), event.missionId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            if ("mission-collecte.creee".equals(event.type())) {
-                notificationService.notifierCreationMissionCollecte(event.missionId());
-            } else if ("mission-collecte.annulee".equals(event.type())) {
-                notificationService.notifierAnnulationMissionCollecte(event.missionId(), event.benevoleId());
-            }
-        } finally {
-            TenantContext.clear();
+        if ("mission-collecte.creee".equals(event.type())) {
+            notificationService.notifierCreationMissionCollecte(event.missionId());
+        } else if ("mission-collecte.annulee".equals(event.type())) {
+            notificationService.notifierAnnulationMissionCollecte(event.missionId(), event.benevoleId());
         }
     }
 }

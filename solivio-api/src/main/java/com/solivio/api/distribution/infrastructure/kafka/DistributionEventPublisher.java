@@ -21,20 +21,20 @@ public class DistributionEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierPubliee(UUID distributionId, String tenantSlug, LocalDate date) {
-        emettreEvenement("distribution.publiee", distributionId, tenantSlug, date);
+    public void publierPubliee(UUID distributionId, LocalDate date) {
+        emettreEvenement("distribution.publiee", distributionId, date);
     }
 
-    public void publierAnnulee(UUID distributionId, String tenantSlug, LocalDate date) {
-        emettreEvenement("distribution.annulee", distributionId, tenantSlug, date);
+    public void publierAnnulee(UUID distributionId, LocalDate date) {
+        emettreEvenement("distribution.annulee", distributionId, date);
     }
 
-    public void publierTerminee(UUID distributionId, String tenantSlug, LocalDate date) {
-        emettreEvenement("distribution.terminee", distributionId, tenantSlug, date);
+    public void publierTerminee(UUID distributionId, LocalDate date) {
+        emettreEvenement("distribution.terminee", distributionId, date);
     }
 
-    private void emettreEvenement(String type, UUID distributionId, String tenantSlug, LocalDate date) {
-        DistributionEvent event = new DistributionEvent(type, distributionId, tenantSlug, date, Instant.now());
+    private void emettreEvenement(String type, UUID distributionId, LocalDate date) {
+        DistributionEvent event = new DistributionEvent(type, distributionId, date, Instant.now());
         kafkaTemplate.send(TOPIC, distributionId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

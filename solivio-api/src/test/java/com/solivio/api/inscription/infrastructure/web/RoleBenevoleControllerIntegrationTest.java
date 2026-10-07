@@ -2,8 +2,6 @@ package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -32,7 +30,6 @@ class RoleBenevoleControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
@@ -49,29 +46,16 @@ class RoleBenevoleControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("rb-test", "Asso RoleBenevole Test");
-        association.setCode("RBTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("rb-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         tokenCoordinateur = jwtService.genererAccessToken(
-            UUID.randomUUID(), "coord@test.com", "Coord", "Test",
-            "rb-test", List.of("coordinateur"), null, false
+            UUID.randomUUID(), "coord@test.com", "Coord", "Test", List.of("coordinateur"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@test.com", "Benef", "Test",
-            "rb-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@test.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        String schema = TenantProvisioningService.schemaName("rb-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

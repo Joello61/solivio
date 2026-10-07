@@ -7,7 +7,6 @@ import java.util.UUID;
 public record ReconditionnementEvent(
     String type,
     UUID sessionId,
-    String tenantSlug,
     ZonedDateTime dateHeureDebut,
     Instant occurredAt
 ) {}

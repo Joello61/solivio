@@ -34,7 +34,7 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration/shared
+    locations: classpath:db/migration
     baseline-on-migrate: false
     validate-on-migrate: true
 
@@ -126,8 +126,6 @@ logging:
     org.flywaydb: INFO
 
 solivio:
-  multitenancy:
-    default-schema: public
   auth:
     # Duree de vie du JWT access token (minutes).
     access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:15}

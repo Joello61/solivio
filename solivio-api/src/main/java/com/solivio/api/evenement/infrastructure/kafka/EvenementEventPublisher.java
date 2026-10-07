@@ -21,19 +21,19 @@ public class EvenementEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierPublie(UUID evenementId, String tenantSlug, ZonedDateTime dateHeureDebut) {
-        emettreEvenement("evenement.publie", evenementId, tenantSlug, dateHeureDebut);
+    public void publierPublie(UUID evenementId, ZonedDateTime dateHeureDebut) {
+        emettreEvenement("evenement.publie", evenementId, dateHeureDebut);
     }
 
-    public void publierAnnule(UUID evenementId, String tenantSlug, ZonedDateTime dateHeureDebut) {
-        emettreEvenement("evenement.annule", evenementId, tenantSlug, dateHeureDebut);
+    public void publierAnnule(UUID evenementId, ZonedDateTime dateHeureDebut) {
+        emettreEvenement("evenement.annule", evenementId, dateHeureDebut);
     }
 
     private void emettreEvenement(
-        String type, UUID evenementId, String tenantSlug, ZonedDateTime dateHeureDebut
+        String type, UUID evenementId, ZonedDateTime dateHeureDebut
     ) {
         EvenementEvent event = new EvenementEvent(
-            type, evenementId, tenantSlug, dateHeureDebut, Instant.now());
+            type, evenementId, dateHeureDebut, Instant.now());
         kafkaTemplate.send(TOPIC, evenementId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

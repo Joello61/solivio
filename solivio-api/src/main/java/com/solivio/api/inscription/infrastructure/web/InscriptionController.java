@@ -43,8 +43,7 @@ public class InscriptionController {
             distributionId,
             user.getUsername(),
             request.type(),
-            request.creneauId(),
-            user.getTenantSlug()
+            request.creneauId()
         );
         auditService.tracer(user.getCompteId(), "INSCRIPTION_CREEE", "inscription", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -72,7 +71,7 @@ public class InscriptionController {
         @PathVariable UUID inscriptionId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        inscriptionService.desinscrire(inscriptionId, user.getUsername(), user.getTenantSlug());
+        inscriptionService.desinscrire(inscriptionId, user.getUsername());
         auditService.tracer(user.getCompteId(), "INSCRIPTION_ANNULEE", "inscription", inscriptionId);
         return ResponseEntity.noContent().build();
     }

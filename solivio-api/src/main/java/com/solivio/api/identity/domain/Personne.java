@@ -14,9 +14,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Profil de contact d'un membre dans un schema tenant.
+ * Profil de contact d'un membre.
  * Les donnees sensibles (situation sociale) sont dans ProfilBeneficiaire.
- * Le lien avec public.compte passe par compte_email (meme valeur que email).
+ * Le lien avec Compte passe par compte_email, cle etrangere vers compte(email).
  */
 @Entity
 @Table(name = "personne")

@@ -1,6 +1,5 @@
 package com.solivio.api.identity.application;
 
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.domain.Personne;
@@ -18,7 +17,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Orchestration du login, logout, refresh token et switch-tenant.
+ * Orchestration du login, logout et refresh token.
  */
 @Service
 public class AuthService {
@@ -39,7 +37,6 @@ public class AuthService {
     private final MembreAssociationRepository membreRepo;
     private final RefreshTokenRepository refreshTokenRepo;
     private final JwtService jwtService;
-    private final AssociationRepository associationRepository;
     private final PersonneProvisioningService personneProvisioningService;
     private final PersonneRepository personneRepository;
     private final RegisterService registerService;
@@ -50,7 +47,6 @@ public class AuthService {
             MembreAssociationRepository membreRepo,
             RefreshTokenRepository refreshTokenRepo,
             JwtService jwtService,
-            AssociationRepository associationRepository,
             PersonneProvisioningService personneProvisioningService,
             PersonneRepository personneRepository,
             RegisterService registerService) {
@@ -59,7 +55,6 @@ public class AuthService {
         this.membreRepo = membreRepo;
         this.refreshTokenRepo = refreshTokenRepo;
         this.jwtService = jwtService;
-        this.associationRepository = associationRepository;
         this.personneProvisioningService = personneProvisioningService;
         this.personneRepository = personneRepository;
         this.registerService = registerService;
@@ -68,81 +63,15 @@ public class AuthService {
     @Transactional
     public TokenResponse login(String email, String motDePasse, boolean rememberMe,
                                HttpServletRequest request, HttpServletResponse response) {
-        Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(email, motDePasse));
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, motDePasse));
 
         Compte compte = compteRepository.findByEmail(email)
             .orElseThrow(() -> new AuthenticationException("Compte introuvable") {});
 
-        List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
-        List<TokenResponse.TenantSummary> tenants = affiliations.stream()
-            .map(a -> new TokenResponse.TenantSummary(
-                a.getAssociation().getSlug(),
-                a.getAssociation().getNom(),
-                a.getRole(),
-                a.getCoordoType()
-            ))
-            .toList();
+        // JIT : couvre les comptes anterieurs a la creation systematique de la Personne.
+        personneProvisioningService.provisionner(compte.getEmail(), compte.getNom(), compte.getPrenom());
 
-        // Si l'utilisateur appartient a un seul tenant, on emet directement un JWT pour ce tenant.
-        // Sinon, on emet un JWT sans tenant (le frontend devra appeler /switch-tenant).
-        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
-
-        String accessToken = jwtService.genererAccessToken(
-            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            tenantSlug, role != null ? List.of(role) : List.of(),
-            coordoType, compte.isSuperAdmin()
-        );
-
-        // JIT : provision la Personne dans le schema tenant si elle n'existe pas encore.
-        // Couvre Google OAuth2 et les comptes anterieurs sans Personne tenant.
-        if (tenantSlug != null) {
-            personneProvisioningService.provisionner(
-                tenantSlug, compte.getEmail(), compte.getNom(), compte.getPrenom()
-            );
-        }
-
-        emetAccessTokenCookie(accessToken, request, response);
-        String refreshTokenBrut = emetRefreshTokenCookie(
-            compte, tenantSlug, request, response, rememberMe, rememberMe);
-
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, tenants, refreshTokenBrut);
-    }
-
-    @Transactional
-    public TokenResponse switchTenant(SolivioUserDetails userDetails, String tenantSlug,
-                                      HttpServletRequest request, HttpServletResponse response) {
-        Compte compte = compteRepository.findById(userDetails.getCompteId())
-            .orElseThrow();
-
-        MembreAssociation membre = membreRepo
-            .findByCompteIdAndAssociationId(
-                compte.getId(),
-                associationRepository.findBySlug(tenantSlug)
-                    .orElseThrow(() -> new IllegalArgumentException("Association inconnue : " + tenantSlug))
-                    .getId()
-            )
-            .filter(MembreAssociation::estActive)
-            .orElseThrow(() -> new IllegalArgumentException("Acces refuse au tenant : " + tenantSlug));
-
-        String accessToken = jwtService.genererAccessToken(
-            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            tenantSlug, List.of(membre.getRole()),
-            membre.getCoordoType(), compte.isSuperAdmin()
-        );
-
-        // JIT : provision la Personne dans le schema tenant si elle n'existe pas encore.
-        personneProvisioningService.provisionner(
-            tenantSlug, compte.getEmail(), compte.getNom(), compte.getPrenom()
-        );
-
-        emetAccessTokenCookie(accessToken, request, response);
-        String refreshTokenBrut = emetRefreshTokenCookie(
-            compte, tenantSlug, request, response, false, false);
-
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of(), refreshTokenBrut);
+        return emettreJetons(compte, rememberMe, request, response);
     }
 
     /**
@@ -173,78 +102,30 @@ public class AuthService {
             throw new IllegalArgumentException("Refresh token expire ou revoque");
         }
 
-        // Rotation : on revoque l'ancien et on emet un nouveau
-        boolean longDuree = token.isLongDuree();
+        // Rotation : on revoque l'ancien et on emet un nouveau, en propageant la
+        // preference "rester connecte" du jeton initial.
         token.setRevoque(true);
         refreshTokenRepo.save(token);
 
-        Compte compte = token.getCompte();
-        String tenantSlug = token.getTenantSlug();
-
-        List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
-        // findFirst() appelle Optional.of() qui refuse les null : on recherche l'entite
-        // d'abord, puis on lit les champs (coordoType peut legitimement etre null).
-        Optional<MembreAssociation> membreOpt = affiliations.stream()
-            .filter(a -> tenantSlug != null && tenantSlug.equals(a.getAssociation().getSlug()))
-            .findFirst();
-        String role = membreOpt.map(MembreAssociation::getRole).orElse(null);
-        String coordoType = membreOpt.map(MembreAssociation::getCoordoType).orElse(null);
-
-        String accessToken = jwtService.genererAccessToken(
-            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            tenantSlug, role != null ? List.of(role) : List.of(),
-            coordoType, compte.isSuperAdmin()
-        );
-
-        emetAccessTokenCookie(accessToken, request, response);
-        // Propage la preference longDuree du token initial (rememberMe)
-        String nouveauRefreshToken = emetRefreshTokenCookie(
-            compte, tenantSlug, request, response, longDuree, longDuree);
-
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, List.of(), nouveauRefreshToken);
+        return emettreJetons(token.getCompte(), token.isLongDuree(), request, response);
     }
 
     @Transactional
     public void logout(SolivioUserDetails userDetails, HttpServletRequest request,
                        HttpServletResponse response) {
-        // Revoque tous les refresh tokens du compte
         refreshTokenRepo.revoquerTousParCompte(userDetails.getCompteId());
         supprimerCookies(response);
     }
 
     /**
-     * Finalise l'inscription Google : lie le compte a une association, emet les tokens.
+     * Finalise l'inscription Google : donne un role au compte, emet les tokens.
      * Retourne les tokens dans le corps (mobile) ET set les cookies (web).
      */
     @Transactional
     public TokenResponse completerInscriptionGoogle(String email, String nom, String prenom,
-            String codeAssociation, String tokenInvitation,
-            HttpServletRequest request, HttpServletResponse response) {
-        Compte compte = registerService.lierAssociationGoogle(
-            email, nom, prenom, codeAssociation, tokenInvitation);
-
-        List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
-        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
-
-        String accessToken = jwtService.genererAccessToken(
-            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            tenantSlug, role != null ? List.of(role) : List.of(),
-            coordoType, compte.isSuperAdmin()
-        );
-
-        List<TokenResponse.TenantSummary> tenants = affiliations.stream()
-            .map(a -> new TokenResponse.TenantSummary(
-                a.getAssociation().getSlug(), a.getAssociation().getNom(),
-                a.getRole(), a.getCoordoType()))
-            .toList();
-
-        emetAccessTokenCookie(accessToken, request, response);
-        String refreshTokenBrut = emetRefreshTokenCookie(
-            compte, tenantSlug, request, response, false, false);
-
-        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60L, tenants, refreshTokenBrut);
+            String tokenInvitation, HttpServletRequest request, HttpServletResponse response) {
+        Compte compte = registerService.finaliserCompteGoogle(email, nom, prenom, tokenInvitation);
+        return emettreJetons(compte, false, request, response);
     }
 
     public MeResponse me(SolivioUserDetails userDetails) {
@@ -254,10 +135,7 @@ public class AuthService {
             .map(a -> Objects.requireNonNull(a.getAuthority())
                 .replace("ROLE_", "").toLowerCase())
             .toList();
-        // Telephone et photo tenant (peut etre null si pas de tenant actif ou pas encore provisionne).
-        Personne personne = userDetails.getTenantSlug() != null
-            ? personneRepository.findByCompteEmail(compte.getEmail()).orElse(null)
-            : null;
+        Personne personne = personneRepository.findByCompteEmail(compte.getEmail()).orElse(null);
         String telephone = personne != null ? personne.getTelephone() : null;
         String photoUrl = compte.getPhotoUrl() != null
             ? compte.getPhotoUrl()
@@ -270,13 +148,31 @@ public class AuthService {
             telephone,
             photoUrl,
             compte.isSuperAdmin(),
-            userDetails.getTenantSlug(),
             roles,
             compte.getDateCreation(),
             compte.getDateModification(),
             compte.isEmailVerifie(),
             compte.getGoogleId() != null ? "google" : "password"
         );
+    }
+
+    // Un membre suspendu ou sans role recoit un jeton sans role : il reste
+    // authentifie mais aucun point d'entree metier ne lui est accessible.
+    private TokenResponse emettreJetons(Compte compte, boolean longDuree,
+                                        HttpServletRequest request, HttpServletResponse response) {
+        Optional<MembreAssociation> membre = membreRepo.findActifByCompteId(compte.getId());
+        List<String> roles = membre.map(m -> List.of(m.getRole())).orElse(List.of());
+        String coordoType = membre.map(MembreAssociation::getCoordoType).orElse(null);
+
+        String accessToken = jwtService.genererAccessToken(
+            compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
+            roles, coordoType, compte.isSuperAdmin()
+        );
+
+        emetAccessTokenCookie(accessToken, request, response);
+        String refreshTokenBrut = emetRefreshTokenCookie(compte, request, response, longDuree);
+
+        return TokenResponse.of(accessToken, jwtService.getAccessTokenMinutes() * 60, refreshTokenBrut);
     }
 
     private void emetAccessTokenCookie(String accessToken,
@@ -291,18 +187,18 @@ public class AuthService {
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
-    private String emetRefreshTokenCookie(Compte compte, String tenantSlug,
+    private String emetRefreshTokenCookie(Compte compte,
                                           HttpServletRequest request, HttpServletResponse response,
-                                          boolean longDuree, boolean storerLongDuree) {
+                                          boolean longDuree) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
 
         RefreshToken rt = new RefreshToken(
-            compte, hash, tenantSlug,
+            compte, hash,
             request.getHeader("User-Agent"),
             request.getRemoteAddr(),
             jwtService.refreshTokenExpiration(),
-            storerLongDuree
+            longDuree
         );
         refreshTokenRepo.save(rt);
 

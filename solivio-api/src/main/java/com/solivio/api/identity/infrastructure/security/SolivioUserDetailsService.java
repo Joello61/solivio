@@ -37,7 +37,6 @@ public class SolivioUserDetailsService implements UserDetailsService {
             compte.getId(),
             compte.getEmail(),
             compte.getPasswordHash(),
-            null,
             compte.isSuperAdmin(),
             List.of(new SimpleGrantedAuthority("ROLE_USER")),
             compte.isActif() && compte.isEmailVerifie()

@@ -4,7 +4,6 @@ import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.association.application.AssociationConfigService;
 import com.solivio.api.association.application.AssociationExportService;
 import com.solivio.api.association.application.AssociationLogoService;
-import com.solivio.api.association.application.AssociationSupprimerService;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import com.solivio.api.association.infrastructure.web.dto.MembreResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
@@ -37,20 +36,17 @@ public class AssociationController {
 
     private final AssociationConfigService configService;
     private final AssociationExportService exportService;
-    private final AssociationSupprimerService supprimerService;
     private final AssociationLogoService logoService;
     private final AuditService auditService;
 
     public AssociationController(
         AssociationConfigService configService,
         AssociationExportService exportService,
-        AssociationSupprimerService supprimerService,
         AssociationLogoService logoService,
         AuditService auditService
     ) {
         this.configService = configService;
         this.exportService = exportService;
-        this.supprimerService = supprimerService;
         this.logoService = logoService;
         this.auditService = auditService;
     }
@@ -58,7 +54,7 @@ public class AssociationController {
     @GetMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE','COORDINATEUR','SUPER_ADMIN')")
     public ResponseEntity<AssociationResponse> lire(@AuthenticationPrincipal SolivioUserDetails user) {
-        return ResponseEntity.ok(configService.lire(user.getTenantSlug()));
+        return ResponseEntity.ok(configService.lire());
     }
 
     @PatchMapping
@@ -67,7 +63,7 @@ public class AssociationController {
         @Valid @RequestBody UpdateAssociationRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        AssociationResponse response = configService.mettreAJour(user.getTenantSlug(), request);
+        AssociationResponse response = configService.mettreAJour(request);
         auditService.tracer(user.getCompteId(), "ASSOCIATION_MODIFIEE", "association", response.id());
         return ResponseEntity.ok(response);
     }
@@ -78,7 +74,7 @@ public class AssociationController {
         @RequestParam("file") MultipartFile file,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        AssociationResponse response = logoService.sauvegarderLogo(user.getTenantSlug(), file);
+        AssociationResponse response = logoService.sauvegarderLogo(file);
         auditService.tracer(user.getCompteId(), "LOGO_MODIFIE", "association", response.id());
         return ResponseEntity.ok(response);
     }
@@ -88,7 +84,7 @@ public class AssociationController {
     public ResponseEntity<List<MembreResponse>> listerMembres(
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(configService.listerMembres(user.getTenantSlug()));
+        return ResponseEntity.ok(configService.listerMembres());
     }
 
     @PatchMapping("/membres/{compteId}/role")
@@ -99,7 +95,7 @@ public class AssociationController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MembreResponse response =
-            configService.mettreAJourRole(user.getTenantSlug(), compteId, request);
+            configService.mettreAJourRole(compteId, request);
         auditService.tracer(user.getCompteId(), "ROLE_MEMBRE_MODIFIE", "compte", compteId);
         return ResponseEntity.ok(response);
     }
@@ -111,8 +107,7 @@ public class AssociationController {
         @Valid @RequestBody UpdateStatutMembreRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MembreResponse response = configService.changerStatutMembre(
-            user.getTenantSlug(), compteId, request.statut());
+        MembreResponse response = configService.changerStatutMembre(compteId, request.statut());
         String action = "suspendu".equals(request.statut()) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
         auditService.tracer(user.getCompteId(), action, "compte", compteId);
         return ResponseEntity.ok(response);
@@ -124,7 +119,7 @@ public class AssociationController {
         @PathVariable UUID compteId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        configService.supprimerMembre(user.getTenantSlug(), compteId);
+        configService.supprimerMembre(compteId);
         auditService.tracer(user.getCompteId(), "MEMBRE_SUSPENDU", "compte", compteId);
         return ResponseEntity.noContent().build();
     }
@@ -132,20 +127,12 @@ public class AssociationController {
     @GetMapping("/export")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<byte[]> exporter(@AuthenticationPrincipal SolivioUserDetails user) {
-        byte[] zip = exportService.exporterEnZip(user.getTenantSlug());
-        String filename = "export-" + user.getTenantSlug() + ".zip";
+        byte[] zip = exportService.exporterEnZip();
+        String filename = "export-solivio.zip";
         auditService.tracer(user.getCompteId(), "EXPORT_DONNEES", "association", null);
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(zip);
-    }
-
-    @DeleteMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Void> supprimer(@AuthenticationPrincipal SolivioUserDetails user) {
-        auditService.tracer(user.getCompteId(), "ASSOCIATION_SUPPRIMEE", "association", null);
-        supprimerService.supprimer(user.getTenantSlug());
-        return ResponseEntity.noContent().build();
     }
 }

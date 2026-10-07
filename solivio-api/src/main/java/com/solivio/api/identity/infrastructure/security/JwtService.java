@@ -31,7 +31,6 @@ public class JwtService {
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
     private static final int MIN_SECRET_BYTES = 32;
-    private static final String CLAIM_TENANT = "tenant";
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_COORDO_TYPE = "coordo_type";
     private static final String CLAIM_SUPER_ADMIN = "super_admin";
@@ -68,8 +67,7 @@ public class JwtService {
     }
 
     public String genererAccessToken(UUID compteId, String email, String nom, String prenom,
-                                     String tenantSlug, List<String> roles,
-                                     String coordoType, boolean superAdmin) {
+                                     List<String> roles, String coordoType, boolean superAdmin) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessTokenMinutes * 60);
 
@@ -78,9 +76,6 @@ public class JwtService {
         claims.put(CLAIM_PRENOM, prenom);
         claims.put(CLAIM_ROLES, roles);
         claims.put(CLAIM_SUPER_ADMIN, superAdmin);
-        if (tenantSlug != null) {
-            claims.put(CLAIM_TENANT, tenantSlug);
-        }
         if (coordoType != null) {
             claims.put(CLAIM_COORDO_TYPE, coordoType);
         }

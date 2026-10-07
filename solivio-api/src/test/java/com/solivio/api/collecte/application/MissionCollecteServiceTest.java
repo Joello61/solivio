@@ -72,12 +72,12 @@ class MissionCollecteServiceTest {
             "Collecte test", null, null, null,
             ZonedDateTime.now().plusDays(3), 6
         );
-        MissionCollecteResponse response = service.creer(request, "admin@example.com", "asso-test");
+        MissionCollecteResponse response = service.creer(request, "admin@example.com");
 
         assertThat(response.titre()).isEqualTo("Collecte test");
         assertThat(response.statut()).isEqualTo("DISPONIBLE");
         verify(missionRepository).save(any(MissionCollecte.class));
-        verify(eventPublisher).publierCreee(any(), eq("asso-test"), any());
+        verify(eventPublisher).publierCreee(any(), any());
     }
 
     @Test
@@ -201,12 +201,12 @@ class MissionCollecteServiceTest {
 
         MissionCollecteResponse response = service.annuler(
             missionId, new AnnulerMissionRequest("Raison test"),
-            "admin@example.com", "asso-test"
+            "admin@example.com"
         );
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.raisonAnnulation()).isEqualTo("Raison test");
-        verify(eventPublisher).publierAnnulee(any(), eq("asso-test"), any(), any());
+        verify(eventPublisher).publierAnnulee(any(), any(), any());
     }
 
     @Test

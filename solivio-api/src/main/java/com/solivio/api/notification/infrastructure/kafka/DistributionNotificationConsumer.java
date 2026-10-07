@@ -1,7 +1,5 @@
 package com.solivio.api.notification.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.distribution.infrastructure.kafka.DistributionEvent;
 import com.solivio.api.notification.application.NotificationService;
 import org.slf4j.Logger;
@@ -26,11 +24,6 @@ public class DistributionNotificationConsumer {
             return;
         }
         log.debug("Traitement notification annulation distribution {}", event.distributionId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            notificationService.notifierAnnulationDistribution(event.distributionId());
-        } finally {
-            TenantContext.clear();
-        }
+        notificationService.notifierAnnulationDistribution(event.distributionId());
     }
 }

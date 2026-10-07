@@ -15,6 +15,5 @@ public record RegisterRequest(
     @NotBlank @Size(min = 8, max = 100) String motDePasse,
     @NotBlank @Size(max = 100) String nom,
     @NotBlank @Size(max = 100) String prenom,
-    String codeAssociation,
     String tokenInvitation
 ) {}

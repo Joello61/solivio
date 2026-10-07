@@ -125,7 +125,7 @@ public class PointageAdHocService {
             .toList();
     }
 
-    public void envoyerInvitation(UUID adHocId, UUID compteIdInvitant, String tenantSlug) {
+    public void envoyerInvitation(UUID adHocId, UUID compteIdInvitant) {
         PointageAdHoc adHoc = adHocRepository.findById(adHocId)
             .orElseThrow(() -> new NotFoundException("Visiteur introuvable : " + adHocId));
 
@@ -136,7 +136,7 @@ public class PointageAdHocService {
             throw new ConflictException("Une invitation a deja ete envoyee a ce visiteur.");
         }
 
-        invitationPort.inviterBenevole(adHoc.getEmail(), compteIdInvitant, tenantSlug);
+        invitationPort.inviterBenevole(adHoc.getEmail(), compteIdInvitant);
 
         adHoc.setInvitationEnvoyee(true);
         adHocRepository.save(adHoc);

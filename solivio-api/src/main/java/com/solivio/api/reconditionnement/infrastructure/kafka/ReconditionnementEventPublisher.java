@@ -21,19 +21,19 @@ public class ReconditionnementEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierPubliee(UUID sessionId, String tenantSlug, ZonedDateTime dateHeureDebut) {
-        emettreEvenement("reconditionnement.publie", sessionId, tenantSlug, dateHeureDebut);
+    public void publierPubliee(UUID sessionId, ZonedDateTime dateHeureDebut) {
+        emettreEvenement("reconditionnement.publie", sessionId, dateHeureDebut);
     }
 
-    public void publierAnnulee(UUID sessionId, String tenantSlug, ZonedDateTime dateHeureDebut) {
-        emettreEvenement("reconditionnement.annule", sessionId, tenantSlug, dateHeureDebut);
+    public void publierAnnulee(UUID sessionId, ZonedDateTime dateHeureDebut) {
+        emettreEvenement("reconditionnement.annule", sessionId, dateHeureDebut);
     }
 
     private void emettreEvenement(
-        String type, UUID sessionId, String tenantSlug, ZonedDateTime dateHeureDebut
+        String type, UUID sessionId, ZonedDateTime dateHeureDebut
     ) {
         ReconditionnementEvent event = new ReconditionnementEvent(
-            type, sessionId, tenantSlug, dateHeureDebut, Instant.now());
+            type, sessionId, dateHeureDebut, Instant.now());
         kafkaTemplate.send(TOPIC, sessionId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

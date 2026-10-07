@@ -1,7 +1,5 @@
 package com.solivio.api.notification.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.notification.application.NotificationService;
 import com.solivio.api.reconditionnement.infrastructure.kafka.ReconditionnementEvent;
 import org.slf4j.Logger;
@@ -26,11 +24,6 @@ public class ReconditionnementNotificationConsumer {
             return;
         }
         log.debug("Traitement notification annulation session {}", event.sessionId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            notificationService.notifierAnnulationSessionReconditionnement(event.sessionId());
-        } finally {
-            TenantContext.clear();
-        }
+        notificationService.notifierAnnulationSessionReconditionnement(event.sessionId());
     }
 }

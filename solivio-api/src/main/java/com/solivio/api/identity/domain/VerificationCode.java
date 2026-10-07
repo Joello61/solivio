@@ -21,7 +21,7 @@ import java.util.UUID;
  * Expire apres 15 minutes. Invalide apres la premiere utilisation reussie.
  */
 @Entity
-@Table(name = "verification_code", schema = "public")
+@Table(name = "verification_code")
 @Getter
 @Setter
 @NoArgsConstructor

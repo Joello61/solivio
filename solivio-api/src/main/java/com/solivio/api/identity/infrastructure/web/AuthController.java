@@ -6,7 +6,6 @@ import com.solivio.api.identity.infrastructure.web.dto.GoogleCompleteRegistratio
 import com.solivio.api.identity.infrastructure.web.dto.LoginRequest;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.RefreshTokenRequest;
-import com.solivio.api.identity.infrastructure.web.dto.SwitchTenantRequest;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -102,7 +101,7 @@ public class AuthController {
     }
 
     /**
-     * Finalise l'inscription d'un compte Google : lie le compte a une association.
+     * Finalise l'inscription d'un compte Google : lui donne un role dans l'association.
      * Accessible sans authentification - la legitimite est verifiee par la presence du google_id.
      */
     @PostMapping("/google/complete-registration")
@@ -111,21 +110,8 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
         TokenResponse token = authService.completerInscriptionGoogle(
-            request.email(), request.nom(), request.prenom(),
-            request.codeAssociation(), request.tokenInvitation(),
+            request.email(), request.nom(), request.prenom(), request.tokenInvitation(),
             httpRequest, httpResponse);
-        return ResponseEntity.ok(token);
-    }
-
-    @PostMapping("/switch-tenant")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TokenResponse> switchTenant(
-            @Valid @RequestBody SwitchTenantRequest request,
-            @AuthenticationPrincipal SolivioUserDetails userDetails,
-            HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
-        TokenResponse token = authService.switchTenant(
-            userDetails, request.tenantSlug(), httpRequest, httpResponse);
         return ResponseEntity.ok(token);
     }
 }

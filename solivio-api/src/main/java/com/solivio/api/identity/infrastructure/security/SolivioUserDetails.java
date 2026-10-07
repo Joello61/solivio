@@ -10,8 +10,7 @@ import java.util.UUID;
 
 /**
  * Representation Spring Security de l'utilisateur authentifie.
- * Porte l'identite (compteId, email) et le contexte tenant actif (tenantSlug, roles).
- * Sera complete en Phase 3 avec la construction depuis le JWT custom.
+ * Porte l'identite (compteId, email) et les roles issus du JWT.
  */
 public class SolivioUserDetails implements UserDetails {
 
@@ -19,8 +18,6 @@ public class SolivioUserDetails implements UserDetails {
     private final UUID compteId;
     private final String email;
     private final String password;
-    @Getter
-    private final String tenantSlug;
     @Getter
     private final boolean superAdmin;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -30,14 +27,12 @@ public class SolivioUserDetails implements UserDetails {
             UUID compteId,
             String email,
             String password,
-            String tenantSlug,
             boolean superAdmin,
             Collection<? extends GrantedAuthority> authorities,
             boolean enabled) {
         this.compteId = compteId;
         this.email = email;
         this.password = password;
-        this.tenantSlug = tenantSlug;
         this.superAdmin = superAdmin;
         this.authorities = authorities;
         this.enabled = enabled;

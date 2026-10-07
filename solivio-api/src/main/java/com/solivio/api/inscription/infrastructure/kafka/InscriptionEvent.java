@@ -10,6 +10,5 @@ public record InscriptionEvent(
     UUID personneId,
     String typeInscription,
     UUID creneauId,
-    String tenantSlug,
     Instant occurredAt
 ) {}

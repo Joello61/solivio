@@ -81,7 +81,7 @@ public class ProfilBeneficiaireService {
             .getEmail();
         return personneRepository.findByCompteEmail(email)
             .orElseThrow(() -> new NotFoundException(
-                "Profil tenant introuvable. Connectez-vous a une association d'abord."));
+                "Profil introuvable pour ce compte."));
     }
 
     private ProfilBeneficiaireResponse toResponse(ProfilBeneficiaire p) {

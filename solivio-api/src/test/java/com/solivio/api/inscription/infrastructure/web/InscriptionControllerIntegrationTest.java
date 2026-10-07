@@ -2,8 +2,6 @@ package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -36,9 +34,6 @@ class InscriptionControllerIntegrationTest {
     private AssociationRepository associationRepository;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -54,33 +49,19 @@ class InscriptionControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("inscr-test", "Asso Inscription Test");
-        association.setCode("INSCRTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("inscr-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         tokenCoordinateur = jwtService.genererAccessToken(
-            UUID.randomUUID(), "coord@test.com", "Coord", "Test",
-            "inscr-test", List.of("coordinateur"), null, false
+            UUID.randomUUID(), "coord@test.com", "Coord", "Test", List.of("coordinateur"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@test.com", "Benef", "Test",
-            "inscr-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@test.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "ben@test.com", "Ben", "Test",
-            "inscr-test", List.of("benevole"), null, false
+            UUID.randomUUID(), "ben@test.com", "Ben", "Test", List.of("benevole"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        String schema = TenantProvisioningService.schemaName("inscr-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

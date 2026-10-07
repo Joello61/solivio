@@ -132,20 +132,20 @@ public class EvenementService {
         return toResponse(evenementRepository.save(evenement));
     }
 
-    public EvenementResponse publier(UUID evenementId, String tenantSlug) {
+    public EvenementResponse publier(UUID evenementId) {
         Evenement evenement = trouverOuEchouer(evenementId);
         evenement.transitionnerVers(StatutEvenement.PUBLIE, null);
         evenementRepository.save(evenement);
-        eventPublisher.publierPublie(evenementId, tenantSlug, evenement.getDateHeureDebut());
+        eventPublisher.publierPublie(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }
 
-    public EvenementResponse annuler(UUID evenementId, AnnulerEvenementRequest request, String tenantSlug) {
+    public EvenementResponse annuler(UUID evenementId, AnnulerEvenementRequest request) {
         Evenement evenement = trouverOuEchouer(evenementId);
         String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
         evenement.transitionnerVers(StatutEvenement.ANNULE, raisonSaine);
         evenementRepository.save(evenement);
-        eventPublisher.publierAnnule(evenementId, tenantSlug, evenement.getDateHeureDebut());
+        eventPublisher.publierAnnule(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }
 

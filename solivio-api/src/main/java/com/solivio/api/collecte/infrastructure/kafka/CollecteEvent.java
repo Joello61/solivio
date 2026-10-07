@@ -7,7 +7,6 @@ import java.util.UUID;
 public record CollecteEvent(
     String type,
     UUID missionId,
-    String tenantSlug,
     ZonedDateTime dateHeure,
     UUID benevoleId,
     Instant occurredAt

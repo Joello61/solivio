@@ -1,7 +1,7 @@
 package com.solivio.api.identity.application;
 
 import com.solivio.api.identity.domain.Personne;
-import com.solivio.api.identity.infrastructure.persistence.AffiliationRepository;
+import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
@@ -14,14 +14,14 @@ import java.util.UUID;
 public class PersonneQueryAdapter implements PersonneQueryPort {
 
     private final PersonneRepository personneRepository;
-    private final AffiliationRepository affiliationRepository;
+    private final MembreAssociationRepository membreRepository;
 
     public PersonneQueryAdapter(
         PersonneRepository personneRepository,
-        AffiliationRepository affiliationRepository
+        MembreAssociationRepository membreRepository
     ) {
         this.personneRepository = personneRepository;
-        this.affiliationRepository = affiliationRepository;
+        this.membreRepository = membreRepository;
     }
 
     @Override
@@ -40,7 +40,14 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
 
     @Override
     public List<PersonneContactInfo> trouverContactsParRole(String nomRole) {
-        return affiliationRepository.findPersonnesActivesByRoleNom(nomRole).stream()
+        // Le role est porte par le membre (compte) ; le contact par la personne liee.
+        List<String> emails = membreRepository.findActifsByRole(nomRole).stream()
+            .map(m -> m.getCompte().getEmail())
+            .toList();
+        if (emails.isEmpty()) {
+            return List.of();
+        }
+        return personneRepository.findByCompteEmailIn(emails).stream()
             .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
             .toList();
     }

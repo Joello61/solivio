@@ -20,23 +20,23 @@ public class InscriptionEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierConfirmee(Inscription inscription, String tenantSlug) {
-        emettre("inscription.confirmee", inscription, tenantSlug);
+    public void publierConfirmee(Inscription inscription) {
+        emettre("inscription.confirmee", inscription);
     }
 
-    public void publierAnnulee(Inscription inscription, String tenantSlug) {
-        emettre("inscription.annulee", inscription, tenantSlug);
+    public void publierAnnulee(Inscription inscription) {
+        emettre("inscription.annulee", inscription);
     }
 
-    public void publierPromue(Inscription inscription, String tenantSlug) {
-        emettre("inscription.promue", inscription, tenantSlug);
+    public void publierPromue(Inscription inscription) {
+        emettre("inscription.promue", inscription);
     }
 
-    public void publierDesistementTardifBenevole(Inscription inscription, String tenantSlug) {
-        emettre("inscription.desistement_tardif_benevole", inscription, tenantSlug);
+    public void publierDesistementTardifBenevole(Inscription inscription) {
+        emettre("inscription.desistement_tardif_benevole", inscription);
     }
 
-    private void emettre(String type, Inscription inscription, String tenantSlug) {
+    private void emettre(String type, Inscription inscription) {
         InscriptionEvent event = new InscriptionEvent(
             type,
             inscription.getId(),
@@ -44,7 +44,6 @@ public class InscriptionEventPublisher {
             inscription.getPersonneId(),
             inscription.getType().name(),
             inscription.getCreneauId(),
-            tenantSlug,
             Instant.now()
         );
         kafkaTemplate.send(TOPIC, inscription.getId().toString(), event)

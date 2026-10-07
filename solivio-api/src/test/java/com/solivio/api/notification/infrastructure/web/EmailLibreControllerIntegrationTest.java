@@ -2,8 +2,6 @@ package com.solivio.api.notification.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -29,13 +27,11 @@ class EmailLibreControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
     private MockMvc mockMvc;
     private Association association;
-    private String schema;
     private String tokenAdmin;
     private String tokenBenevole;
 
@@ -45,44 +41,22 @@ class EmailLibreControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        schema = TenantProvisioningService.schemaName(TENANT);
-        try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        associationRepository.findAll().stream()
-            .filter(a -> TENANT.equals(a.getSlug()))
-            .forEach(associationRepository::delete);
-
-        association = new Association(TENANT, "Asso Email Libre Test");
-        association.setCode("ELTEST");
-        associationRepository.save(association);
-
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         UUID personneAdminId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneAdminId, "Admin", "Test", "admin@el.com", "admin@el.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneAdminId, "Admin", "Test", "admin@el.com");
 
         tokenAdmin = jwtService.genererAccessToken(
-            UUID.randomUUID(), "admin@el.com", "Admin", "Test",
-            TENANT, List.of("admin"), null, false
+            UUID.randomUUID(), "admin@el.com", "Admin", "Test", List.of("admin"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "ben@el.com", "Ben", "Test",
-            TENANT, List.of("benevole"), null, false
+            UUID.randomUUID(), "ben@el.com", "Ben", "Test", List.of("benevole"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
         try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        try {
-            associationRepository.delete(association);
         } catch (Exception ignored) {}
     }
 

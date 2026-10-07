@@ -83,7 +83,7 @@ class PasswordServiceTest {
         when(passwordEncoder.matches("wrongpass", "correct-hash")).thenReturn(false);
 
         SolivioUserDetails userDetails = new SolivioUserDetails(
-            id, "alice@example.com", "correct-hash", "pilote", false, List.of(), true);
+            id, "alice@example.com", "correct-hash", false, List.of(), true);
 
         assertThatThrownBy(() -> service.changerMotDePasse(userDetails, "wrongpass", "newpass123!"))
             .isInstanceOf(IllegalArgumentException.class)

@@ -101,16 +101,16 @@ class SessionReconditionnementServiceTest {
         when(sessionRepository.save(any(SessionReconditionnement.class))).thenReturn(session);
         when(inscriptionRepository.countBySessionIdAndStatut(sessionId, "CONFIRMEE")).thenReturn(0L);
 
-        SessionReconditionnementResponse response = service.publier(sessionId, "tenant1");
+        SessionReconditionnementResponse response = service.publier(sessionId);
 
         assertThat(response.statut()).isEqualTo("PUBLIEE");
-        verify(eventPublisher).publierPubliee(eq(sessionId), eq("tenant1"), any(ZonedDateTime.class));
+        verify(eventPublisher).publierPubliee(eq(sessionId), any(ZonedDateTime.class));
     }
 
     @Test
     void publier_echoueSiSessionInexistante() {
         when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.publier(sessionId, "tenant1"))
+        assertThatThrownBy(() -> service.publier(sessionId))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -121,12 +121,12 @@ class SessionReconditionnementServiceTest {
         when(inscriptionRepository.countBySessionIdAndStatut(sessionId, "CONFIRMEE")).thenReturn(0L);
 
         SessionReconditionnementResponse response = service.annuler(
-            sessionId, new AnnulerSessionRequest("Manque de benevoles"), "tenant1"
+            sessionId, new AnnulerSessionRequest("Manque de benevoles")
         );
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.motifAnnulation()).isEqualTo("Manque de benevoles");
-        verify(eventPublisher).publierAnnulee(eq(sessionId), eq("tenant1"), any(ZonedDateTime.class));
+        verify(eventPublisher).publierAnnulee(eq(sessionId), any(ZonedDateTime.class));
     }
 
     @Test

@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.domain.VerificationCode;
@@ -41,7 +39,6 @@ class PasswordControllerIntegrationTest {
     @Autowired private AssociationRepository associationRepository;
     @Autowired private MembreAssociationRepository membreRepo;
     @Autowired private VerificationCodeRepository verificationCodeRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private PasswordEncoder passwordEncoder;
 
@@ -54,19 +51,11 @@ class PasswordControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity()).build();
 
-        association = new Association("pwd-test", "Password Test Asso");
-        association.setCode("PWDTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("pwd-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         compte = new Compte("alice@example.com", passwordEncoder.encode("password123!"), "Dupont", "Alice");
         compte.setEmailVerifie(true);
         compteRepository.save(compte);
 
-        MembreAssociation membre = new MembreAssociation(compte, association, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compte, "beneficiaire");
         membreRepo.save(membre);
     }
 
@@ -75,9 +64,6 @@ class PasswordControllerIntegrationTest {
         verificationCodeRepository.deleteAll();
         membreRepo.deleteAll();
         compteRepository.deleteAll();
-        String schema = TenantProvisioningService.schemaName("pwd-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

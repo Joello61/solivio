@@ -7,7 +7,6 @@ import java.util.UUID;
 public record EvenementEvent(
     String type,
     UUID evenementId,
-    String tenantSlug,
     ZonedDateTime dateHeureDebut,
     Instant occurredAt
 ) {}

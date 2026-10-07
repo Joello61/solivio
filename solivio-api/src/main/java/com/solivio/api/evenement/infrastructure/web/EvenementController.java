@@ -86,7 +86,7 @@ public class EvenementController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        EvenementResponse response = evenementService.publier(id, user.getTenantSlug());
+        EvenementResponse response = evenementService.publier(id);
         auditService.tracer(user.getCompteId(), "EVENEMENT_PUBLIE", "evenement", id);
         return ResponseEntity.ok(response);
     }
@@ -98,7 +98,7 @@ public class EvenementController {
         @Valid @RequestBody AnnulerEvenementRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        EvenementResponse response = evenementService.annuler(id, request, user.getTenantSlug());
+        EvenementResponse response = evenementService.annuler(id, request);
         auditService.tracer(user.getCompteId(), "EVENEMENT_ANNULE", "evenement", id);
         return ResponseEntity.ok(response);
     }

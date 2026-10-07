@@ -1,7 +1,5 @@
 package com.solivio.api.identity.infrastructure.security;
 
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +39,6 @@ public class SecurityConfig {
     private final CorsProperties corsProperties;
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
-    private final AssociationRepository associationRepository;
     private final Environment environment;
 
     public SecurityConfig(
@@ -51,7 +48,6 @@ public class SecurityConfig {
             CorsProperties corsProperties,
             GoogleOAuth2UserService googleOAuth2UserService,
             GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
-            AssociationRepository associationRepository,
             Environment environment) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
@@ -59,26 +55,7 @@ public class SecurityConfig {
         this.corsProperties = corsProperties;
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
-        this.associationRepository = associationRepository;
         this.environment = environment;
-    }
-
-    @Bean
-    public TenantResolutionFilter tenantResolutionFilter() {
-        return new TenantResolutionFilter(associationRepository);
-    }
-
-    /**
-     * Desactive l'enregistrement automatique du filtre comme filtre servlet.
-     * Il est enregistre uniquement dans la SecurityFilterChain via addFilterAfter.
-     * Sans ce bean, Spring Boot l'enregistrerait deux fois.
-     */
-    @Bean
-    public FilterRegistrationBean<TenantResolutionFilter> tenantFilterRegistration(
-            TenantResolutionFilter filter) {
-        FilterRegistrationBean<TenantResolutionFilter> reg = new FilterRegistrationBean<>(filter);
-        reg.setEnabled(false);
-        return reg;
     }
 
     @Bean
@@ -134,8 +111,6 @@ public class SecurityConfig {
                 })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            // TenantResolutionFilter apres JWT : le SecurityContext est peuple, on peut lire le tenant.
-            .addFilterAfter(tenantResolutionFilter(), JwtAuthenticationFilter.class)
             .build();
     }
 

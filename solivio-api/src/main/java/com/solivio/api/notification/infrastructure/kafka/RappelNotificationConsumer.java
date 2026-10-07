@@ -1,7 +1,5 @@
 package com.solivio.api.notification.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.notification.application.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +23,6 @@ public class RappelNotificationConsumer {
             return;
         }
         log.debug("Traitement rappel veille distribution {}", event.distributionId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            notificationService.notifierRappelVeille(event.distributionId());
-        } finally {
-            TenantContext.clear();
-        }
+        notificationService.notifierRappelVeille(event.distributionId());
     }
 }

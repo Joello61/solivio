@@ -1,7 +1,5 @@
 package com.solivio.api.statistique.infrastructure.kafka;
 
-import com.solivio.api.association.multitenancy.TenantContext;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.distribution.infrastructure.kafka.DistributionEvent;
 import com.solivio.api.statistique.application.StatistiqueService;
 import org.slf4j.Logger;
@@ -28,11 +26,6 @@ public class DistributionTermineeStatistiqueConsumer {
             return;
         }
         log.debug("Calcul des stats pour distribution terminee {}", event.distributionId());
-        TenantContext.setTenantId(TenantProvisioningService.schemaName(event.tenantSlug()));
-        try {
-            statistiqueService.calculerEtSauvegarder(event.distributionId(), event.distributionDate());
-        } finally {
-            TenantContext.clear();
-        }
+        statistiqueService.calculerEtSauvegarder(event.distributionId(), event.distributionDate());
     }
 }

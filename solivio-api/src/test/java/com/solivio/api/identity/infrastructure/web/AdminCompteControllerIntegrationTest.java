@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -40,7 +38,6 @@ class AdminCompteControllerIntegrationTest {
     @Autowired private CompteRepository compteRepository;
     @Autowired private AssociationRepository associationRepository;
     @Autowired private MembreAssociationRepository membreRepo;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
     @Autowired private PasswordEncoder passwordEncoder;
@@ -49,21 +46,12 @@ class AdminCompteControllerIntegrationTest {
     private Association association;
     private Compte compteAdmin;
     private Compte compteCible;
-    private String schema;
     private String tokenSuperAdmin;
     private String tokenResponsable;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-
-        association = new Association("admin-test", "Association Admin Test");
-        association.setCode("ADMINTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("admin-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
 
         compteAdmin = new Compte("admin@example.com",
             passwordEncoder.encode("password123!"), "Admin", "Super");
@@ -76,29 +64,25 @@ class AdminCompteControllerIntegrationTest {
         compteCible.setEmailVerifie(true);
         compteRepository.save(compteCible);
 
-        membreRepo.save(new MembreAssociation(compteAdmin, association, "responsable"));
-        membreRepo.save(new MembreAssociation(compteCible, association, "benevole"));
+        membreRepo.save(new MembreAssociation(compteAdmin, "responsable"));
+        membreRepo.save(new MembreAssociation(compteCible, "benevole"));
 
         tokenSuperAdmin = jwtService.genererAccessToken(
-            compteAdmin.getId(), "admin@example.com", "Admin", "Super",
-            "admin-test", List.of("responsable"), null, true
+            compteAdmin.getId(), "admin@example.com", "Admin", "Super", List.of("responsable"), null, true
         );
         tokenResponsable = jwtService.genererAccessToken(
-            UUID.randomUUID(), "resp@example.com", "Resp", "User",
-            "admin-test", List.of("responsable"), null, false
+            UUID.randomUUID(), "resp@example.com", "Resp", "User", List.of("responsable"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
         membreRepo.deleteAll();
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
         compteRepository.delete(compteAdmin);
         // compteCible peut avoir ete supprime dans un test.
         if (compteRepository.existsById(compteCible.getId())) {
             compteRepository.delete(compteCible);
         }
-        associationRepository.delete(association);
     }
 
     @Test

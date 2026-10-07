@@ -7,7 +7,6 @@ import java.util.UUID;
 public record DistributionEvent(
     String type,
     UUID distributionId,
-    String tenantSlug,
     LocalDate distributionDate,
     Instant occurredAt
 ) {}

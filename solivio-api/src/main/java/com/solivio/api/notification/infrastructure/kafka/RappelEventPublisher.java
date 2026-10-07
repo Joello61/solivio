@@ -20,8 +20,8 @@ public class RappelEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publierRappelVeille(UUID distributionId, String tenantSlug) {
-        RappelEvent event = new RappelEvent("rappel.veille", distributionId, tenantSlug, Instant.now());
+    public void publierRappelVeille(UUID distributionId) {
+        RappelEvent event = new RappelEvent("rappel.veille", distributionId, Instant.now());
         kafkaTemplate.send(TOPIC, distributionId.toString(), event)
             .whenComplete((result, ex) -> {
                 if (ex != null) {

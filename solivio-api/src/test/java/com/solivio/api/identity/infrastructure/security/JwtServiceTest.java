@@ -24,8 +24,7 @@ class JwtServiceTest {
     void genererAccessToken_retourneTokenValide() {
         UUID compteId = UUID.randomUUID();
         String token = jwtService.genererAccessToken(
-            compteId, "alice@example.com", "Dupont", "Alice",
-            "pilote", List.of("beneficiaire"), null, false);
+            compteId, "alice@example.com", "Dupont", "Alice", List.of("beneficiaire"), null, false);
 
         assertThat(token).isNotBlank();
         assertThat(jwtService.estValide(token)).isTrue();
@@ -35,14 +34,13 @@ class JwtServiceTest {
     void valider_retourneClaimsCorrects() {
         UUID compteId = UUID.randomUUID();
         String token = jwtService.genererAccessToken(
-            compteId, "alice@example.com", "Dupont", "Alice",
-            "pilote", List.of("coordinateur"), "coordo_sec", false);
+            compteId, "alice@example.com", "Dupont", "Alice", List.of("coordinateur"), "coordo_sec", false);
 
         Claims claims = jwtService.valider(token);
 
         assertThat(claims.getSubject()).isEqualTo(compteId.toString());
         assertThat(claims.get("email", String.class)).isEqualTo("alice@example.com");
-        assertThat(claims.get("tenant", String.class)).isEqualTo("pilote");
+        assertThat(claims.get("tenant")).isNull();
         assertThat(claims.get("coordo_type", String.class)).isEqualTo("coordo_sec");
     }
 
@@ -51,8 +49,7 @@ class JwtServiceTest {
         JwtService shortLivedService = new JwtService(SECRET, 0, 30);
         UUID compteId = UUID.randomUUID();
         String token = shortLivedService.genererAccessToken(
-            compteId, "bob@example.com", "Martin", "Bob",
-            "pilote", List.of("benevole"), null, false);
+            compteId, "bob@example.com", "Martin", "Bob", List.of("benevole"), null, false);
 
         // Le token expire immediatement (0 minutes)
         assertThat(shortLivedService.estValide(token)).isFalse();
@@ -62,8 +59,7 @@ class JwtServiceTest {
     void estValide_retourneFalseTokenFalsifie() {
         UUID compteId = UUID.randomUUID();
         String token = jwtService.genererAccessToken(
-            compteId, "eve@example.com", "Evil", "Eve",
-            "pilote", List.of("admin"), null, false);
+            compteId, "eve@example.com", "Evil", "Eve", List.of("admin"), null, false);
 
         String tokenFalsifie = token + "tampered";
         assertThat(jwtService.estValide(tokenFalsifie)).isFalse();
@@ -85,15 +81,14 @@ class JwtServiceTest {
     }
 
     @Test
-    void tokenSuperAdmin_pasDeTenant() {
+    void tokenSuperAdmin_portLeDrapeau() {
         UUID compteId = UUID.randomUUID();
         String token = jwtService.genererAccessToken(
-            compteId, "admin@solivio.app", "Admin", "Super",
-            null, List.of(), null, true);
+            compteId, "admin@solivio.app", "Admin", "Super", List.of(), null, true);
 
         Claims claims = jwtService.valider(token);
         assertThat(claims.get("super_admin", Boolean.class)).isTrue();
-        assertThat(claims.get("tenant", String.class)).isNull();
+        assertThat(claims.get(String.class)).isNull();
     }
 
     @Test
