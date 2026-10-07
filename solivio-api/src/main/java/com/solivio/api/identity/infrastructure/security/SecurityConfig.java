@@ -3,6 +3,8 @@ package com.solivio.api.identity.infrastructure.security;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +22,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Clock;
 import java.util.List;
 
 /**
@@ -61,7 +64,24 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public LimiteDebitAuthFilter limiteDebitAuthFilter(
+            @Value("${solivio.securite.limite-debit-auth.requetes-par-minute:10}") int requetesParMinute) {
+        return new LimiteDebitAuthFilter(Clock.systemUTC(), requetesParMinute);
+    }
+
+    // Le filtre n'est execute que dans la chaine de securite, pas une seconde
+    // fois comme filtre servlet enregistre automatiquement par Spring Boot.
+    @Bean
+    public FilterRegistrationBean<LimiteDebitAuthFilter> limiteDebitAuthFilterRegistration(
+            LimiteDebitAuthFilter filter) {
+        FilterRegistrationBean<LimiteDebitAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, LimiteDebitAuthFilter limiteDebitAuthFilter)
+            throws Exception {
         return http
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -112,6 +132,7 @@ public class SecurityConfig {
                     response.getWriter().write("{\"title\":\"Acces refuse\",\"status\":403}");
                 })
             )
+            .addFilterBefore(limiteDebitAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
