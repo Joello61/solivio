@@ -1,22 +1,18 @@
-# Glossaire — Solivio
+# Glossaire - Solivio
 
 > Le vocabulaire partagé du projet, pour que chaque terme veuille dire la même chose pour tout le monde.
 
-**Document de pilotage — version 1.0**
+**Document de pilotage - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
----
-
 ## Avertissement de lecture
 
-Ce glossaire existe parce que Solivio s'adresse à des publics très différents : le porteur, les associations, des recruteurs, de futurs contributeurs. Un même mot peut signifier des choses différentes selon qui le lit. « Distribution » n'évoque pas la même chose pour un développeur et pour un bénévole ; « bénéficiaire » porte une charge sociale ; « tenant » est du jargon technique.
+Ce glossaire existe parce que Solivio s'adresse à des publics très différents : le porteur, les associations, des recruteurs, de futurs contributeurs. Un même mot peut signifier des choses différentes selon qui le lit. "Distribution" n'évoque pas la même chose pour un développeur et pour un bénévole ; "bénéficiaire" porte une charge sociale ; "tenant" est du jargon technique.
 
 Ce document fixe le sens des termes tels qu'ils sont employés dans toute la série. En cas de doute sur un mot dans un autre document, c'est ici que l'on tranche. Lorsqu'un terme a un sens particulier dans Solivio, il est précisé.
 
 Les définitions sont volontairement accessibles : un membre de bureau non technique doit pouvoir comprendre l'essentiel, et un développeur y retrouver la précision nécessaire.
-
----
 
 ## 1. Termes du domaine associatif
 
@@ -44,7 +40,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Présence.** Le résultat du pointage pour une inscription : présent, absent, ou non encore pointé.
 
-**Absence (ou « no-show »).** Le fait, pour une personne inscrite, de ne pas se présenter. Solivio compte les absences pour aider l'association à les suivre.
+**Absence (ou "no-show").** Le fait, pour une personne inscrite, de ne pas se présenter. Solivio compte les absences pour aider l'association à les suivre.
 
 **Denrée.** Un bien distribué lors d'une distribution (par exemple des pommes de terre, des yaourts). Dans Solivio, une denrée est rattachée à une distribution précise, avec une quantité.
 
@@ -58,8 +54,6 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Passation de bureau.** Le renouvellement, souvent annuel, de l'équipe dirigeante d'une association. C'est un moment critique : beaucoup d'outils associatifs meurent à cette occasion, faute d'être repris par la nouvelle équipe.
 
----
-
 ## 2. Termes du produit
 
 **Solivio.** Le nom du produit : une plateforme de gestion opérationnelle pour les associations de solidarité.
@@ -68,9 +62,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Module.** Un domaine fonctionnel cohérent du produit (par exemple le module Distributions, le module Notifications). Dans l'architecture, les modules sont aussi les briques internes du backend, aux frontières nettes.
 
-**Multi-association (ou « multi-tenant »).** Le fait qu'une seule installation de Solivio puisse servir plusieurs associations indépendantes, sans qu'elles ne voient jamais les données les unes des autres. « Tenant » est le terme technique pour « association » dans ce contexte.
-
-**Isolation.** La garantie qu'aucune association n'accède aux données d'une autre. C'est une exigence critique, vérifiée par une suite de tests dédiée.
+**Instance.** Une installation de Solivio. Depuis octobre 2026, une instance sert une seule association : Linkee Toulouse (`architecture_technique.md`, ADR-001). Une autre association utiliserait sa propre instance. Les anciennes notions de "multi-association", "multi-tenant" et "isolation entre associations" ne s'appliquent plus.
 
 **Configuration.** L'ensemble des réglages propres à une association : nom, logo, couleurs, paramètres. Elle permet d'adapter l'apparence sans développement.
 
@@ -80,29 +72,31 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Responsive.** Se dit d'une interface qui s'adapte automatiquement à toutes les tailles d'écran (téléphone, tablette, ordinateur).
 
----
-
 ## 3. Termes techniques
 
 **Monolithe modulaire.** Le style d'architecture du backend : une seule application déployable, mais découpée à l'intérieur en modules indépendants. À mi-chemin entre le monolithe classique (un seul bloc) et les microservices (plusieurs applications).
 
 **Microservice.** Une application autonome, déployée séparément, responsable d'un domaine précis. Solivio n'en utilise pas en V1, mais son architecture est conçue pour en extraire plus tard, à partir des modules existants.
 
-**Schema-per-tenant (un schéma par association).** La technique d'isolation retenue : chaque association a son propre schéma dans la base de données PostgreSQL, ce qui rend les données physiquement séparées.
+**Spring Modulith.** La bibliothèque qui décrit les modules du backend, vérifie automatiquement qu'aucun module n'accède aux internes d'un autre, et fournit les événements internes fiables.
 
 **RBAC (contrôle d'accès par rôle).** Un modèle où les droits dépendent du rôle de la personne (responsable, coordinateur, etc.). C'est la base du contrôle d'accès de la V1.
 
 **ABAC (contrôle d'accès par attributs).** Un modèle plus fin où les droits dépendent du contexte : qui agit, sur quoi, dans quelle situation (par exemple, un coordinateur n'agit que sur ses distributions). C'est un différenciateur de Solivio, déployé progressivement au-delà de la V1.
 
-**Événementiel (ou « asynchrone »).** Un mode de communication où un module signale qu'un événement s'est produit (par exemple « inscription confirmée ») sans attendre de réponse, et où un autre module y réagit (par exemple en envoyant un email). Cela découple les modules.
+**Événementiel (ou "asynchrone").** Un mode de communication où un module signale qu'un événement s'est produit (par exemple "inscription confirmée") sans attendre de réponse, et où un autre module y réagit (par exemple en envoyant un email). Cela découple les modules.
 
-**Kafka.** L'outil qui transporte ces événements entre les modules. Dans sa génération actuelle, il fonctionne sans le composant ZooKeeper d'autrefois, ce qui simplifie son exploitation.
+**Registre de publication.** La table de la base de données où chaque événement interne est enregistré dans la même transaction que la donnée métier, puis marqué terminé une fois traité. Il garantit qu'un événement n'est jamais perdu, même en cas d'arrêt de l'application.
 
-**Keycloak.** L'outil open source qui gère l'authentification (connexion, identités, rôles, jetons). Solivio délègue l'authentification à Keycloak plutôt que de la reconstruire.
+**JWT (JSON Web Token).** Le jeton signé que le backend délivre après la connexion et qui prouve l'identité et les rôles de l'utilisateur à chaque requête. Solivio gère lui-même son authentification, sans outil externe.
 
-**OIDC (OpenID Connect).** Le protocole standard par lequel le produit dialogue avec Keycloak pour authentifier les utilisateurs.
+**OIDC (OpenID Connect).** Le protocole standard utilisé pour la connexion avec un compte Google.
 
-**Vault / OpenBao.** Des outils de gestion des secrets (mots de passe, clés). Ils chiffrent et distribuent les secrets de façon contrôlée. Solivio privilégie OpenBao, le fork open source de Vault, pour rester cohérent avec sa licence (voir section 4).
+**Infisical.** L'outil de gestion des secrets (mots de passe, clés) hébergé sur le serveur. Il injecte les secrets dans l'application au moment de son lancement, sans qu'ils soient jamais écrits dans le code.
+
+**Expo.** La plateforme utilisée pour construire l'application mobile en React Native.
+
+**Observabilité.** La capacité à comprendre ce qui se passe dans l'application en production grâce à ses journaux (Loki), ses métriques (Prometheus) et ses traces (Tempo), consultés dans Grafana.
 
 **Spring Boot.** Le cadre de développement du backend, en langage Java.
 
@@ -110,17 +104,15 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **PostgreSQL.** Le système de base de données relationnelle utilisé pour stocker les données.
 
-**Docker.** L'outil de conteneurisation : il empaquette chaque composant dans un « conteneur » standardisé, ce qui rend l'application reproductible et facile à déployer ou à auto-héberger.
+**Docker.** L'outil de conteneurisation : il empaquette chaque composant dans un "conteneur" standardisé, ce qui rend l'application reproductible et facile à déployer ou à auto-héberger.
 
-**CI/CD (intégration et déploiement continus).** La chaîne automatisée qui teste, construit et déploie le code à chaque modification. Assurée ici par GitLab. Elle permet d'avancer sans régression.
+**CI/CD (intégration et déploiement continus).** La chaîne automatisée qui teste, construit et déploie le code à chaque modification. Assurée ici par GitHub Actions. Elle permet d'avancer sans régression.
 
-**Testcontainers.** Un outil qui lance de vraies dépendances (base de données, Kafka) dans des conteneurs jetables le temps des tests d'intégration.
+**Testcontainers.** Un outil qui lance de vraies dépendances (ici la base de données PostgreSQL) dans des conteneurs jetables le temps des tests d'intégration.
 
 **Flyway.** L'outil qui gère les évolutions de la structure de la base de données de façon versionnée et contrôlée.
 
 **Migration.** Une modification versionnée de la structure de la base de données (ajout d'une table, d'un champ). Appliquée de façon contrôlée, y compris sur tous les schémas des associations.
-
----
 
 ## 4. Termes juridiques, données et licences
 
@@ -134,7 +126,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Données sensibles.** Dans ce projet, les données sociales et financières des bénéficiaires (situation, reste à vivre, statut). Elles sont protégées strictement et à accès restreint.
 
-**Catégories particulières (au sens du RGPD).** Les données les plus protégées par le RGPD (origine, opinions, santé, etc.). À ne pas confondre avec les « données sensibles » au sens courant employé ci-dessus : les données collectées par Solivio sont sensibles socialement mais ne relèvent pas, en principe, de ces catégories particulières.
+**Catégories particulières (au sens du RGPD).** Les données les plus protégées par le RGPD (origine, opinions, santé, etc.). À ne pas confondre avec les "données sensibles" au sens courant employé ci-dessus : les données collectées par Solivio sont sensibles socialement mais ne relèvent pas, en principe, de ces catégories particulières.
 
 **Pseudonymisation.** Le fait de traiter des données sans exposer l'identité des personnes (par exemple dans les statistiques, où l'on compte les bénéficiaires sans les nommer). Différent de l'anonymisation, qui rend l'identification impossible de façon irréversible.
 
@@ -148,11 +140,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Copyleft.** Le principe selon lequel les versions dérivées d'un logiciel libre doivent rester libres. L'AGPL est une licence à fort copyleft.
 
-**BSL (Business Source License).** Une licence dite « source ouverte mais non open source » : le code est visible et utilisable, mais avec des restrictions (notamment l'interdiction d'en faire un service concurrent), et il devient open source après un délai. C'est la licence actuelle de Vault, raison pour laquelle Solivio lui préfère OpenBao.
-
-**MPL 2.0.** Une licence open source à copyleft faible, reconnue par l'Open Source Initiative. C'est la licence d'OpenBao.
-
----
+**BSL (Business Source License).** Une licence dite "source ouverte mais non open source" : le code est visible et utilisable, mais avec des restrictions (notamment l'interdiction d'en faire un service concurrent), et il devient open source après un délai.
 
 ## 5. Acronymes en un coup d'œil
 
@@ -166,21 +154,17 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 | CI/CD | Intégration et déploiement continus | Section 3 |
 | AGPL | Affero General Public License | Section 4 |
 | BSL | Business Source License | Section 4 |
-| MPL | Mozilla Public License | Section 4 |
+| JWT | JSON Web Token | Section 3 |
 | V1 / V2 / V3 | Versions successives du produit | Section 2 |
-
----
 
 ## 6. Synthèse en une page
 
 **Pourquoi ce document.** Parce que Solivio parle à des publics différents, et qu'un vocabulaire commun évite les malentendus entre le porteur, les associations, les recruteurs et les contributeurs.
 
-**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation…), le produit (multi-association, V1, isolation, non-enfermement…), la technique (monolithe modulaire, schema-per-tenant, ABAC, Kafka, Keycloak, OpenBao…), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation…).
+**Les familles de termes.** Le domaine associatif (bénéficiaire, distribution, créneau, répartition, dotation...), le produit (instance, V1, non-enfermement, etc.), la technique (monolithe modulaire, Spring Modulith, registre de publication, JWT, ABAC, Infisical, etc.), et le juridique (RGPD, sous-traitant, AGPL, BSL, pseudonymisation, etc.).
 
-**Les distinctions à ne pas confondre.** Bénéficiaire et bénévole (une même personne peut être les deux) ; mobile-first et mobile-only ; RBAC et ABAC ; données sensibles au sens courant et catégories particulières du RGPD ; AGPL, BSL et MPL.
+**Les distinctions à ne pas confondre.** Bénéficiaire et bénévole (une même personne peut être les deux) ; mobile-first et mobile-only ; RBAC et ABAC ; données sensibles au sens courant et catégories particulières du RGPD ; AGPL et BSL.
 
 **La règle.** En cas de doute sur un terme ailleurs dans la série, c'est ici qu'on tranche.
-
----
 
 *Fin du glossaire. Fin de la série documentaire de Solivio.*

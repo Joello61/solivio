@@ -1,12 +1,12 @@
-# Modèle économique — Solivio
+# Modèle économique - Solivio
 
 > Comment Solivio finance son existence, sous quelle licence il vit, et comment il dure sans dépendre d'une seule personne.
 
-**Document fondateur — version 1.0**
+**Document fondateur - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
----
+> **Document archivé en octobre 2026.** Cette analyse a été écrite pour un déploiement national auprès de plusieurs associations. Solivio sert désormais uniquement Linkee Toulouse (`../architecture_technique.md`, ADR-001) : ce document ne fait plus foi et n'est conservé que comme historique.
 
 ## Avertissement de lecture
 
@@ -15,11 +15,9 @@ Ce document tranche deux décisions lourdes et engageantes :
 1. **La licence open source** sous laquelle le code est publié. Ce choix est difficilement réversible une fois des contributeurs extérieurs impliqués, et il conditionne ce que d'autres peuvent faire du code.
 2. **Le modèle de financement et de pérennité** : comment couvrir les coûts et faire survivre le projet dans le temps.
 
-Une mise au point préalable, essentielle pour ne pas se tromper de cadre : **Solivio n'est pas une startup qui cherche à maximiser un profit.** C'est un projet d'utilité sociale à code ouvert. Son « modèle économique » ne vise pas à enrichir son auteur, mais à garantir trois choses : que les coûts soient couverts sans devenir un fardeau, que le projet survive à son créateur, et qu'aucune association ne soit jamais prisonnière de l'outil. Tout le document découle de ce cadre.
+Une mise au point préalable, essentielle pour ne pas se tromper de cadre : **Solivio n'est pas une startup qui cherche à maximiser un profit.** C'est un projet d'utilité sociale à code ouvert. Son "modèle économique" ne vise pas à enrichir son auteur, mais à garantir trois choses : que les coûts soient couverts sans devenir un fardeau, que le projet survive à son créateur, et qu'aucune association ne soit jamais prisonnière de l'outil. Tout le document découle de ce cadre.
 
 Les tarifs cités sont datés de juin 2026, donnés hors taxes, et doivent être revérifiés avant tout engagement. Aucun montant n'est inventé : les chiffres proviennent de sources publiques vérifiées.
-
----
 
 ## 1. La philosophie économique
 
@@ -35,13 +33,11 @@ Le modèle économique de Solivio doit donc protéger en priorité contre **le r
 
 ### 1.2 Trois principes économiques
 
-**E1 — Le coût d'usage doit rester nul pour les petites associations.** C'est une condition d'adoption, validée par l'analyse de la concurrence : face à des acteurs gratuits installés (HelloAsso, le tableur), faire payer une petite association de solidarité serait un contresens. La gratuité pour les petites structures n'est pas une promotion, c'est un invariant.
+**E1 - Le coût d'usage doit rester nul pour les petites associations.** C'est une condition d'adoption, validée par l'analyse de la concurrence : face à des acteurs gratuits installés (HelloAsso, le tableur), faire payer une petite association de solidarité serait un contresens. La gratuité pour les petites structures n'est pas une promotion, c'est un invariant.
 
-**E2 — Le financement doit suivre les coûts, pas les précéder.** On ne cherche pas de financement tant que les coûts sont couvrables de la poche du porteur (une dizaine d'euros par mois). On active des sources de financement uniquement quand l'échelle l'impose. Chercher des subventions pour un projet qui coûte 10 € par mois serait une perte d'énergie.
+**E2 - Le financement doit suivre les coûts, pas les précéder.** On ne cherche pas de financement tant que les coûts sont couvrables de la poche du porteur (une dizaine d'euros par mois). On active des sources de financement uniquement quand l'échelle l'impose. Chercher des subventions pour un projet qui coûte 10 € par mois serait une perte d'énergie.
 
-**E3 — La pérennité prime sur la captation de valeur.** Toute décision qui rendrait le projet plus rentable mais moins durable, ou qui enfermerait les associations, est écartée. C'est ce principe qui guide le choix de licence.
-
----
+**E3 - La pérennité prime sur la captation de valeur.** Toute décision qui rendrait le projet plus rentable mais moins durable, ou qui enfermerait les associations, est écartée. C'est ce principe qui guide le choix de licence.
 
 ## 2. Le choix de la licence open source
 
@@ -57,9 +53,9 @@ C'est la décision la plus structurante du document. Elle répond à une questio
 
 ### 2.2 Le piège que Solivio doit éviter
 
-Solivio est un logiciel destiné à être utilisé **comme service en ligne** (une instance hébergée à laquelle les associations se connectent). C'est précisément le cas où la GPL classique montre sa limite, connue sous le nom de « faille SaaS » :
+Solivio est un logiciel destiné à être utilisé **comme service en ligne** (une instance hébergée à laquelle les associations se connectent). C'est précisément le cas où la GPL classique montre sa limite, connue sous le nom de "faille SaaS" :
 
-> Avec la GPL, une entreprise peut prendre le code de Solivio, l'améliorer, le proposer comme service en ligne payant, et n'avoir aucune obligation de publier ses améliorations — parce qu'elle ne *distribue* pas le logiciel, elle l'*exploite* à distance.
+> Avec la GPL, une entreprise peut prendre le code de Solivio, l'améliorer, le proposer comme service en ligne payant, et n'avoir aucune obligation de publier ses améliorations - parce qu'elle ne *distribue* pas le logiciel, elle l'*exploite* à distance.
 
 Pour un projet dont la nature même est d'être un service en ligne, c'est un risque réel : un acteur mieux doté pourrait construire une version fermée et commerciale sur le travail bénévole du porteur, sans rien rendre à la communauté.
 
@@ -85,8 +81,6 @@ L'AGPL a un coût qu'il faut nommer honnêtement :
 
 Pour préserver l'avenir, le porteur conserve le **droit d'auteur sur son code** (via un accord de contribution pour les éventuels contributeurs extérieurs, à formaliser le jour où il y en a). Cela laisse ouverte, si besoin un jour, la possibilité d'un double licensing : le code reste AGPL pour tous, mais une licence commerciale séparée pourrait être proposée à une structure qui voudrait l'intégrer dans un produit fermé, en échange d'un soutien au projet. Cette porte n'est pas ouverte aujourd'hui ; elle est simplement préservée.
 
----
-
 ## 3. Le modèle hébergé contre auto-hébergé
 
 Solivio existe sous deux formes, dont l'économie diffère.
@@ -96,7 +90,7 @@ Solivio existe sous deux formes, dont l'économie diffère.
 - Le porteur héberge une instance, sur laquelle plusieurs associations ont leur espace.
 - Cette instance est **gratuite pour les petites associations**.
 - Le porteur assume les coûts (faibles) et la maintenance (coûteuse en temps).
-- C'est la voie d'entrée pour les associations sans aucune compétence technique — c'est-à-dire la cible principale.
+- C'est la voie d'entrée pour les associations sans aucune compétence technique - c'est-à-dire la cible principale.
 
 ### 3.2 L'auto-hébergement (par l'association ou un tiers)
 
@@ -108,8 +102,6 @@ Solivio existe sous deux formes, dont l'économie diffère.
 ### 3.3 Pourquoi les deux coexistent
 
 L'instance hébergée maximise l'adoption (zéro friction pour les non-techniciens). L'auto-hébergement maximise la pérennité et décharge le porteur. Les deux servent des publics différents et se complètent. Aucune n'est sacrifiée.
-
----
 
 ## 4. La structure de coûts réelle
 
@@ -127,7 +119,7 @@ Voici ce que coûte réellement Solivio, à différentes échelles. Chiffres dat
 
 À noter : Hetzner a annoncé un ajustement de ses prix prenant effet au 1ᵉʳ avril 2026 ; les montants ci-dessus en tiennent compte de manière approximative et doivent être revérifiés. Une option encore moins chère existe (série CAX, processeurs ARM, entrée autour de 4 € par mois) si la pile technique le permet.
 
-### 4.2 Emails transactionnels — un poste qui reste gratuit longtemps
+### 4.2 Emails transactionnels - un poste qui reste gratuit longtemps
 
 Les rappels de distribution, confirmations et annulations sont des emails transactionnels. Les paliers gratuits des services spécialisés couvrent largement les besoins d'une petite association :
 
@@ -146,9 +138,7 @@ Si plusieurs dizaines d'associations adoptent l'outil :
 
 ### 4.4 Le coût qui n'apparaît pas dans le tableau
 
-Le coût dominant est invisible dans une grille tarifaire : c'est le **temps du porteur** — développement, maintenance, corrections de sécurité, support aux associations, accompagnement à l'onboarding. C'est ce coût-là, et non l'infrastructure, qui peut faire mourir le projet. Le modèle de pérennité (section 6) s'attaque d'abord à lui.
-
----
+Le coût dominant est invisible dans une grille tarifaire : c'est le **temps du porteur** - développement, maintenance, corrections de sécurité, support aux associations, accompagnement à l'onboarding. C'est ce coût-là, et non l'infrastructure, qui peut faire mourir le projet. Le modèle de pérennité (section 6) s'attaque d'abord à lui.
 
 ## 5. Les sources de financement possibles
 
@@ -174,29 +164,25 @@ Important : la plupart de ces dispositifs exigent une **structure juridique** po
 
 ### 5.4 À grande échelle : offre de service gérée
 
-Si de grandes structures veulent une instance dédiée, du support garanti, ou des développements spécifiques, une **offre payante de service géré** peut être proposée — sans jamais rendre l'outil de base payant pour les petites associations. C'est le seul levier de revenu réellement envisagé, et seulement pour les structures qui en ont les moyens. C'est le pendant du « Plus par HelloAsso » : le cœur reste gratuit, l'accompagnement premium est payant.
+Si de grandes structures veulent une instance dédiée, du support garanti, ou des développements spécifiques, une **offre payante de service géré** peut être proposée - sans jamais rendre l'outil de base payant pour les petites associations. C'est le seul levier de revenu réellement envisagé, et seulement pour les structures qui en ont les moyens. C'est le pendant du "Plus par HelloAsso" : le cœur reste gratuit, l'accompagnement premium est payant.
 
 ### 5.5 La question de la structure juridique
 
 Tant que le projet est petit, il peut rester une initiative personnelle. Mais pour recevoir des subventions, des dons défiscalisés, ou pour porter le projet collectivement, il faudra une structure : le plus naturel serait une **association loi 1901** dédiée au projet. Cela a deux vertus : cela ouvre les financements, et cela résout en partie le facteur de bus (le projet appartient à une structure, pas à une personne). Cette décision est à prendre le jour où l'échelle ou le besoin de financement l'impose, pas avant.
 
----
-
 ## 6. La pérennité : répondre au risque humain
 
 C'est le cœur du modèle, parce que c'est le vrai risque (section 1.1). Cinq leviers.
 
-**L1 — L'open source comme assurance-vie.** Sous AGPL, le code est public et réutilisable. Si le porteur s'arrête, n'importe qui peut reprendre une instance, et les associations qui s'auto-hébergent ne sont pas affectées. Le projet ne meurt pas avec son auteur.
+**L1 - L'open source comme assurance-vie.** Sous AGPL, le code est public et réutilisable. Si le porteur s'arrête, n'importe qui peut reprendre une instance, et les associations qui s'auto-hébergent ne sont pas affectées. Le projet ne meurt pas avec son auteur.
 
-**L2 — L'auto-hébergement comme filet.** Plus il y a d'associations capables de s'auto-héberger, moins le projet dépend de l'instance centrale et de son mainteneur. La documentation d'installation est donc un investissement de pérennité, pas un détail.
+**L2 - L'auto-hébergement comme filet.** Plus il y a d'associations capables de s'auto-héberger, moins le projet dépend de l'instance centrale et de son mainteneur. La documentation d'installation est donc un investissement de pérennité, pas un détail.
 
-**L3 — La sobriété comme protection contre l'épuisement.** Un périmètre restreint (principe P7 de la note d'intention) limite la charge de maintenance. Chaque fonctionnalité ajoutée est une dette de maintenance future. Moins il y en a, plus le projet est tenable par une personne à temps partiel.
+**L3 - La sobriété comme protection contre l'épuisement.** Un périmètre restreint (principe P7 de la note d'intention) limite la charge de maintenance. Chaque fonctionnalité ajoutée est une dette de maintenance future. Moins il y en a, plus le projet est tenable par une personne à temps partiel.
 
-**L4 — La structure juridique comme dépersonnalisation.** À terme, porter le projet via une association loi 1901 permet d'accueillir d'autres contributeurs, de partager la responsabilité, et de survivre au départ de n'importe quel individu.
+**L4 - La structure juridique comme dépersonnalisation.** À terme, porter le projet via une association loi 1901 permet d'accueillir d'autres contributeurs, de partager la responsabilité, et de survivre au départ de n'importe quel individu.
 
-**L5 — La documentation comme transmission.** Un projet documenté (code, architecture, exploitation) peut être repris. Un projet dans la tête d'une seule personne meurt avec son indisponibilité. La documentation est un acte de pérennité.
-
----
+**L5 - La documentation comme transmission.** Un projet documenté (code, architecture, exploitation) peut être repris. Un projet dans la tête d'une seule personne meurt avec son indisponibilité. La documentation est un acte de pérennité.
 
 ## 7. Ce que Solivio ne fera jamais
 
@@ -207,8 +193,6 @@ Pour cadrer le modèle, voici les options explicitement exclues :
 - **Vendre, louer ou exploiter commercialement les données** des associations ou des bénéficiaires. Jamais.
 - **Fermer le code** ou créer une dépendance qui empêcherait une association de partir avec ses données.
 - **Concurrencer HelloAsso sur la collecte de dons.** On s'y connecte, on ne le remplace pas (cohérent avec l'analyse de la concurrence).
-
----
 
 ## 8. Synthèse des décisions
 
@@ -225,16 +209,12 @@ Pour cadrer le modèle, voici les options explicitement exclues :
 | Risque principal | Humain (épuisement, dépendance à une personne), pas financier |
 | Réponse au risque | Open source, auto-hébergement, sobriété, structure dédiée, documentation |
 
----
-
 ## 9. Ce que ce document implique pour la suite
 
 - L'**architecture technique** (`architecture_technique.md`) doit rendre l'auto-hébergement réellement simple (installation documentée, dépendances limitées), car l'auto-hébergement est un pilier de pérennité, pas une option secondaire.
 - La **roadmap** (`roadmap.md`) doit inclure la documentation d'installation et d'exploitation comme un livrable à part entière, pas comme une tâche annexe.
-- Les **spécifications fonctionnelles** doivent intégrer la possibilité, pour une association, d'exporter et de supprimer l'intégralité de ses données — c'est la traduction concrète de la promesse de non-enfermement.
+- Les **spécifications fonctionnelles** doivent intégrer la possibilité, pour une association, d'exporter et de supprimer l'intégralité de ses données - c'est la traduction concrète de la promesse de non-enfermement.
 - La mention de l'AGPL et de la gratuité doit figurer dans toute communication vers les associations : c'est un argument de confiance, pas une clause cachée.
-
----
 
 ## 10. Synthèse en une page
 
@@ -249,7 +229,5 @@ Pour cadrer le modèle, voici les options explicitement exclues :
 **Le financement.** Inutile au début (autofinancement). Contributions volontaires à l'usage. Subventions, fondations et service géré payant pour grandes structures à l'échelle. Une association loi 1901 le jour où c'est nécessaire.
 
 **Le vrai enjeu.** Survivre au risque humain. La réponse tient en cinq mots : ouverture, auto-hébergement, sobriété, structure, documentation.
-
----
 
 *Fin du modèle économique. Document suivant : `etude_faisabilite.md`.*

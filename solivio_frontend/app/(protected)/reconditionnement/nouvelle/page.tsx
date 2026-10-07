@@ -22,7 +22,7 @@ export default function NouvelleSessionPage() {
           <FormulaireSession />
         </div>
 
-        {/* Panneau info — masqué sur mobile */}
+        {/* Panneau info - masqué sur mobile */}
         <div className="hidden lg:block">
           <FormInfoPanel
             imageSrc="/images/forms/reco-session.jpg"

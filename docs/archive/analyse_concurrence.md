@@ -1,22 +1,20 @@
-# Analyse de la concurrence — Solivio
+# Analyse de la concurrence - Solivio
 
 > Où se situe Solivio dans le paysage des outils de gestion associative, et quel espace réel reste-t-il à occuper.
 
-**Document fondateur — version 1.0**
+**Document fondateur - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
----
+> **Document archivé en octobre 2026.** Cette analyse a été écrite pour un déploiement national auprès de plusieurs associations. Solivio sert désormais uniquement Linkee Toulouse (`../architecture_technique.md`, ADR-001) : ce document ne fait plus foi et n'est conservé que comme historique.
 
 ## Avertissement de lecture
 
 Ce document recense les outils réellement existants sur le marché francophone à la date de rédaction. Trois précautions s'imposent :
 
 1. **Les tarifs et fonctionnalités évoluent vite.** Tous les prix cités sont datés et donnés à titre indicatif. Ils doivent être revérifiés avant toute communication officielle. Lorsqu'un tarif n'a pas pu être confirmé avec certitude, il est signalé comme tel plutôt qu'inventé.
-2. **L'analyse est honnête, pas complaisante.** L'objectif n'est pas de démontrer que Solivio n'a pas de concurrent — ce serait faux et dangereux. Il est d'identifier précisément les recouvrements et l'espace réellement libre.
+2. **L'analyse est honnête, pas complaisante.** L'objectif n'est pas de démontrer que Solivio n'a pas de concurrent - ce serait faux et dangereux. Il est d'identifier précisément les recouvrements et l'espace réellement libre.
 3. **Le périmètre de comparaison est celui défini dans la note d'intention.** On compare les outils sur le terrain de la gestion opérationnelle des associations de solidarité, pas sur celui de la collecte de fonds ou de la comptabilité, où Solivio ne se positionne volontairement pas.
-
----
 
 ## 1. Objet et méthode
 
@@ -27,8 +25,6 @@ L'analyse répond à trois questions :
 - Reste-t-il un espace réel et défendable pour Solivio ?
 
 La méthode consiste à classer les outils par famille, à analyser les acteurs les plus représentatifs de chaque famille, puis à confronter l'ensemble au besoin spécifique défini dans la note d'intention : le cycle opérationnel d'une distribution de solidarité (bénéficiaires, bénévoles, créneaux, stocks, présence, statistiques), pour des structures sans moyens techniques, avec une exigence de confidentialité.
-
----
 
 ## 2. Cartographie du marché
 
@@ -42,13 +38,11 @@ Le marché des outils utilisables par une association de solidarité se réparti
 | Solutions open source de gestion associative | Adhérents, cotisations, parfois ERP complet | Dolibarr, Garradin/Paheko, Galette |
 | Outils génériques détournés | Tableurs, formulaires, messageries | Tableurs partagés, formulaires en ligne, messageries instantanées |
 
-Le point essentiel : ces familles sont organisées autour de **l'adhérent qui paie** (familles 1, 2, 4) ou autour du **bénévole qui donne du temps** (famille 3). Aucune n'est organisée autour du **bénéficiaire qui reçoit une aide gratuite** — qui est pourtant la personne centrale d'une association de solidarité.
-
----
+Le point essentiel : ces familles sont organisées autour de **l'adhérent qui paie** (familles 1, 2, 4) ou autour du **bénévole qui donne du temps** (famille 3). Aucune n'est organisée autour du **bénéficiaire qui reçoit une aide gratuite** - qui est pourtant la personne centrale d'une association de solidarité.
 
 ## 3. Analyse détaillée par acteur
 
-### 3.1 HelloAsso — le standard de la collecte
+### 3.1 HelloAsso - le standard de la collecte
 
 **Ce que c'est.** La plateforme de référence pour la collecte de fonds associative en France. Entièrement gratuite pour les associations : elle ne prélève aucune commission sur les transactions et se finance par les contributions volontaires laissées par les donateurs. À la date de rédaction, elle revendique plus de 350 000 associations utilisatrices et plusieurs milliards d'euros collectés.
 
@@ -58,7 +52,7 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Conclusion.** HelloAsso n'est pas un concurrent de Solivio : c'est un **partenaire à intégrer**. Une association continuera d'encaisser ses dons sur HelloAsso ; Solivio peut récupérer l'information de ces dons sans chercher à les remplacer.
 
-### 3.2 AssoConnect — la suite tout-en-un structurée
+### 3.2 AssoConnect - la suite tout-en-un structurée
 
 **Ce que c'est.** Un logiciel cloud tout-en-un, considéré comme le plus complet du marché pour les associations structurées ou en croissance : CRM adhérents, comptabilité, gestion d'événements, communication, paiements.
 
@@ -68,7 +62,7 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Où il s'arrête.** Deux limites majeures pour notre cible. D'abord le **coût** : pour une petite association étudiante sans budget, l'abonnement est un frein réel. Ensuite le **modèle conceptuel** : AssoConnect est construit autour de l'adhérent et de la cotisation, pas autour du bénéficiaire d'une aide gratuite et du cycle de distribution. On peut tenter d'y faire entrer une logique de distribution de solidarité, mais au prix de détournements inconfortables.
 
-### 3.3 Yapla — le CRM associatif orienté événements
+### 3.3 Yapla - le CRM associatif orienté événements
 
 **Ce que c'est.** Une solution tout-en-un d'origine canadienne (créée en 2013, présente en France depuis 2018, associée au Crédit Agricole), positionnée sur le CRM associatif, les cotisations, les dons, les événements et la pré-comptabilité.
 
@@ -78,7 +72,7 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Où il s'arrête.** Comme AssoConnect, modèle centré sur l'adhérent et la transaction. La tarification à l'administrateur est un mauvais signal pour une association de solidarité où de nombreux coordinateurs bénévoles ont besoin d'un accès.
 
-### 3.4 eBrigade — le concurrent le plus proche du cœur
+### 3.4 eBrigade - le concurrent le plus proche du cœur
 
 **Ce que c'est.** Un logiciel cloud spécialisé dans la gestion des bénévoles, conçu pour les associations, organisations de secours, collectivités et clubs sportifs (existe depuis 2020). C'est, de tous les outils analysés, **celui qui se rapproche le plus du cœur métier de Solivio**, et il faut le dire clairement.
 
@@ -88,13 +82,13 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Conclusion.** eBrigade est le concurrent à prendre le plus au sérieux. La différenciation de Solivio par rapport à lui doit être nette et ne peut pas reposer sur le seul planning bénévole, qu'eBrigade fait déjà bien. Elle repose sur : la centralité du bénéficiaire, la confidentialité par conception, le contrôle d'accès contextuel, la gratuité pour les petites structures, et l'ouverture du code. Ce point est développé en section 6.
 
-### 3.5 Vorg — la gestion de bénévoles événementielle
+### 3.5 Vorg - la gestion de bénévoles événementielle
 
 **Ce que c'est.** Un outil d'aide à la gestion des bénévoles d'un événement : définition de postes, créneaux horaires, dotations, suivi pas à pas.
 
 **Où il s'arrête.** Outil pensé pour l'événement ponctuel, pas pour l'activité récurrente et structurée d'une association de solidarité. Pas de gestion de bénéficiaires, de stocks, ni de pilotage dans la durée. Recoupement faible avec Solivio.
 
-### 3.6 Les solutions open source — Dolibarr, Garradin/Paheko, Galette
+### 3.6 Les solutions open source - Dolibarr, Garradin/Paheko, Galette
 
 **Dolibarr.** ERP/CRM open source, gratuit en auto-hébergement, modulaire, plus de vingt ans d'existence et très largement utilisé. Modules adhérents, cotisations, dons, événements, projets, comptabilité. C'est l'option libre la plus complète.
 *Où il s'arrête pour notre cible :* c'est un ERP d'entreprise adapté aux associations, lourd, à la logique métier généraliste (adhérent, facturation, projet). Faire entrer le cycle de distribution de solidarité et la gestion fine des bénéficiaires y demande de la configuration experte. La prise en main n'est pas à la portée immédiate d'un bureau étudiant non technique, et le modèle conceptuel reste celui de l'adhérent, pas du bénéficiaire.
@@ -103,7 +97,7 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Galette.** Open source, limité volontairement à la gestion des adhésions et des cotisations. Hors périmètre pour notre besoin.
 
-**Enseignement transversal.** L'open source associatif existe et est mûr — c'est à la fois une inspiration (le modèle est viable) et un repère (Solivio devra justifier son existence à côté de Dolibarr). Mais aucune de ces solutions n'est construite autour du bénéficiaire et du cycle de distribution. C'est précisément là que Solivio se distingue, y compris dans le monde libre.
+**Enseignement transversal.** L'open source associatif existe et est mûr - c'est à la fois une inspiration (le modèle est viable) et un repère (Solivio devra justifier son existence à côté de Dolibarr). Mais aucune de ces solutions n'est construite autour du bénéficiaire et du cycle de distribution. C'est précisément là que Solivio se distingue, y compris dans le monde libre.
 
 ### 3.7 Les outils génériques détournés
 
@@ -113,9 +107,7 @@ Le point essentiel : ces familles sont organisées autour de **l'adhérent qui p
 
 **Pourquoi ils échouent à terme.** Pas de montée en charge, pas de structure, information dispersée, aucun historique fiable, aucune confidentialité, rien ne survit au changement de bureau. Ce sont les points de rupture déjà décrits dans la note d'intention.
 
-**Conclusion capitale.** Le vrai concurrent de Solivio, au quotidien, n'est pas un autre logiciel : c'est le tableur. La question n'est pas seulement « Solivio est-il meilleur qu'AssoConnect ? » mais « Solivio est-il assez simple et assez utile pour qu'une association abandonne son tableur ? ». Tout le défi d'adoption est là.
-
----
+**Conclusion capitale.** Le vrai concurrent de Solivio, au quotidien, n'est pas un autre logiciel : c'est le tableur. La question n'est pas seulement "Solivio est-il meilleur qu'AssoConnect ?" mais "Solivio est-il assez simple et assez utile pour qu'une association abandonne son tableur ?". Tout le défi d'adoption est là.
 
 ## 4. Tableau comparatif de synthèse
 
@@ -138,8 +130,6 @@ Comparaison sur le terrain qui intéresse Solivio. Les cases reflètent l'orient
 
 Lecture : aucun outil de la ligne n'additionne les caractéristiques de la colonne Solivio. Les outils financiers et tout-en-un ignorent le bénéficiaire et le cycle de distribution ; eBrigade s'en approche mais reste centré bénévole et propriétaire ; l'open source existant reste centré adhérent ; le tableur ne tient pas dans la durée.
 
----
-
 ## 5. Le constat : où est l'espace réel
 
 L'analyse fait apparaître un espace précis, défini par l'intersection de plusieurs manques :
@@ -155,8 +145,6 @@ Chacun de ces critères pris isolément est couvert par un outil. C'est leur **c
 - Le tableur est gratuit et simple, mais s'effondre.
 
 Cet espace est étroit mais réel. Il est étroit parce que les voisins sont nombreux et solides ; il est réel parce qu'aucun voisin ne s'y trouve. C'est un positionnement de niche, ce qui est une force pour un projet porté par une personne : on ne gagne pas en étant un AssoConnect de plus, on gagne en étant le seul sur un segment précis.
-
----
 
 ## 6. Positionnement de Solivio
 
@@ -176,38 +164,30 @@ Solivio est l'outil opérationnel des associations de solidarité, construit aut
 **Ce que Solivio ne prétend pas être.**
 Solivio ne sera jamais meilleur qu'HelloAsso pour collecter des dons, ni qu'AssoConnect pour la comptabilité, ni qu'eBrigade pour le pur planning bénévole de grande échelle. Il ne cherche pas à l'être. Il s'y connecte ou les laisse à leur place, et concentre sa valeur sur l'espace vide identifié.
 
----
-
 ## 7. Menaces concurrentielles, sans complaisance
 
 Une analyse honnête nomme ce qui peut faire échouer le positionnement.
 
-**Menace 1 — La gratuité et l'ubiquité d'HelloAsso.** HelloAsso est tellement répandu et gratuit qu'une association peut estimer qu'il « suffit », même s'il ne gère pas l'opérationnel. Le risque est moins la concurrence frontale que l'inertie : « on a déjà HelloAsso, pourquoi un outil de plus ? ». Réponse : se positionner en complément explicite, jamais en remplacement.
+**Menace 1 - La gratuité et l'ubiquité d'HelloAsso.** HelloAsso est tellement répandu et gratuit qu'une association peut estimer qu'il "suffit", même s'il ne gère pas l'opérationnel. Le risque est moins la concurrence frontale que l'inertie : "on a déjà HelloAsso, pourquoi un outil de plus ?". Réponse : se positionner en complément explicite, jamais en remplacement.
 
-**Menace 2 — eBrigade peut se rapprocher.** eBrigade est configurable, cible déjà l'aide alimentaire, et pourrait renforcer sa dimension bénéficiaire. C'est le concurrent dont il faut suivre l'évolution. La défense de Solivio est son modèle métier centré bénéficiaire, son ouverture et sa gratuité — des choix qu'eBrigade, éditeur propriétaire en abonnement, ne peut pas copier sans se renier.
+**Menace 2 - eBrigade peut se rapprocher.** eBrigade est configurable, cible déjà l'aide alimentaire, et pourrait renforcer sa dimension bénéficiaire. C'est le concurrent dont il faut suivre l'évolution. La défense de Solivio est son modèle métier centré bénéficiaire, son ouverture et sa gratuité - des choix qu'eBrigade, éditeur propriétaire en abonnement, ne peut pas copier sans se renier.
 
-**Menace 3 — Le tableur, concurrent invisible mais redoutable.** Gratuit, déjà en place, sans courbe d'apprentissage. Si Solivio est plus compliqué que le tableur pour le bénéfice rendu, il perd. L'enjeu d'adoption prime sur l'enjeu de fonctionnalités.
+**Menace 3 - Le tableur, concurrent invisible mais redoutable.** Gratuit, déjà en place, sans courbe d'apprentissage. Si Solivio est plus compliqué que le tableur pour le bénéfice rendu, il perd. L'enjeu d'adoption prime sur l'enjeu de fonctionnalités.
 
-**Menace 4 — Les grandes structures internalisent.** Les très grandes associations développent leurs propres outils. Ce n'est pas une menace directe (elles ne sont pas la cible), mais cela signifie que Solivio ne doit pas viser ce segment, déjà couvert.
+**Menace 4 - Les grandes structures internalisent.** Les très grandes associations développent leurs propres outils. Ce n'est pas une menace directe (elles ne sont pas la cible), mais cela signifie que Solivio ne doit pas viser ce segment, déjà couvert.
 
-**Menace 5 — La soutenabilité d'un projet porté par une personne.** Face à des éditeurs disposant d'équipes, le risque n'est pas la qualité mais la continuité. L'open source est la principale réponse : il transforme une faiblesse (un seul porteur) en garantie (le code survit au porteur).
-
----
+**Menace 5 - La soutenabilité d'un projet porté par une personne.** Face à des éditeurs disposant d'équipes, le risque n'est pas la qualité mais la continuité. L'open source est la principale réponse : il transforme une faiblesse (un seul porteur) en garantie (le code survit au porteur).
 
 ## 8. Ce que cette analyse implique pour la suite
 
-- Le **modèle économique** (`modele_economique.md`) doit assumer la coexistence avec HelloAsso (intégration, pas concurrence) et un positionnement gratuit pour les petites structures, sous peine de se heurter frontalement à des acteurs gratuits installés.
-- Les **spécifications fonctionnelles** (`specifications_fonctionnelles.md`) doivent faire de la gestion du bénéficiaire et du cycle de distribution le cœur visible et soigné du produit — c'est là qu'est la différence, pas dans le planning bénévole où eBrigade est déjà bon.
+- Le **modèle économique** (`modele_economique.md`, archivé lui aussi) doit assumer la coexistence avec HelloAsso (intégration, pas concurrence) et un positionnement gratuit pour les petites structures, sous peine de se heurter frontalement à des acteurs gratuits installés.
+- Les **spécifications fonctionnelles** (`specifications_fonctionnelles.md`) doivent faire de la gestion du bénéficiaire et du cycle de distribution le cœur visible et soigné du produit - c'est là qu'est la différence, pas dans le planning bénévole où eBrigade est déjà bon.
 - L'**expérience utilisateur** (`parcours_utilisateurs.md`) doit viser une simplicité supérieure au tableur pour le bénéfice rendu, car le tableur est le vrai concurrent quotidien.
 - La **confidentialité** doit être un argument explicite et visible, pas seulement une qualité technique cachée.
-
----
 
 ## 9. Sources
 
 Les informations de ce document proviennent d'une recherche menée en juin 2026 sur des sources publiques : sites officiels des éditeurs (HelloAsso, AssoConnect, Yapla, eBrigade, Dolibarr), comparatifs spécialisés (independant.io, tool-advisor.fr, clictreso.fr, GetApp, Capterra), et le portail associations.gouv.fr. Les tarifs et fonctionnalités sont datés de cette période et doivent être revérifiés avant toute publication. Lorsqu'une donnée n'a pas pu être confirmée, elle est explicitement signalée comme à confirmer plutôt que présentée comme certaine.
-
----
 
 ## 10. Synthèse en une page
 
@@ -215,14 +195,12 @@ Les informations de ce document proviennent d'une recherche menée en juin 2026 
 
 **Le point commun de tous.** Ils sont construits autour de l'adhérent qui paie ou du bénévole qui donne du temps. Aucun n'est construit autour du bénéficiaire qui reçoit une aide gratuite.
 
-**Le concurrent le plus proche.** eBrigade, spécialiste du planning bénévole qui cible déjà l'aide alimentaire — mais centré ressource humaine, propriétaire et payant.
+**Le concurrent le plus proche.** eBrigade, spécialiste du planning bénévole qui cible déjà l'aide alimentaire - mais centré ressource humaine, propriétaire et payant.
 
 **Le vrai concurrent quotidien.** Le tableur : gratuit, déjà là, mais qui s'effondre à la montée en charge et au changement d'équipe.
 
 **L'espace réel.** Un outil centré bénéficiaire et cycle de distribution, gratuit et simple pour les petites structures, confidentiel par conception, à accès contextuel, et ouvert. Étroit mais vide.
 
 **La condition de victoire.** Être assez simple et assez utile pour qu'une association abandonne son tableur, tout en se connectant à HelloAsso plutôt qu'en cherchant à le remplacer.
-
----
 
 *Fin de l'analyse de la concurrence. Document suivant : `modele_economique.md`.*
