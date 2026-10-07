@@ -7,4 +7,9 @@
 * `c.s.a.s.distribution.DistributionQueryPort` (in shared)
 |Events listened to
 |* `c.s.a.d.events.DistributionTerminee` (async) 
+* `c.s.a.i.events.InscriptionConfirmee` 
+* `c.s.a.d.events.DistributionTerminee` 
+* `c.s.a.d.events.DistributionAnnulee` 
+* `c.s.a.i.events.DesistementTardifBenevole` 
+* `c.s.a.i.events.InscriptionPromue` 
 |===
