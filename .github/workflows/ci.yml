@@ -45,6 +45,21 @@ jobs:
           path: solivio-api/target/site/jacoco
           retention-days: 7
 
+  backend-dependances:
+    name: Backend (vulnerabilites des dependances)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Equivalent Maven de npm audit : OSV-Scanner resout les dependances
+      # transitives du pom et echoue des qu'une vulnerabilite connue est trouvee.
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
+        with:
+          scan-args: |-
+            --recursive
+            ./solivio-api
+
   frontend:
     name: Frontend (audit, lint, types, tests, build)
     runs-on: ubuntu-latest
