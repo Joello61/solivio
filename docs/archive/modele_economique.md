@@ -6,6 +6,8 @@
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
+> **Document archivé en octobre 2026.** Cette analyse a été écrite pour un déploiement national auprès de plusieurs associations. Solivio sert désormais uniquement Linkee Toulouse (`../architecture_technique.md`, ADR-001) : ce document ne fait plus foi et n'est conservé que comme historique.
+
 ---
 
 ## Avertissement de lecture

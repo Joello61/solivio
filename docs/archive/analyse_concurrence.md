@@ -6,6 +6,8 @@
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
+> **Document archivé en octobre 2026.** Cette analyse a été écrite pour un déploiement national auprès de plusieurs associations. Solivio sert désormais uniquement Linkee Toulouse (`../architecture_technique.md`, ADR-001) : ce document ne fait plus foi et n'est conservé que comme historique.
+
 ---
 
 ## Avertissement de lecture
@@ -196,7 +198,7 @@ Une analyse honnête nomme ce qui peut faire échouer le positionnement.
 
 ## 8. Ce que cette analyse implique pour la suite
 
-- Le **modèle économique** (`modele_economique.md`) doit assumer la coexistence avec HelloAsso (intégration, pas concurrence) et un positionnement gratuit pour les petites structures, sous peine de se heurter frontalement à des acteurs gratuits installés.
+- Le **modèle économique** (`modele_economique.md`, archivé lui aussi) doit assumer la coexistence avec HelloAsso (intégration, pas concurrence) et un positionnement gratuit pour les petites structures, sous peine de se heurter frontalement à des acteurs gratuits installés.
 - Les **spécifications fonctionnelles** (`specifications_fonctionnelles.md`) doivent faire de la gestion du bénéficiaire et du cycle de distribution le cœur visible et soigné du produit — c'est là qu'est la différence, pas dans le planning bénévole où eBrigade est déjà bon.
 - L'**expérience utilisateur** (`parcours_utilisateurs.md`) doit viser une simplicité supérieure au tableur pour le bénéfice rendu, car le tableur est le vrai concurrent quotidien.
 - La **confidentialité** doit être un argument explicite et visible, pas seulement une qualité technique cachée.
