@@ -36,12 +36,13 @@ spring:
             client-secret: test-google-client-secret
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health
+  # Port de gestion aleatoire : pas de conflit avec une application lancee en local.
+  server:
+    port: 0
 
 solivio:
+  observabilite:
+    metrics-scrape-token: test-metrics-scrape-token
   securite:
     limite-debit-auth:
       # Les tests partagent un contexte et une IP : la limite est testee unitairement.

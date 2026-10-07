@@ -5,9 +5,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -81,7 +83,34 @@ public class SecurityConfig {
         return registration;
     }
 
+    // Points d'actuator, servis sur le port de gestion non route par Traefik :
+    // sante et info publiques (sondes Docker), metriques reservees a Prometheus.
     @Bean
+    @Order(1)
+    public SecurityFilterChain actuatorFilterChain(
+            HttpSecurity http,
+            @Value("${solivio.observabilite.metrics-scrape-token:}") String jetonScrape) throws Exception {
+        return http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
+                .requestMatchers(EndpointRequest.to("prometheus")).hasRole(MetricsScrapeTokenFilter.ROLE)
+                .anyRequest().denyAll()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                    ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Acces refuse."))
+            )
+            .addFilterBefore(new MetricsScrapeTokenFilter(jetonScrape), UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http, LimiteDebitAuthFilter limiteDebitAuthFilter)
             throws Exception {
         return http
@@ -107,8 +136,6 @@ public class SecurityConfig {
                 ).permitAll()
                 // Google OAuth2 initiation et callback
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                // Infrastructure
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 // Swagger : public en dev/test, bloque en prod.
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .access((a, ctx) -> new org.springframework.security.authorization.AuthorizationDecision(
