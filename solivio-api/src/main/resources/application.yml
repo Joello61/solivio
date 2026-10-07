@@ -82,6 +82,12 @@ spring:
           enabled: false
       completion-mode: archive
       republish-outstanding-events-on-restart: true
+      # Une publication bloquee au-dela de ces durees passe en echec et sera
+      # relancee par MaintenancePublicationsJob.
+      staleness:
+        published: PT30M
+        processing: PT15M
+        resubmitted: PT15M
 
   # Executeur des ecouteurs @ApplicationModuleListener (emails, statistiques).
   task:
