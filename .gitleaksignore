@@ -1,0 +1,6 @@
+# Faux positifs confirmes : cles JWT de test et de developpement, sans valeur hors
+# de la machine locale ou des tests. La production lit SOLIVIO_AUTH_JWT_SECRET
+# depuis Infisical.
+95819632d2e54699ca69f4b16b6b347d1a4776e7:solivio-api/src/test/java/com/solivio/api/identity/infrastructure/security/ObservabiliteHttpIntegrationTest.java:generic-api-key:28
+db5943cef97345106fb3c03abc2bb352a3d532a8:solivio-api/src/test/java/com/solivio/api/support/SolivioIntegrationTest.java:generic-api-key:28
+e0ee98adad27fa30a25b94d819ffb97f21fb09cd:solivio-api/src/main/resources/application-dev.yml:generic-api-key:62

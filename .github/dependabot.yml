@@ -1,0 +1,31 @@
+# Mises a jour de dependances proposees chaque semaine, vers dev.
+# Le mobile est gele pendant la refonte du socle : pas de mise a jour automatique.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /solivio-api
+    target-branch: dev
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /solivio_frontend
+    target-branch: dev
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directories:
+      - /solivio-api
+      - /solivio_frontend
+    target-branch: dev
+    schedule:
+      interval: weekly
