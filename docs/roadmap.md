@@ -149,7 +149,7 @@ flowchart TD
 
 **Critère de sortie.** Le responsable peut configurer son association, piloter par les chiffres, et exercer son droit d'export et de suppression. La V1 est alors fonctionnellement complète.
 
-## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - EN COURS
+## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - EN FINALISATION
 
 **Objectif.** Partir d'une base simple et solide avant la mise en conditions réelles, maintenant que Solivio ne sert plus que Linkee Toulouse.
 
@@ -168,6 +168,13 @@ flowchart TD
 11. Audit final : couverture, typographie, secrets, dépendances.
 
 **Critère de sortie.** Plus aucune mention de tenant, Kafka, OpenBao ou Keycloak dans le code ; tests verts, couverture d'au moins 80 pour cent, test de modularité vert ; application déployée en préproduction sur le VPS et visible dans Grafana.
+
+**État au 7 octobre 2026.** Les onze étapes sont réalisées dans le code ; les étapes 1 à 5 sont fusionnées dans `dev`, les étapes 6 à 11 en revue. Restent, hors code, pour atteindre le critère de sortie :
+
+- migrer le dépôt de GitLab vers GitHub et configurer les environnements GitHub, Infisical et GHCR (`docker/deploy/README.md`) ;
+- révoquer la clé Google Maps et le secret client Google publiés dans l'historique, puis compléter `.gitleaksignore` ;
+- premier déploiement en préproduction, puis fusion de la demande d'intégration du dépôt `infrastructure` ;
+- ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue.
 
 ## 9. Phase 6 - Mise en conditions réelles
 
