@@ -5,7 +5,7 @@
   "license": "AGPL-3.0",
   "author": {
     "name": "Timothée Joël Tchinda Tchoffo",
-    "url": "https://gitlab.com/tchindajoel61"
+    "url": "https://github.com/Joello61"
   },
   "private": true,
   "scripts": {
@@ -64,8 +64,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/tchindajoel61/solivio.git",
-    "directory": "frontend"
+    "url": "https://github.com/Joello61/solivio.git",
+    "directory": "solivio_frontend"
   },
   "engines": {
     "node": ">=22.0.0"

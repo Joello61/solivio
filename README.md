@@ -34,7 +34,7 @@ La documentation complète du projet (note d'intention, spécifications fonction
 | Authentification | JWT intégré au backend, connexion Google |
 | Secrets | Variables d'environnement injectées par Infisical |
 | Exploitation | Docker, Traefik, Loki, Prometheus, Tempo, Grafana |
-| CI/CD | GitHub Actions et GHCR (le dépôt doit encore migrer de GitLab vers GitHub) |
+| CI/CD | GitHub Actions et GHCR |
 
 Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](docs/architecture_technique.md) (ADR-001 à ADR-008).
 
@@ -50,7 +50,7 @@ Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](d
 ### 1. Cloner le dépôt
 
 ```bash
-git clone https://gitlab.com/tchindajoel61/solivio.git
+git clone https://github.com/Joello61/solivio.git
 cd solivio
 ```
 
@@ -147,7 +147,7 @@ Les contributions sont les bienvenues.
 2. Créer une branche (`git checkout -b feature/ma-fonctionnalite`)
 3. Committer les changements (`git commit -m "feat: description claire"`)
 4. Pousser la branche (`git push origin feature/ma-fonctionnalite`)
-5. Ouvrir une Merge Request sur GitLab
+5. Ouvrir une pull request vers `dev`
 
 Les tests doivent passer et la couverture backend doit rester supérieure à 80 %. Les règles de développement sont dans [`CLAUDE.md`](CLAUDE.md).
 
@@ -162,5 +162,5 @@ Cela signifie que toute version modifiée proposée comme service en ligne doit 
 **Timothée Joël Tchinda Tchoffo**
 Développeur fullstack, étudiant en Master MIASHS à l'Université Toulouse Jean Jaurès.
 
-Profil : [gitlab.com/tchindajoel61](https://gitlab.com/tchindajoel61)
+Profil : [github.com/Joello61](https://github.com/Joello61)
 Portfolio : [joeltech.dev](https://joeltech.dev)

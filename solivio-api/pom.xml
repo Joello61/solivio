@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Solivio API</name>
 	<description>Plateforme de gestion operationnelle pour les associations de solidarite etudiante</description>
-	<url>https://gitlab.com/tchindajoel61/solivio</url>
+	<url>https://github.com/Joello61/solivio</url>
 
 	<licenses>
 		<license>
@@ -27,14 +27,14 @@
 		<developer>
 			<id>joello61</id>
 			<name>Timothée Joël Tchinda Tchoffo</name>
-			<url>https://gitlab.com/tchindajoel61</url>
+			<url>https://github.com/Joello61</url>
 		</developer>
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://gitlab.com/tchindajoel61/solivio.git</connection>
-		<developerConnection>scm:git:ssh://git@gitlab.com/tchindajoel61/solivio.git</developerConnection>
-		<url>https://gitlab.com/tchindajoel61/solivio</url>
+		<connection>scm:git:https://github.com/Joello61/solivio.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/Joello61/solivio.git</developerConnection>
+		<url>https://github.com/Joello61/solivio</url>
 		<tag>HEAD</tag>
 	</scm>
 	<properties>
