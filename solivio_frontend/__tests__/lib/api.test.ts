@@ -39,13 +39,22 @@ describe("apiFetch", () => {
     expect(result).toBeUndefined();
   });
 
-  it("leve une erreur avec le detail du backend pour une reponse 400", async () => {
+  it("leve une erreur avec le message, le code et le request_id du backend", async () => {
     global.fetch = mockFetch([
-      { ok: false, status: 400, body: { title: "Validation", detail: "Champ requis" } },
+      {
+        ok: false,
+        status: 400,
+        body: {
+          error: { code: "VALIDATION_FAILED", message: "Champ requis", request_id: "req-1234" },
+        },
+      },
     ]);
     await expect(apiFetch("/api/test")).rejects.toMatchObject({
       status: 400,
+      message: "Champ requis",
       detail: "Champ requis",
+      code: "VALIDATION_FAILED",
+      requestId: "req-1234",
     });
   });
 
@@ -63,7 +72,7 @@ describe("apiFetch", () => {
     // 2e appel : refresh -> 200
     // 3e appel : retry requete originale -> 200
     global.fetch = mockFetch([
-      { ok: false, status: 401, body: { title: "Non authentifie", status: 401 } },
+      { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Authentification requise." } } },
       { ok: true, status: 200, body: {} },       // refresh
       { ok: true, status: 200, body: { id: 2 } }, // retry
     ]);
@@ -79,8 +88,8 @@ describe("apiFetch", () => {
 
   it("sur 401 + refresh echoue : leve une erreur de session expiree", async () => {
     global.fetch = mockFetch([
-      { ok: false, status: 401, body: { title: "Non authentifie" } },
-      { ok: false, status: 401, body: { title: "Refresh invalide" } }, // refresh echoue
+      { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Authentification requise." } } },
+      { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Session expiree." } } }, // refresh echoue
     ]);
 
     // window.location.href = '/login' ne peut pas etre teste en jsdom sans mock.
@@ -95,7 +104,7 @@ describe("apiFetch", () => {
 
   it("ne tente pas un refresh si le path est /api/auth/refresh", async () => {
     global.fetch = mockFetch([
-      { ok: false, status: 401, body: { title: "Non authentifie" } },
+      { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Authentification requise." } } },
     ]);
     // Le refresh endpoint lui-meme retourne 401 -> doit lancer l'erreur sans boucle infinie.
     await expect(apiFetch("/api/auth/refresh")).rejects.toMatchObject({ status: 401 });
@@ -105,7 +114,7 @@ describe("apiFetch", () => {
 
   it("ne tente pas un refresh si noCredentials est true", async () => {
     global.fetch = mockFetch([
-      { ok: false, status: 401, body: { title: "Non authentifie" } },
+      { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Authentification requise." } } },
     ]);
     await expect(apiFetch("/api/test", { noCredentials: true })).rejects.toMatchObject({
       status: 401,
