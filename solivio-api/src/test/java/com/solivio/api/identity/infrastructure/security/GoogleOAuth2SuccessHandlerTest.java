@@ -176,6 +176,32 @@ class GoogleOAuth2SuccessHandlerTest {
             .contains("Max-Age=0");
     }
 
+    // Non-regression : le chemin /api/auth/refresh privait le proxy Next.js du
+    // cookie, et la session Google ne se rafraichissait pas cote serveur.
+    @Test
+    void connexionWeb_poseLeCookieDeRafraichissementSurLaRacine() throws Exception {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(membreRepo.findByCompteId(any()))
+            .thenReturn(Optional.of(new com.solivio.api.identity.domain.MembreAssociation(compte, "beneficiaire")));
+        when(jwtService.genererAccessToken(any(), any(), any(), any(), any(), any(),
+            org.mockito.ArgumentMatchers.anyBoolean())).thenReturn("access-token");
+        when(jwtService.genererRefreshTokenBrut()).thenReturn("refresh-brut");
+        when(jwtService.getRefreshTokenSeconds()).thenReturn(2592000L);
+
+        handler.onAuthenticationSuccess(request, response, buildAuth("alice@example.com"));
+
+        ArgumentCaptor<String> cookieCaptor = ArgumentCaptor.forClass(String.class);
+        verify(response).addHeader(eq("Set-Cookie"), cookieCaptor.capture());
+        assertThat(cookieCaptor.getValue())
+            .startsWith("refresh_token=refresh-brut")
+            .contains("Path=/;")
+            .contains("HttpOnly")
+            .contains("SameSite=Strict")
+            .doesNotContain("/api/auth/refresh");
+    }
+
     private Authentication buildAuth(String email) {
         OAuth2User oAuth2User = mock(OAuth2User.class);
         when(oAuth2User.getAttribute("email")).thenReturn(email);

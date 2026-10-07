@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -179,12 +180,15 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             true
         );
         refreshTokenRepo.save(rt);
-        response.addHeader("Set-Cookie",
-            "refresh_token=" + tokenBrut
-                + "; Max-Age=" + jwtService.getRefreshTokenSeconds()
-                + "; Path=/api/auth/refresh"
-                + "; HttpOnly"
-                + (request.isSecure() ? "; Secure" : "")
-                + "; SameSite=Strict");
+        // Memes attributs que la connexion par mot de passe (AuthService) : le
+        // chemin "/" permet au proxy Next.js de rafraichir la session cote serveur.
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", tokenBrut)
+            .maxAge(jwtService.getRefreshTokenSeconds())
+            .path("/")
+            .httpOnly(true)
+            .secure(request.isSecure())
+            .sameSite("Strict")
+            .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 }
