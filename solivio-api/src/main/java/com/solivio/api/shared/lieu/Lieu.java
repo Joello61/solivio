@@ -1,4 +1,4 @@
-package com.solivio.api.distribution.domain;
+package com.solivio.api.shared.lieu;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

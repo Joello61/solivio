@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import org.jspecify.annotations.NullMarked;

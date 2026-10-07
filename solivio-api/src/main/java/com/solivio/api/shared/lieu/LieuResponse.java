@@ -1,4 +1,4 @@
-package com.solivio.api.distribution.infrastructure.web.dto;
+package com.solivio.api.shared.lieu;
 
 public record LieuResponse(
     String placeId,

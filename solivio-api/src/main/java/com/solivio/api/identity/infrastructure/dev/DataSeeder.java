@@ -1,4 +1,4 @@
-package com.solivio.api.dev;
+package com.solivio.api.identity.infrastructure.dev;
 
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;

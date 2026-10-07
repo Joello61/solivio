@@ -1,5 +1,6 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.identity.SolivioUserDetails;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

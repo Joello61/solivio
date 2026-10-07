@@ -1,7 +1,7 @@
 package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.PasswordService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.ChangePasswordRequest;
 import com.solivio.api.identity.infrastructure.web.dto.ForgotPasswordRequest;
 import com.solivio.api.identity.infrastructure.web.dto.ResetPasswordRequest;

@@ -7,7 +7,7 @@ import com.solivio.api.collecte.infrastructure.web.dto.AnnulerMissionRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.CreateMissionCollecteRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.MissionCollecteResponse;
 import com.solivio.api.collecte.infrastructure.web.dto.UpdateMissionCollecteRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

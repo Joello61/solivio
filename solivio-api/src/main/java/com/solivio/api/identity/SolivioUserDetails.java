@@ -1,4 +1,4 @@
-package com.solivio.api.identity.infrastructure.security;
+package com.solivio.api.identity;
 
 import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
@@ -9,7 +9,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 /**
- * Representation Spring Security de l'utilisateur authentifie.
+ * Representation Spring Security de l'utilisateur authentifie. API publique du
+ * module identity : les controleurs des autres modules l'injectent.
  * Porte l'identite (compteId, email) et les roles issus du JWT.
  */
 public class SolivioUserDetails implements UserDetails {

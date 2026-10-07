@@ -1,8 +1,10 @@
 package com.solivio.api.distribution.application;
 
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
-import com.solivio.api.distribution.domain.Lieu;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
 import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
@@ -12,8 +14,6 @@ import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreneauResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuRequest;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;

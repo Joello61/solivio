@@ -7,8 +7,11 @@ import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PersonneQueryAdapter implements PersonneQueryPort {
@@ -58,5 +61,11 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
             .limit(10)
             .map(p -> new PersonneContactInfo(p.getId(), p.getEmail(), p.getPrenom(), p.getNom()))
             .toList();
+    }
+
+    @Override
+    public Map<UUID, String> trouverEmailsParIds(Collection<UUID> personneIds) {
+        return personneRepository.findAllById(personneIds).stream()
+            .collect(Collectors.toMap(Personne::getId, Personne::getEmail));
     }
 }

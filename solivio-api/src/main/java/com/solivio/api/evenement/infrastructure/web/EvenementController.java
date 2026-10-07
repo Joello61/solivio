@@ -8,7 +8,7 @@ import com.solivio.api.evenement.infrastructure.web.dto.CreateEvenementRequest;
 import com.solivio.api.evenement.infrastructure.web.dto.EvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.UpdateEvenementRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

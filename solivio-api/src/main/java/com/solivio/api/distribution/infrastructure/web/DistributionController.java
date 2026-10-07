@@ -5,7 +5,7 @@ import com.solivio.api.distribution.application.DistributionService;
 import com.solivio.api.distribution.infrastructure.web.dto.AnnulerDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

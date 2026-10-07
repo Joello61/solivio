@@ -1,7 +1,7 @@
 package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.AuthService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.GoogleCompleteRegistrationRequest;
 import com.solivio.api.identity.infrastructure.web.dto.LoginRequest;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;

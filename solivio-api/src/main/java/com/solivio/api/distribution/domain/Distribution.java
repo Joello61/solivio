@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.domain;
 
+import com.solivio.api.shared.lieu.Lieu;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;

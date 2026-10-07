@@ -1,7 +1,7 @@
 package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscrireRequest;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;

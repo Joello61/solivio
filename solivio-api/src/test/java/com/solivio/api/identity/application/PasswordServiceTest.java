@@ -3,7 +3,7 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,7 +1,7 @@
 package com.solivio.api.reconditionnement.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.reconditionnement.application.SessionReconditionnementService;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.CreateSessionReconditionnementRequest;

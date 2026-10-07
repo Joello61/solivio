@@ -2,7 +2,7 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.InvitationService;
 import com.solivio.api.identity.domain.Invitation;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.InviterMembreRequest;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import jakarta.validation.Valid;

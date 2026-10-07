@@ -4,7 +4,7 @@ import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.application.ParticipationEvenementService;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.PointageEvenementRequest;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

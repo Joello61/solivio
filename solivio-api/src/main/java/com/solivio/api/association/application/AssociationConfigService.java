@@ -3,33 +3,21 @@ package com.solivio.api.association.application;
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
-import com.solivio.api.association.infrastructure.web.dto.MembreResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
-import com.solivio.api.association.infrastructure.web.dto.UpdateRoleMembreRequest;
-import com.solivio.api.identity.domain.MembreAssociation;
-import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
-import com.solivio.api.shared.exception.NotFoundException;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
 public class AssociationConfigService {
 
     private final AssociationRepository associationRepository;
-    private final MembreAssociationRepository membreRepository;
 
-    public AssociationConfigService(
-        AssociationRepository associationRepository,
-        MembreAssociationRepository membreRepository
-    ) {
+    public AssociationConfigService(AssociationRepository associationRepository) {
         this.associationRepository = associationRepository;
-        this.membreRepository = membreRepository;
     }
 
     @Transactional(readOnly = true)
@@ -68,40 +56,6 @@ public class AssociationConfigService {
         return toResponse(associationRepository.save(asso));
     }
 
-    @Transactional(readOnly = true)
-    public List<MembreResponse> listerMembres() {
-        return membreRepository.findAllAvecCompte()
-            .stream()
-            .map(this::toMembreResponse)
-            .toList();
-    }
-
-    public MembreResponse changerStatutMembre(UUID compteId, String statut) {
-        MembreAssociation membre = membreRepository
-            .findByCompteId(compteId)
-            .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
-        membre.setStatut(statut);
-        return toMembreResponse(membreRepository.save(membre));
-    }
-
-    public MembreResponse mettreAJourRole(UUID compteId, UpdateRoleMembreRequest request) {
-        MembreAssociation membre = membreRepository
-            .findByCompteId(compteId)
-            .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
-        membre.setRole(request.role());
-        membre.setCoordoType(request.coordoType());
-        return toMembreResponse(membreRepository.save(membre));
-    }
-
-    public void supprimerMembre(UUID compteId) {
-        MembreAssociation membre = membreRepository
-            .findByCompteId(compteId)
-            .orElseThrow(() -> new NotFoundException("Membre introuvable : " + compteId));
-        // Cloture logique : le membre perd son role mais garde son historique.
-        membre.setStatut("suspendu");
-        membreRepository.save(membre);
-    }
-
     // La ligne est creee par la migration V2 : son absence est une erreur d'installation.
     Association charger() {
         return associationRepository.findUnique()
@@ -114,19 +68,6 @@ public class AssociationConfigService {
             a.getLogoUrl(), a.getCouleurPrimaire(), a.getCouleurSecondaire(),
             a.getFuseauHoraire(), a.getFrequenceMaxParSemaine(),
             a.getContactEmail(), a.getContactTelephone(), a.getDateCreation()
-        );
-    }
-
-    private MembreResponse toMembreResponse(MembreAssociation m) {
-        return new MembreResponse(
-            m.getCompte().getId(),
-            m.getCompte().getNom(),
-            m.getCompte().getPrenom(),
-            m.getCompte().getEmail(),
-            m.getRole(),
-            m.getCoordoType(),
-            m.getStatut(),
-            m.getDateDebut()
         );
     }
 }

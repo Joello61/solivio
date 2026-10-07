@@ -1,8 +1,8 @@
 package com.solivio.api.reconditionnement.application;
 
-import com.solivio.api.distribution.domain.Lieu;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuRequest;
-import com.solivio.api.distribution.infrastructure.web.dto.LieuResponse;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutPresenceReconditionnement;

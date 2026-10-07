@@ -3,7 +3,7 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

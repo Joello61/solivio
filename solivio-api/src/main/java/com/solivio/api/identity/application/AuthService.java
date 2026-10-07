@@ -9,7 +9,7 @@ import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepo
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;

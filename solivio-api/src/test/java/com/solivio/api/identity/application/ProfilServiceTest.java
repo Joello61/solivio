@@ -4,7 +4,7 @@ import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateProfilRequest;
 import org.junit.jupiter.api.BeforeEach;

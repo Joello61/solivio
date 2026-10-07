@@ -41,6 +41,7 @@
 		<java.version>25</java.version>
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<bouncycastle.version>1.86</bouncycastle.version>
+		<spring-modulith.version>2.1.1</spring-modulith.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -104,6 +105,19 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-insight</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<!-- Requis par Argon2PasswordEncoder (Spring Security), non gere par Spring Boot. -->
 		<dependency>
@@ -217,7 +231,24 @@
 			<artifactId>testcontainers-postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.modulith</groupId>
+				<artifactId>spring-modulith-bom</artifactId>
+				<version>${spring-modulith.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -307,7 +338,7 @@
 						<!-- Classes anonymes generees par le compilateur -->
 						<exclude>com/solivio/api/identity/application/AuthService$*.class</exclude>
 						<!-- Seeder de donnees de dev : @Profile("seed"), pas de logique metier -->
-						<exclude>com/solivio/api/dev/**</exclude>
+						<exclude>com/solivio/api/identity/infrastructure/dev/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>

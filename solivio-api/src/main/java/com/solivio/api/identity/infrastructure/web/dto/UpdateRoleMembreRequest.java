@@ -1,4 +1,4 @@
-package com.solivio.api.association.infrastructure.web.dto;
+package com.solivio.api.identity.infrastructure.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
