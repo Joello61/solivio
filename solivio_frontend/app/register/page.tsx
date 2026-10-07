@@ -21,13 +21,11 @@ function RegisterForm() {
   const searchParams = useSearchParams();
 
   const tokenInvitation = searchParams.get("invitation") ?? undefined;
-  const assoParam = searchParams.get("asso") ?? "";
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
-  const [codeAssociation, setCodeAssociation] = useState(assoParam.toUpperCase());
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +41,6 @@ function RegisterForm() {
         motDePasse,
         nom,
         prenom,
-        codeAssociation: isInvitation ? undefined : codeAssociation,
         tokenInvitation,
       });
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -117,22 +114,6 @@ function RegisterForm() {
           />
         </div>
 
-        {!isInvitation && (
-          <div className="space-y-1.5">
-            <Label htmlFor="code">Code de votre association</Label>
-            <Input
-              id="code"
-              required
-              value={codeAssociation}
-              onChange={(e) => setCodeAssociation(e.target.value.toUpperCase())}
-              placeholder="Ex: PILOTE"
-              className="uppercase"
-            />
-            <p className="text-xs text-muted-foreground">
-              Ce code vous est fourni par votre association.
-            </p>
-          </div>
-        )}
 
         <FormError message={error} />
 

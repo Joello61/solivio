@@ -98,7 +98,7 @@ describe("LoginPage", () => {
     expect(screen.getByText("Identifiants incorrects")).toBeInTheDocument();
   });
 
-  it("redirige vers /dashboard apres connexion avec un seul tenant", async () => {
+  it("appelle login avec les identifiants saisis", async () => {
     const push = vi.fn();
     vi.doMock("next/navigation", () => ({
       useRouter: () => ({ push, refresh: vi.fn() }),
@@ -110,7 +110,6 @@ describe("LoginPage", () => {
       tokenType: "Bearer",
       expiresIn: 900,
       refreshToken: null,
-      tenants: [{ slug: "pilote", nom: "Asso Pilote", role: "beneficiaire", coordoType: null }],
     });
 
     renderLogin();

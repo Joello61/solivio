@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { login } from "@/lib/auth";
-import type { TokenResponse } from "@/types/auth";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_AUTH_LOGIN_URL ?? "http://localhost:8080/oauth2/authorization/google";
@@ -27,22 +26,21 @@ function LoginForm() {
   const [motDePasse, setMotDePasse] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Renvoye par le backend apres une connexion Google d'un membre suspendu.
+  const [error, setError] = useState<string | null>(
+    searchParams.get("erreur") === "compte-suspendu"
+      ? "Votre acces a ete suspendu. Contactez un responsable de l'association."
+      : null
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setPending(true);
     try {
-      const data: TokenResponse = await login(email, motDePasse, rememberMe);
-      if (data.tenants.length > 1) {
-        sessionStorage.setItem("pending_token", data.accessToken);
-        sessionStorage.setItem("pending_tenants", JSON.stringify(data.tenants));
-        router.push("/tenant-select");
-      } else {
-        router.push(redirect);
-        router.refresh();
-      }
+      await login(email, motDePasse, rememberMe);
+      router.push(redirect);
+      router.refresh();
     } catch (err: unknown) {
       const msg =
         err instanceof Error

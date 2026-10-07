@@ -10,7 +10,6 @@ import {
   CalendarDays,
   Clock,
   Key,
-  Building2,
   BadgeCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -151,18 +150,6 @@ export default async function MonComptePage() {
                 </div>
               </div>
 
-              {/* Association active */}
-              {user.tenantActif && (
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">Association</p>
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {user.tenantActif}
-                    </p>
-                  </div>
-                </div>
-              )}
 
               {/* Membre depuis */}
               <div className="flex items-start gap-3">
