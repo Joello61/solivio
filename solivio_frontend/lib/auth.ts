@@ -1,8 +1,8 @@
-import { apiGet, apiPost } from "./api";
+import { API_URL, apiGet, apiPost } from "./api";
 import type { MeResponse, TokenResponse } from "@/types/auth";
 
-export const AUTH_LOGIN_URL =
-  process.env.NEXT_PUBLIC_AUTH_LOGIN_URL ?? "http://localhost:8080/oauth2/authorization/google";
+// Point d'entree de la connexion Google, servi par le backend.
+export const AUTH_LOGIN_URL = `${API_URL}/oauth2/authorization/google`;
 
 export async function login(email: string, motDePasse: string, rememberMe: boolean): Promise<TokenResponse> {
   return apiPost<TokenResponse>("/api/auth/login", { email, motDePasse, rememberMe });

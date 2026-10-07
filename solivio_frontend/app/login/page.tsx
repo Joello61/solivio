@@ -12,10 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
-import { login } from "@/lib/auth";
-
-const GOOGLE_AUTH_URL =
-  process.env.NEXT_PUBLIC_AUTH_LOGIN_URL ?? "http://localhost:8080/oauth2/authorization/google";
+import { AUTH_LOGIN_URL, login } from "@/lib/auth";
 
 function LoginForm() {
   const router = useRouter();
@@ -111,7 +108,7 @@ function LoginForm() {
         variant="outline"
         className="w-full gap-2"
         onClick={() => {
-          window.location.href = GOOGLE_AUTH_URL;
+          window.location.href = AUTH_LOGIN_URL;
         }}
         type="button"
       >

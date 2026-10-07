@@ -112,6 +112,24 @@ describe("apiFetch", () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
+  // Non-regression : un 401 sur /api/auth/login declenchait un refresh puis une
+  // redirection vers /login, et le message "identifiants incorrects" n'apparaissait jamais.
+  it("identifiants refuses au login : remonte le message sans refresh ni redirection", async () => {
+    global.fetch = mockFetch([
+      {
+        ok: false,
+        status: 401,
+        body: { error: { code: "INVALID_CREDENTIALS", message: "Email ou mot de passe incorrect." } },
+      },
+    ]);
+    await expect(apiFetch("/api/auth/login", { method: "POST" })).rejects.toMatchObject({
+      status: 401,
+      code: "INVALID_CREDENTIALS",
+      message: "Email ou mot de passe incorrect.",
+    });
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("ne tente pas un refresh si noCredentials est true", async () => {
     global.fetch = mockFetch([
       { ok: false, status: 401, body: { error: { code: "UNAUTHENTICATED", message: "Authentification requise." } } },

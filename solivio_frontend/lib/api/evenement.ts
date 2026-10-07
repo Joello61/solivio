@@ -1,4 +1,4 @@
-import { parseErrorResponse } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import type {
   EvenementResponse,
   ParticipationEvenementResponse,
@@ -12,15 +12,6 @@ import type {
 
 const BASE = "/api/evenements";
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { credentials: "include", ...init });
-  if (!res.ok) {
-    throw parseErrorResponse(await res.json().catch(() => null), res.status);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
-}
-
 export function listerEvenements(params?: {
   statut?: StatutEvenement;
   type?: TypeEvenement;
@@ -29,15 +20,15 @@ export function listerEvenements(params?: {
   if (params?.statut) qs.set("statut", params.statut);
   if (params?.type) qs.set("type", params.type);
   const query = qs.toString() ? `?${qs}` : "";
-  return request<EvenementResponse[]>(`${BASE}${query}`);
+  return apiFetch<EvenementResponse[]>(`${BASE}${query}`);
 }
 
 export function detailEvenement(id: string): Promise<EvenementResponse> {
-  return request<EvenementResponse>(`${BASE}/${id}`);
+  return apiFetch<EvenementResponse>(`${BASE}/${id}`);
 }
 
 export function creerEvenement(payload: CreateEvenementPayload): Promise<EvenementResponse> {
-  return request<EvenementResponse>(BASE, {
+  return apiFetch<EvenementResponse>(BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -48,7 +39,7 @@ export function modifierEvenement(
   id: string,
   payload: UpdateEvenementPayload,
 ): Promise<EvenementResponse> {
-  return request<EvenementResponse>(`${BASE}/${id}`, {
+  return apiFetch<EvenementResponse>(`${BASE}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -56,11 +47,11 @@ export function modifierEvenement(
 }
 
 export function publierEvenement(id: string): Promise<EvenementResponse> {
-  return request<EvenementResponse>(`${BASE}/${id}/publier`, { method: "PUT" });
+  return apiFetch<EvenementResponse>(`${BASE}/${id}/publier`, { method: "PUT" });
 }
 
 export function annulerEvenement(id: string, raison: string): Promise<EvenementResponse> {
-  return request<EvenementResponse>(`${BASE}/${id}/annuler`, {
+  return apiFetch<EvenementResponse>(`${BASE}/${id}/annuler`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ raison }),
@@ -71,7 +62,7 @@ export function sInscrire(
   evenementId: string,
   role: RoleParticipation,
 ): Promise<ParticipationEvenementResponse> {
-  return request<ParticipationEvenementResponse>(`${BASE}/${evenementId}/participations`, {
+  return apiFetch<ParticipationEvenementResponse>(`${BASE}/${evenementId}/participations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role }),
@@ -79,13 +70,13 @@ export function sInscrire(
 }
 
 export function seDesinscrire(evenementId: string): Promise<void> {
-  return request<void>(`${BASE}/${evenementId}/participations/moi`, { method: "DELETE" });
+  return apiFetch<void>(`${BASE}/${evenementId}/participations/moi`, { method: "DELETE" });
 }
 
 export function listerParticipants(
   evenementId: string,
 ): Promise<ParticipationEvenementResponse[]> {
-  return request<ParticipationEvenementResponse[]>(`${BASE}/${evenementId}/participations`);
+  return apiFetch<ParticipationEvenementResponse[]>(`${BASE}/${evenementId}/participations`);
 }
 
 export function listerPourPointage(
@@ -93,7 +84,7 @@ export function listerPourPointage(
   q?: string,
 ): Promise<ParticipationEvenementResponse[]> {
   const qs = q ? `?q=${encodeURIComponent(q)}` : "";
-  return request<ParticipationEvenementResponse[]>(`${BASE}/${evenementId}/pointage${qs}`);
+  return apiFetch<ParticipationEvenementResponse[]>(`${BASE}/${evenementId}/pointage${qs}`);
 }
 
 export function pointer(
@@ -101,7 +92,7 @@ export function pointer(
   participationId: string,
   presence: PresenceEvenement,
 ): Promise<ParticipationEvenementResponse> {
-  return request<ParticipationEvenementResponse>(
+  return apiFetch<ParticipationEvenementResponse>(
     `${BASE}/${evenementId}/pointage/${participationId}`,
     {
       method: "PUT",
@@ -112,5 +103,5 @@ export function pointer(
 }
 
 export function mesEvenements(): Promise<ParticipationEvenementResponse[]> {
-  return request<ParticipationEvenementResponse[]>(`${BASE}/mes-evenements`);
+  return apiFetch<ParticipationEvenementResponse[]>(`${BASE}/mes-evenements`);
 }

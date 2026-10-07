@@ -1,6 +1,21 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Vide dans les images deployees : appels relatifs, sur le domaine de la page.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 type FetchOptions = RequestInit & { noCredentials?: boolean };
+
+// Un 401 de ces points d'entree publics est une reponse metier (identifiants
+// refuses, jeton expire), pas une session expiree : ni rafraichissement ni
+// redirection, l'erreur remonte au formulaire.
+const ENDPOINTS_AUTH_PUBLICS = new Set([
+  "/api/auth/login",
+  "/api/auth/refresh",
+  "/api/auth/register",
+  "/api/auth/verify-email",
+  "/api/auth/resend-verification",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+  "/api/auth/google/complete-registration",
+]);
 
 // Promise partagee entre les requetes concurrentes : on ne refreshe qu'une seule fois
 // meme si plusieurs requetes recoivent un 401 simultanement.
@@ -59,12 +74,12 @@ export function parseErrorResponse(body: unknown, status: number): Error {
  */
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const { noCredentials = false, ...init } = options;
-  const isRefreshEndpoint = path === "/api/auth/refresh";
+  const sansRafraichissement = ENDPOINTS_AUTH_PUBLICS.has(path);
 
   const response = await fetch(`${API_URL}${path}`, buildInit(init, noCredentials));
 
   // Token expire : on tente un refresh puis on rejoue la requete.
-  if (response.status === 401 && !noCredentials && !isRefreshEndpoint) {
+  if (response.status === 401 && !noCredentials && !sansRafraichissement) {
     const refreshed = await tentativeRefresh();
 
     if (refreshed) {
