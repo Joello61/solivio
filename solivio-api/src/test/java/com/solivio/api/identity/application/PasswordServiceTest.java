@@ -3,6 +3,7 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
+import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
 import com.solivio.api.identity.SolivioUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,13 +34,16 @@ class PasswordServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private EmailService emailService;
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
 
     private PasswordService service;
     private Compte compte;
 
     @BeforeEach
     void setUp() {
-        service = new PasswordService(compteRepository, verificationCodeService, passwordEncoder, emailService);
+        service = new PasswordService(compteRepository, verificationCodeService, passwordEncoder, emailService,
+            refreshTokenRepository);
         compte = new Compte("alice@example.com", "old-hash", "Dupont", "Alice");
     }
 
@@ -88,5 +92,35 @@ class PasswordServiceTest {
         assertThatThrownBy(() -> service.changerMotDePasse(userDetails, "wrongpass", "newpass123!"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Mot de passe actuel incorrect");
+    }
+
+    @Test
+    void resetMotDePasse_revoqueLesSessionsOuvertes() {
+        UUID id = UUID.randomUUID();
+        compte.setId(id);
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(verificationCodeService.valider(compte, "654321", VerificationCode.TYPE_PASSWORD_RESET)).thenReturn(true);
+        when(passwordEncoder.encode("nouveau-mdp-solide")).thenReturn("new-hash");
+
+        service.resetMotDePasse("alice@example.com", "654321", "nouveau-mdp-solide");
+
+        verify(refreshTokenRepository).revoquerTousParCompte(id);
+        verify(emailService).envoyerConfirmationChangementMotDePasse(compte);
+    }
+
+    @Test
+    void changerMotDePasse_revoqueLesSessionsOuvertes() {
+        UUID id = UUID.randomUUID();
+        compte = new Compte("alice@example.com", "correct-hash", "Dupont", "Alice");
+        compte.setId(id);
+        when(compteRepository.findById(id)).thenReturn(Optional.of(compte));
+        when(passwordEncoder.matches("actuel", "correct-hash")).thenReturn(true);
+        when(passwordEncoder.encode("nouveau-mdp-solide")).thenReturn("new-hash");
+        SolivioUserDetails userDetails = new SolivioUserDetails(
+            id, "alice@example.com", "correct-hash", false, List.of(), true);
+
+        service.changerMotDePasse(userDetails, "actuel", "nouveau-mdp-solide");
+
+        verify(refreshTokenRepository).revoquerTousParCompte(id);
     }
 }
