@@ -5,7 +5,7 @@ import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.PublicCible;
 import com.solivio.api.evenement.domain.StatutEvenement;
 import com.solivio.api.evenement.domain.TypeEvenement;
-import com.solivio.api.evenement.infrastructure.kafka.EvenementEventPublisher;
+import com.solivio.api.evenement.infrastructure.evenements.EvenementEventPublisher;
 import com.solivio.api.evenement.infrastructure.persistence.EvenementRepository;
 import com.solivio.api.evenement.infrastructure.persistence.ParticipationEvenementRepository;
 import com.solivio.api.evenement.infrastructure.web.dto.AnnulerEvenementRequest;

@@ -2,7 +2,7 @@ package com.solivio.api.collecte.application;
 
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
-import com.solivio.api.collecte.infrastructure.kafka.CollecteEventPublisher;
+import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
 import com.solivio.api.collecte.infrastructure.persistence.MissionCollecteRepository;
 import com.solivio.api.collecte.infrastructure.web.dto.AnnulerMissionRequest;
 import com.solivio.api.collecte.infrastructure.web.dto.CreateMissionCollecteRequest;

@@ -4,7 +4,7 @@ import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
-import com.solivio.api.inscription.infrastructure.kafka.InscriptionEventPublisher;
+import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
@@ -142,7 +142,6 @@ public class InscriptionService {
         boolean estBenevole = inscription.getType() == TypeInscription.BENEVOLE;
         inscription.annuler();
         inscriptionRepository.save(inscription);
-        eventPublisher.publierAnnulee(inscription);
 
         // Alerte desistement tardif : benevole confirme se desinscrit dans les 24h avant la distribution.
         if (etaitConfirmee && estBenevole) {

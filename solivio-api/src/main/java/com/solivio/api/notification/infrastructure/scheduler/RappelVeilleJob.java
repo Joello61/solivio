@@ -1,11 +1,12 @@
 package com.solivio.api.notification.infrastructure.scheduler;
 
-import com.solivio.api.notification.infrastructure.kafka.RappelEventPublisher;
+import com.solivio.api.notification.infrastructure.evenements.RappelEventPublisher;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -37,13 +38,17 @@ public class RappelVeilleJob {
      * chaque distribution publiee du lendemain.
      */
     @Scheduled(cron = "0 0 8 * * *", zone = FUSEAU)
+    @Transactional
     public void emettreRappelsVeille() {
         LocalDate demain = LocalDate.now(ZoneId.of(FUSEAU)).plusDays(1);
         log.info("Job rappel veille : recherche des distributions pour le {}", demain);
         emettreRappels(demain);
     }
 
-    void emettreRappels(LocalDate date) {
+    // Transactionnel : le registre d'evenements n'enregistre une publication
+    // que dans une transaction, et l'envoi n'a lieu qu'apres sa validation.
+    @Transactional
+    public void emettreRappels(LocalDate date) {
         List<UUID> distributionIds = distributionQueryPort.trouverDistributionsPublieesPourDate(date);
         for (UUID distId : distributionIds) {
             rappelEventPublisher.publierRappelVeille(distId);

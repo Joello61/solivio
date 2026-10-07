@@ -3,7 +3,7 @@ package com.solivio.api.reconditionnement.application;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutSessionReconditionnement;
-import com.solivio.api.reconditionnement.infrastructure.kafka.ReconditionnementEventPublisher;
+import com.solivio.api.reconditionnement.infrastructure.evenements.ReconditionnementEventPublisher;
 import com.solivio.api.reconditionnement.infrastructure.persistence.InscriptionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.persistence.SessionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;

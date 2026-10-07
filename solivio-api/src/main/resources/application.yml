@@ -38,19 +38,6 @@ spring:
     baseline-on-migrate: false
     validate-on-migrate: true
 
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      group-id: ${spring.application.name}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      properties:
-        spring.json.trusted.packages: "com.solivio.*"
-
   servlet:
     multipart:
       max-file-size: 2MB
@@ -85,6 +72,25 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+
+  # Evenements internes (ADR-003) : registre de publication JDBC, schema
+  # gere par Flyway (V8), evenements traites archives pour garder une trace.
+  modulith:
+    events:
+      jdbc:
+        schema-initialization:
+          enabled: false
+      completion-mode: archive
+      republish-outstanding-events-on-restart: true
+
+  # Executeur des ecouteurs @ApplicationModuleListener (emails, statistiques).
+  task:
+    execution:
+      thread-name-prefix: solivio-evt-
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 500
 
   thymeleaf:
     check-template-location: false

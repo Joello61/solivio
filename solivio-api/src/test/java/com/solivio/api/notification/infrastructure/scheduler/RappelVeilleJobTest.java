@@ -2,7 +2,7 @@ package com.solivio.api.notification.infrastructure.scheduler;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.notification.infrastructure.kafka.RappelEventPublisher;
+import com.solivio.api.notification.infrastructure.evenements.RappelEventPublisher;
 import com.solivio.api.support.SolivioIntegrationTest;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;

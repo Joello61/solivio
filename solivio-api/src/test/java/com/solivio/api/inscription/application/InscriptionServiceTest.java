@@ -4,7 +4,7 @@ import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
-import com.solivio.api.inscription.infrastructure.kafka.InscriptionEventPublisher;
+import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.shared.association.AssociationQueryPort;

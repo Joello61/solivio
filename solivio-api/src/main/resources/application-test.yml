@@ -1,6 +1,6 @@
 # application-test.yml
 # Profil de test active automatiquement via @SolivioIntegrationTest.
-# Testcontainers (@ServiceConnection) fournit PostgreSQL et Kafka reels
+# Testcontainers (@ServiceConnection) fournit une vraie base PostgreSQL
 # et surcharge automatiquement les proprietes de connexion.
 
 spring:

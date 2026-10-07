@@ -7,7 +7,7 @@ import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutPresenceReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutSessionReconditionnement;
-import com.solivio.api.reconditionnement.infrastructure.kafka.ReconditionnementEventPublisher;
+import com.solivio.api.reconditionnement.infrastructure.evenements.ReconditionnementEventPublisher;
 import com.solivio.api.reconditionnement.infrastructure.persistence.InscriptionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.persistence.SessionReconditionnementRepository;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
@@ -75,7 +75,6 @@ public class SessionReconditionnementService {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.PUBLIEE, null);
         sessionRepository.save(session);
-        eventPublisher.publierPubliee(sessionId, session.getDateHeureDebut());
         return toResponse(session, compterInscrits(sessionId));
     }
 

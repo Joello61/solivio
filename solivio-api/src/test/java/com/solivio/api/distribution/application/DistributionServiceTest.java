@@ -3,7 +3,7 @@ package com.solivio.api.distribution.application;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
-import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
+import com.solivio.api.distribution.infrastructure.evenements.DistributionEventPublisher;
 import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository;
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;

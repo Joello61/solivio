@@ -7,7 +7,7 @@ import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
-import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
+import com.solivio.api.distribution.infrastructure.evenements.DistributionEventPublisher;
 import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository;
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;
@@ -78,7 +78,6 @@ public class DistributionService {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
-        eventPublisher.publierPubliee(distributionId, d.getDate());
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
