@@ -13,8 +13,13 @@
 # run" les injecte dans l'environnement de docker compose, avec une identite machine
 # propre a chaque environnement (lecture seule).
 #
-# Les migrations Flyway s'executent au demarrage du backend : une migration doit
-# rester additive pour que l'ancienne version tourne encore pendant la bascule.
+# Backend et frontend basculent sans coupure (docker-rollout, ADR-010) : la nouvelle
+# version demarre a cote de l'ancienne, Traefik ne lui envoie du trafic qu'une fois
+# son controle de sante au vert, puis l'ancienne est arretee. Une nouvelle version qui
+# ne devient jamais saine est retiree et l'ancienne continue de servir.
+#
+# Les migrations Flyway s'executent au demarrage du backend, pendant que l'ancienne
+# version sert encore : une migration doit rester additive.
 
 set -euo pipefail
 
@@ -50,6 +55,12 @@ esac
 # Infisical tourne sur le VPS lui-meme, jamais expose : le script s'execute sur le
 # serveur (SSH) et l'atteint en local.
 INFISICAL_API_URL='http://localhost:8081'
+
+# Version figee par commit et verifiee par empreinte. Le plugin est installe pour
+# l'utilisateur SSH, partage avec Cobage qui epingle la meme version.
+DOCKER_ROLLOUT_VERSION='v0.14'
+DOCKER_ROLLOUT_COMMIT='a72a9632c38187abd6d8799e4a9d5054a67fe615'
+DOCKER_ROLLOUT_SHA256='cdeaba6ae9eee3b0b606286e585bbda6787283d801a6ad6d9b9d2bc347fda05b'
 
 SSH_KEY_FILE="$(mktemp)"
 KNOWN_HOSTS_FILE="$(mktemp)"
@@ -97,11 +108,33 @@ run() {
   infisical run --projectId="$INFISICAL_PROJECT_ID" --env="$ENVIRONMENT" -- docker compose \$COMPOSE_FILES "\$@"
 }
 
+rollout() {
+  infisical run --projectId="$INFISICAL_PROJECT_ID" --env="$ENVIRONMENT" -- docker rollout \$COMPOSE_FILES "\$@"
+}
+
+echo "=== Installation de docker-rollout ${DOCKER_ROLLOUT_VERSION} ==="
+PLUGIN="\$HOME/.docker/cli-plugins/docker-rollout"
+if ! echo "${DOCKER_ROLLOUT_SHA256}  \$PLUGIN" | sha256sum --check --status 2>/dev/null; then
+  mkdir -p "\$(dirname "\$PLUGIN")"
+  curl -fsSL "https://raw.githubusercontent.com/Wowu/docker-rollout/${DOCKER_ROLLOUT_COMMIT}/docker-rollout" -o "\$PLUGIN.tmp"
+  echo "${DOCKER_ROLLOUT_SHA256}  \$PLUGIN.tmp" | sha256sum --check --quiet
+  chmod +x "\$PLUGIN.tmp"
+  mv "\$PLUGIN.tmp" "\$PLUGIN"
+fi
+
 echo "=== Recuperation des images ==="
 run pull
 
-echo "=== Demarrage ==="
-run up -d --remove-orphans --wait --wait-timeout 300
+echo "=== Base de donnees et sauvegarde ==="
+run up -d --remove-orphans --wait --wait-timeout 300 postgres backup
+
+# Au premier deploiement, docker-rollout se contente de demarrer le service ; le
+# frontend attend alors un backend sain (depends_on).
+echo "=== Backend ==="
+rollout --timeout 300 backend
+
+echo "=== Frontend ==="
+rollout --timeout 120 frontend
 
 echo "Deploiement termine (${ENVIRONMENT}, images ${IMAGE_TAG})."
 REMOTE
