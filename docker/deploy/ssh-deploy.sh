@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploie Solivio sur le VPS, appele par .github/workflows/deploy.yml.
+# Deploie Solivio sur le VPS, appele par les jobs de deploiement de .github/workflows/ci.yml.
 # Tire les images deja construites et testees par la CI (GHCR, etiquette = SHA du
 # commit), jamais de build sur le serveur : l'image testee est l'image deployee.
 #
