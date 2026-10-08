@@ -107,7 +107,7 @@ L'application est disponible sur `http://localhost:3000`.
 - `docker-compose.yml` : stack déployée (préproduction et production), complétée sur le serveur par le routage Traefik (`docker-compose.prod.traefik.yml.example`) et le rattachement à l'observabilité (`docker-compose.*.observability.yml`)
 - `docker/deploy/` : script et procédure de déploiement
 - `docker/backup/` : sauvegarde, restauration et test de restauration
-- `.github/workflows/` : intégration continue (`ci.yml`) et déploiement (`deploy.yml`)
+- `.github/workflows/ci.yml` : intégration continue puis déploiement (préproduction depuis `dev`, production depuis `main`)
 - `CLAUDE.md` : règles de développement du projet
 
 ## Tests
