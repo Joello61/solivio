@@ -184,8 +184,9 @@ solivio:
     # URI de redirection apres logout (vers le frontend).
     post-logout-redirect-uri: ${SOLIVIO_POST_LOGOUT_REDIRECT_URI:http://localhost:3000}
   mail:
-    from: noreply@solivio.app
-    reply-to: contact@solivio.app
+    # Expediteur des emails : adresse d'un domaine authentifie chez le fournisseur SMTP
+    # (Brevo en production), sinon les emails partent en spam ou sont refuses.
+    from: ${SOLIVIO_MAIL_FROM:noreply@solivio.app}
   observabilite:
     # Jeton attendu de Prometheus sur /actuator/prometheus. Vide = metriques inaccessibles.
     metrics-scrape-token: ${METRICS_SCRAPE_TOKEN:}
