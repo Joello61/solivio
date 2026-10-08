@@ -93,17 +93,21 @@ ssh vps-ovh
 git clone https://github.com/Joello61/solivio.git /opt/apps/solivio-staging
 git clone https://github.com/Joello61/solivio.git /opt/apps/solivio
 
-# Routage Traefik, fichier non suivi par git
+# Routage Traefik, fichier non suivi par git. git clone se place sur main, la branche
+# par defaut ; l'exemple est lu sur dev pour ne dependre d'aucune mise en production.
 cd /opt/apps/solivio
-cp docker-compose.prod.traefik.yml.example docker-compose.prod.traefik.yml
+git show origin/dev:docker-compose.prod.traefik.yml.example > docker-compose.prod.traefik.yml
+grep -c "solivio.joeltech.fr" docker-compose.prod.traefik.yml   # doit afficher 3
 
 cd /opt/apps/solivio-staging
-sed -e 's/solivio\.joeltech\.fr/staging.solivio.joeltech.fr/g' \
-    -e 's/routers\.solivio-/routers.solivio-staging-/g' \
-    -e 's/services\.solivio-/services.solivio-staging-/g' \
-    -e 's/service=solivio-/service=solivio-staging-/g' \
-    docker-compose.prod.traefik.yml.example > docker-compose.prod.traefik.yml
-grep -c "solivio-staging-" docker-compose.prod.traefik.yml   # doit afficher 15
+git show origin/dev:docker-compose.prod.traefik.yml.example \
+  | sed -e 's/solivio\.joeltech\.fr/staging.solivio.joeltech.fr/g' \
+        -e 's/routers\.solivio-/routers.solivio-staging-/g' \
+        -e 's/services\.solivio-/services.solivio-staging-/g' \
+        -e 's/service=solivio-/service=solivio-staging-/g' \
+  > docker-compose.prod.traefik.yml
+grep -c "solivio-staging-" docker-compose.prod.traefik.yml               # doit afficher 15
+grep -c "staging.solivio.joeltech.fr" docker-compose.prod.traefik.yml    # doit afficher 3
 
 # Acces aux images privees de GHCR : deja configure pour Cobage. A verifier :
 grep -c ghcr.io ~/.docker/config.json   # 1 ou plus
