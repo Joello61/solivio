@@ -85,6 +85,9 @@ spring:
       # Une publication bloquee au-dela de ces durees passe en echec et sera
       # relancee par MaintenancePublicationsJob.
       staleness:
+        # Defaut : chaque minute, avec trois lignes INFO "No stale publications"
+        # par passage. Vu les seuils ci-dessous, cinq minutes suffisent.
+        check-interval: PT5M
         published: PT30M
         processing: PT15M
         resubmitted: PT15M
