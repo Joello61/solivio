@@ -77,3 +77,4 @@ Une sauvegarde qui n'a jamais été restaurée n'est pas une sauvegarde. Après 
 
 | Date | Environnement | Résultat | Détail |
 |---|---|---|---|
+| 2026-10-08 | staging | Succès | `staging/2026-10-08.tar.gpg` (11 Ko, sauvegarde lancée à la main) téléchargé depuis R2, déchiffré sur la machine locale, restauré dans un PostgreSQL 18 jetable avec `pg_restore --no-owner --no-privileges`, code 0. Schéma à jour (V10), aucun compte ni distribution (préproduction encore vide), dossiers `avatars/` et `logos/` présents. Prochaine échéance : 2027-01-08, avec une archive de production. |
