@@ -136,7 +136,9 @@ test.describe("Parcours inscription beneficiaire", () => {
       if (route.request().method() === "POST") {
         await route.fulfill({
           status: 409,
-          json: { detail: "Distribution complete, inscription sur liste d'attente." },
+          json: {
+            error: { code: "CONFLICT", message: "Distribution complete, inscription sur liste d'attente." },
+          },
         });
       } else {
         await route.fallback();

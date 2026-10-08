@@ -1,0 +1,9 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.solivio.api.repartition`
+|Bean references
+|* `c.s.a.a.application.AuditService` (in audit)
+* `c.s.a.s.distribution.DistributionQueryPort` (in shared)
+* `c.s.a.s.inscription.InscriptionQueryPort` (in shared)
+|===

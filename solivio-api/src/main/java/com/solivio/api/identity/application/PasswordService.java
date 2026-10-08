@@ -3,7 +3,8 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.infrastructure.persistence.RefreshTokenRepository;
+import com.solivio.api.identity.SolivioUserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,16 +19,19 @@ public class PasswordService {
     private final VerificationCodeService verificationCodeService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public PasswordService(
             CompteRepository compteRepository,
             VerificationCodeService verificationCodeService,
             PasswordEncoder passwordEncoder,
-            EmailService emailService) {
+            EmailService emailService,
+            RefreshTokenRepository refreshTokenRepository) {
         this.compteRepository = compteRepository;
         this.verificationCodeService = verificationCodeService;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Transactional
@@ -53,6 +57,8 @@ public class PasswordService {
 
         compte.setPasswordHash(passwordEncoder.encode(nouveauMotDePasse));
         compteRepository.save(compte);
+        // Ferme les sessions ouvertes, y compris celle d'un eventuel attaquant.
+        refreshTokenRepository.revoquerTousParCompte(compte.getId());
         emailService.envoyerConfirmationChangementMotDePasse(compte);
     }
 
@@ -72,6 +78,8 @@ public class PasswordService {
 
         compte.setPasswordHash(passwordEncoder.encode(nouveauMotDePasse));
         compteRepository.save(compte);
+        // Ferme les sessions ouvertes, y compris celle d'un eventuel attaquant.
+        refreshTokenRepository.revoquerTousParCompte(compte.getId());
         emailService.envoyerConfirmationChangementMotDePasse(compte);
     }
 }

@@ -28,12 +28,12 @@ test.describe("Page login", () => {
 
   test("affiche le formulaire de connexion", async ({ page }) => {
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/mot de passe/i)).toBeVisible();
+    await expect(page.getByLabel("Mot de passe", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /se connecter/i })).toBeVisible();
   });
 
   test("affiche un lien vers la page d'inscription", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /inscription/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /creer un compte/i })).toBeVisible();
   });
 
   test("affiche un lien vers la reinitialisation du mot de passe", async ({ page }) => {
@@ -42,11 +42,11 @@ test.describe("Page login", () => {
 
   test("identifiants incorrects : affiche un message d'erreur", async ({ page }) => {
     await page.route("**/api/auth/login", (route) =>
-      route.fulfill({ status: 401, json: { detail: "Identifiants invalides" } }),
+      route.fulfill({ status: 401, json: { error: { code: "INVALID_CREDENTIALS", message: "Identifiants invalides" } } }),
     );
 
     await page.getByLabel(/email/i).fill("inconnu@example.com");
-    await page.getByLabel(/mot de passe/i).fill("mauvaismdp");
+    await page.getByLabel("Mot de passe", { exact: true }).fill("mauvaismdp");
     await page.getByRole("button", { name: /se connecter/i }).click();
 
     await expect(page.getByText(/identifiants invalides/i)).toBeVisible();
@@ -60,7 +60,7 @@ test.describe("Page inscription (register)", () => {
 
   test("affiche les champs du formulaire", async ({ page }) => {
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/mot de passe/i)).toBeVisible();
+    await expect(page.getByLabel("Mot de passe", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /s'inscrire/i })).toBeVisible();
   });
 

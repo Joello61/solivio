@@ -11,17 +11,9 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NAV_SECTIONS, filterNavItems, isNavItemActive } from "./navigation";
 import { logout } from "@/lib/auth";
 import type { MeResponse } from "@/types/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  admin: "Administrateur",
-  responsable: "Responsable",
-  coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
-};
 
 interface SidebarProps {
   user: MeResponse;
@@ -193,7 +185,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           >
             <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden">
               {avatarSrc ? (
-                <Image src={avatarSrc} alt="" fill sizes="28px" className="object-cover" />
+                <Image unoptimized src={avatarSrc} alt="" fill sizes="28px" className="object-cover" />
               ) : (
                 <span>{initials}</span>
               )}
@@ -211,7 +203,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
           >
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
-                <Image src={avatarSrc} alt="" fill sizes="32px" className="object-cover" />
+                <Image unoptimized src={avatarSrc} alt="" fill sizes="32px" className="object-cover" />
               ) : (
                 <span>{initials}</span>
               )}

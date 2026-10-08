@@ -93,4 +93,45 @@ class VerificationCodeServiceTest {
 
         assertThat(result).isFalse();
     }
+
+    @Test
+    void valider_compteLesEssaisRatesSansBrulerLeCodeAvantLeSeuil() {
+        VerificationCode vc = new VerificationCode(
+            compte, "654321", VerificationCode.TYPE_EMAIL, Instant.now().plusSeconds(900));
+        when(repository.findTopByCompteIdAndTypeAndUtiliseFalseOrderByCreeADesc(any(), any()))
+            .thenReturn(Optional.of(vc));
+
+        for (int i = 1; i < VerificationCodeService.MAX_TENTATIVES; i++) {
+            assertThat(service.valider(compte, "000000", VerificationCode.TYPE_EMAIL)).isFalse();
+        }
+
+        assertThat(vc.getTentatives()).isEqualTo(VerificationCodeService.MAX_TENTATIVES - 1);
+        assertThat(vc.isUtilise()).isFalse();
+        assertThat(service.valider(compte, "654321", VerificationCode.TYPE_EMAIL)).isTrue();
+    }
+
+    @Test
+    void valider_bruleLeCodeAuSeuilDEssaisRates() {
+        VerificationCode vc = new VerificationCode(
+            compte, "654321", VerificationCode.TYPE_EMAIL, Instant.now().plusSeconds(900));
+        vc.setTentatives(VerificationCodeService.MAX_TENTATIVES - 1);
+        when(repository.findTopByCompteIdAndTypeAndUtiliseFalseOrderByCreeADesc(any(), any()))
+            .thenReturn(Optional.of(vc));
+
+        assertThat(service.valider(compte, "000000", VerificationCode.TYPE_EMAIL)).isFalse();
+
+        assertThat(vc.isUtilise()).isTrue();
+        // Le bon code ne passe plus : le code brule n'est plus valide.
+        assertThat(service.valider(compte, "654321", VerificationCode.TYPE_EMAIL)).isFalse();
+    }
+
+    @Test
+    void valider_refuseUnCodeAbsent() {
+        VerificationCode vc = new VerificationCode(
+            compte, "654321", VerificationCode.TYPE_EMAIL, Instant.now().plusSeconds(900));
+        when(repository.findTopByCompteIdAndTypeAndUtiliseFalseOrderByCreeADesc(any(), any()))
+            .thenReturn(Optional.of(vc));
+
+        assertThat(service.valider(compte, null, VerificationCode.TYPE_EMAIL)).isFalse();
+    }
 }

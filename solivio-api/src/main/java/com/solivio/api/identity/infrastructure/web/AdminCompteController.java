@@ -2,7 +2,7 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.application.AdminCompteService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.CompteAdminResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateStatutCompteRequest;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateSuperAdminRequest;

@@ -2,8 +2,6 @@ package com.solivio.api.statistique.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -31,13 +29,11 @@ class StatistiqueControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
     private MockMvc mockMvc;
     private Association association;
-    private String schema;
     private UUID responsableId;
     private String tokenResponsable;
     private String tokenBeneficiaire;
@@ -46,35 +42,23 @@ class StatistiqueControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("stat-test", "Asso Stat Test");
-        association.setCode("STATTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("stat-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         responsableId = UUID.randomUUID();
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) "
-                + "VALUES (?, 'Resp', 'Test', 'resp@test.com', 'resp@test.com')",
+            "INSERT INTO personne (id, nom, prenom, email) "
+                + "VALUES (?, 'Resp', 'Test', 'resp@test.com')",
             responsableId
         );
 
         tokenResponsable = jwtService.genererAccessToken(
-            responsableId, "resp@test.com", "Resp", "Test",
-            "stat-test", List.of("responsable"), null, false
+            responsableId, "resp@test.com", "Resp", "Test", List.of("responsable"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@test.com", "Benef", "Test",
-            "stat-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@test.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
@@ -103,7 +87,7 @@ class StatistiqueControllerIntegrationTest {
         LocalDate date = LocalDate.of(2026, 6, 10);
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".statistique_distribution "
+            "INSERT INTO statistique_distribution "
                 + "(distribution_id, distribution_date, nb_inscrits_beneficiaires, "
                 + "nb_inscrits_benevoles, nb_presents_beneficiaires, "
                 + "nb_absents_beneficiaires, nb_non_pointes, taux_presence) "
@@ -123,7 +107,7 @@ class StatistiqueControllerIntegrationTest {
     @Test
     void statistiquesPeriode_retourneAgregatSurPeriode() throws Exception {
         // aggregerPeriode lit la table distribution (statut TERMINEE), pas le snapshot
-        String insertDist = "INSERT INTO \"" + schema + "\".distribution "
+        String insertDist = "INSERT INTO distribution "
             + "(id, titre, date, statut, capacite_beneficiaires, cree_par_id) "
             + "VALUES (?, ?, ?, 'TERMINEE', 50, ?)";
         jdbcTemplate.update(insertDist,

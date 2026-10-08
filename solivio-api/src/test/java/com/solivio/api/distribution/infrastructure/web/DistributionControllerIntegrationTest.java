@@ -2,8 +2,6 @@ package com.solivio.api.distribution.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -36,9 +34,6 @@ class DistributionControllerIntegrationTest {
     private AssociationRepository associationRepository;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -53,30 +48,17 @@ class DistributionControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("dist-test", "Asso Distribution Test");
-        association.setCode("DISTTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("dist-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         UUID compteId = UUID.randomUUID();
         tokenCoordinateur = jwtService.genererAccessToken(
-            compteId, "coord@test.com", "Coord", "Test",
-            "dist-test", List.of("coordinateur"), null, false
+            compteId, "coord@test.com", "Coord", "Test", List.of("coordinateur"), null, false
         );
         tokenBeneficiaire = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benef@test.com", "Benef", "Test",
-            "dist-test", List.of("beneficiaire"), null, false
+            UUID.randomUUID(), "benef@test.com", "Benef", "Test", List.of("beneficiaire"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        String schema = TenantProvisioningService.schemaName("dist-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

@@ -70,7 +70,7 @@ public class StatistiqueService {
     @Transactional(readOnly = true)
     public StatistiquePeriodeResponse aggregerPeriode(LocalDate debut, LocalDate fin) {
         // Les IDs viennent directement de la table distribution (statut TERMINEE),
-        // pas du snapshot statistique_distribution qui depend du flux Kafka.
+        // pas du snapshot statistique_distribution qui depend de l'evenement de cloture.
         List<UUID> ids = distributionQueryPort.trouverIdsTermineesEntre(debut, fin);
         long nbDistributions = ids.size();
         long nbBeneficiaires = inscriptionPort.compterBeneficiairesDistinctsServis(ids);

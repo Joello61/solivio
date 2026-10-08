@@ -31,7 +31,6 @@ const userBase: MeResponse = {
   telephone: null,
   photoUrl: null,
   superAdmin: false,
-  tenantActif: "pilote",
   roles: ["benevole"],
   dateCreation: "2024-01-01T00:00:00Z",
   dateModification: "2024-01-01T00:00:00Z",

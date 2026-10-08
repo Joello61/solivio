@@ -1,6 +1,8 @@
 # application.yml
 # Configuration de base chargee dans tous les profils.
-# Les valeurs sensibles viennent des variables d'environnement ou de Spring Cloud Vault.
+# Les valeurs sensibles viennent uniquement des variables d'environnement
+# (injectees par Infisical en production, voir .env.example). Aucun secret
+# n'a de valeur par defaut ici : l'application refuse de demarrer s'il manque.
 #
 # Surcharges par profil : application-dev.yml, application-test.yml
 # En production : SPRING_PROFILES_ACTIVE=prod + toutes les ${ENV_VAR} fournies.
@@ -8,19 +10,6 @@
 spring:
   application:
     name: solivio-api
-
-  config:
-    import: "optional:vault://"
-
-  cloud:
-    vault:
-      uri: ${SPRING_CLOUD_VAULT_URI:http://localhost:8200}
-      token: ${SPRING_CLOUD_VAULT_TOKEN:}
-      scheme: http
-      kv:
-        enabled: true
-        backend: secret
-        default-context: ${spring.application.name}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/solivio}
@@ -45,22 +34,9 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration/shared
+    locations: classpath:db/migration
     baseline-on-migrate: false
     validate-on-migrate: true
-
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      group-id: ${spring.application.name}
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest
-      properties:
-        spring.json.trusted.packages: "com.solivio.*"
 
   servlet:
     multipart:
@@ -81,14 +57,14 @@ spring:
             required: true
 
   # Google OAuth2 : seul fournisseur externe supporte.
-  # Les credentials Google sont injectes depuis OpenBao en production.
+  # Spring refuse de demarrer si GOOGLE_CLIENT_ID est vide.
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:326901339653-qqkbuml4g1lj65e9gph0t6rqd8k98hco.apps.googleusercontent.com}
-            client-secret: ${GOOGLE_CLIENT_SECRET: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}
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
             scope: profile,email
         provider:
           google:
@@ -97,6 +73,31 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
+  # Evenements internes (ADR-003) : registre de publication JDBC, schema
+  # gere par Flyway (V8), evenements traites archives pour garder une trace.
+  modulith:
+    events:
+      jdbc:
+        schema-initialization:
+          enabled: false
+      completion-mode: archive
+      republish-outstanding-events-on-restart: true
+      # Une publication bloquee au-dela de ces durees passe en echec et sera
+      # relancee par MaintenancePublicationsJob.
+      staleness:
+        published: PT30M
+        processing: PT15M
+        resubmitted: PT15M
+
+  # Executeur des ecouteurs @ApplicationModuleListener (emails, statistiques).
+  task:
+    execution:
+      thread-name-prefix: solivio-evt-
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 500
+
   thymeleaf:
     check-template-location: false
     prefix: classpath:/templates/email/
@@ -104,22 +105,56 @@ spring:
 
 server:
   port: 8080
+  # Derriere Traefik : X-Forwarded-* donne le schema (cookies Secure) et l'IP cliente
+  # (limite de debit). Traefik ecrase ces en-tetes, un client ne peut pas les forger.
+  forward-headers-strategy: framework
   servlet:
     context-path: /
   compression:
     enabled: true
 
 management:
+  # Port de gestion distinct, jamais route par Traefik : seul Prometheus y accede,
+  # par le reseau Docker d'observabilite, avec le jeton METRICS_SCRAPE_TOKEN.
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:8081}
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,prometheus
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: never
+      probes:
+        enabled: true
   info:
     env:
       enabled: true
+  # Les traces partent vers Tempo (OTLP) seulement dans le profil prod. Tempo ne
+  # recoit pas de metriques : elles sont scrapees par Prometheus.
+  tracing:
+    export:
+      enabled: false
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      consume: W3C
+      produce: W3C
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  opentelemetry:
+    resource-attributes:
+      deployment.environment.name: ${DEPLOYMENT_ENVIRONMENT:local}
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    # Buckets d'histogramme pour calculer les percentiles de latence dans Prometheus
+    # (tableau de bord et alerte p95 du depot infrastructure).
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 springdoc:
   api-docs:
@@ -137,28 +172,34 @@ logging:
     org.flywaydb: INFO
 
 solivio:
-  multitenancy:
-    default-schema: public
   auth:
     # Duree de vie du JWT access token (minutes).
     access-token-expiration-minutes: ${SOLIVIO_ACCESS_TOKEN_EXPIRATION:15}
     # Duree de vie du JWT refresh token (jours).
     refresh-token-expiration-days: ${SOLIVIO_REFRESH_TOKEN_EXPIRATION:30}
-    # Cle secrete HMAC-SHA256 pour signer les JWT (32 octets minimum, base64).
-    # En prod : injectee depuis OpenBao (secret/solivio-api, cle jwt.secret).
-    jwt-secret: ${jwt.secret:}
+    # Cle HMAC-SHA256 de signature des JWT, 32 octets minimum.
+    jwt-secret: ${SOLIVIO_AUTH_JWT_SECRET:}
     # URI de redirection apres login Google reussi (vers le frontend).
     post-login-redirect-uri: ${SOLIVIO_POST_LOGIN_REDIRECT_URI:http://localhost:3000}
     # URI de redirection apres logout (vers le frontend).
     post-logout-redirect-uri: ${SOLIVIO_POST_LOGOUT_REDIRECT_URI:http://localhost:3000}
   mail:
-    from: noreply@solivio.app
-    reply-to: contact@solivio.app
+    # Expediteur des emails : adresse d'un domaine authentifie chez le fournisseur SMTP
+    # (Brevo en production), sinon les emails partent en spam ou sont refuses.
+    from: ${SOLIVIO_MAIL_FROM:noreply@solivio.app}
+  observabilite:
+    # Jeton attendu de Prometheus sur /actuator/prometheus. Vide = metriques inaccessibles.
+    metrics-scrape-token: ${METRICS_SCRAPE_TOKEN:}
+  securite:
+    limite-debit-auth:
+      # Appels POST par minute et par IP sur les points d'entree publics d'authentification.
+      requetes-par-minute: 10
   cors:
     allowed-origins: ${SOLIVIO_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   uploads:
     logos-dir: ${SOLIVIO_LOGOS_DIR:/var/solivio/logos}
     avatars-dir: ${SOLIVIO_UPLOADS_AVATARS_DIR:/var/solivio/avatars}
   maps:
-    # Cle Google Maps Platform injectee depuis OpenBao en production.
-    api-key: ${GOOGLE_MAPS_API_KEY:AIzaSyARDf3AExqhj8D4K8rkhFWhrVojuBCBCx0}
+    # Cle Google Maps Platform, publique cote navigateur : la restreindre par
+    # referent HTTP dans la console Google. Vide = carte desactivee.
+    api-key: ${GOOGLE_MAPS_API_KEY:}

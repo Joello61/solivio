@@ -13,7 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -79,15 +79,7 @@ public class AdminCompteService {
     }
 
     private CompteAdminResponse toResponse(Compte compte) {
-        List<MembreAssociation> affiliations = membreRepository.findActivesByCompteId(compte.getId());
-        List<CompteAdminResponse.AffiliationSummary> affiliationSummaries = affiliations.stream()
-            .map(a -> new CompteAdminResponse.AffiliationSummary(
-                a.getAssociation().getNom(),
-                a.getAssociation().getSlug(),
-                a.getRole(),
-                a.getStatut()
-            ))
-            .toList();
+        Optional<MembreAssociation> membre = membreRepository.findByCompteId(compte.getId());
         return new CompteAdminResponse(
             compte.getId(),
             compte.getEmail(),
@@ -98,7 +90,8 @@ public class AdminCompteService {
             compte.isActif(),
             compte.isSuperAdmin(),
             compte.getDateCreation(),
-            affiliationSummaries
+            membre.map(MembreAssociation::getRole).orElse(null),
+            membre.map(MembreAssociation::getStatut).orElse(null)
         );
     }
 }

@@ -30,7 +30,7 @@ public class JwtService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
-    private static final String CLAIM_TENANT = "tenant";
+    private static final int MIN_SECRET_BYTES = 32;
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_COORDO_TYPE = "coordo_type";
     private static final String CLAIM_SUPER_ADMIN = "super_admin";
@@ -46,14 +46,28 @@ public class JwtService {
             @Value("${solivio.auth.jwt-secret}") String jwtSecret,
             @Value("${solivio.auth.access-token-expiration-minutes:15}") long accessTokenMinutes,
             @Value("${solivio.auth.refresh-token-expiration-days:30}") long refreshTokenDays) {
-        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.signingKey = Keys.hmacShaKeyFor(verifierSecret(jwtSecret));
         this.accessTokenMinutes = accessTokenMinutes;
         this.refreshTokenDays = refreshTokenDays;
     }
 
+    // Un secret absent donnait une WeakKeyException peu parlante au demarrage :
+    // on echoue tot avec un message qui nomme la variable a fournir.
+    private static byte[] verifierSecret(String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "SOLIVIO_AUTH_JWT_SECRET est obligatoire (32 octets minimum)");
+        }
+        byte[] bytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "SOLIVIO_AUTH_JWT_SECRET doit faire au moins " + MIN_SECRET_BYTES + " octets");
+        }
+        return bytes;
+    }
+
     public String genererAccessToken(UUID compteId, String email, String nom, String prenom,
-                                     String tenantSlug, List<String> roles,
-                                     String coordoType, boolean superAdmin) {
+                                     List<String> roles, String coordoType, boolean superAdmin) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessTokenMinutes * 60);
 
@@ -62,9 +76,6 @@ public class JwtService {
         claims.put(CLAIM_PRENOM, prenom);
         claims.put(CLAIM_ROLES, roles);
         claims.put(CLAIM_SUPER_ADMIN, superAdmin);
-        if (tenantSlug != null) {
-            claims.put(CLAIM_TENANT, tenantSlug);
-        }
         if (coordoType != null) {
             claims.put(CLAIM_COORDO_TYPE, coordoType);
         }

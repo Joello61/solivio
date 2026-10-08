@@ -22,7 +22,7 @@ export default function NouvelEvenementPage() {
           <FormulaireEvenement />
         </div>
 
-        {/* Panneau info — masqué sur mobile */}
+        {/* Panneau info - masqué sur mobile */}
         <div className="hidden lg:block">
           <FormInfoPanel
             imageSrc="/images/forms/evenement.jpg"

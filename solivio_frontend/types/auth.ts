@@ -1,15 +1,7 @@
-export interface TenantSummary {
-  slug: string;
-  nom: string;
-  role: string;
-  coordoType: string | null;
-}
-
 export interface TokenResponse {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
-  tenants: TenantSummary[];
   refreshToken: string | null;
 }
 
@@ -21,7 +13,6 @@ export interface MeResponse {
   telephone: string | null;
   photoUrl: string | null;
   superAdmin: boolean;
-  tenantActif: string | null;
   roles: string[];
   dateCreation: string;
   dateModification: string;

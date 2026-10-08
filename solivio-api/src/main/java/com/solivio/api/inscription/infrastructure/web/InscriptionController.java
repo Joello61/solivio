@@ -1,7 +1,7 @@
 package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscrireRequest;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
@@ -43,8 +43,7 @@ public class InscriptionController {
             distributionId,
             user.getUsername(),
             request.type(),
-            request.creneauId(),
-            user.getTenantSlug()
+            request.creneauId()
         );
         auditService.tracer(user.getCompteId(), "INSCRIPTION_CREEE", "inscription", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -72,7 +71,7 @@ public class InscriptionController {
         @PathVariable UUID inscriptionId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        inscriptionService.desinscrire(inscriptionId, user.getUsername(), user.getTenantSlug());
+        inscriptionService.desinscrire(inscriptionId, user.getUsername());
         auditService.tracer(user.getCompteId(), "INSCRIPTION_ANNULEE", "inscription", inscriptionId);
         return ResponseEntity.noContent().build();
     }

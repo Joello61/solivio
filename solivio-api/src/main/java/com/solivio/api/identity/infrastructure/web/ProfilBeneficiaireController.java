@@ -1,7 +1,7 @@
 package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.identity.application.ProfilBeneficiaireService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.ProfilBeneficiaireResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateProfilBeneficiaireRequest;
 import jakarta.validation.Valid;

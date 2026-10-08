@@ -13,17 +13,9 @@ import { NavBreadcrumb } from "./NavBreadcrumb";
 import { logout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  admin: "Administrateur",
-  responsable: "Responsable",
-  coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
-};
 
 interface HeaderProps {
   user: MeResponse;
@@ -96,6 +88,7 @@ export function Header({ user }: HeaderProps) {
             <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image
+                  unoptimized
                   src={avatarSrc}
                   alt={`${user.prenom} ${user.nom}`}
                   fill

@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -52,9 +50,6 @@ class AuthControllerIntegrationTest {
     private MembreAssociationRepository membreRepo;
 
     @Autowired
-    private TenantFlywayMigrator flywayMigrator;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -71,19 +66,12 @@ class AuthControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
             .build();
-        association = new Association("pilote-test", "Association Pilote Test");
-        association.setCode("PILOTETEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("pilote-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
 
         compte = new Compte("alice@example.com", passwordEncoder.encode("password123!"), "Dupont", "Alice");
         compte.setEmailVerifie(true);
         compteRepository.save(compte);
 
-        MembreAssociation membre = new MembreAssociation(compte, association, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compte, "beneficiaire");
         membreRepo.save(membre);
     }
 
@@ -91,9 +79,6 @@ class AuthControllerIntegrationTest {
     void tearDown() {
         membreRepo.deleteAll();
         compteRepository.deleteAll();
-        String schema = TenantProvisioningService.schemaName("pilote-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
@@ -121,6 +106,39 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void login_verrouilleLeCompteApresCinqEchecs() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "faux-mdp", false))))
+                .andExpect(status().isUnauthorized());
+        }
+
+        // Meme le bon mot de passe est refuse tant que le verrouillage dure.
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void login_reussiRemetLeCompteurAZero() throws Exception {
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "faux-mdp", false))))
+                .andExpect(status().isUnauthorized());
+        }
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isOk());
+
+        org.assertj.core.api.Assertions.assertThat(
+            compteRepository.findByEmail("alice@example.com").orElseThrow().getEchecsConnexion()).isZero();
+    }
+
+    @Test
     void login_retourne401PourEmailInconnu() throws Exception {
         LoginRequest request = new LoginRequest("unknown@example.com", "password123!", false);
 
@@ -133,8 +151,7 @@ class AuthControllerIntegrationTest {
     @Test
     void register_retourne201PourNouvelInscription() throws Exception {
         RegisterRequest request = new RegisterRequest(
-            "bob@example.com", "password123!", "Martin", "Bob",
-            "PILOTETEST", null);
+            "bob@example.com", "password123!", "Martin", "Bob", null);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -145,10 +162,22 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void register_refuseUnMotDePasseCourant() throws Exception {
+        RegisterRequest request = new RegisterRequest(
+            "carole@example.com", "azertyuiop", "Durand", "Carole", null);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        assertThat(compteRepository.existsByEmail("carole@example.com")).isFalse();
+    }
+
+    @Test
     void register_retourne4xxPourEmailDejaPris() throws Exception {
         RegisterRequest request = new RegisterRequest(
-            "alice@example.com", "password123!", "Autre", "Personne",
-            "PILOTETEST", null);
+            "alice@example.com", "password123!", "Autre", "Personne", null);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -254,7 +283,7 @@ class AuthControllerIntegrationTest {
         compteRepository.save(googleCompte);
 
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "google@example.com", "Dupont", "Alice", "PILOTETEST", null);
+            "google@example.com", "Dupont", "Alice", null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -268,7 +297,7 @@ class AuthControllerIntegrationTest {
     void googleCompleteRegistration_retourne400SiPasGoogleId() throws Exception {
         // alice@example.com n'a pas de google_id (compte email/mot de passe)
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "alice@example.com", "Dupont", "Alice", "PILOTETEST", null);
+            "alice@example.com", "Dupont", "Alice", null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -281,10 +310,10 @@ class AuthControllerIntegrationTest {
         Compte googleCompteAffilie = new Compte("google2@example.com", null, "Martin", "Bob");
         googleCompteAffilie.setGoogleId("google-uid-789");
         compteRepository.save(googleCompteAffilie);
-        membreRepo.save(new MembreAssociation(googleCompteAffilie, association, "beneficiaire"));
+        membreRepo.save(new MembreAssociation(googleCompteAffilie, "beneficiaire"));
 
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "google2@example.com", "Martin", "Bob", "PILOTETEST", null);
+            "google2@example.com", "Martin", "Bob", null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)

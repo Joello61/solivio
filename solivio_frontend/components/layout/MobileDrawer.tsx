@@ -144,6 +144,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image
+                  unoptimized
                   src={avatarSrc}
                   alt="Avatar"
                   fill

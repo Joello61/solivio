@@ -2,8 +2,6 @@ package com.solivio.api.collecte.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -33,7 +31,6 @@ class MissionCollecteControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
@@ -41,7 +38,6 @@ class MissionCollecteControllerIntegrationTest {
     private Association association;
     private String tokenAdmin;
     private String tokenBenevole;
-    private String schema;
     private UUID personneId;
     private UUID benevolePersonneId;
 
@@ -51,52 +47,28 @@ class MissionCollecteControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        // Nettoyage des residus d'un tearDown precedemment interrompu par deadlock
-        schema = TenantProvisioningService.schemaName(TENANT);
-        try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        associationRepository.findAll().stream()
-            .filter(a -> TENANT.equals(a.getSlug()))
-            .forEach(associationRepository::delete);
-
-        association = new Association(TENANT, "Asso Collecte Test");
-        association.setCode("COLLTEST");
-        associationRepository.save(association);
-
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         personneId = UUID.randomUUID();
         benevolePersonneId = UUID.randomUUID();
 
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            personneId, "Admin", "Test", "admin@collecte.com", "admin@collecte.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            personneId, "Admin", "Test", "admin@collecte.com");
         jdbcTemplate.update(
-            "INSERT INTO \"" + schema + "\".personne (id, nom, prenom, email, compte_email) VALUES (?, ?, ?, ?, ?)",
-            benevolePersonneId, "Ben", "Evole", "ben@collecte.com", "ben@collecte.com"
-        );
+            "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            benevolePersonneId, "Ben", "Evole", "ben@collecte.com");
 
         tokenAdmin = jwtService.genererAccessToken(
-            UUID.randomUUID(), "admin@collecte.com", "Admin", "Test",
-            TENANT, List.of("responsable"), null, false
+            UUID.randomUUID(), "admin@collecte.com", "Admin", "Test", List.of("responsable"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "ben@collecte.com", "Ben", "Evole",
-            TENANT, List.of("benevole"), null, false
+            UUID.randomUUID(), "ben@collecte.com", "Ben", "Evole", List.of("benevole"), null, false
         );
     }
 
     @AfterEach
     void tearDown() {
-        // Le DROP SCHEMA peut provoquer un deadlock sous execution parallele — on absorbe l'erreur.
+        // Le DROP SCHEMA peut provoquer un deadlock sous execution parallele - on absorbe l'erreur.
         try {
-            jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        } catch (Exception ignored) {}
-        try {
-            associationRepository.delete(association);
         } catch (Exception ignored) {}
     }
 

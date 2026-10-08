@@ -22,7 +22,6 @@ function CompleteGoogleRegistrationForm() {
 
   const [nom, setNom] = useState(searchParams.get("nom") ?? "");
   const [prenom, setPrenom] = useState(searchParams.get("prenom") ?? "");
-  const [codeAssociation, setCodeAssociation] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,22 +30,14 @@ function CompleteGoogleRegistrationForm() {
     setError(null);
     setPending(true);
     try {
-      const data = await apiPost<TokenResponse>("/api/auth/google/complete-registration", {
+      await apiPost<TokenResponse>("/api/auth/google/complete-registration", {
         email,
         nom,
         prenom,
-        codeAssociation: isInvitation ? undefined : codeAssociation,
         tokenInvitation: isInvitation ? tokenInvitation : undefined,
       });
-
-      if (data.tenants.length > 1) {
-        sessionStorage.setItem("pending_token", data.accessToken);
-        sessionStorage.setItem("pending_tenants", JSON.stringify(data.tenants));
-        router.push("/tenant-select");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
+      router.push("/dashboard");
+      router.refresh();
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -64,7 +55,7 @@ function CompleteGoogleRegistrationForm() {
       description={
         isInvitation
           ? "Verifiez vos informations pour accepter l'invitation."
-          : "Verifiez vos informations pour rejoindre votre association."
+          : "Verifiez vos informations pour rejoindre Linkee Toulouse."
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,22 +87,6 @@ function CompleteGoogleRegistrationForm() {
           </div>
         </div>
 
-        {!isInvitation && (
-          <div className="space-y-1.5">
-            <Label htmlFor="code">Code de votre association</Label>
-            <Input
-              id="code"
-              required
-              value={codeAssociation}
-              onChange={(e) => setCodeAssociation(e.target.value.toUpperCase())}
-              placeholder="Ex: PILOTE"
-              className="uppercase"
-            />
-            <p className="text-xs text-muted-foreground">
-              Ce code vous est fourni par votre association.
-            </p>
-          </div>
-        )}
 
         <FormError message={error} />
 

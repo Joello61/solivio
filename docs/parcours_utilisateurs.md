@@ -1,14 +1,12 @@
-# Parcours utilisateurs — Solivio
+# Parcours utilisateurs - Solivio
 
 > Comment chaque utilisateur vit concrètement le produit, étape par étape, avec la simplicité comme obsession.
 
-**Document structurant — version 1.1**
+**Document structurant - version 1.1**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
 > Changement depuis la version 1.0 : clarification explicite de l'approche mobile-first et non mobile-only (interface responsive, pleinement utilisable sur ordinateur), avec distinction des parcours à dominante mobile et à dominante ordinateur.
-
----
 
 ## Avertissement de lecture
 
@@ -18,11 +16,9 @@ Il se limite strictement aux parcours de la V1. Les fonctions repoussées (dons,
 
 Un fil rouge traverse tout le document, hérité de l'analyse de la concurrence : **le vrai concurrent n'est pas un autre logiciel, c'est le tableur.** Chaque parcours doit donc se mesurer à une seule question : *est-ce plus simple que ce que l'utilisateur fait aujourd'hui ?* Si la réponse n'est pas un oui évident, le parcours est à revoir.
 
----
-
 ## 1. Le principe directeur : la simplicité
 
-La simplicité n'est pas une qualité parmi d'autres : c'est la condition de survie du produit. Un outil associatif est utilisé par des bénévoles non techniques, dont l'équipe se renouvelle chaque année, souvent dans l'urgence d'un jour de distribution. Un parcours confus n'est pas « moins agréable » : il est abandonné, et l'on retourne au tableur.
+La simplicité n'est pas une qualité parmi d'autres : c'est la condition de survie du produit. Un outil associatif est utilisé par des bénévoles non techniques, dont l'équipe se renouvelle chaque année, souvent dans l'urgence d'un jour de distribution. Un parcours confus n'est pas "moins agréable" : il est abandonné, et l'on retourne au tableur.
 
 Trois conséquences concrètes :
 
@@ -30,16 +26,14 @@ Trois conséquences concrètes :
 - **Pas de jargon.** Le vocabulaire est celui des utilisateurs, pas celui des développeurs.
 - **L'erreur est rattrapable.** Annuler une inscription, corriger une saisie, revenir en arrière doit toujours être facile et sans conséquence grave.
 
----
-
 ## 2. Principes d'expérience transverses
 
 Ces principes s'appliquent à tous les parcours.
 
 **Mobile d'abord, mais jamais mobile uniquement.** Solivio est conçu selon une approche *mobile-first* : on conçoit pour le téléphone d'abord, puis on enrichit l'affichage pour les écrans plus grands. Mais ce n'est en aucun cas une application *mobile-only* : tous les parcours doivent rester pleinement utilisables sur ordinateur. L'interface est **responsive**, c'est-à-dire qu'elle s'adapte à toutes les tailles d'écran. Concrètement :
 
-- les parcours **à dominante mobile** — l'inscription du bénéficiaire et le pointage sur le terrain le jour J — sont conçus et optimisés d'abord pour le téléphone, car c'est là qu'ils sont réellement utilisés ;
-- les parcours **à dominante ordinateur** — la création d'une distribution, la saisie des denrées, le suivi des inscriptions, la configuration de l'association, les statistiques — sont plus riches et plus confortables sur grand écran, où ils sont le plus souvent réalisés, mais doivent rester **entièrement faisables sur mobile** en cas de besoin.
+- les parcours **à dominante mobile** - l'inscription du bénéficiaire et le pointage sur le terrain le jour J - sont conçus et optimisés d'abord pour le téléphone, car c'est là qu'ils sont réellement utilisés ;
+- les parcours **à dominante ordinateur** - la création d'une distribution, la saisie des denrées, le suivi des inscriptions, la configuration de l'association, les statistiques - sont plus riches et plus confortables sur grand écran, où ils sont le plus souvent réalisés, mais doivent rester **entièrement faisables sur mobile** en cas de besoin.
 
 Autrement dit, aucun écran n'est réservé à un seul type d'appareil. Le mobile guide la conception ; l'ordinateur n'est jamais sacrifié.
 
@@ -51,8 +45,6 @@ Autrement dit, aucun écran n'est réservé à un seul type d'appareil. Le mobil
 
 **Accessibilité.** Contrastes suffisants, textes lisibles, navigation possible sans souris, compatibilité avec les lecteurs d'écran. Le public est large et divers.
 
----
-
 ## 3. Les quatre utilisateurs et leurs moments clés
 
 | Utilisateur | Son moment clé | Ce qui compte le plus pour lui |
@@ -61,8 +53,6 @@ Autrement dit, aucun écran n'est réservé à un seul type d'appareil. Le mobil
 | Bénévole | S'inscrire à un créneau et aider le jour J | Clarté de ses missions, pointage facile |
 | Coordinateur | Organiser une distribution de bout en bout | Vision d'ensemble, calcul de répartition, gestion des imprévus |
 | Responsable | Piloter et configurer l'association | Vue globale, statistiques fiables, maîtrise des données |
-
----
 
 ## 4. Parcours du bénéficiaire
 
@@ -74,7 +64,7 @@ C'est le parcours le plus important et le plus exigeant en simplicité. Il doit 
 flowchart TD
     A[Ouverture de Solivio sur mobile] --> B{Compte existant ?}
     B -- Non --> C[Création de compte rapide]
-    B -- Oui --> D[Connexion via Keycloak]
+    B -- Oui --> D[Connexion email ou Google]
     C --> D
     D --> E[Liste des distributions à venir]
     E --> F[Sélection de la distribution]
@@ -94,27 +84,25 @@ flowchart TD
 
 ### 4.2 Les étapes en détail
 
-**Étape 1 — Accès et compte.** Le bénéficiaire arrive sur la page de son association (avec le logo et les couleurs de celle-ci). S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact). La connexion passe par Keycloak, de façon transparente pour lui. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
+**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, aux couleurs de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
 
-**Étape 2 — Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
+**Étape 2 - Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
 
-**Étape 3 — S'inscrire.** Il choisit une distribution. Selon le mode défini par l'association :
+**Étape 3 - S'inscrire.** Il choisit une distribution. Selon le mode défini par l'association :
 - en **mode créneau unique**, il s'inscrit simplement à la plage (par exemple lundi 17h-18h30), en sachant que le service se fera dans l'ordre d'arrivée ;
 - en **mode créneaux découpés**, il choisit un horaire précis parmi ceux qui restent (par exemple 16h15-16h30).
 
-**Étape 4 — La confirmation, ou la liste d'attente.** S'il reste de la place, l'inscription est confirmée à l'écran et par email. Si la distribution est complète, il est placé en liste d'attente, ce qui lui est expliqué clairement et sans dramatiser : il sera prévenu automatiquement si une place se libère. S'il a déjà atteint la limite de fréquence fixée par l'association (par exemple une inscription par semaine), l'écran le lui dit avec ménagement.
+**Étape 4 - La confirmation, ou la liste d'attente.** S'il reste de la place, l'inscription est confirmée à l'écran et par email. Si la distribution est complète, il est placé en liste d'attente, ce qui lui est expliqué clairement et sans dramatiser : il sera prévenu automatiquement si une place se libère. S'il a déjà atteint la limite de fréquence fixée par l'association (par exemple une inscription par semaine), l'écran le lui dit avec ménagement.
 
-**Étape 5 — Le rappel.** La veille, il reçoit un email de rappel : date, lieu, et son horaire le cas échéant.
+**Étape 5 - Le rappel.** La veille, il reçoit un email de rappel : date, lieu, et son horaire le cas échéant.
 
-**Étape 6 — Le jour J.** Il se présente. En mode unique, il est servi dans l'ordre d'arrivée ; en mode découpé, à son horaire. Un bénévole ou un coordinateur le pointe comme présent. Pour lui, c'est invisible et instantané.
+**Étape 6 - Le jour J.** Il se présente. En mode unique, il est servi dans l'ordre d'arrivée ; en mode découpé, à son horaire. Un bénévole ou un coordinateur le pointe comme présent. Pour lui, c'est invisible et instantané.
 
-**Étape 7 — Empêchement.** S'il ne peut pas venir, il annule son inscription en un geste, ce qui libère sa place pour la liste d'attente. L'annulation est encouragée et facile, précisément pour réduire les absences.
+**Étape 7 - Empêchement.** S'il ne peut pas venir, il annule son inscription en un geste, ce qui libère sa place pour la liste d'attente. L'annulation est encouragée et facile, précisément pour réduire les absences.
 
 ### 4.3 Ce que le bénéficiaire ne voit jamais
 
 Il ne voit pas les données des autres bénéficiaires, ni les statistiques, ni la logistique. Son espace est minimal : ses inscriptions, à venir et passées, et rien d'autre. Cette minimalité est un choix de simplicité et de confidentialité.
-
----
 
 ## 5. Parcours du bénévole
 
@@ -136,8 +124,6 @@ S'il ne peut plus assurer son créneau, il se désinscrit. Si c'est tardif, le c
 
 Le bénévole voit ses créneaux à venir et son historique de participation. Simple, centré sur lui.
 
----
-
 ## 6. Parcours du coordinateur
 
 C'est le parcours le plus riche, car le coordinateur orchestre la distribution. Il doit rester maîtrisable malgré sa richesse.
@@ -154,9 +140,9 @@ Il fixe les capacités (nombre de bénéficiaires, nombre de bénévoles). La di
 
 C'est une étape distinctive de Solivio. Le coordinateur saisit les denrées disponibles **en conditionnement** : pour chaque denrée, un libellé, une unité, un nombre de contenants et une quantité par contenant. L'application calcule aussitôt la quantité totale.
 
-Puis elle affiche, pour chaque denrée, la **dotation par bénéficiaire** : la quantité totale divisée par le nombre d'inscrits, arrondie à l'inférieur, avec un plancher à 1. Exemple à l'écran : « Pommes de terre : 10 sacs × 100 = 1 000, soit 10 par personne pour 100 inscrits ».
+Puis elle affiche, pour chaque denrée, la **dotation par bénéficiaire** : la quantité totale divisée par le nombre d'inscrits, arrondie à l'inférieur, avec un plancher à 1. Exemple à l'écran : "Pommes de terre : 10 sacs x 100 = 1 000, soit 10 par personne pour 100 inscrits".
 
-Le cas de pénurie est rendu clair : si une denrée ne suffit pas pour tout le monde (par exemple 50 yaourts pour 100 inscrits), l'application affiche « 1 par personne, pour 50 bénéficiaires sur 100 ». Elle ne masque pas le manque ; elle le montre, pour que le coordinateur prépare en conséquence.
+Le cas de pénurie est rendu clair : si une denrée ne suffit pas pour tout le monde (par exemple 50 yaourts pour 100 inscrits), l'application affiche "1 par personne, pour 50 bénéficiaires sur 100". Elle ne masque pas le manque ; elle le montre, pour que le coordinateur prépare en conséquence.
 
 Le coordinateur peut basculer la base de calcul des inscrits vers les présents, utile le jour J pour ajuster un reste à ceux qui sont effectivement venus.
 
@@ -177,8 +163,6 @@ Le coordinateur supervise le pointage (qu'il fait lui-même ou délègue aux bé
 
 Après la distribution, le coordinateur la clôt. Il dispose alors d'un bilan : combien d'inscrits, de présents, d'absents, quelle répartition a été appliquée. Ce bilan nourrit les statistiques.
 
----
-
 ## 7. Parcours du responsable
 
 ### 7.1 Configurer l'association
@@ -197,8 +181,6 @@ Le responsable dispose d'un tableau de bord de statistiques agrégées : nombre 
 
 Le responsable peut exporter l'ensemble des données de l'association, et en demander la suppression. C'est la traduction concrète, dans l'expérience, de la promesse de non-enfermement. Cette possibilité est visible et accessible, pas cachée.
 
----
-
 ## 8. Les moments de vérité
 
 Certains instants décident de l'adoption ou de l'abandon. Ils méritent un soin particulier.
@@ -213,8 +195,6 @@ Certains instants décident de l'adoption ou de l'abandon. Ils méritent un soin
 
 Le dernier point dépasse le cadre strict de la V1 mais doit rester présent à l'esprit : la simplicité de chaque parcours est ce qui permettra à un nouveau bureau de reprendre l'outil sans tout réapprendre.
 
----
-
 ## 9. Ce qui est volontairement absent des parcours V1
 
 Pour rester cohérent avec le périmètre, ces parcours n'existent pas en V1 :
@@ -228,15 +208,11 @@ Pour rester cohérent avec le périmètre, ces parcours n'existent pas en V1 :
 
 Ces absences sont des choix, pas des oublis.
 
----
-
 ## 10. Ce que ce document implique pour la suite
 
 - La **roadmap** (`roadmap.md`) doit prioriser les parcours dans l'ordre de leur criticité : d'abord l'inscription du bénéficiaire et le pointage, puis la création de distribution et la répartition, puis la configuration et les statistiques.
 - La phase de **design visuel** (au moment du développement frontend, guidée par les bonnes pratiques d'interface) traduira ces parcours en écrans concrets, en gardant la simplicité comme critère premier.
 - Les **tests fonctionnels** définis dans l'architecture doivent couvrir en priorité les moments de vérité de la section 8.
-
----
 
 ## 11. Synthèse en une page
 
@@ -244,14 +220,12 @@ Ces absences sont des choix, pas des oublis.
 
 **Le bénéficiaire.** Un parcours mobile, digne et minimal : voir les distributions, s'inscrire en moins d'une minute, recevoir confirmation et rappel, être pointé sans friction le jour J, annuler facilement. Il ne voit que ses propres inscriptions.
 
-**Le bénévole.** S'inscrire à un créneau, aider au pointage le jour J — en ne voyant qu'un nom et un statut, jamais les données sensibles. La confidentialité rendue visible.
+**Le bénévole.** S'inscrire à un créneau, aider au pointage le jour J - en ne voyant qu'un nom et un statut, jamais les données sensibles. La confidentialité rendue visible.
 
 **Le coordinateur.** Le parcours le plus riche : créer une distribution avec son mode de créneau, saisir les denrées en conditionnement et voir la répartition calculée (avec le cas de pénurie affiché clairement), suivre les inscriptions, superviser le jour J, gérer les imprévus, clôturer.
 
-**Le responsable.** Configurer l'association, gérer membres et rôles, suivre des statistiques agrégées, et exporter ou supprimer les données — le non-enfermement rendu concret.
+**Le responsable.** Configurer l'association, gérer membres et rôles, suivre des statistiques agrégées, et exporter ou supprimer les données - le non-enfermement rendu concret.
 
 **Les moments de vérité.** Première inscription, pointage, calcul de répartition, annulation, reprise par un nouveau bureau. C'est là que se joue l'adoption, et c'est là que la simplicité doit être irréprochable.
-
----
 
 *Fin des parcours utilisateurs. Document suivant : `roadmap.md`.*

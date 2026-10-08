@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.infrastructure.web.dto;
 
+import com.solivio.api.shared.lieu.LieuRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

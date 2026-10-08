@@ -1,0 +1,24 @@
+# Rattachement a l'observabilite du VPS (depot infrastructure), preproduction uniquement.
+# Charge par docker/deploy/ssh-deploy.sh quand l'environnement est "staging" ;
+# la production charge docker-compose.prod.observability.yml. Reseau distinct de
+# la production : un meme nom de service y designerait deux conteneurs.
+#
+# Prometheus vise le backend par l'alias solivio-staging-backend (port de gestion 8081,
+# jeton METRICS_SCRAPE_TOKEN), jamais par le nom de service "backend", ambigu sur un
+# reseau partage par plusieurs projets. Le backend y envoie aussi ses traces (Tempo).
+#
+# "default" est repete : des qu'un fichier de la fusion declare une liste "networks"
+# pour un service, Compose n'ajoute plus "default" implicitement, et le backend
+# perdrait PostgreSQL.
+
+services:
+  backend:
+    networks:
+      default:
+      observability-staging:
+        aliases:
+          - solivio-staging-backend
+
+networks:
+  observability-staging:
+    external: true

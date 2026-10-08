@@ -1,6 +1,6 @@
 package com.solivio.api.inscription.infrastructure.web;
 
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import org.springframework.http.ResponseEntity;

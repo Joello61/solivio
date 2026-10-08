@@ -1,6 +1,6 @@
 package com.solivio.api.repartition.infrastructure.web;
 
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.repartition.application.CatalogueDenreeService;
 import com.solivio.api.repartition.infrastructure.web.dto.CatalogueDenreeRequest;
 import com.solivio.api.repartition.infrastructure.web.dto.CatalogueDenreeResponse;

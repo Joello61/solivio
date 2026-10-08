@@ -3,7 +3,7 @@ package com.solivio.api.distribution.application;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
-import com.solivio.api.distribution.infrastructure.kafka.DistributionEventPublisher;
+import com.solivio.api.distribution.infrastructure.evenements.DistributionEventPublisher;
 import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository;
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;
@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -116,16 +117,17 @@ class DistributionServiceTest {
         when(creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId))
             .thenReturn(List.of());
 
-        DistributionResponse response = service.publier(distributionId, "tenant1");
+        DistributionResponse response = service.publier(distributionId);
 
         assertThat(response.statut()).isEqualTo("PUBLIEE");
-        verify(eventPublisher).publierPubliee(eq(distributionId), eq("tenant1"), any(LocalDate.class));
+        // La publication n'a aucun consommateur : aucun evenement n'est emis.
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void publier_echoueSiDistributionInexistante() {
         when(distributionRepository.findById(distributionId)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.publier(distributionId, "tenant1"))
+        assertThatThrownBy(() -> service.publier(distributionId))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -136,11 +138,11 @@ class DistributionServiceTest {
         when(creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId))
             .thenReturn(List.of());
 
-        DistributionResponse response = service.annuler(distributionId, "Raison X", "tenant1");
+        DistributionResponse response = service.annuler(distributionId, "Raison X");
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.motifAnnulation()).isEqualTo("Raison X");
-        verify(eventPublisher).publierAnnulee(eq(distributionId), eq("tenant1"), any(LocalDate.class));
+        verify(eventPublisher).publierAnnulee(eq(distributionId), any(LocalDate.class));
     }
 
     @Test
@@ -170,7 +172,7 @@ class DistributionServiceTest {
     }
 
     @Test
-    void demarrer_nEmettreAucunEvenementKafka() {
+    void demarrer_nEmetAucunEvenement() {
         // Distribution a la date du jour : demarrage autorise
         Distribution distribAujourdhui = new Distribution(
             "Distribution de test", null, null, LocalDate.now(),
@@ -186,8 +188,7 @@ class DistributionServiceTest {
         DistributionResponse response = service.demarrer(distributionId);
 
         assertThat(response.statut()).isEqualTo("EN_COURS");
-        verify(eventPublisher, never()).publierPubliee(any(), any(), any());
-        verify(eventPublisher, never()).publierAnnulee(any(), any(), any());
+        verify(eventPublisher, never()).publierAnnulee(any(), any());
     }
 
     @Test

@@ -1,7 +1,7 @@
 package com.solivio.api.reconditionnement.infrastructure.web;
 
 import com.solivio.api.audit.application.AuditService;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.reconditionnement.application.SessionReconditionnementService;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.CreateSessionReconditionnementRequest;
@@ -82,7 +82,7 @@ public class SessionReconditionnementController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        SessionReconditionnementResponse response = sessionService.publier(id, user.getTenantSlug());
+        SessionReconditionnementResponse response = sessionService.publier(id);
         auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_PUBLIEE",
             "session_reconditionnement", id);
         return ResponseEntity.ok(response);
@@ -120,7 +120,7 @@ public class SessionReconditionnementController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         SessionReconditionnementResponse response =
-            sessionService.annuler(id, request, user.getTenantSlug());
+            sessionService.annuler(id, request);
         auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_ANNULEE",
             "session_reconditionnement", id);
         return ResponseEntity.ok(response);

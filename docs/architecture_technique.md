@@ -1,358 +1,277 @@
-# Architecture technique — Solivio
+# Architecture technique - Solivio
 
-> Comment le produit est construit : style architectural, pile technique, et chemin d'évolution vers les microservices.
+> Comment le produit est construit : style architectural, pile technique, exploitation, et décisions d'architecture (ADR).
 
-**Document structurant — version 1.0**
+**Document structurant - version 2.0**
 **Statut : référence de travail**
-**Dernière mise à jour : juin 2026**
-
----
+**Dernière mise à jour : octobre 2026**
 
 ## Avertissement de lecture
 
-Ce document décrit les choix techniques de Solivio : le style d'architecture, les technologies, et la manière de les assembler. Il traduit en infrastructure les décisions des documents précédents, en respectant deux contraintes fortes posées par le porteur :
+Ce document décrit les choix techniques de Solivio et les décisions d'architecture qui les justifient (section 14, ADR). Il traduit en infrastructure les documents fonctionnels, avec deux contraintes :
 
-1. **Un objectif d'apprentissage assumé.** Le projet est aussi un terrain de montée en compétence sur des technologies que le porteur veut maîtriser (Spring Boot, Kafka, Keycloak, Vault/OpenBao, Next.js, conteneurisation, intégration continue). Ce n'est pas un caprice : c'est un objectif de carrière légitime, cohérent avec une trajectoire vers un rôle de Tech Lead.
-2. **Une discipline de livraison.** Conformément à l'étude de faisabilité, l'architecture ne doit pas mettre en péril la livraison de la V1. C'est pourquoi le style retenu réconcilie apprentissage et livrabilité (voir section 2).
+1. **Une seule association.** Depuis octobre 2026, Solivio est construit pour Linkee Toulouse uniquement (ADR-001). Les briques pensées pour un déploiement multi-association (schéma par association, Keycloak, Kafka, OpenBao) ont été retirées : elles alourdissaient chaque évolution sans rien apporter à une association unique.
+2. **Une discipline de livraison.** Le projet est porté par un développeur seul. Toute brique d'infrastructure doit se justifier par un besoin réel, et pouvoir être exploitée sur le VPS existant.
 
-**Sur les versions.** Toutes les versions citées sont à jour au moment de la rédaction (juin 2026) et ont été vérifiées. Mais elles bougent vite — Spring Boot, Next.js, PostgreSQL et Kafka publient des versions toutes les quelques semaines à quelques mois. Le principe directeur est : **toujours partir de la dernière version stable, et la revérifier au démarrage effectif du projet.** Le tableau de la section 16 donne l'état de référence de juin 2026.
-
----
+**Sur les versions.** Les versions bougent vite. Le principe directeur reste : partir de la dernière version stable et supportée, et la revérifier sur la documentation officielle avant toute installation ou mise à jour (règle de `CLAUDE.md`). Le tableau de la section 13 donne l'état de référence.
 
 ## 1. Vue d'ensemble
 
-Solivio est composé de quatre grands ensembles techniques, tous conteneurisés :
-
 | Ensemble | Technologie | Rôle |
 |---|---|---|
-| Frontend | Next.js (React, TypeScript) | L'interface web, rendue côté serveur pour les pages publiques |
-| Backend | Spring Boot (Java) | La logique métier, organisée en monolithe modulaire |
-| Authentification | Keycloak | La gestion des identités et des accès, déléguée |
-| Données et secrets | PostgreSQL, Kafka, Vault/OpenBao | Persistance, événementiel asynchrone, gestion des secrets |
+| Frontend web | Next.js (React, TypeScript, Tailwind CSS) | Interface web, rendu serveur des pages publiques |
+| Application mobile | Expo (React Native, Expo Router, NativeWind) | Application mobile des bénévoles et bénéficiaires (ADR-007) |
+| Backend | Spring Boot (Java) avec Spring Modulith | Logique métier, monolithe modulaire vérifié (ADR-002) |
+| Données | PostgreSQL | Persistance, y compris le registre des événements internes |
+| Exploitation | Docker, Traefik, Grafana Alloy, Loki, Prometheus, Tempo, Grafana, Infisical | Conteneurs, routage HTTPS, observabilité, secrets (stack commune du VPS) |
 
-Le tout est conteneurisé avec Docker, intégré et déployé via GitLab CI/CD, et hébergé sur une infrastructure européenne (cohérent avec le RGPD et le modèle économique).
+Enchaînement type d'une requête : le navigateur interagit avec Next.js ; les appels API arrivent sur Spring Boot, qui authentifie la requête (jeton JWT en cookie HttpOnly ou en en-tête `Authorization: Bearer` pour le mobile), vérifie les droits, lit ou écrit dans PostgreSQL et publie au besoin un événement interne (par exemple pour déclencher une notification). L'événement est enregistré dans la même transaction que la donnée métier, puis traité après validation de celle-ci (section 4).
 
-L'enchaînement type d'une requête depuis un navigateur : le navigateur interagit avec Next.js ; pour la connexion, Spring Boot joue le rôle de BFF (Backend for Frontend) et gère lui-même le flow OIDC avec Keycloak — les tokens ne transitent jamais par le navigateur, ils sont chiffrés dans des cookies HttpOnly. Pour les appels API, Spring Boot vérifie les droits, lit ou écrit dans PostgreSQL, publie au besoin des événements dans Kafka (par exemple pour déclencher une notification), et récupère ses secrets depuis OpenBao.
+## 2. Le style architectural : monolithe modulaire vérifié
 
-Depuis une application mobile Capacitor, le flow est différent : l'application gère elle-même le flow PKCE avec Keycloak et envoie le token en header `Authorization: Bearer`. Spring Boot accepte les deux modes de manière transparente.
+### 2.1 La décision
 
----
+Le backend est un **monolithe modulaire** : une seule application déployable, découpée en modules aux frontières nettes. Ce choix évite la complexité opérationnelle des microservices (déploiements multiples, cohérence distribuée), qui est le principal risque d'enlisement pour un développeur seul, tout en gardant le code organisé par domaine.
 
-## 2. Le style architectural : monolithe modulaire évolutif
+Depuis octobre 2026, les frontières ne reposent plus sur la seule discipline : **Spring Modulith** les vérifie automatiquement (ADR-002). Un test de modularité échoue dès qu'un module accède aux internes d'un autre, et ce test fait partie de la construction (`./mvnw verify`), donc de l'intégration continue.
 
-### 2.1 La décision et sa justification
+### 2.2 Les modules
 
-Le backend est un **monolithe modulaire** : une seule application déployable, mais découpée à l'intérieur en modules aux frontières nettes. Ce n'est ni un monolithe en bloc (le « gros tas » difficile à maintenir), ni des microservices (plusieurs applications déployées séparément).
-
-Ce choix réconcilie les deux contraintes de l'avertissement :
-
-- Il **permet d'apprendre** Kafka, Keycloak, Vault, la conteneurisation et l'intégration continue dès le départ, car ces briques fonctionnent à l'identique quel que soit le style monolithe ou microservices.
-- Il **protège la livraison**, car il évite la complexité opérationnelle des microservices (déploiements multiples, cohérence distribuée, tracing inter-services) qui, pour un développeur seul, est le principal risque d'enlisement.
-- Il **prépare l'évolution** : les modules ayant des frontières claires et communiquant par événements, on pourra en extraire un en microservice plus tard, comme un exercice d'apprentissage délibéré, sur une base stable. C'est d'ailleurs ainsi que procèdent la plupart des entreprises : monolithe d'abord, extraction ensuite.
-
-### 2.2 Les modules internes
-
-Le monolithe est découpé en modules correspondant aux domaines fonctionnels des spécifications :
+Chaque module est un sous-package direct de `com.solivio.api` :
 
 | Module | Responsabilité |
 |---|---|
-| Identité et accès | Personnes, rôles, permissions, affiliations |
-| Distributions | Distributions, créneaux, cycle de vie |
-| Inscriptions | Inscriptions, listes d'attente, présence |
-| Répartition | Denrées et calcul de dotation |
-| Notifications | Envoi des emails sur événements |
-| Audit | Journal des actions sensibles |
-| Socle multi-association | Isolation, configuration, contexte tenant |
+| `identity` | Comptes, personnes, rôles, authentification, invitations, profil bénéficiaire |
+| `association` | Configuration de l'association (nom, logo, couleurs, contact, fuseau, fréquence), export RGPD |
+| `distribution` | Distributions, créneaux, lieux, cycle de vie |
+| `inscription` | Inscriptions, listes d'attente, pointage (dont pointage ad hoc), rôles bénévoles |
+| `repartition` | Denrées et calcul de dotation |
+| `notification` | Emails déclenchés par les événements, rappels, email libre |
+| `statistique` | Statistiques agrégées et pseudonymisées |
+| `evenement` | Événements de l'association et participations |
+| `collecte` | Missions de collecte |
+| `reconditionnement` | Sessions de reconditionnement |
+| `audit` | Journal des actions sensibles |
+| `shared` | Ports et types partagés explicitement exposés aux autres modules |
 
 ### 2.3 Comment les modules communiquent
 
-Deux modes de communication, choisis pour préparer l'extraction future :
+- **Appels synchrones par port** pour les besoins immédiats (par exemple le module `repartition` demande au module `inscription` le nombre d'inscrits). Le port est une interface publique du module appelé (ou de `shared`), jamais un accès direct à son repository ou à ses entités.
+- **Événements internes** pour découpler les effets secondaires (par exemple `inscription` publie qu'une inscription est confirmée, `notification` envoie l'email). Voir section 4.
 
-- **Appels synchrones par interface** pour les besoins immédiats (par exemple, le module Répartition demande au module Inscriptions le nombre d'inscrits). Ces appels passent par des interfaces explicites, jamais par un accès direct aux données internes d'un autre module.
-- **Événements asynchrones via Kafka** pour découpler les modules (par exemple, à l'inscription d'un bénéficiaire, le module Inscriptions publie un événement ; le module Notifications le consomme et envoie l'email de confirmation). C'est ce découplage par événements qui rendra l'extraction en microservice indolore le moment venu, et c'est aussi le vecteur d'apprentissage de Kafka.
+> Règle de conception : aucun module n'accède aux tables, repositories ou entités d'un autre module. Le test de modularité Spring Modulith en est le garant.
 
-> Règle de conception : aucun module n'accède aux tables d'un autre module. Les frontières sont respectées comme si chaque module était déjà un service séparé. C'est la discipline qui garantit l'extraction future.
+### 2.4 Structure interne d'un module
 
----
+Chaque module suit une organisation en couches inspirée de l'architecture hexagonale :
+
+- `domain` : règles métier pures (par exemple le calcul de dotation avec arrondi et plancher), testables sans base de données ;
+- `application` : orchestration des cas d'usage, transactions, publication d'événements ;
+- `infrastructure` : persistance (`persistence`), API HTTP (`web`), planification, intégrations externes.
+
+Flux d'une requête : `Requête -> Validation -> Autorisation -> Service applicatif -> Domaine -> Persistance -> Réponse`. Les controllers restent minces.
 
 ## 3. Le backend : Spring Boot
 
-### 3.1 Versions et socle
+### 3.1 Socle
 
-Le backend repose sur **Spring Boot 4** (version 4.0.6 stable en juin 2026, construite sur Spring Framework 7 et Spring Security 7), exécuté sur **Java 25** (la version LTS publiée en septembre 2025, bénéficiant du support de première classe de Spring Boot 4). La version 4.1 est attendue peu après la rédaction ; le principe de partir de la dernière stable s'applique.
+Spring Boot 4 (Spring Framework 7, Spring Security 7) sur Java 25 (LTS). Spring Boot 4 apporte Jackson 3 (`tools.jackson.*`) et Hibernate 7 ; voir les notes de migration dans la mémoire du projet et les release notes officielles avant toute montée de version.
 
-### 3.2 Structure interne d'un module
+### 3.2 Persistance
 
-Chaque module suit une organisation en couches inspirée de l'architecture hexagonale, qui isole la logique métier des détails techniques :
+JPA/Hibernate, avec **Flyway** comme seul maître du schéma : toute modification passe par une migration versionnée, jamais par une génération automatique ni une modification manuelle. Un seul schéma PostgreSQL (`public`) et un seul emplacement de migrations (ADR-001).
 
-- une couche **domaine** (les règles métier pures, par exemple le calcul de dotation avec arrondi et plancher) ;
-- une couche **application** (l'orchestration des cas d'usage) ;
-- une couche **infrastructure** (la persistance, l'accès à Kafka, les appels externes).
+### 3.3 L'API
 
-Cette isolation a un double bénéfice : elle rend la logique métier testable sans base de données, et elle facilite l'extraction future d'un module en service autonome.
+API REST, documentée automatiquement par OpenAPI (springdoc), exposée uniquement dans les profils de développement et de test. Les réponses d'erreur suivent une enveloppe unique, `{"error": {"code", "message", "details", "request_id"}}` : `code` est un identifiant stable destiné au client (`VALIDATION_FAILED`, `NOT_FOUND`, `UNAUTHENTICATED`...), `message` est lisible par l'utilisateur, `details` liste les champs invalides d'une validation, et `request_id` relie une erreur visible à ses journaux et traces. Une ressource inexistante ou non autorisée répond `404`, jamais une confirmation de son existence.
 
-### 3.3 Persistance
+## 4. Les événements internes : Spring Modulith
 
-La persistance utilise **JPA/Hibernate**, avec **Flyway** pour la gestion versionnée des migrations de schéma. Les migrations sont rejouables et s'appliquent de façon contrôlée, y compris sur plusieurs schémas (voir la section base de données).
+### 4.1 Pourquoi pas Kafka
 
-### 3.4 La réalisation de l'isolation multi-association
+Kafka avait été retenu pour l'apprentissage et pour préparer une extraction en microservices. Pour une association unique sur un VPS, il ajoutait un service lourd à exploiter, et l'envoi des messages se faisait avant la validation de la transaction (un rollback pouvait quand même déclencher un email). Il est remplacé par les événements internes de Spring Modulith (ADR-003).
 
-Le modèle de données posait le principe d'isolation sans en fixer la réalisation physique. Ce document tranche : **un schéma PostgreSQL par association** (stratégie schema-per-tenant). Hibernate gère nativement ce mode de multi-tenance : un résolveur de contexte détermine, à chaque requête, l'association concernée (à partir du jeton d'authentification ou du sous-domaine), et oriente automatiquement les requêtes vers le bon schéma.
+### 4.2 Fonctionnement
 
-Avantages, déjà énoncés dans le modèle de données et confirmés ici : isolation forte par construction, migration et sauvegarde par association, export et suppression propres d'une association entière.
+1. Un service transactionnel publie un événement (record Java) avec `ApplicationEventPublisher`.
+2. Le **registre de publication** (table `event_publication`, starter JDBC) enregistre une entrée par écouteur concerné, dans la même transaction que la donnée métier. Si la transaction échoue, aucun événement n'existe.
+3. Après validation, chaque écouteur `@ApplicationModuleListener` (asynchrone, dans sa propre transaction) traite l'événement. En cas de succès, l'entrée est marquée terminée (mode `archive`) ; en cas d'échec, elle reste en attente.
+4. Les publications non terminées sont republiées au redémarrage, et une tâche planifiée relance celles en échec. Une alerte se déclenche si des publications restent bloquées.
 
-### 3.5 L'API
+Conséquence : la livraison est garantie **au moins une fois**. Un écouteur doit donc tolérer d'être exécuté deux fois pour le même événement (par exemple ne pas envoyer deux fois le même email si la trace d'envoi existe déjà).
 
-Le backend expose une **API REST** documentée automatiquement via **OpenAPI**. La documentation générée sert autant au frontend qu'à la future ouverture d'une interface publique (prévue en V3). Spring Boot 4 introduisant un versionnage stable des points d'accès HTTP, l'API est versionnée dès le départ pour préparer les évolutions sans rupture.
+### 4.3 Usages
 
----
+- Notifications : confirmation d'inscription, promotion depuis la liste d'attente, désistement tardif d'un bénévole, annulation de distribution, d'événement, de mission de collecte ou de session de reconditionnement, rappel de la veille.
+- Statistiques : calcul et enregistrement des statistiques à la clôture d'une distribution.
 
-## 4. L'authentification : Keycloak
+## 5. L'authentification
 
-### 4.1 Pourquoi déléguer l'authentification
+### 5.1 Le choix : authentification intégrée
 
-Conformément au principe « déléguer la commodité » du modèle économique, l'authentification n'est pas reconstruite : elle est confiée à **Keycloak** (version 26 en juin 2026), une solution open source mature, désormais projet de la fondation CNCF, qui gère identités, connexion, double authentification, rôles et jetons selon les standards OpenID Connect et OAuth 2.0.
+L'authentification est assurée par le backend lui-même (ADR-004), sans fournisseur d'identité externe à héberger :
 
-### 4.2 Deux clients Keycloak, deux patterns d'accès
+- connexion par email et mot de passe (haché en Argon2id), avec vérification de l'email et réinitialisation par code à usage unique ;
+- connexion Google (OAuth 2.0 / OpenID Connect via Spring Security), avec rattachement au compte existant par email ;
+- jeton d'accès JWT signé (HMAC-SHA256), de courte durée ;
+- jeton de rafraîchissement aléatoire, stocké haché en base, avec rotation à chaque usage et révocation possible.
 
-Deux clients Keycloak sont configurés dans le realm `solivio` (exporté dans `keycloak/realm-solivio.json`) :
+### 5.2 Transport des jetons
 
-| Client | Type | Usage |
-|---|---|---|
-| `solivio-backend` | Confidentiel (secret) | BFF : Spring Boot gere le flow Authorization Code avec Keycloak pour les clients browser |
-| `solivio-frontend` | Public (PKCE) | PKCE natif : l'application mobile Capacitor gere elle-meme son flow OIDC |
+- **Navigateur** : jetons en cookies `HttpOnly`, `Secure` en production, `SameSite=Strict`. Le JavaScript du frontend ne les lit jamais.
+- **Mobile (Expo)** : jetons conservés dans le stockage sécurisé de l'appareil (`expo-secure-store`) et envoyés en en-tête `Authorization: Bearer`.
 
-Les roles Solivio (`responsable`, `coordinateur`, `benevole`, `beneficiaire`) sont des roles de realm Keycloak, portes dans le claim `realm_access.roles` du JWT. Le claim `association_id` (attribut utilisateur Keycloak) identifie l'association du token et est lu par le backend pour router vers le bon schema tenant.
+Le backend accepte les deux modes. Derrière Traefik, Spring Boot doit faire confiance aux en-têtes `X-Forwarded-*` pour que les cookies reçoivent l'attribut `Secure`.
 
-### 4.3 Pattern BFF (Backend for Frontend) pour les clients browser
+### 5.3 Rôles
 
-Pour les clients browser (Next.js), Spring Boot joue le role de BFF stateless :
-
-1. L'utilisateur est redirige vers `/oauth2/authorization/keycloak` (Spring Boot).
-2. Spring Boot redirige vers Keycloak (Authorization Code + PKCE via `solivio-backend`).
-3. Keycloak redirige vers le callback Spring Boot avec le code.
-4. Spring Boot echange le code contre les tokens et les chiffre en cookies HttpOnly (AES-256-GCM, cle depuis OpenBao).
-5. Les requetes API suivantes utilisent ces cookies ; Spring Boot dechiffre et valide le JWT.
-
-Pour les clients mobiles (Capacitor), le flow PKCE est gere nativement par l'application, et le token est envoye en header `Authorization: Bearer`. Spring Boot accepte les deux modes via un `CompositeBearerTokenResolver`.
-
-La cle de chiffrement des cookies est stockee dans OpenBao (`secret/solivio-api`, cle `cookie.encryption-key`) et injectee au demarrage via Spring Cloud Vault Config. Les cookies de token utilisent `SameSite=Strict` ; le cookie d'etat OAuth2 utilise `SameSite=Lax` (necessaire car Keycloak redirige depuis un domaine different).
-
-### 4.4 Multi-association et Keycloak
-
-Pour la V1 (une seule association pilote), un seul espace Keycloak suffit. Pour le multi-association, deux stratégies existent : la fonctionnalité **Organizations** de Keycloak (multi-tenance au sein d'un même realm, introduite récemment) ou un realm par association. La première est plus légère à exploiter et constitue la piste privilégiée ; le choix définitif est à valider au moment où la deuxième association arrive. En V1, ce point n'a pas à être tranché.
-
----
-
-## 5. L'asynchrone et l'événementiel : Apache Kafka
-
-### 5.1 Versions et mode de fonctionnement
-
-L'événementiel asynchrone repose sur **Apache Kafka 4** (version 4.2 en juin 2026). Point important de cette génération : Kafka 4 fonctionne **exclusivement en mode KRaft**, ZooKeeper ayant été entièrement supprimé. Le déploiement en est simplifié — un composant de moins à exploiter, ce qui est une bonne nouvelle pour un projet porté par une personne.
-
-### 5.2 Usages en V1
-
-En V1, Kafka sert à :
-
-- **découpler les notifications** : un événement « inscription confirmée » ou « distribution annulée » est publié par le module concerné et consommé par le module Notifications, qui envoie l'email ;
-- **alimenter l'audit** de façon asynchrone, sans ralentir les opérations ;
-- **préparer les traitements lourds futurs** (génération de documents en V2, par exemple) qui se grefferont naturellement sur ce socle événementiel.
-
-### 5.3 Le double bénéfice
-
-Kafka apporte ici deux choses à la fois : un découplage réel et utile dès la V1, et le support d'apprentissage que le porteur recherche. Surtout, c'est l'épine dorsale qui permettra d'extraire des modules en microservices plus tard : un module déjà découplé par événements peut devenir un service autonome sans réécriture de la communication.
-
----
+`super_admin` (drapeau sur le compte), `admin`, `responsable`, `coordinateur`, `benevole`, `beneficiaire`. Les rôles sont portés dans le jeton et vérifiés côté backend (`@PreAuthorize`). Le frontend n'est jamais une frontière de sécurité.
 
 ## 6. La base de données : PostgreSQL
 
-Le stockage relationnel repose sur **PostgreSQL 18** (version 18.4 en juin 2026). Choix justifié par sa robustesse, sa maturité, son support natif par Hibernate et Keycloak, et sa parfaite adéquation avec la stratégie schema-per-tenant.
+PostgreSQL 18, un seul schéma. Points clés :
 
-Points clés :
+- migrations Flyway uniquement ;
+- le registre des événements internes vit dans la même base (table `event_publication` et son archive) ;
+- sauvegardes planifiées (`pg_dump`) conservées hors du VPS, avec un test de restauration documenté ;
+- la base n'est jamais exposée hors du réseau Docker de l'application.
 
-- **Un schéma par association**, créé automatiquement lors de l'ajout d'une association (provisioning).
-- **Migrations multi-schéma via Flyway** : un mécanisme central applique les migrations sur l'ensemble des schémas, de façon ordonnée et traçable.
-- **Sauvegardes** régulières, par association lorsque c'est pertinent, conformément à l'exigence de pouvoir restaurer ou exporter une association isolément.
+## 7. Les secrets : Infisical
 
----
+Aucun secret n'est écrit dans le code ni dans un fichier de configuration versionné (ADR-005). L'application lit ses secrets dans des variables d'environnement. En production, ces variables sont injectées au lancement par **Infisical**, déjà hébergé sur le VPS : le script de déploiement s'authentifie avec une identité machine dédiée à l'environnement, puis exécute `infisical run -- docker compose up -d`. Aucun fichier `.env` contenant des secrets n'existe sur le serveur.
 
-## 7. La gestion des secrets : Vault ou OpenBao
+Seule exception, imposée par Prometheus : le jeton de lecture des métriques est un fichier côté infrastructure, égal à la variable `METRICS_SCRAPE_TOKEN` de l'application.
 
-### 7.1 Le besoin
+L'application refuse de démarrer si un secret obligatoire manque (par exemple une clé de signature JWT absente ou trop courte), plutôt que de démarrer dans un état incohérent.
 
-Les secrets (identifiants de base de données, clés d'API des services tiers, clés de signature des jetons) ne doivent jamais vivre en clair dans le code ni dans les fichiers de configuration. Une solution dédiée les centralise, les chiffre, et les distribue de façon contrôlée — au backend comme au frontend pour ce qui le concerne.
+## 8. Le frontend web : Next.js
 
-### 7.2 Un point de licence à connaître
+- Next.js 16 (App Router) sur React 19, TypeScript strict, Tailwind CSS v4, icônes `lucide-react`.
+- Rendu serveur pour les pages publiques ; `proxy.ts` (remplaçant de `middleware.ts` depuis Next.js 16) pour les redirections d'authentification, qui ne sont qu'un confort : l'autorité reste le backend.
+- Priorité au mobile : l'inscription et le pointage du jour J doivent être impeccables sur téléphone.
+- Les variables `NEXT_PUBLIC_*` sont figées au moment de la construction de l'image : elles doivent être fournies en argument de build, jamais seulement à l'exécution.
 
-Le porteur a cité Vault. Une précision importante, vérifiée en juin 2026, et qui touche directement l'engagement open source du projet :
+## 9. L'application mobile : Expo
 
-- **HashiCorp Vault** est passé en 2023 sous licence **BSL 1.1** (Business Source License), qui n'est pas une licence open source au sens strict : elle autorise l'usage en production mais interdit d'offrir le logiciel en service hébergé concurrent de l'offre commerciale. HashiCorp ayant été racheté par IBM (début 2025), Vault est désormais un produit IBM. Chaque version repasse en open source (MPL 2.0) quatre ans après sa publication.
-- **OpenBao** est le fork **open source** (licence MPL 2.0), né en réaction à ce changement, gouverné par la Linux Foundation, **compatible API avec Vault** (version 2.5 en février 2026, avec contributions notamment de GitLab et d'IBM).
+L'application mobile est une application **Expo / React Native** (Expo Router, NativeWind), distincte du frontend web (ADR-007). Elle consomme la même API que le web, en mode Bearer. Capacitor, un temps envisagé dans une version antérieure de ce document, n'est pas retenu.
 
-### 7.3 La recommandation
+Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'API de cette refonte (retrait du choix d'association, du code d'association à l'inscription) seront repris lors de sa remise à niveau.
 
-Pour un projet sous licence AGPL et à vocation de service hébergé, **OpenBao est le choix le plus cohérent** : il est pleinement open source, sans ambiguïté de licence, et compatible API avec Vault — ce qui signifie que l'apprentissage est entièrement transférable (les concepts et l'interface sont les mêmes). Le porteur apprend donc exactement les mêmes mécanismes, tout en restant aligné avec l'éthique du projet.
+## 10. Conteneurisation et déploiement
 
-À noter : pour l'usage interne de Solivio (gérer ses propres secrets), la licence BSL de Vault ne serait probablement pas bloquante, car Solivio n'offre pas Vault comme service. Mais OpenBao évite toute zone grise et s'inscrit dans la cohérence open source du projet. C'est un arbitrage à confirmer, la recommandation penche vers OpenBao.
+- Images Docker multi-étapes, exécutées sans privilège root, avec contrôle de santé.
+- En développement, Docker Compose lance PostgreSQL (et un serveur SMTP de test) ; backend et frontend tournent sur la machine ou en conteneur.
+- En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api`, `/oauth2` et `/login/oauth2` sont routés vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS. Deux routes `/api` appartiennent au serveur Next.js (`/api/auth/server-refresh`, `/api/health`) et passent en priorité. Le frontend est donc construit sans URL d'API : une même image sert la préproduction et la production.
+- Sauvegarde quotidienne chiffrée de la base et des fichiers déposés, copiée hors du VPS, avec un test de restauration trimestriel (`docker/backup/README.md`).
+- Environnements : la branche `dev` alimente l'environnement de préproduction (staging), la branche `main` la production.
+- Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008). Les images ne sont jamais construites sur le serveur.
 
----
+## 11. L'observabilité
 
-## 8. Le frontend : Next.js
+L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `infrastructure`) :
 
-### 8.1 Versions et socle
+- **Journaux** : JSON au format ECS sur la sortie standard (profil `prod`), collectés par Grafana Alloy vers Loki. Chaque ligne porte le `request_id`, l'identifiant de trace (`traceId`, `spanId`) et, si la requête est authentifiée, l'identifiant (UUID) du compte (`account_id`). Aucune donnée personnelle ni aucune donnée de `profil_beneficiaire` n'est journalisée.
+- **Identifiant de requête** : attribué à chaque requête (ou repris de l'en-tête `X-Request-Id` s'il est sûr), renvoyé dans l'en-tête de réponse et dans le corps de chaque erreur, pour relier une erreur signalée à ses journaux.
+- **Métriques** : Micrometer, exposées au format Prometheus sur `/actuator/prometheus`, sur le port de gestion `8081` non routé par Traefik et protégé par le jeton `METRICS_SCRAPE_TOKEN` (en-tête `Authorization: Bearer`, comparaison à temps constant ; sans jeton configuré, les métriques sont inaccessibles). Le port de gestion expose aussi les sondes `/actuator/health/liveness` et `/actuator/health/readiness`, publiques et sans détail. Métriques techniques (HTTP, JVM, pool de connexions) et métiers :
+  - `solivio_inscriptions_confirmees_total`, `solivio_inscriptions_promues_total`, `solivio_desistements_tardifs_total` ;
+  - `solivio_distributions_terminees_total`, `solivio_distributions_annulees_total` ;
+  - `solivio_evenements_publications_incompletes` et `solivio_evenements_publications_echouees`, état du registre des événements internes, support de l'alerte sur les emails non envoyés.
+- **Traces** : OpenTelemetry (OTLP HTTP) vers Tempo dans le profil `prod` (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, par défaut `http://tempo:4318/v1/traces`), y compris les interactions entre modules publiées par Spring Modulith. Seule la propagation W3C est acceptée. L'attribut `deployment.environment.name` vient de `DEPLOYMENT_ENVIRONMENT` (`staging` ou `production`).
+- **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana).
+- **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques.
 
-Le frontend repose sur **Next.js 16** (version 16.2 en juin 2026, sur React 19), en **TypeScript**, avec **Tailwind CSS** pour le style. L'App Router est utilisé pour structurer l'application et gérer le contexte d'association.
+## 12. La sécurité
 
-### 8.2 Rôles du frontend
+- HTTPS partout ; HSTS et en-têtes de sécurité.
+- Secrets injectés par Infisical, jamais versionnés.
+- Jetons en cookies `HttpOnly`/`Secure`/`SameSite=Strict` ; la protection CSRF repose sur `SameSite=Strict` et un CORS strict (décision documentée, ADR-004).
+- Limitation de débit et verrouillage temporaire sur la connexion, la vérification d'email et la réinitialisation du mot de passe.
+- Contrôle d'accès côté backend uniquement ; validation et assainissement de toutes les entrées côté serveur.
+- `profil_beneficiaire` à accès restreint, jamais exposé au pointage ni aux statistiques ; statistiques agrégées et pseudonymisées.
+- Journal d'audit des actions sensibles ; hébergement en Union européenne ; dépendances surveillées en intégration continue.
 
-- **Rendu côté serveur** pour les pages publiques (page d'une association, futures pages de campagne), bénéfique pour l'accès et le référencement.
-- **Contexte d'association** : le branding (logo, couleurs) est appliqué dynamiquement selon l'association, via le système de layouts.
-- **Authentification via le BFF** : le frontend ne gere pas de tokens directement. Il redirige vers Spring Boot (`/oauth2/authorization/keycloak`), qui gere le flow OIDC et pose des cookies HttpOnly chiffres. Les appels API sont authentifies par ces cookies, transparents pour le code Next.js.
-- **Support mobile** : le frontend Next.js est aussi la base de l'application mobile Capacitor. En contexte Capacitor, le flow PKCE est gere nativement avec le client `solivio-frontend` (voir section 4.3). Spring Boot accepte les deux modes via son `CompositeBearerTokenResolver`.
-- **Priorité au mobile** : l'inscription des bénéficiaires et le pointage le jour J doivent être impeccables sur téléphone, conformément à l'exigence non fonctionnelle des spécifications.
+## 13. Tableau des versions de référence
 
-### 8.3 CORS
+À revérifier avant toute installation ou mise à jour.
 
-Les origines autorisees pour les requetes cross-origin sont configurees via la propriete `solivio.cors.allowed-origins` (pas codee en dur). En dev : `http://localhost:3000`. En prod : l'URL publique du frontend. Les cookies de session etant `HttpOnly`, `credentials: true` est necessaire pour que le navigateur les envoie sur les requetes cross-origin vers le backend.
-
-### 8.4 Vigilance sécurité
-
-Next.js a connu en 2026 plusieurs avis de sécurité importants (contournements d'autorisation via le middleware, notamment). La règle est donc stricte : **se tenir à jour des correctifs de sécurité**, et ne jamais faire reposer une autorisation sensible uniquement sur le middleware frontend. L'autorité en matière de droits reste le backend.
-
----
-
-## 9. La conteneurisation : Docker
-
-Toute la pile est conteneurisée avec **Docker**. En développement, **Docker Compose** orchestre l'ensemble (backend, frontend, PostgreSQL, Keycloak, Kafka, OpenBao) pour reproduire localement un environnement proche de la production en une commande. Les images sont construites en plusieurs étapes (multi-stage) pour rester légères.
-
-La conteneurisation sert aussi la promesse d'auto-hébergement du modèle économique : une association techniquement équipée doit pouvoir lancer Solivio à partir d'une configuration Docker documentée.
-
----
-
-## 10. L'intégration et le déploiement continus : GitLab CI/CD
-
-Le projet utilise **GitLab CI/CD**. Le pipeline type enchaîne :
-
-1. **analyse statique et style** du code (backend et frontend) ;
-2. **tests** : unitaires, d'intégration, fonctionnels (voir section 11) ;
-3. **construction** des images Docker ;
-4. **migrations** de base de données contrôlées ;
-5. **déploiement** vers l'environnement cible.
-
-L'intégration continue n'est pas un confort : c'est ce qui permet à un développeur seul d'avancer sans régression, et c'est aussi une compétence DevOps que le porteur veut consolider.
-
----
-
-## 11. La stratégie de tests
-
-La consigne du porteur est claire : tests unitaires, fonctionnels et d'intégration, systématiquement. Le détail :
-
-| Type de test | Portée | Outil principal |
+| Brique | Version de référence | Note |
 |---|---|---|
-| Unitaires | Logique métier pure (calcul de dotation, règles de fréquence, listes d'attente) | Cadre de test Java standard |
-| Intégration | Modules avec vraie base de données et vrai Kafka | Testcontainers (conteneurs jetables) |
-| Fonctionnels / bout en bout | Parcours critiques (inscription, pointage, répartition) | Outils E2E côté frontend et API |
-| Isolation multi-association | Vérifier qu'aucune association n'accède aux données d'une autre | Suite dédiée, écrite avant le code |
-| Sécurité | Contrôle d'accès, validation des entrées | Tests ciblés et revue |
-
-> La **suite d'isolation multi-association** est traitée à part car elle est critique : une fuite inter-association serait catastrophique (données de précarité). Ces tests sont écrits tôt et exécutés à chaque intégration. C'est la traduction technique de l'exigence d'isolation.
-
-L'usage de **Testcontainers** est déjà familier au porteur, ce qui réduit le risque sur ce volet.
-
----
-
-## 12. L'observabilité
-
-Même un monolithe a besoin d'être observé. Trois piliers :
-
-- **Journaux structurés** (au format exploitable), portant systématiquement l'identifiant de l'association concernée, pour pouvoir diagnostiquer sans confondre les associations.
-- **Métriques applicatives** (temps de réponse, taux d'erreur), exposées par Spring Boot via son module de supervision.
-- **Traçabilité métier** assurée par le journal d'audit (distinct des journaux techniques).
-
-Une solution de visualisation (tableaux de bord de métriques) pourra être ajoutée quand l'échelle le justifiera ; en V1, l'essentiel est que les journaux et métriques existent et soient lisibles.
-
----
-
-## 13. La sécurité
-
-Synthèse des exigences techniques de sécurité, dont plusieurs sont déjà des invariants des documents précédents :
-
-- chiffrement des échanges (HTTPS partout) ;
-- secrets gérés par OpenBao, jamais en clair — y compris la cle de chiffrement des cookies (`secret/solivio-api`, cle `cookie.encryption-key`) ;
-- tokens de session chiffres en AES-256-GCM dans des cookies HttpOnly (SameSite=Strict) — le navigateur ne voit jamais les JWT en clair ;
-- CSRF protege par `csrf.spa()` de Spring Security 7 : cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN` ;
-- authentification déléguée à Keycloak, jetons vérifiés côté backend uniquement ;
-- contrôle d'accès appliqué côté backend, jamais uniquement côté frontend ;
-- validation stricte de toutes les entrées côté serveur ;
-- limitation de débit par association et par point d'accès, pour éviter qu'une association ne dégrade le service des autres ;
-- journal d'audit des actions sensibles ;
-- hébergement en Union européenne ;
-- mises à jour de sécurité suivies, en particulier sur Next.js et les dépendances.
-
----
-
-## 14. Le chemin d'évolution vers les microservices
-
-Le monolithe modulaire n'est pas une fin : c'est une base saine pour une extraction progressive, lorsque le porteur voudra approfondir les architectures distribuées sur un socle stable.
-
-L'ordre d'extraction naturel, du plus simple au plus engageant :
-
-1. **Le module Notifications** : déjà découplé par événements Kafka, faiblement couplé au reste, c'est le premier candidat évident. L'extraire en service autonome est un excellent premier exercice.
-2. **Les traitements lourds** (génération de documents en V2) : naturellement asynchrones, ils se prêtent bien à un service dédié.
-3. **Les modules métier de cœur** (distributions, inscriptions) : à n'extraire que si un besoin réel d'échelle ou d'autonomie le justifie, jamais par principe.
-
-La règle de discipline reste : on extrait un service quand il y a une raison concrète (échelle, autonomie d'équipe, apprentissage délibéré), jamais pour faire des microservices par esthétique. Les frontières de modules respectées dès la V1 sont ce qui rend cette extraction possible sans douleur.
-
----
-
-## 15. Convention de nommage du code
-
-Point laissé ouvert par le modèle de données. Recommandation : choisir une convention unique (français sans accents, ou anglais) et s'y tenir partout. Le domaine et l'équipe étant francophones, le français sans accents est acceptable et cohérent avec la documentation ; l'anglais est plus courant dans l'écosystème technique et facilite l'ouverture à des contributeurs externes (cohérent avec l'open source). En l'absence de contrainte forte, l'anglais pour le code technique et le français pour le vocabulaire métier visible est un compromis répandu. Décision à acter au démarrage, sans enjeu bloquant.
-
----
-
-## 16. Tableau des versions de référence
-
-État vérifié en juin 2026. À revérifier au démarrage effectif : ces versions évoluent toutes les quelques semaines à quelques mois.
-
-| Brique | Version de référence (juin 2026) | Note |
-|---|---|---|
-| Java | 25 (LTS, sept. 2025) | Support de première classe par Spring Boot 4 |
-| Spring Boot | 4.0.6 | Sur Spring Framework 7, Spring Security 7 ; 4.1 attendue |
+| Java | 25 (LTS) | |
+| Spring Boot | 4.1.x | Montée depuis 4.0.6 requise par Spring Modulith 2.1 |
+| Spring Modulith | 2.1.x | Aligné sur Spring Boot 4.1 |
 | Next.js | 16.2 | Sur React 19 |
-| Node.js | LTS active | À confirmer au démarrage (la LTS courante) |
-| PostgreSQL | 18.4 | |
-| Keycloak | 26 | Fonctionnalité Organizations pour le multi-tenance |
-| Apache Kafka | 4.2 | Mode KRaft exclusif, sans ZooKeeper |
-| Gestion des secrets | OpenBao 2.5 | Recommandé plutôt que Vault (BSL) pour l'alignement open source |
-| Conteneurisation | Docker / Docker Compose | |
-| Intégration continue | GitLab CI/CD | |
-| Tests d'intégration | Testcontainers | Déjà maîtrisé par le porteur |
+| Expo | SDK 54 | React Native 0.81 ; mise à jour prévue à la reprise du mobile |
+| PostgreSQL | 18 | |
+| Traefik, Loki, Alloy, Prometheus, Tempo, Grafana, Infisical | Versions fixées dans le dépôt `infrastructure` | Stack commune du VPS |
+| Tests d'intégration | Testcontainers (PostgreSQL) | |
 
----
+## 14. Décisions d'architecture (ADR)
 
-## 17. Ce que ce document implique pour la suite
+Chaque décision est numérotée. Une décision n'est jamais modifiée silencieusement : on en écrit une nouvelle qui la remplace.
 
-- La **roadmap** (`roadmap.md`) doit refléter l'ordre de construction : d'abord le socle (conteneurisation, base, Keycloak, OpenBao, squelette Spring Boot et Next.js), puis les modules métier, puis l'événementiel.
-- Les **parcours utilisateurs** (`parcours_utilisateurs.md`) doivent tenir compte de la priorité mobile et de l'intégration Keycloak pour les écrans de connexion.
-- La complexité réelle de cette pile (Spring Boot 4, Kafka, Keycloak, OpenBao, Next.js) confirme l'avertissement de l'étude de faisabilité : le périmètre fonctionnel de la V1 doit rester minimal pour que l'apprentissage de la pile reste tenable. Architecture riche, périmètre fonctionnel sobre.
+### ADR-001 - Une seule association
 
----
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : Solivio visait à l'origine le réseau national Linkee, d'où un schéma PostgreSQL par association (multi-tenant). Linkee Toulouse est devenue une association locale autonome, seule utilisatrice du produit.
+- **Décision** : un seul schéma, une seule configuration d'association (enregistrement unique). Suppression du routage de schéma, du choix d'association à la connexion, du code d'association à l'inscription, de l'administration des associations et du claim `tenant` du jeton.
+- **Conséquences** : chaque fonctionnalité n'a plus à prouver son isolation entre associations. Si une autre association voulait un jour Solivio, elle déploierait sa propre instance (le code est sous AGPL), plutôt que de partager une base.
 
-## 18. Synthèse en une page
+### ADR-002 - Spring Modulith pour vérifier les frontières de modules
 
-**Le style.** Un monolithe modulaire évolutif : une seule application déployable, découpée en modules à frontières nettes, communiquant par interfaces et par événements Kafka, conçue pour extraire des microservices plus tard. Cela réconcilie l'apprentissage voulu et la livraison à protéger.
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : la règle "un module n'accède jamais aux internes d'un autre" n'était garantie que par la discipline.
+- **Décision** : Spring Modulith décrit les modules (`package-info.java`, `@ApplicationModule`, `@NamedInterface`) et un test (`ApplicationModules.verify()`) échoue en cas de violation ou de cycle. La documentation des modules est générée dans `docs/modules/`.
+- **Conséquences** : toute violation bloque la construction. Nécessite Spring Boot 4.1 pour Spring Modulith 2.1.
 
-**La pile (juin 2026).** Backend Spring Boot 4 sur Java 25 ; frontend Next.js 16 sur React 19 en TypeScript (base de l'app mobile Capacitor) ; authentification via BFF stateless — Spring Boot gere le flow OIDC avec Keycloak 26, tokens chiffres AES-256-GCM en cookies HttpOnly, fallback Bearer header pour Capacitor ; base PostgreSQL 18 en schéma par association ; événementiel Apache Kafka 4 en mode KRaft ; secrets gérés par OpenBao plutôt que Vault, pour l'alignement open source ; le tout conteneurisé avec Docker et livré par GitLab CI/CD.
+### ADR-003 - Événements internes avec registre de publication, à la place de Kafka
 
-**L'isolation.** Un schéma PostgreSQL par association, géré nativement par Hibernate, avec une suite de tests dédiée à la non-fuite inter-association.
+- **Statut** : acceptée (octobre 2026). Remplace le choix de Kafka de la version 1.0 de ce document.
+- **Contexte** : Kafka était surdimensionné pour une association unique, coûteux à exploiter sur le VPS, et ses envois avaient lieu avant la validation de la transaction.
+- **Décision** : événements Spring publiés depuis les services transactionnels, traités par des écouteurs `@ApplicationModuleListener`, avec registre de publication JDBC (Spring Modulith), mode de complétion `archive`, republication au redémarrage et relance planifiée des échecs.
+- **Conséquences** : plus de service Kafka ; aucun événement émis pour une transaction annulée ; livraison au moins une fois, donc écouteurs tolérants à la double exécution.
 
-**Les tests.** Unitaires, intégration (Testcontainers), fonctionnels, isolation et sécurité — systématiques.
+### ADR-004 - Authentification intégrée (JWT) plutôt que Keycloak
 
-**L'évolution.** Extraction progressive de microservices à partir du module Notifications, sur un socle stable, quand une raison concrète le justifie — jamais par principe.
+- **Statut** : acceptée (octobre 2026). Remplace le choix de Keycloak de la version 1.0 de ce document, jamais mis en œuvre dans le code.
+- **Contexte** : l'authentification a été implémentée dans le backend (JWT, Google OAuth 2.0). Keycloak aurait ajouté un service lourd à héberger.
+- **Décision** : conserver l'authentification intégrée et la durcir : limitation de débit, verrouillage temporaire, politique de mot de passe, rotation des jetons de rafraîchissement, prise en compte des en-têtes de proxy. CSRF désactivé côté Spring Security, compensé par des cookies `SameSite=Strict` et un CORS limité aux origines connues ; toute évolution qui relâcherait l'une de ces deux conditions doit réactiver une protection CSRF.
+- **Conséquences** : la sécurité de l'authentification est sous la responsabilité du projet ; elle est couverte par des tests dédiés.
 
-**Le principe de prudence.** Architecture riche, périmètre fonctionnel sobre. C'est la condition pour que l'ambition technique ne mette pas la livraison en péril.
+### ADR-005 - Secrets par variables d'environnement injectées par Infisical
 
----
+- **Statut** : acceptée (octobre 2026). Remplace OpenBao.
+- **Contexte** : OpenBao ne fournissait en pratique que la clé de signature JWT, et ajoutait un service à exploiter. Le VPS dispose déjà d'Infisical, utilisé par les autres projets.
+- **Décision** : l'application lit uniquement des variables d'environnement ; Infisical les injecte en production ; un fichier `.env.example` documente la liste complète sans valeur réelle.
+- **Conséquences** : plus de dépendance Spring Cloud Vault ; échec explicite au démarrage si un secret obligatoire manque.
 
-*Fin de l'architecture technique. Document suivant : `parcours_utilisateurs.md`.*
+### ADR-006 - Observabilité par la stack commune du VPS
+
+- **Statut** : acceptée (octobre 2026).
+- **Décision** : journaux JSON sur la sortie standard, métriques Prometheus sur un port de gestion protégé par jeton, traces OTLP vers Tempo, tableaux de bord et alertes dans le dépôt `infrastructure`.
+- **Conséquences** : le nom du projet Compose (`solivio`, `solivio-staging`) doit figurer dans la liste des projets autorisés de l'infrastructure, sinon les journaux ne sont pas collectés.
+
+### ADR-007 - Application mobile Expo
+
+- **Statut** : acceptée (octobre 2026). Remplace la mention de Capacitor de la version 1.0 de ce document.
+- **Décision** : l'application mobile reste une application Expo / React Native, distincte du frontend web, qui consomme l'API en mode Bearer.
+- **Conséquences** : gelée pendant la refonte du socle (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
+- **Ruptures d'API à reprendre dans le mobile** (refonte d'octobre 2026) :
+  - `POST /api/auth/switch-tenant` et `/api/admin/associations` n'existent plus : retirer l'écran `tenant-select`, `switchTenant()` et l'écran d'administration des associations ;
+  - `TokenResponse` ne contient plus `tenants`, `MeResponse` ne contient plus `tenantActif` ;
+  - l'inscription et la finalisation d'un compte Google ne prennent plus de `codeAssociation` ;
+  - les erreurs suivent l'enveloppe `{"error": {"code", "message", "details", "request_id"}}` : le mobile lit encore `detail` (ProblemDetail) et n'affiche plus que des messages génériques ;
+  - les mots de passe suivent la nouvelle politique (8 à 128 caractères, mots de passe courants refusés), et la connexion peut répondre `429` (limite de débit ou compte temporairement verrouillé).
+
+### ADR-008 - GitHub Actions et GHCR
+
+- **Statut** : acceptée (octobre 2026). Remplace GitLab CI/CD.
+- **Décision** : intégration continue sur GitHub Actions (qualité, tests, couverture, analyse de sécurité), images sur GHCR étiquetées par SHA, déploiement par SSH avec Infisical ; `dev` vers la préproduction, `main` vers la production.
+- **Conséquences** : migration du dépôt vers GitHub ; même modèle de déploiement que les autres projets hébergés sur le VPS.
+
+## 15. Synthèse
+
+**Le style.** Un monolithe modulaire dont les frontières sont vérifiées par Spring Modulith, avec des événements internes fiables (registre de publication) pour découpler les effets secondaires.
+
+**La pile.** Spring Boot 4 sur Java 25, PostgreSQL 18, Next.js 16 sur React 19, application mobile Expo ; authentification intégrée (JWT, Google) ; secrets Infisical ; Docker derrière Traefik ; observabilité Loki, Prometheus, Tempo, Grafana ; GitHub Actions.
+
+**Le principe de prudence.** Pas de brique d'infrastructure sans besoin réel. Une association, une base, une application.

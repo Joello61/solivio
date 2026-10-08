@@ -1,0 +1,309 @@
+name: CI
+
+# Integration continue sur dev (preproduction) et main (production), et sur toute
+# pull request vers ces branches. Sur un push, et seulement si tous les controles
+# passent, les images sont construites une fois puis deployees : dev vers la
+# preproduction, main vers la production.
+#
+# Les jobs de deploiement sont dans ce fichier plutot que dans un workflow
+# declenche par workflow_run : ce declencheur n'est pris en compte que si le
+# fichier existe sur la branche par defaut (main), ce qui empechait tout
+# deploiement de la preproduction depuis dev.
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+# Une pull request mise a jour annule son execution precedente ; un push sur dev
+# ou main n'est jamais interrompu, pour ne pas couper un deploiement en cours.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    name: Backend (tests, couverture, Checkstyle, modularite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solivio-api
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      # Tests unitaires et d'integration (Testcontainers sur le Docker du runner),
+      # JaCoCo 80 pour cent bloquant, Checkstyle et ModularityTest.
+      - name: Verify
+        run: ./mvnw -B verify
+
+      - name: Rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco
+          path: solivio-api/target/site/jacoco
+          retention-days: 7
+
+  backend-dependances:
+    name: Backend (vulnerabilites des dependances)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Equivalent Maven de npm audit : OSV-Scanner resout les dependances
+      # transitives du pom et echoue des qu'une vulnerabilite connue est trouvee.
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
+        with:
+          scan-args: |-
+            --recursive
+            ./solivio-api
+
+  frontend:
+    name: Frontend (audit, lint, types, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solivio_frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: solivio_frontend/package-lock.json
+
+      - run: npm ci
+
+      # Bloque sur les vulnerabilites hautes et critiques des dependances embarquees
+      # dans l'application. Les outils de build (ESLint, CLI shadcn) dependent de
+      # braces, sans version corrigee a ce jour et jamais expose a une entree
+      # utilisateur ; Dependabot et la revue des dependances les suivent.
+      - name: Audit des dependances
+        run: npm audit --omit=dev --audit-level=high
+
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+
+      # Meme configuration que l'image deployee : API sur le meme domaine.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ""
+
+  e2e:
+    name: Bout en bout (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: solivio
+          POSTGRES_USER: solivio
+          POSTGRES_PASSWORD: solivio_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U solivio -d solivio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.31.4
+        ports:
+          - 1025:1025
+    env:
+      # Comptes du profil seed (DataSeeder), sans valeur hors developpement.
+      E2E_EMAIL: coordo1@solivio.app
+      E2E_PASSWORD: Solivio2026!
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: solivio_frontend/package-lock.json
+
+      - name: Demarrer le backend (profils dev et seed)
+        working-directory: solivio-api
+        env:
+          SPRING_PROFILES_ACTIVE: dev,seed
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/solivio
+          SPRING_DATASOURCE_PASSWORD: solivio_ci
+        run: |
+          ./mvnw -B -q package -DskipTests
+          nohup java -jar target/solivio-api-*.jar > ../backend.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8081/actuator/health/readiness > /dev/null; then exit 0; fi
+            sleep 3
+          done
+          cat ../backend.log
+          exit 1
+
+      - name: Construire et demarrer le frontend
+        working-directory: solivio_frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          API_URL: http://localhost:8080
+        run: |
+          npm ci
+          npm run build
+          nohup npm start > ../frontend.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Installer Chromium
+        working-directory: solivio_frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright
+        working-directory: solivio_frontend
+        run: npx playwright test
+
+      - name: Journaux et rapport
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e
+          path: |
+            backend.log
+            frontend.log
+            solivio_frontend/playwright-report
+          retention-days: 7
+
+  secrets:
+    name: Detection de secrets (gitleaks)
+    runs-on: ubuntu-latest
+    # Sur une pull request, l'action liste ses commits par l'API.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  images:
+    name: Images (GHCR)
+    needs: [backend, backend-dependances, frontend, e2e, secrets]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_base: ${{ steps.meta.outputs.image_base }}
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Metadonnees
+        id: meta
+        run: |
+          echo "image_base=ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${GITHUB_SHA:0:12}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Backend
+        uses: docker/build-push-action@v7
+        with:
+          context: ./solivio-api
+          push: true
+          tags: ${{ steps.meta.outputs.image_base }}-backend:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Frontend
+        uses: docker/build-push-action@v7
+        with:
+          context: ./solivio_frontend
+          push: true
+          tags: ${{ steps.meta.outputs.image_base }}-frontend:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  # Secrets de l'environnement GitHub "staging" ; memes noms qu'en production.
+  deploy-staging:
+    name: Deploiement preproduction
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.solivio.joeltech.fr
+    concurrency:
+      group: deploy-staging
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploiement SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          IMAGE_BASE: ${{ needs.images.outputs.image_base }}
+          IMAGE_TAG: ${{ needs.images.outputs.image_tag }}
+        run: docker/deploy/ssh-deploy.sh staging
+
+  # "Required reviewers" n'existe pas sur un depot prive : le garde-fou de la
+  # production est la fusion de dev dans main, toujours faite a la main.
+  deploy-production:
+    name: Deploiement production
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://solivio.joeltech.fr
+    concurrency:
+      group: deploy-production
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploiement SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          IMAGE_BASE: ${{ needs.images.outputs.image_base }}
+          IMAGE_TAG: ${{ needs.images.outputs.image_tag }}
+        run: docker/deploy/ssh-deploy.sh production

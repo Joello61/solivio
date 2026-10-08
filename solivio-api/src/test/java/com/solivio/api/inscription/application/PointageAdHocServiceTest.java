@@ -169,9 +169,9 @@ class PointageAdHocServiceTest {
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
         when(adHocRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.envoyerInvitation(adHocId, pointeParId, "asso-test");
+        service.envoyerInvitation(adHocId, pointeParId);
 
-        verify(invitationPort).inviterBenevole("jean@test.com", pointeParId, "asso-test");
+        verify(invitationPort).inviterBenevole("jean@test.com", pointeParId);
         assertThat(adHoc.isInvitationEnvoyee()).isTrue();
     }
 
@@ -181,11 +181,11 @@ class PointageAdHocServiceTest {
         PointageAdHoc adHoc = new PointageAdHoc(distributionId, "Dupont", "Jean", null, null);
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId, "asso-test"))
+        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("email");
 
-        verify(invitationPort, never()).inviterBenevole(any(), any(), any());
+        verify(invitationPort, never()).inviterBenevole(any(), any());
     }
 
     @Test
@@ -195,11 +195,11 @@ class PointageAdHocServiceTest {
         adHoc.setInvitationEnvoyee(true);
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId, "asso-test"))
+        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("invitation");
 
-        verify(invitationPort, never()).inviterBenevole(any(), any(), any());
+        verify(invitationPort, never()).inviterBenevole(any(), any());
     }
 
     @Test
@@ -207,7 +207,7 @@ class PointageAdHocServiceTest {
         UUID adHocId = UUID.randomUUID();
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId, "asso-test"))
+        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
             .isInstanceOf(NotFoundException.class);
     }
 }

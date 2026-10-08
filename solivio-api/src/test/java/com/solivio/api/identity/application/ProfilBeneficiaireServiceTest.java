@@ -132,6 +132,6 @@ class ProfilBeneficiaireServiceTest {
 
         assertThatThrownBy(() -> service.lire(compteId))
             .isInstanceOf(NotFoundException.class)
-            .hasMessageContaining("tenant");
+            .hasMessageContaining("Profil introuvable");
     }
 }

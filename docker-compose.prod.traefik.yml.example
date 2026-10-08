@@ -1,0 +1,53 @@
+# Exemple de routage Traefik, a copier sur le serveur en docker-compose.prod.traefik.yml
+# (un fichier par environnement, jamais committe) puis a adapter :
+#   - production : tel quel (solivio.joeltech.fr, routeurs et services "solivio-*") ;
+#   - preproduction : domaine staging.solivio.joeltech.fr et prefixe "solivio-staging-*"
+#     a la place de "solivio-*" (sed ci-dessous). Les noms de routeurs et services sont
+#     globaux pour Traefik et Compose n'interpole pas les cles de labels.
+#
+#   sed -e 's/solivio\.joeltech\.fr/staging.solivio.joeltech.fr/g' \
+#       -e 's/routers\.solivio-/routers.solivio-staging-/g' \
+#       -e 's/services\.solivio-/services.solivio-staging-/g' \
+#       -e 's/service=solivio-/service=solivio-staging-/g' \
+#       docker-compose.prod.traefik.yml.example > docker-compose.prod.traefik.yml
+#
+# Un seul domaine : /api et les chemins OAuth2 vont au backend, tout le reste au
+# frontend. Les cookies restent SameSite=Strict, sans CORS. Deux routes /api
+# appartiennent au serveur Next.js (rafraichissement de session cote serveur,
+# sonde de sante) et passent avant le backend grace a une priorite plus haute.
+
+services:
+  backend:
+    networks:
+      - default
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.solivio-api.rule=Host(`solivio.joeltech.fr`) && (PathPrefix(`/api`) || PathPrefix(`/oauth2`) || PathPrefix(`/login/oauth2`))
+      - traefik.http.routers.solivio-api.entrypoints=websecure
+      - traefik.http.routers.solivio-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.solivio-api.service=solivio-api
+      - traefik.http.services.solivio-api.loadbalancer.server.port=8080
+
+  frontend:
+    networks:
+      - default
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.solivio-web.rule=Host(`solivio.joeltech.fr`)
+      - traefik.http.routers.solivio-web.entrypoints=websecure
+      - traefik.http.routers.solivio-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.solivio-web.service=solivio-web
+      - traefik.http.routers.solivio-web-api.rule=Host(`solivio.joeltech.fr`) && (Path(`/api/auth/server-refresh`) || Path(`/api/health`))
+      - traefik.http.routers.solivio-web-api.entrypoints=websecure
+      - traefik.http.routers.solivio-web-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.solivio-web-api.priority=1000
+      - traefik.http.routers.solivio-web-api.service=solivio-web
+      - traefik.http.services.solivio-web.loadbalancer.server.port=3000
+
+networks:
+  traefik-public:
+    external: true

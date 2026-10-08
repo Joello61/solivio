@@ -5,10 +5,7 @@ import java.util.UUID;
 
 public record AssociationResponse(
     UUID id,
-    String slug,
-    String code,
     String nom,
-    String statut,
     String logoUrl,
     String couleurPrimaire,
     String couleurSecondaire,

@@ -2,8 +2,6 @@ package com.solivio.api.identity.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.domain.VerificationCode;
@@ -41,7 +39,6 @@ class RegisterControllerIntegrationTest {
     @Autowired private AssociationRepository associationRepository;
     @Autowired private MembreAssociationRepository membreRepo;
     @Autowired private VerificationCodeRepository verificationCodeRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private PasswordEncoder passwordEncoder;
 
@@ -54,20 +51,12 @@ class RegisterControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity()).build();
 
-        association = new Association("reg-test", "Register Test Asso");
-        association.setCode("REGTEST");
-        associationRepository.save(association);
-
-        String schema = TenantProvisioningService.schemaName("reg-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         compteNonVerifie = new Compte("unverified@example.com",
             passwordEncoder.encode("password123!"), "Unverif", "User");
         compteNonVerifie.setEmailVerifie(false);
         compteRepository.save(compteNonVerifie);
 
-        MembreAssociation membre = new MembreAssociation(compteNonVerifie, association, "beneficiaire");
+        MembreAssociation membre = new MembreAssociation(compteNonVerifie, "beneficiaire");
         membreRepo.save(membre);
     }
 
@@ -76,9 +65,6 @@ class RegisterControllerIntegrationTest {
         verificationCodeRepository.deleteAll();
         membreRepo.deleteAll();
         compteRepository.deleteAll();
-        String schema = TenantProvisioningService.schemaName("reg-test");
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test

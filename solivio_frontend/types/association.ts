@@ -1,9 +1,6 @@
 export interface AssociationResponse {
   id: string;
-  slug: string;
-  code: string;
   nom: string;
-  statut: string;
   logoUrl: string | null;
   couleurPrimaire: string | null;
   couleurSecondaire: string | null;
@@ -39,21 +36,6 @@ export interface MembreResponse {
 export interface UpdateRoleMembrePayload {
   role: string;
   coordoType?: string;
-}
-
-export interface AssociationAdminResponse {
-  id: string;
-  slug: string;
-  code: string;
-  nom: string;
-  statut: string;
-  dateCreation: string;
-}
-
-export interface CreateAssociationPayload {
-  nom: string;
-  slug: string;
-  emailResponsable: string;
 }
 
 export interface StatistiqueDistributionResponse {

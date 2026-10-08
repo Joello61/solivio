@@ -13,10 +13,7 @@ vi.mock("@/lib/api/association", () => ({
 
 const associationMock: AssociationResponse = {
   id: "asso-1",
-  slug: "solidarite-paris",
-  code: "SP",
   nom: "Solidarite Paris",
-  statut: "actif",
   logoUrl: null,
   couleurPrimaire: "#16513F",
   couleurSecondaire: "#1E6B52",

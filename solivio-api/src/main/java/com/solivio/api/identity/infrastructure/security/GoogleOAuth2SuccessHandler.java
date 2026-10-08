@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -21,13 +22,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Apres un login Google reussi :
- * - Web : emet un JWT et redirige vers le dashboard ou /tenant-select.
+ * - Web : emet un JWT et redirige vers le dashboard.
  * - Mobile (cookie solivio_mobile_auth=1) : inclut accessToken + refreshToken dans le
- *   deep link soliviomobile://auth?accessToken=...&refreshToken=...&tenants=[...].
- * - Nouveau compte sans association : redirige vers la page de saisie du code.
+ *   deep link soliviomobile://auth?accessToken=...&refreshToken=....
+ * - Nouveau compte sans role : redirige vers la finalisation de l'inscription.
+ * - Membre suspendu : redirige vers la connexion avec une erreur.
  */
 @Component
 public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -63,7 +66,7 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         String email = oAuth2User.getAttribute("email");
 
         Compte compte = compteRepository.findByEmail(email).orElseThrow();
-        List<MembreAssociation> affiliations = membreRepo.findActivesByCompteId(compte.getId());
+        Optional<MembreAssociation> membre = membreRepo.findByCompteId(compte.getId());
 
         boolean mobileAuth = detecteMobileAuth(request, response);
         boolean mobileLinkAuth = !mobileAuth && detecteMobileLinkAuth(request, response);
@@ -73,7 +76,7 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
-        if (affiliations.isEmpty()) {
+        if (membre.isEmpty()) {
             assert
                 email != null;
             String encodedEmail = URLEncoder.encode(email, StandardCharsets.UTF_8);
@@ -93,41 +96,31 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
-        String tenantSlug = affiliations.size() == 1 ? affiliations.getFirst().getAssociation().getSlug() : null;
-        String role = affiliations.size() == 1 ? affiliations.getFirst().getRole() : null;
-        String coordoType = affiliations.size() == 1 ? affiliations.getFirst().getCoordoType() : null;
+        if (!membre.get().estActive()) {
+            getRedirectStrategy().sendRedirect(request, response,
+                mobileAuth ? "soliviomobile://auth?error=compte_suspendu"
+                    : frontendUrl + "/login?erreur=compte-suspendu");
+            return;
+        }
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            tenantSlug, role != null ? List.of(role) : List.of(),
-            coordoType, compte.isSuperAdmin()
+            List.of(membre.get().getRole()), membre.get().getCoordoType(), compte.isSuperAdmin()
         );
 
+        // JIT : couvre les comptes Google anterieurs a la creation systematique de la Personne.
+        personneProvisioningService.provisionner(compte.getEmail(), compte.getNom(), compte.getPrenom());
+
         if (mobileAuth) {
-            if (tenantSlug != null) {
-                personneProvisioningService.provisionner(
-                    tenantSlug, compte.getEmail(), compte.getNom(), compte.getPrenom()
-                );
-            }
-            String refreshTokenBrut = genererRefreshTokenMobile(compte, tenantSlug, request);
-            String tenantsJson = construireTenantsJson(affiliations);
+            String refreshTokenBrut = genererRefreshTokenMobile(compte, request);
             String redirectUrl = "soliviomobile://auth?accessToken=" + accessToken
-                + "&refreshToken=" + URLEncoder.encode(refreshTokenBrut, StandardCharsets.UTF_8)
-                + "&tenants=" + URLEncoder.encode(tenantsJson, StandardCharsets.UTF_8);
+                + "&refreshToken=" + URLEncoder.encode(refreshTokenBrut, StandardCharsets.UTF_8);
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
 
-        // Comportement web existant
-        String redirectUrl;
-        if (affiliations.size() == 1) {
-            redirectUrl = frontendUrl + "/dashboard#token=" + accessToken;
-        } else {
-            redirectUrl = frontendUrl + "/tenant-select#token=" + accessToken;
-        }
-
-        emetRefreshTokenCookie(compte, tenantSlug, request, response);
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        emetRefreshTokenCookie(compte, request, response);
+        getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/dashboard#token=" + accessToken);
     }
 
     /**
@@ -160,12 +153,12 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         return link;
     }
 
-    private String genererRefreshTokenMobile(Compte compte, String tenantSlug,
+    private String genererRefreshTokenMobile(Compte compte,
                                              HttpServletRequest request) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
         var rt = new RefreshToken(
-            compte, hash, tenantSlug,
+            compte, hash,
             request.getHeader("User-Agent"),
             request.getRemoteAddr(),
             jwtService.refreshTokenExpiration(),
@@ -175,50 +168,27 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         return tokenBrut;
     }
 
-    private String construireTenantsJson(List<MembreAssociation> affiliations) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < affiliations.size(); i++) {
-            MembreAssociation a = affiliations.get(i);
-            if (i > 0) {
-                sb.append(",");
-            }
-            sb.append("{\"slug\":\"").append(echapper(a.getAssociation().getSlug())).append("\"")
-              .append(",\"nom\":\"").append(echapper(a.getAssociation().getNom())).append("\"")
-              .append(",\"role\":\"").append(echapper(a.getRole() != null ? a.getRole() : "")).append("\"")
-              .append(",\"coordoType\":");
-            if (a.getCoordoType() != null) {
-                sb.append("\"").append(echapper(a.getCoordoType())).append("\"");
-            } else {
-                sb.append("null");
-            }
-            sb.append("}");
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    private String echapper(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    private void emetRefreshTokenCookie(Compte compte, String tenantSlug,
+    private void emetRefreshTokenCookie(Compte compte,
                                         HttpServletRequest request, HttpServletResponse response) {
         String tokenBrut = jwtService.genererRefreshTokenBrut();
         String hash = jwtService.hasher(tokenBrut);
         var rt = new RefreshToken(
-            compte, hash, tenantSlug,
+            compte, hash,
             request.getHeader("User-Agent"),
             request.getRemoteAddr(),
             jwtService.refreshTokenExpiration(),
             true
         );
         refreshTokenRepo.save(rt);
-        response.addHeader("Set-Cookie",
-            "refresh_token=" + tokenBrut
-                + "; Max-Age=" + jwtService.getRefreshTokenSeconds()
-                + "; Path=/api/auth/refresh"
-                + "; HttpOnly"
-                + (request.isSecure() ? "; Secure" : "")
-                + "; SameSite=Strict");
+        // Memes attributs que la connexion par mot de passe (AuthService) : le
+        // chemin "/" permet au proxy Next.js de rafraichir la session cote serveur.
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", tokenBrut)
+            .maxAge(jwtService.getRefreshTokenSeconds())
+            .path("/")
+            .httpOnly(true)
+            .secure(request.isSecure())
+            .sameSite("Strict")
+            .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 }

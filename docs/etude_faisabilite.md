@@ -1,12 +1,12 @@
-# Étude de faisabilité — Solivio
+# Étude de faisabilité - Solivio
 
 > Le projet est-il réellement réalisable, par qui, avec quelles ressources, et sous quelles conditions.
 
-**Document fondateur — version 1.0**
+**Document fondateur - version 1.0**
 **Statut : référence de travail**
 **Dernière mise à jour : juin 2026**
 
----
+> **Mise à jour d'octobre 2026.** Ce document fondateur décrit l'ambition d'origine : une plateforme mutualisée pour plusieurs associations du réseau Linkee. Depuis octobre 2026, Solivio sert uniquement Linkee Toulouse (`architecture_technique.md`, ADR-001). Les passages sur le multi-association, la mutualisation et les choix techniques d'origine (Keycloak, Kafka, OpenBao) sont conservés comme historique et ne font plus foi ; en cas d'écart, les spécifications, l'architecture et `CLAUDE.md` priment.
 
 ## Avertissement de lecture
 
@@ -15,8 +15,6 @@ Ce document est volontairement le plus lucide de la série. Son rôle n'est pas 
 Une étude de faisabilité complaisante ne sert à rien. Celle-ci nomme les contraintes sans les adoucir, parce que c'est la seule façon de prendre des décisions justes en amont plutôt que de découvrir les murs en s'y cognant. Si certaines sections paraissent sévères, c'est délibéré : il vaut mieux qu'un document fasse cet inventaire qu'une désillusion à six mois.
 
 Conclusion anticipée, pour poser le cadre : **le projet est faisable, mais seulement dans sa version étagée et sobre. Le projet dans son ambition maximale et immédiate ne l'est pas pour une personne seule.** Tout le document explicite cette nuance.
-
----
 
 ## 1. Objet et dimensions évaluées
 
@@ -30,8 +28,6 @@ La faisabilité d'un projet logiciel porté par une personne se mesure sur six d
 | Juridique et réglementaire | La conformité (notamment RGPD) est-elle atteignable par une personne seule ? |
 | Économique | Les coûts sont-ils soutenables ? |
 | De pérennité | Le projet peut-il survivre au-delà de son lancement ? |
-
----
 
 ## 2. Faisabilité technique
 
@@ -64,13 +60,11 @@ Il faut nommer honnêtement un arbitrage qui pèse directement sur la faisabilit
 | Pile professionnelle maîtrisée (celle du quotidien du porteur) | Vitesse maximale, risque minimal, le porteur est immédiatement productif | Apport moindre à la montée en compétence visée |
 | Pile en cours d'apprentissage (celle des projets personnels) | Montée en compétence, valeur portfolio accrue, cohérence avec les objectifs de carrière | Vitesse réduite, risque accru, temps d'apprentissage à financer sur un budget temps déjà tendu |
 
-Du strict point de vue de la faisabilité, **la pile maîtrisée est le choix le plus sûr** : un projet solo mené en parallèle d'une activité prenante a tout intérêt à minimiser les inconnues. Le désir légitime de monter en compétence sur une autre pile est un objectif de carrière, pas un objectif de faisabilité — et mélanger les deux est une cause classique d'enlisement. La décision finale est renvoyée au document d'architecture, mais l'étude de faisabilité recommande de ne pas cumuler deux paris (un projet ambitieux *et* une pile nouvelle) sur un budget temps contraint.
-
----
+Du strict point de vue de la faisabilité, **la pile maîtrisée est le choix le plus sûr** : un projet solo mené en parallèle d'une activité prenante a tout intérêt à minimiser les inconnues. Le désir légitime de monter en compétence sur une autre pile est un objectif de carrière, pas un objectif de faisabilité - et mélanger les deux est une cause classique d'enlisement. La décision finale est renvoyée au document d'architecture, mais l'étude de faisabilité recommande de ne pas cumuler deux paris (un projet ambitieux *et* une pile nouvelle) sur un budget temps contraint.
 
 ## 3. Faisabilité humaine et temporelle
 
-C'est la dimension la plus critique, et la plus sous-estimée par tout porteur de projet solo. C'est ici que la plupart des projets de ce type échouent — non par incapacité technique, mais par épuisement du budget temps.
+C'est la dimension la plus critique, et la plus sous-estimée par tout porteur de projet solo. C'est ici que la plupart des projets de ce type échouent - non par incapacité technique, mais par épuisement du budget temps.
 
 ### 3.1 La réalité du budget temps
 
@@ -78,7 +72,7 @@ Le porteur est dans une transition de vie : fin d'études et d'alternance, reche
 
 > Le temps disponible pour Solivio va probablement **diminuer**, pas augmenter, dans les mois qui viennent. Une prise de poste réduit fortement le temps et l'énergie résiduels pour un projet personnel exigeant.
 
-Cela renverse l'intuition habituelle (« je commencerai vraiment quand j'aurai un poste stable »). En réalité, la période la plus propice à poser les fondations lourdes est probablement **maintenant ou avant la prise de poste**, tant que le temps est plus disponible. Une fois en poste, le projet doit pouvoir avancer par petites touches, sans dépendre de longues plages de concentration.
+Cela renverse l'intuition habituelle ("je commencerai vraiment quand j'aurai un poste stable"). En réalité, la période la plus propice à poser les fondations lourdes est probablement **maintenant ou avant la prise de poste**, tant que le temps est plus disponible. Une fois en poste, le projet doit pouvoir avancer par petites touches, sans dépendre de longues plages de concentration.
 
 ### 3.2 La conséquence sur la conception du projet
 
@@ -100,13 +94,11 @@ Mener un projet exigeant en parallèle d'une vie professionnelle est un marathon
 
 La faisabilité temporelle est réelle **à condition** d'accepter un rythme lent, un périmètre réduit, et un découpage en incréments courts. Elle est illusoire si le projet est mené comme une course contre la montre vers une plateforme complète.
 
----
-
 ## 4. Faisabilité organisationnelle
 
 ### 4.1 L'atout : un terrain réel
 
-Solivio n'est pas un projet hors-sol. Le porteur a accès à un terrain concret — une association étudiante de solidarité — qui sert de cas d'usage fondateur. C'est un avantage majeur sur les projets purement spéculatifs : il y a un besoin réel, des utilisateurs réels, et la possibilité de valider sur le terrain.
+Solivio n'est pas un projet hors-sol. Le porteur a accès à un terrain concret - une association étudiante de solidarité - qui sert de cas d'usage fondateur. C'est un avantage majeur sur les projets purement spéculatifs : il y a un besoin réel, des utilisateurs réels, et la possibilité de valider sur le terrain.
 
 ### 4.2 La condition non remplie à ce jour : la validation terrain explicite
 
@@ -120,13 +112,11 @@ Cette validation n'est pas coûteuse (quelques heures d'observation et d'échang
 
 Même un bon outil peut ne pas être adopté. Les freins identifiés dans l'analyse de la concurrence s'appliquent : le tableur est gratuit et déjà en place, les équipes associatives sont non techniques, et le renouvellement annuel des bureaux fragilise toute adoption durable. La faisabilité organisationnelle dépend donc autant de la **simplicité d'usage** que de la qualité technique.
 
----
-
 ## 5. Faisabilité juridique et réglementaire
 
 ### 5.1 L'enjeu : des données sensibles, un porteur seul
 
-Solivio traite des données de personnes en situation de précarité — des données à caractère social, potentiellement sensibles. Le porteur, en hébergeant l'instance, devient **sous-traitant** au sens du RGPD, chaque association étant responsable de traitement. Cela emporte des obligations réelles.
+Solivio traite des données de personnes en situation de précarité - des données à caractère social, potentiellement sensibles. Le porteur, en hébergeant l'instance, devient **sous-traitant** au sens du RGPD, chaque association étant responsable de traitement. Cela emporte des obligations réelles.
 
 ### 5.2 Ce qui est atteignable par une personne seule
 
@@ -149,15 +139,11 @@ Il faut le dire clairement : la rédaction d'un accord de sous-traitance solide 
 
 Faisable, à condition de traiter la conformité comme un invariant de conception (ce qui est déjà le cas) et de ne pas improviser le volet contractuel le moment venu.
 
----
-
 ## 6. Faisabilité économique
 
-Cette dimension est traitée en détail dans `modele_economique.md`. En synthèse : les coûts d'infrastructure sont de l'ordre d'une dizaine d'euros par mois au démarrage, couvrables par l'autofinancement. La faisabilité économique n'est pas un point dur. Le coût réel est le temps du porteur (traité en section 3), pas l'argent.
+Cette dimension est traitée en détail dans `archive/modele_economique.md`. En synthèse : les coûts d'infrastructure sont de l'ordre d'une dizaine d'euros par mois au démarrage, couvrables par l'autofinancement. La faisabilité économique n'est pas un point dur. Le coût réel est le temps du porteur (traité en section 3), pas l'argent.
 
 Verdict partiel : faisable sans réserve sur le plan financier.
-
----
 
 ## 7. Analyse consolidée des risques
 
@@ -177,8 +163,6 @@ Synthèse des risques majeurs, évalués selon leur probabilité et leur impact,
 
 Lecture : les risques critiques par leur impact (RGPD, fuite de données) ont une probabilité maîtrisable par la conception. Les risques les plus probables (épuisement, dérive, baisse de temps) sont des risques humains et de discipline, pas techniques. C'est cohérent avec le constat du modèle économique : le danger est humain avant d'être technique ou financier.
 
----
-
 ## 8. Scénarios
 
 ### 8.1 Scénario réaliste (le plus probable)
@@ -193,8 +177,6 @@ Le besoin se confirme largement, d'autres associations adoptent l'outil, une str
 
 Le projet vise trop large d'emblée, les fondations n'en finissent pas, rien de visible n'est livré, le porteur s'épuise et abandonne. Aucun utilisateur réel n'a jamais touché l'outil. **C'est l'échec, et c'est le scénario que toute la conception cherche à éviter.** Il survient presque toujours par excès d'ambition initiale, jamais par manque de compétence.
 
----
-
 ## 9. Conditions de réussite
 
 Le projet est faisable si, et seulement si, ces conditions sont tenues :
@@ -206,17 +188,13 @@ Le projet est faisable si, et seulement si, ces conditions sont tenues :
 5. **Le choix de pile ne cumule pas deux paris.** Soit la vitesse, soit l'apprentissage, pas les deux sur un budget temps contraint.
 6. **L'ambition de plateforme reste un horizon, pas un point de départ.** On généralise après avoir réussi pour une association, jamais avant.
 
----
-
 ## 10. Verdict
 
-**Le projet est faisable**, et le porteur est bien, voire particulièrement bien armé pour le mener — notamment grâce à son expérience en production et à son expertise sur le contrôle d'accès, qui est le cœur différenciant du produit.
+**Le projet est faisable**, et le porteur est bien, voire particulièrement bien armé pour le mener - notamment grâce à son expérience en production et à son expertise sur le contrôle d'accès, qui est le cœur différenciant du produit.
 
 **Mais cette faisabilité est conditionnelle.** Elle suppose une discipline de sobriété et un rythme lent assumé. Le même projet, mené avec une ambition maximale et immédiate, par une personne seule en parallèle d'une vie professionnelle, **n'est pas faisable** et conduirait au scénario d'échec.
 
 La frontière entre les deux n'est pas la compétence : c'est la **discipline de périmètre**. C'est rassurant, car cette frontière est entièrement sous le contrôle du porteur.
-
----
 
 ## 11. Synthèse en une page
 
@@ -231,7 +209,5 @@ La frontière entre les deux n'est pas la compétence : c'est la **discipline de
 **Économiquement.** Aucun point dur : une dizaine d'euros par mois.
 
 **Le verdict.** Faisable dans sa version étagée et sobre. Non faisable dans son ambition maximale immédiate. La différence se joue sur une seule variable, entièrement sous contrôle : la discipline de périmètre.
-
----
 
 *Fin de l'étude de faisabilité. Document suivant : `specifications_fonctionnelles.md`.*

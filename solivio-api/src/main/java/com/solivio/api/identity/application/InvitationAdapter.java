@@ -15,7 +15,7 @@ public class InvitationAdapter implements InvitationPort {
     }
 
     @Override
-    public void inviterBenevole(String emailInvite, UUID compteIdInvitant, String tenantSlug) {
-        invitationService.inviterParCompteId(compteIdInvitant, emailInvite, "benevole", null, tenantSlug);
+    public void inviterBenevole(String emailInvite, UUID compteIdInvitant) {
+        invitationService.inviterParCompteId(compteIdInvitant, emailInvite, "benevole", null);
     }
 }

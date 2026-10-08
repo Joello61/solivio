@@ -14,6 +14,8 @@ import { test, expect } from "@playwright/test";
 // (uniquement le check d'auth du layout protege). Les interactions client-side
 // de PointageListe sont interceptables via page.route().
 
+const RECHERCHE_POINTAGE = (url: URL) => url.pathname.endsWith("/api/distributions/dist-e2e/pointage");
+
 test.describe("Pointage - interactions client-side", () => {
   test("champ de recherche presente sur la page de pointage", async ({ page }) => {
     await page.goto("/distributions/dist-e2e/pointage");
@@ -23,11 +25,12 @@ test.describe("Pointage - interactions client-side", () => {
       return;
     }
 
-    await expect(page.getByPlaceholder(/taper 2 lettres/i)).toBeVisible();
+    await expect(page.getByLabel("Rechercher un inscrit")).toBeVisible();
   });
 
   test("recherche affiche les resultats mockes", async ({ page }) => {
-    await page.route("**/api/distributions/dist-e2e/pointage**", (route) =>
+    // Recherche seule : la liste des visiteurs ponctuels partage le prefixe /pointage.
+    await page.route(RECHERCHE_POINTAGE, (route) =>
       route.fulfill({
         json: [
           {
@@ -51,7 +54,7 @@ test.describe("Pointage - interactions client-side", () => {
       return;
     }
 
-    const input = page.getByPlaceholder(/taper 2 lettres/i);
+    const input = page.getByLabel("Rechercher un inscrit");
     await input.fill("Du");
     await page.getByRole("button", { name: /rechercher/i }).click();
 
@@ -59,27 +62,25 @@ test.describe("Pointage - interactions client-side", () => {
   });
 
   test("clic sur 'Marquer present' met a jour le statut", async ({ page }) => {
-    await page.route("**/api/distributions/dist-e2e/pointage**", async (route) => {
-      if (route.request().method() === "GET" || route.request().method() === "HEAD") {
-        await route.fulfill({
-          json: [
-            {
-              inscriptionId: "insc-1",
-              nom: "Martin",
-              prenom: "Paul",
-              type: "BENEVOLE",
-              statut: "CONFIRMEE",
-              presence: "NON_POINTE",
-              heureCreneauDebut: null,
-              heureCreneauFin: null,
-            },
-          ],
-        });
-      } else {
-        await route.fulfill({ status: 200, json: {} });
-      }
-    });
-
+    await page.route(RECHERCHE_POINTAGE, (route) =>
+      route.fulfill({
+        json: [
+          {
+            inscriptionId: "insc-1",
+            nom: "Martin",
+            prenom: "Paul",
+            type: "BENEVOLE",
+            statut: "CONFIRMEE",
+            presence: "NON_POINTE",
+            heureCreneauDebut: null,
+            heureCreneauFin: null,
+          },
+        ],
+      }),
+    );
+    await page.route("**/api/distributions/dist-e2e/pointage/insc-1", (route) =>
+      route.fulfill({ status: 200, json: {} }),
+    );
     await page.goto("/distributions/dist-e2e/pointage");
 
     if (page.url().includes("/login")) {
@@ -87,13 +88,13 @@ test.describe("Pointage - interactions client-side", () => {
       return;
     }
 
-    await page.getByPlaceholder(/taper 2 lettres/i).fill("Ma");
+    await page.getByLabel("Rechercher un inscrit").fill("Ma");
     await page.getByRole("button", { name: /rechercher/i }).click();
     await expect(page.getByText("Martin Paul")).toBeVisible();
 
-    await page.getByTitle("Marquer present").click();
+    await page.getByRole("button", { name: "Marquer present" }).click();
     // Apres le pointage, la liste se met a jour localement (pas de rechargement SSR)
-    await expect(page.getByTitle("Marquer present")).toBeVisible();
+    await expect(page.getByText("Present", { exact: true })).toBeVisible();
   });
 });
 

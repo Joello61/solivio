@@ -11,23 +11,18 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { register } from "@/lib/auth";
-
-const GOOGLE_AUTH_URL =
-  process.env.NEXT_PUBLIC_AUTH_LOGIN_URL ?? "http://localhost:8080/oauth2/authorization/google";
+import { AUTH_LOGIN_URL, register } from "@/lib/auth";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const tokenInvitation = searchParams.get("invitation") ?? undefined;
-  const assoParam = searchParams.get("asso") ?? "";
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
-  const [codeAssociation, setCodeAssociation] = useState(assoParam.toUpperCase());
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +38,6 @@ function RegisterForm() {
         motDePasse,
         nom,
         prenom,
-        codeAssociation: isInvitation ? undefined : codeAssociation,
         tokenInvitation,
       });
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -117,22 +111,6 @@ function RegisterForm() {
           />
         </div>
 
-        {!isInvitation && (
-          <div className="space-y-1.5">
-            <Label htmlFor="code">Code de votre association</Label>
-            <Input
-              id="code"
-              required
-              value={codeAssociation}
-              onChange={(e) => setCodeAssociation(e.target.value.toUpperCase())}
-              placeholder="Ex: PILOTE"
-              className="uppercase"
-            />
-            <p className="text-xs text-muted-foreground">
-              Ce code vous est fourni par votre association.
-            </p>
-          </div>
-        )}
 
         <FormError message={error} />
 
@@ -154,7 +132,7 @@ function RegisterForm() {
       <Button
         variant="outline"
         className="w-full gap-2"
-        onClick={() => { window.location.href = GOOGLE_AUTH_URL; }}
+        onClick={() => { window.location.href = AUTH_LOGIN_URL; }}
         type="button"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">

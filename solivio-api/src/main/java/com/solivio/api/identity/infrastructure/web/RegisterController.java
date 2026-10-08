@@ -31,12 +31,8 @@ public class RegisterController {
                 request.email(), request.motDePasse(), request.nom(), request.prenom(),
                 UUID.fromString(request.tokenInvitation()));
         } else {
-            if (request.codeAssociation() == null || request.codeAssociation().isBlank()) {
-                return ResponseEntity.badRequest().build();
-            }
             registerService.inscrireBeneficiaire(
-                request.email(), request.motDePasse(), request.nom(), request.prenom(),
-                request.codeAssociation());
+                request.email(), request.motDePasse(), request.nom(), request.prenom());
         }
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

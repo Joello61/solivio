@@ -375,7 +375,7 @@ class NotificationServiceTest {
         UUID evenementId = UUID.randomUUID();
         UUID b1Id = UUID.randomUUID();
         PersonneContactInfo b1 = new PersonneContactInfo(b1Id, "b1@ev.com", "Dup", "Lic");
-        // aBesoiNStaff=true ET publicParticipants=BENEVOLES → meme benevole potentiellement dans les deux listes
+        // aBesoiNStaff=true ET publicParticipants=BENEVOLES -> meme benevole potentiellement dans les deux listes
         EvenementInfo info = new EvenementInfo(evenementId, "Stand", ZonedDateTime.now(),
             null, true, true, "BENEVOLES", "OBLIGATOIRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
@@ -412,7 +412,7 @@ class NotificationServiceTest {
         when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
         when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
 
-        service.notifierAnnulationEvenement(evenementId, "asso-test");
+        service.notifierAnnulationEvenement(evenementId);
 
         verify(emailService).envoyerAnnulationEvenement(eq("ins@ev.com"), any(ContexteEvenementEmail.class));
         verify(notificationRepository).save(any(Notification.class));
@@ -428,10 +428,10 @@ class NotificationServiceTest {
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
         when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
         when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
-        when(associationQueryPort.trouverContactEmail("asso-libre"))
+        when(associationQueryPort.trouverContactEmail())
             .thenReturn(Optional.of("contact@asso.fr"));
 
-        service.notifierAnnulationEvenement(evenementId, "asso-libre");
+        service.notifierAnnulationEvenement(evenementId);
 
         // inscrit + contactEmail
         verify(emailService, times(2)).envoyerAnnulationEvenement(anyString(), any(ContexteEvenementEmail.class));
@@ -444,13 +444,13 @@ class NotificationServiceTest {
             null, false, false, null, "LIBRE", "Pluie");
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
         when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of());
-        when(associationQueryPort.trouverContactEmail("slug"))
+        when(associationQueryPort.trouverContactEmail())
             .thenReturn(Optional.of("contact@asso.fr"));
         doThrow(new NotificationEmailException("contact@asso.fr", "sujet", new RuntimeException("SMTP")))
             .when(emailService).envoyerAnnulationEvenement(eq("contact@asso.fr"), any());
 
         // ne doit pas lever d'exception
-        service.notifierAnnulationEvenement(evenementId, "slug");
+        service.notifierAnnulationEvenement(evenementId);
     }
 
     @Test
@@ -463,9 +463,9 @@ class NotificationServiceTest {
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
         when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
         when(personneQueryPort.trouverPersonneParId(inscritId)).thenReturn(inscrit);
-        when(associationQueryPort.trouverContactEmail(anyString())).thenReturn(Optional.empty());
+        when(associationQueryPort.trouverContactEmail()).thenReturn(Optional.empty());
 
-        service.notifierAnnulationEvenement(evenementId, "asso-sans-email");
+        service.notifierAnnulationEvenement(evenementId);
 
         verify(emailService, times(1)).envoyerAnnulationEvenement(eq("i@ev.com"), any());
     }
@@ -483,7 +483,7 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(bev));
         when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(ben));
 
-        service.notifierAnnulationEvenement(evenementId, "asso-x");
+        service.notifierAnnulationEvenement(evenementId);
 
         verify(emailService).envoyerAnnulationEvenement(eq("bev@ev.com"), any(ContexteEvenementEmail.class));
         verify(emailService).envoyerAnnulationEvenement(eq("ben@ev.com"), any(ContexteEvenementEmail.class));
@@ -501,9 +501,9 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(commun));
         when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(commun));
 
-        service.notifierAnnulationEvenement(evenementId, "asso-y");
+        service.notifierAnnulationEvenement(evenementId);
 
-        // meme id dans benevoles et beneficiaires → un seul email
+        // meme id dans benevoles et beneficiaires -> un seul email
         verify(emailService, times(1)).envoyerAnnulationEvenement(eq("x@ev.com"), any());
     }
 }

@@ -44,9 +44,9 @@ describe("RegisterPage", () => {
     expect(screen.getByLabelText(/Mot de passe/)).toBeInTheDocument();
   });
 
-  it("affiche le champ code association (sans token invitation)", () => {
+  it("ne demande pas de code association (une seule association)", () => {
     renderRegister();
-    expect(screen.getByLabelText(/Code de votre association/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Code de votre association/)).not.toBeInTheDocument();
   });
 
   it("redirige vers /verify-email apres inscription reussie", async () => {
@@ -66,9 +66,6 @@ describe("RegisterPage", () => {
     fireEvent.change(screen.getByLabelText(/Mot de passe/), {
       target: { value: "motdepasse123" },
     });
-    fireEvent.change(screen.getByLabelText(/Code de votre association/), {
-      target: { value: "PILOTE" },
-    });
 
     await act(async () => {
       fireEvent.submit(screen.getByRole("button", { name: "Creer mon compte" }).closest("form")!);
@@ -81,6 +78,7 @@ describe("RegisterPage", () => {
         prenom: "Alice",
       }),
     );
+    expect(vi.mocked(authLib.register).mock.calls[0][0]).not.toHaveProperty("codeAssociation");
   });
 
   it("affiche un message d'erreur si l'email est deja utilise", async () => {
@@ -97,9 +95,6 @@ describe("RegisterPage", () => {
     });
     fireEvent.change(screen.getByLabelText(/Mot de passe/), {
       target: { value: "motdepasse123" },
-    });
-    fireEvent.change(screen.getByLabelText(/Code de votre association/), {
-      target: { value: "PILOTE" },
     });
 
     await act(async () => {

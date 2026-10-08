@@ -8,5 +8,5 @@ import java.util.UUID;
  */
 public interface InvitationPort {
 
-    void inviterBenevole(String emailInvite, UUID compteIdInvitant, String tenantSlug);
+    void inviterBenevole(String emailInvite, UUID compteIdInvitant);
 }

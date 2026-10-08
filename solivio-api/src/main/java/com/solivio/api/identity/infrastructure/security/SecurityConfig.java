@@ -1,11 +1,16 @@
 package com.solivio.api.identity.infrastructure.security;
 
-import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import com.solivio.api.shared.web.ApiError;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -21,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Clock;
 import java.util.List;
 
 /**
@@ -33,6 +39,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableConfigurationProperties(CorsProperties.class)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -41,7 +48,6 @@ public class SecurityConfig {
     private final CorsProperties corsProperties;
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
-    private final AssociationRepository associationRepository;
     private final Environment environment;
 
     public SecurityConfig(
@@ -51,7 +57,6 @@ public class SecurityConfig {
             CorsProperties corsProperties,
             GoogleOAuth2UserService googleOAuth2UserService,
             GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
-            AssociationRepository associationRepository,
             Environment environment) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
@@ -59,30 +64,55 @@ public class SecurityConfig {
         this.corsProperties = corsProperties;
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
-        this.associationRepository = associationRepository;
         this.environment = environment;
     }
 
     @Bean
-    public TenantResolutionFilter tenantResolutionFilter() {
-        return new TenantResolutionFilter(associationRepository);
+    public LimiteDebitAuthFilter limiteDebitAuthFilter(
+            @Value("${solivio.securite.limite-debit-auth.requetes-par-minute:10}") int requetesParMinute) {
+        return new LimiteDebitAuthFilter(Clock.systemUTC(), requetesParMinute);
     }
 
-    /**
-     * Desactive l'enregistrement automatique du filtre comme filtre servlet.
-     * Il est enregistre uniquement dans la SecurityFilterChain via addFilterAfter.
-     * Sans ce bean, Spring Boot l'enregistrerait deux fois.
-     */
+    // Le filtre n'est execute que dans la chaine de securite, pas une seconde
+    // fois comme filtre servlet enregistre automatiquement par Spring Boot.
     @Bean
-    public FilterRegistrationBean<TenantResolutionFilter> tenantFilterRegistration(
-            TenantResolutionFilter filter) {
-        FilterRegistrationBean<TenantResolutionFilter> reg = new FilterRegistrationBean<>(filter);
-        reg.setEnabled(false);
-        return reg;
+    public FilterRegistrationBean<LimiteDebitAuthFilter> limiteDebitAuthFilterRegistration(
+            LimiteDebitAuthFilter filter) {
+        FilterRegistrationBean<LimiteDebitAuthFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    // Points d'actuator, servis sur le port de gestion non route par Traefik :
+    // sante et info publiques (sondes Docker), metriques reservees a Prometheus.
+    @Bean
+    @Order(1)
+    public SecurityFilterChain actuatorFilterChain(
+            HttpSecurity http,
+            @Value("${solivio.observabilite.metrics-scrape-token:}") String jetonScrape) throws Exception {
+        return http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
+                .requestMatchers(EndpointRequest.to("prometheus")).hasRole(MetricsScrapeTokenFilter.ROLE)
+                .anyRequest().denyAll()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                    ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Acces refuse."))
+            )
+            .addFilterBefore(new MetricsScrapeTokenFilter(jetonScrape), UsernamePasswordAuthenticationFilter.class)
+            .build();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(2)
+    public SecurityFilterChain filterChain(HttpSecurity http, LimiteDebitAuthFilter limiteDebitAuthFilter)
+            throws Exception {
         return http
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -106,8 +136,6 @@ public class SecurityConfig {
                 ).permitAll()
                 // Google OAuth2 initiation et callback
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                // Infrastructure
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 // Swagger : public en dev/test, bloque en prod.
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .access((a, ctx) -> new org.springframework.security.authorization.AuthorizationDecision(
@@ -122,20 +150,14 @@ public class SecurityConfig {
             // Pour les requetes API non authentifiees : 401 JSON au lieu d'une redirection 302.
             // Le frontend gere la redirection vers /login lorsqu'il recoit un 401.
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/problem+json");
-                    response.getWriter().write("{\"title\":\"Non authentifie\",\"status\":401}");
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/problem+json");
-                    response.getWriter().write("{\"title\":\"Acces refuse\",\"status\":403}");
-                })
+                .authenticationEntryPoint((request, response, authException) ->
+                    ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN",
+                        "Vous n'avez pas les droits necessaires pour cette operation."))
             )
+            .addFilterBefore(limiteDebitAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            // TenantResolutionFilter apres JWT : le SecurityContext est peuple, on peut lire le tenant.
-            .addFilterAfter(tenantResolutionFilter(), JwtAuthenticationFilter.class)
             .build();
     }
 

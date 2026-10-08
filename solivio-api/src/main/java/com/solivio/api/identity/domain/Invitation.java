@@ -1,6 +1,5 @@
 package com.solivio.api.identity.domain;
 
-import com.solivio.api.association.domain.Association;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,7 +21,7 @@ import java.util.UUID;
  * Le token UUID est inclus dans le lien envoye par email (expire apres 7 jours).
  */
 @Entity
-@Table(name = "invitation", schema = "public")
+@Table(name = "invitation")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,10 +33,6 @@ public class Invitation {
 
     @Column(nullable = false)
     private String email;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "association_id", nullable = false)
-    private Association association;
 
     @Column(nullable = false, length = 30)
     private String role;
@@ -61,10 +56,8 @@ public class Invitation {
     @Column(name = "cree_a", nullable = false, updatable = false)
     private Instant creeA = Instant.now();
 
-    public Invitation(String email, Association association, String role,
-                      Compte invitePar, Instant expireA) {
+    public Invitation(String email, String role, Compte invitePar, Instant expireA) {
         this.email = email;
-        this.association = association;
         this.role = role;
         this.invitePar = invitePar;
         this.expireA = expireA;

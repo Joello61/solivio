@@ -1,5 +1,7 @@
 package com.solivio.api.identity.infrastructure.security;
 
+import com.solivio.api.identity.SolivioUserDetails;
+import com.solivio.api.shared.web.ContexteRequete;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,6 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                MDC.put(ContexteRequete.MDC_ACCOUNT_ID, userDetails.getCompteId().toString());
             } catch (Exception e) {
                 log.debug("Echec construction UserDetails depuis JWT : {}", e.getMessage());
             }
@@ -85,7 +89,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private SolivioUserDetails construireUserDetails(Claims claims) {
         UUID compteId = UUID.fromString(claims.getSubject());
         String email = claims.get("email", String.class);
-        String tenantSlug = claims.get("tenant", String.class);
         boolean superAdmin = Boolean.TRUE.equals(claims.get("super_admin", Boolean.class));
 
         List<String> roles = claims.get("roles", List.class);
@@ -98,7 +101,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return new SolivioUserDetails(
-            compteId, email, null, tenantSlug, superAdmin, authorities, true
+            compteId, email, null, superAdmin, authorities, true
         );
     }
 }

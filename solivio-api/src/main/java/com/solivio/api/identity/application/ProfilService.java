@@ -4,7 +4,7 @@ import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
-import com.solivio.api.identity.infrastructure.security.SolivioUserDetails;
+import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateProfilRequest;
 import org.jsoup.Jsoup;
@@ -43,7 +43,7 @@ public class ProfilService {
         }
         compteRepository.save(compte);
 
-        // Propager nom/prenom sur la Personne tenant et mettre a jour le telephone.
+        // Propager nom/prenom sur la Personne et mettre a jour le telephone.
         Personne personne = personneRepository.findByCompteEmail(compte.getEmail()).orElse(null);
         if (personne != null) {
             if (request.nom() != null && !request.nom().isBlank()) {
@@ -79,7 +79,6 @@ public class ProfilService {
             telephone,
             photoUrl,
             compte.isSuperAdmin(),
-            userDetails.getTenantSlug(),
             roles,
             compte.getDateCreation(),
             compte.getDateModification(),

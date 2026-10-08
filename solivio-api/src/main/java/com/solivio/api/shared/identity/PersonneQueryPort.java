@@ -2,7 +2,9 @@ package com.solivio.api.shared.identity;
 
 import java.util.UUID;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface PersonneQueryPort {
 
@@ -21,6 +23,12 @@ public interface PersonneQueryPort {
      * Limitee a 10 resultats. Exclut les personnes supprimees.
      */
     List<PersonneContactInfo> rechercherParNomOuPrenom(String terme);
+
+    /**
+     * Emails des personnes demandees, en une seule requete. Les identifiants
+     * inconnus sont absents de la table retournee.
+     */
+    Map<UUID, String> trouverEmailsParIds(Collection<UUID> personneIds);
 
     record PersonneInfo(UUID id, String nom, String prenom) {}
 

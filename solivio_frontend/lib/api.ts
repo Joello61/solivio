@@ -1,6 +1,21 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Vide dans les images deployees : appels relatifs, sur le domaine de la page.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 type FetchOptions = RequestInit & { noCredentials?: boolean };
+
+// Un 401 de ces points d'entree publics est une reponse metier (identifiants
+// refuses, jeton expire), pas une session expiree : ni rafraichissement ni
+// redirection, l'erreur remonte au formulaire.
+const ENDPOINTS_AUTH_PUBLICS = new Set([
+  "/api/auth/login",
+  "/api/auth/refresh",
+  "/api/auth/register",
+  "/api/auth/verify-email",
+  "/api/auth/resend-verification",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+  "/api/auth/google/complete-registration",
+]);
 
 // Promise partagee entre les requetes concurrentes : on ne refreshe qu'une seule fois
 // meme si plusieurs requetes recoivent un 401 simultanement.
@@ -32,12 +47,31 @@ function buildInit(init: RequestInit, noCredentials: boolean): RequestInit {
   };
 }
 
-function parseErrorResponse(body: unknown, status: number): Error {
-  const b = body as { title?: string; detail?: string } | null;
-  return Object.assign(new Error(b?.detail ?? b?.title ?? "Erreur"), {
+// Rechargement complet volontaire apres une session expiree : il vide l'etat
+// client et le cache des requetes. Hors composant, aucun routeur n'est disponible.
+function allerALaConnexion(): void {
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/login";
+  }
+}
+
+type ApiErrorBody = {
+  error?: { code?: string; message?: string; details?: unknown; request_id?: string };
+};
+
+/**
+ * Convertit l'enveloppe d'erreur du backend ({"error": {code, message, details, request_id}})
+ * en Error. `detail` reprend le message pour les composants qui l'affichent.
+ */
+export function parseErrorResponse(body: unknown, status: number): Error {
+  const e = (body as ApiErrorBody | null)?.error;
+  return Object.assign(new Error(e?.message ?? "Erreur"), {
     status,
-    title: b?.title,
-    detail: b?.detail,
+    code: e?.code,
+    detail: e?.message,
+    details: e?.details,
+    requestId: e?.request_id,
   });
 }
 
@@ -49,12 +83,12 @@ function parseErrorResponse(body: unknown, status: number): Error {
  */
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const { noCredentials = false, ...init } = options;
-  const isRefreshEndpoint = path === "/api/auth/refresh";
+  const sansRafraichissement = ENDPOINTS_AUTH_PUBLICS.has(path);
 
   const response = await fetch(`${API_URL}${path}`, buildInit(init, noCredentials));
 
   // Token expire : on tente un refresh puis on rejoue la requete.
-  if (response.status === 401 && !noCredentials && !isRefreshEndpoint) {
+  if (response.status === 401 && !noCredentials && !sansRafraichissement) {
     const refreshed = await tentativeRefresh();
 
     if (refreshed) {
@@ -67,9 +101,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     }
 
     // Refresh impossible (refresh token expire ou invalide) : retour au login.
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
+    allerALaConnexion();
     throw Object.assign(new Error("Session expiree"), { status: 401 });
   }
 
@@ -112,7 +144,7 @@ export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T
         return retry.json() as Promise<T>;
       }
     }
-    if (typeof window !== "undefined") window.location.href = "/login";
+    allerALaConnexion();
     throw Object.assign(new Error("Session expiree"), { status: 401 });
   }
 

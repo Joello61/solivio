@@ -2,8 +2,6 @@ package com.solivio.api.inscription.infrastructure.web;
 
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
-import com.solivio.api.association.multitenancy.TenantFlywayMigrator;
-import com.solivio.api.association.multitenancy.TenantProvisioningService;
 import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -32,13 +30,11 @@ class PointageAdHocControllerIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private AssociationRepository associationRepository;
-    @Autowired private TenantFlywayMigrator flywayMigrator;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private JwtService jwtService;
 
     private MockMvc mockMvc;
     private Association association;
-    private String schema;
     private String tokenCoordinateur;
     private String tokenBenevole;
     private UUID distributionId;
@@ -48,28 +44,16 @@ class PointageAdHocControllerIntegrationTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 
-        association = new Association("adhoc-test", "Asso AdHoc Test");
-        association.setCode("ADHOCTEST");
-        associationRepository.save(association);
-
-        schema = TenantProvisioningService.schemaName("adhoc-test");
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
-        flywayMigrator.migrate(schema);
-
         tokenCoordinateur = jwtService.genererAccessToken(
-            UUID.randomUUID(), "coord@adhoc.com", "Coord", "Test",
-            "adhoc-test", List.of("coordinateur"), null, false
+            UUID.randomUUID(), "coord@adhoc.com", "Coord", "Test", List.of("coordinateur"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
-            UUID.randomUUID(), "benevole@adhoc.com", "Bene", "Vole",
-            "adhoc-test", List.of("benevole"), null, false
+            UUID.randomUUID(), "benevole@adhoc.com", "Bene", "Vole", List.of("benevole"), null, false
         );
 
-        // Inserer une distribution EN_COURS dans le schema tenant
+        // Inserer une distribution EN_COURS
         distributionId = UUID.randomUUID();
         personneId = UUID.randomUUID();
-
-        jdbcTemplate.execute("SET search_path TO \"" + schema + "\"");
 
         jdbcTemplate.update(
             "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
@@ -86,13 +70,10 @@ class PointageAdHocControllerIntegrationTest {
             50, "CRENEAU_UNIQUE", "INSCRITS", personneId
         );
 
-        jdbcTemplate.execute("SET search_path TO public");
     }
 
     @AfterEach
     void tearDown() {
-        jdbcTemplate.execute("DROP SCHEMA IF EXISTS \"" + schema + "\" CASCADE");
-        associationRepository.delete(association);
     }
 
     @Test
