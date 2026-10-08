@@ -1,5 +1,10 @@
 # Mises a jour de dependances proposees chaque semaine, vers dev.
 # Le mobile est gele pendant la refonte du socle : pas de mise a jour automatique.
+#
+# Les paquets qui doivent avancer ensemble sont groupes : une mise a jour isolee
+# casse l'installation (versions de pairs incompatibles) ou les tests (react et
+# react-dom de versions differentes). Les versions majeures du runtime et du
+# langage se decident a la main, jamais sur proposition hebdomadaire.
 version: 2
 updates:
   - package-ecosystem: maven
@@ -15,6 +20,39 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@vitejs/plugin-react"
+      lint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "prettier"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+    ignore:
+      # TypeScript 7 n'est pas encore pris en charge par typescript-eslint.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Les types suivent la version de Node reellement executee (24 LTS).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -29,3 +67,7 @@ updates:
     target-branch: dev
     schedule:
       interval: weekly
+    ignore:
+      # Une version de Node ne passe en production qu'une fois LTS (Node 26 : 28 octobre 2026).
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
