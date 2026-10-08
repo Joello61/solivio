@@ -253,6 +253,15 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
+      - name: Sauvegarde
+        uses: docker/build-push-action@v7
+        with:
+          context: ./docker/backup
+          push: true
+          tags: ${{ steps.meta.outputs.image_base }}-backup:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha,scope=backup
+          cache-to: type=gha,scope=backup,mode=max
+
   # Secrets de l'environnement GitHub "staging" ; memes noms qu'en production.
   deploy-staging:
     name: Deploiement preproduction
