@@ -162,7 +162,7 @@ Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'A
 - Images Docker multi-étapes, exécutées sans privilège root, avec contrôle de santé.
 - En développement, Docker Compose lance PostgreSQL (et un serveur SMTP de test) ; backend et frontend tournent sur la machine ou en conteneur.
 - En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api`, `/oauth2` et `/login/oauth2` sont routés vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS. Deux routes `/api` appartiennent au serveur Next.js (`/api/auth/server-refresh`, `/api/health`) et passent en priorité. Le frontend est donc construit sans URL d'API : une même image sert la préproduction et la production.
-- Sauvegarde quotidienne chiffrée de la base et des fichiers déposés, copiée hors du VPS, avec un test de restauration trimestriel (`docker/backup/README.md`).
+- Sauvegarde quotidienne de la base et des fichiers déposés par le service `backup`, chiffrée par clé publique et copiée sur Cloudflare R2, avec un test de restauration trimestriel (ADR-009, `docker/backup/README.md`).
 - Environnements : la branche `dev` alimente l'environnement de préproduction (staging), la branche `main` la production.
 - Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008). Les images ne sont jamais construites sur le serveur.
 
@@ -267,6 +267,13 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Statut** : acceptée (octobre 2026). Remplace GitLab CI/CD.
 - **Décision** : intégration continue sur GitHub Actions (qualité, tests, couverture, analyse de sécurité), images sur GHCR étiquetées par SHA, déploiement par SSH avec Infisical ; `dev` vers la préproduction, `main` vers la production.
 - **Conséquences** : migration du dépôt vers GitHub ; même modèle de déploiement que les autres projets hébergés sur le VPS.
+
+### ADR-009 - Sauvegardes par un service dédié, chiffrées par clé publique, vers Cloudflare R2
+
+- **Statut** : acceptée (octobre 2026). Remplace les scripts lancés par le cron du VPS, jamais mis en service.
+- **Contexte** : une tâche cron sur l'hôte demandait une phrase de chiffrement et des clés de stockage en clair dans des fichiers du serveur, hors d'Infisical, et une configuration manuelle que rien ne versionne. Cobage, sur le même VPS, sauvegarde déjà depuis un conteneur vers R2.
+- **Décision** : un service `backup` dans le fichier Compose de chaque environnement (image construite par la CI, planification par supercronic) exécute `pg_dump`, archive les fichiers déposés, chiffre pour une clé publique GPG versionnée et envoie l'archive dans un bucket R2 dédié, avec un jeton R2 limité à ce bucket et donné à ce seul service. Rétention dégressive (7 jours, 4 semaines, 3 mois) ; moniteur "push" Uptime Kuma.
+- **Conséquences** : aucun secret ni configuration de sauvegarde sur l'hôte ; la clé privée vit hors du VPS, la restauration commence donc par un déchiffrement sur une machine de confiance ; les secrets R2 deviennent obligatoires au déploiement.
 
 ## 15. Synthèse
 

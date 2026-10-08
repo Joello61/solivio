@@ -60,7 +60,8 @@ Vérification (machine locale) : `dig +short solivio.joeltech.fr staging.solivio
    | `SMTP_PORT` | `587` |
    | `SMTP_USERNAME`, `SMTP_PASSWORD` | identifiant et clé SMTP Brevo de cet environnement |
    | `SOLIVIO_MAIL_FROM` | `noreply@joeltech.fr` |
-   | `BACKUP_GPG_PASSPHRASE` | `openssl rand -base64 32`, à copier aussi dans ton gestionnaire de mots de passe |
+   | `R2_ENDPOINT`, `R2_BACKUPS_BUCKET`, `R2_BACKUPS_ACCESS_KEY_ID`, `R2_BACKUPS_SECRET_ACCESS_KEY` | bucket et jeton R2 dédiés aux sauvegardes (`docker/backup/README.md`) |
+   | `BACKUP_HEARTBEAT_URL` | moniteur push Uptime Kuma de cet environnement (`docker/backup/README.md`) |
 
 4. Access Control > Machine Identities : créer `solivio-staging-deploy` et `solivio-production-deploy` (Universal Auth), chacune en lecture seule sur son seul environnement du projet Solivio. Noter pour chacune le Client ID et générer un Client Secret.
 
@@ -180,7 +181,7 @@ Même chose pour `metrics_scrape_token_solivio` après le premier déploiement d
 
 ### 10. Sauvegardes
 
-Voir `docker/backup/README.md` : fichier d'environnement de sauvegarde par environnement, crontab, moniteur « push » Uptime Kuma.
+Voir `docker/backup/README.md` : paire de clés GPG, bucket et jeton R2, moniteur "push" Uptime Kuma, puis première sauvegarde manuelle et test de restauration. Les secrets R2 doivent exister dans Infisical avant le premier déploiement qui contient le service `backup`, sinon Compose refuse de démarrer.
 
 ### 11. Production
 

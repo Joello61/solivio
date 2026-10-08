@@ -64,6 +64,7 @@ updates:
     directories:
       - /solivio-api
       - /solivio_frontend
+      - /docker/backup
     target-branch: dev
     schedule:
       interval: weekly
