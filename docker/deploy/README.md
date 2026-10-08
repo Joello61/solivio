@@ -71,11 +71,18 @@ Une clé par environnement, sans phrase de passe (elle est utilisée par GitHub 
 ```bash
 ssh-keygen -t ed25519 -N "" -C "solivio-staging-deploy" -f ~/.ssh/solivio_staging_deploy
 ssh-keygen -t ed25519 -N "" -C "solivio-production-deploy" -f ~/.ssh/solivio_production_deploy
-ssh-copy-id -i ~/.ssh/solivio_staging_deploy.pub vps-ovh
-ssh-copy-id -i ~/.ssh/solivio_production_deploy.pub vps-ovh
+# -f : sans lui, ssh-copy-id teste la connexion avec la cle de l'alias vps-ovh
+# (ou de l'agent SSH), reussit, et croit a tort que la nouvelle cle est deja installee.
+ssh-copy-id -f -i ~/.ssh/solivio_staging_deploy.pub vps-ovh
+ssh-copy-id -f -i ~/.ssh/solivio_production_deploy.pub vps-ovh
 ```
 
-Vérification : `ssh -i ~/.ssh/solivio_staging_deploy ubuntu@57.129.143.18 true` se connecte sans mot de passe.
+Vérification, chaque clé seule comme le fera GitHub Actions (`IdentitiesOnly=yes` interdit toute autre clé) :
+
+```bash
+ssh -o IdentitiesOnly=yes -i ~/.ssh/solivio_staging_deploy ubuntu@57.129.143.18 'echo ok staging'
+ssh -o IdentitiesOnly=yes -i ~/.ssh/solivio_production_deploy ubuntu@57.129.143.18 'echo ok production'
+```
 
 ### 6. VPS
 
