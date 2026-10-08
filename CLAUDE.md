@@ -45,7 +45,7 @@ Toujours une version stable et officiellement supportée : jamais d'alpha, bêta
 
 ## 4. Stack
 
-Décisions détaillées dans `docs/architecture_technique.md` (ADR-001 à ADR-008).
+Décisions détaillées dans `docs/architecture_technique.md` (ADR-001 à ADR-009).
 
 | Couche | Choix |
 |---|---|

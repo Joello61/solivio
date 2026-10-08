@@ -64,6 +64,7 @@ ssh-keyscan -H "$SSH_HOST" > "$KNOWN_HOSTS_FILE" 2>/dev/null
 
 BACKEND_IMAGE="${IMAGE_BASE}-backend:${IMAGE_TAG}"
 FRONTEND_IMAGE="${IMAGE_BASE}-frontend:${IMAGE_TAG}"
+BACKUP_IMAGE="${IMAGE_BASE}-backup:${IMAGE_TAG}"
 
 echo "Deploiement de ${ENVIRONMENT}, images ${IMAGE_TAG}"
 
@@ -76,6 +77,7 @@ export COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT"
 export DEPLOYMENT_ENVIRONMENT="$ENVIRONMENT"
 export BACKEND_IMAGE="$BACKEND_IMAGE"
 export FRONTEND_IMAGE="$FRONTEND_IMAGE"
+export BACKUP_IMAGE="$BACKUP_IMAGE"
 
 # Les fichiers compose suivent exactement le commit dont les images ont ete
 # construites (HEAD detache). Le fichier Traefik, non suivi, n'est pas touche.

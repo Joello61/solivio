@@ -2,7 +2,7 @@
 # docker/deploy/ssh-deploy.sh. Le developpement local utilise docker-compose-dev.yml.
 #
 # Les images sont construites et testees une seule fois par la CI, puis tirees de
-# GHCR (BACKEND_IMAGE, FRONTEND_IMAGE, etiquetees par SHA) : jamais de build sur
+# GHCR (BACKEND_IMAGE, FRONTEND_IMAGE, BACKUP_IMAGE, etiquetees par SHA) : jamais de build sur
 # le serveur. Les secrets sont injectes par "infisical run" dans l'environnement de
 # docker compose ; aucun fichier .env rempli n'existe sur le serveur (.env.example
 # liste les variables).
@@ -69,6 +69,34 @@ services:
     mem_limit: 512m
     depends_on:
       backend:
+        condition: service_healthy
+
+  # Sauvegarde quotidienne chiffree vers Cloudflare R2 (docker/backup/README.md). Le
+  # jeton R2 dedie, limite au bucket des sauvegardes, n'est donne qu'a ce service.
+  backup:
+    image: ${BACKUP_IMAGE:?}
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${DB_NAME}
+      PGUSER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      BACKUP_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT}
+      R2_BACKUPS_BUCKET: ${R2_BACKUPS_BUCKET:?}
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+      RCLONE_CONFIG_R2_REGION: auto
+      RCLONE_CONFIG_R2_ENDPOINT: ${R2_ENDPOINT:?}
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${R2_BACKUPS_ACCESS_KEY_ID:?}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${R2_BACKUPS_SECRET_ACCESS_KEY:?}
+      # Le jeton n'a pas le droit de creer de bucket.
+      RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
+      BACKUP_HEARTBEAT_URL: ${BACKUP_HEARTBEAT_URL:-}
+    mem_limit: 256m
+    volumes:
+      - uploads_data:/var/solivio/uploads:ro
+    depends_on:
+      postgres:
         condition: service_healthy
 
 volumes:

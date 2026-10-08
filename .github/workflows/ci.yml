@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "25"
@@ -130,7 +130,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "25"
@@ -252,6 +252,15 @@ jobs:
           tags: ${{ steps.meta.outputs.image_base }}-frontend:${{ steps.meta.outputs.image_tag }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
+
+      - name: Sauvegarde
+        uses: docker/build-push-action@v7
+        with:
+          context: ./docker/backup
+          push: true
+          tags: ${{ steps.meta.outputs.image_base }}-backup:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha,scope=backup
+          cache-to: type=gha,scope=backup,mode=max
 
   # Secrets de l'environnement GitHub "staging" ; memes noms qu'en production.
   deploy-staging:
