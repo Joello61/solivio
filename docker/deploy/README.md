@@ -97,7 +97,7 @@ git clone https://github.com/Joello61/solivio.git /opt/apps/solivio
 # par defaut ; l'exemple est lu sur dev pour ne dependre d'aucune mise en production.
 cd /opt/apps/solivio
 git show origin/dev:docker-compose.prod.traefik.yml.example > docker-compose.prod.traefik.yml
-grep -c "solivio.joeltech.fr" docker-compose.prod.traefik.yml   # doit afficher 3
+grep -c "solivio.joeltech.fr" docker-compose.prod.traefik.yml   # doit afficher 6 (3 regles, 3 commentaires)
 
 cd /opt/apps/solivio-staging
 git show origin/dev:docker-compose.prod.traefik.yml.example \
@@ -106,8 +106,8 @@ git show origin/dev:docker-compose.prod.traefik.yml.example \
         -e 's/services\.solivio-/services.solivio-staging-/g' \
         -e 's/service=solivio-/service=solivio-staging-/g' \
   > docker-compose.prod.traefik.yml
-grep -c "solivio-staging-" docker-compose.prod.traefik.yml               # doit afficher 15
-grep -c "staging.solivio.joeltech.fr" docker-compose.prod.traefik.yml    # doit afficher 3
+grep -c "solivio-staging-" docker-compose.prod.traefik.yml               # doit afficher 19 (dont 4 en commentaire)
+grep -c "staging.solivio.joeltech.fr" docker-compose.prod.traefik.yml    # doit afficher 6 (3 regles, 3 commentaires)
 
 # Acces aux images privees de GHCR : deja configure pour Cobage. A verifier :
 grep -c ghcr.io ~/.docker/config.json   # 1 ou plus
