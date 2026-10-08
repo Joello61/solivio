@@ -196,6 +196,10 @@ Mémoire du VPS : Solivio ajoute environ 3 Go en limite haute (backend 1 Go et f
 3. Pour `METRICS_SCRAPE_TOKEN`, mettre à jour le même jour le fichier de jeton de Prometheus (étape 9).
 4. Changer `SOLIVIO_AUTH_JWT_SECRET` déconnecte tous les utilisateurs : à faire hors des créneaux de distribution.
 
+## Bascule sans coupure
+
+Backend et frontend sont remplacés par `docker-rollout` (ADR-010), installé et vérifié par `ssh-deploy.sh` dans `~/.docker/cli-plugins` de l'utilisateur SSH. Le nom de ces conteneurs change à chaque déploiement (`solivio-backend-2`, puis `-1`...) : pour une commande manuelle, le retrouver avec `docker ps --filter name=solivio-backend`. Si la nouvelle version ne devient pas saine dans le délai, elle est retirée, l'ancienne continue de servir et le job de déploiement échoue avec ses journaux.
+
 ## Retour arrière
 
 Relancer la CI d'un commit antérieur de la branche (onglet Actions, « Re-run all jobs ») : son image existe déjà sur GHCR. Une migration Flyway déjà appliquée ne se défait pas : les migrations restent additives pour que la version précédente fonctionne encore sur le nouveau schéma.
