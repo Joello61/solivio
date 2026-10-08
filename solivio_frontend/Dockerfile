@@ -9,14 +9,14 @@
 # preproduction et la production. Le code serveur joint le backend par API_URL,
 # lu a l'execution.
 
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN npm run build
 
-FROM node:24-alpine AS final
+FROM node:26-alpine AS final
 
 WORKDIR /app
 
