@@ -2,11 +2,13 @@
 
 > Quoi construire, dans quel ordre, et pourquoi : le plan d'exécution qui ordonne toutes les décisions de la série.
 
-**Document de pilotage - version 1.2**
+**Document de pilotage - version 1.3**
 **Statut : référence de travail**
 **Dernière mise à jour : octobre 2026**
 
-> Changement depuis la version 1.1 : les phases 2 à 5 sont livrées (juin 2026). Solivio sert désormais uniquement Linkee Toulouse ; une phase de refonte du socle (phase 5 bis) est insérée avant la mise en conditions réelles. Les descriptions des phases 1 et 4 restent comme historique : Keycloak, Kafka, OpenBao et le multi-association qu'elles mentionnent sont retirés (`architecture_technique.md`, ADR-001 à ADR-008).
+> Changement depuis la version 1.2 : la phase 5 bis (refonte du socle) est terminée ; Solivio tourne en préproduction et en production sur le VPS, observé et sauvegardé. Prochaine étape : la phase 6, mise en conditions réelles.
+>
+> Rappel de la version 1.2 : les phases 2 à 5 sont livrées (juin 2026) et Solivio sert uniquement Linkee Toulouse. Les descriptions des phases 1 et 4 restent comme historique : Keycloak, Kafka, OpenBao et le multi-association qu'elles mentionnent sont retirés (`architecture_technique.md`, section 14).
 
 ## Avertissement de lecture
 
@@ -149,7 +151,7 @@ flowchart TD
 
 **Critère de sortie.** Le responsable peut configurer son association, piloter par les chiffres, et exercer son droit d'export et de suppression. La V1 est alors fonctionnellement complète.
 
-## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - EN FINALISATION
+## 8 bis. Phase 5 bis - Refonte du socle (octobre 2026) - COMPLETE
 
 **Objectif.** Partir d'une base simple et solide avant la mise en conditions réelles, maintenant que Solivio ne sert plus que Linkee Toulouse.
 
@@ -169,12 +171,20 @@ flowchart TD
 
 **Critère de sortie.** Plus aucune mention de tenant, Kafka, OpenBao ou Keycloak dans le code ; tests verts, couverture d'au moins 80 pour cent, test de modularité vert ; application déployée en préproduction sur le VPS et visible dans Grafana.
 
-**État au 7 octobre 2026.** Les onze étapes sont réalisées dans le code ; les étapes 1 à 5 sont fusionnées dans `dev`, les étapes 6 à 11 en revue. Restent, hors code, pour atteindre le critère de sortie :
+**Critère de sortie atteint (9 octobre 2026).** Les onze étapes sont fusionnées. Au-delà du critère initial :
 
-- migrer le dépôt de GitLab vers GitHub et configurer les environnements GitHub, Infisical et GHCR (`docker/deploy/README.md`) ;
-- révoquer la clé Google Maps et le secret client Google publiés dans l'historique, puis compléter `.gitleaksignore` ;
-- premier déploiement en préproduction, puis fusion de la demande d'intégration du dépôt `infrastructure` ;
-- ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue.
+- dépôt migré de GitLab vers GitHub (historique, branches et demandes de fusion, devenues les PR #1 à #32) ; intégration continue sur GitHub Actions avec analyse des dépendances (OSV-Scanner, `npm audit`), détection de secrets et Dependabot ;
+- **préproduction** sur `https://staging.solivio.joeltech.fr` (branche `dev`) et **production** sur `https://solivio.joeltech.fr` (branche `main`), déployées par la CI, secrets dans Infisical, emails par Brevo ;
+- observabilité vérifiée : métriques des deux environnements dans Prometheus, journaux dans Loki, tableau de bord "Solivio - Application", six alertes de production, moniteurs Uptime Kuma (PostgreSQL, sites, sauvegardes) ;
+- sauvegardes quotidiennes chiffrées vers Cloudflare R2 par un service dédié (ADR-009), premier test de restauration réussi le 8 octobre 2026 (`docker/backup/README.md`) ;
+- déploiement sans coupure par `docker-rollout` derrière Traefik (ADR-010).
+
+**Reste ouvert, à traiter avant ou pendant la phase 6 :**
+
+- révoquer la clé Google Maps et le secret client Google publiés dans l'historique du dépôt ;
+- tester dans le navigateur, en préproduction puis en production, l'inscription (email reçu par Brevo), la connexion et la connexion Google ;
+- ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue ;
+- reprendre l'application mobile (ADR-007) : elle reste gelée, avec des ruptures d'API connues.
 
 ## 9. Phase 6 - Mise en conditions réelles
 
