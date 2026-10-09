@@ -29,14 +29,14 @@ La documentation complète du projet (note d'intention, spécifications fonction
 |---|---|
 | Backend | Spring Boot 4, Java 25, Spring Modulith (modules vérifiés, événements internes) |
 | Frontend web | Next.js 16, React 19, TypeScript, Tailwind CSS v4 |
-| Mobile | Expo, React Native (gelé pendant la refonte du socle) |
+| Mobile | Expo, React Native (en suspens : priorité au web responsive) |
 | Base de données | PostgreSQL 18 |
 | Authentification | JWT intégré au backend, connexion Google |
 | Secrets | Variables d'environnement injectées par Infisical |
-| Exploitation | Docker, Traefik, Loki, Prometheus, Tempo, Grafana |
+| Exploitation | Docker, Traefik, Loki, Prometheus, Tempo, Grafana, Uptime Kuma ; sauvegardes chiffrées vers Cloudflare R2 |
 | CI/CD | GitHub Actions et GHCR |
 
-Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](docs/architecture_technique.md) (ADR-001 à ADR-008).
+Les choix et leurs justifications sont dans [`docs/architecture_technique.md`](docs/architecture_technique.md) (décisions d'architecture, section 14).
 
 ## Prérequis
 
@@ -97,16 +97,25 @@ L'application est disponible sur `http://localhost:3000`.
 | API | http://localhost:8080 | - |
 | Mailpit (emails) | http://localhost:8025 | - |
 
+## Environnements
+
+| Environnement | Adresse | Branche |
+|---|---|---|
+| Préproduction | https://staging.solivio.joeltech.fr | `dev` |
+| Production | https://solivio.joeltech.fr | `main` |
+
+Chaque fusion déclenche l'intégration continue puis le déploiement de l'environnement correspondant, sans coupure. Mise en service, secrets, observabilité et retour arrière : [`docker/deploy/README.md`](docker/deploy/README.md). Sauvegardes et restauration : [`docker/backup/README.md`](docker/backup/README.md).
+
 ## Structure du projet
 
 - `solivio-api/` : backend Spring Boot (`src/`, `pom.xml`, `Dockerfile`)
 - `solivio_frontend/` : frontend Next.js (`app/`, `components/`, `lib/`, `Dockerfile`)
-- `solivio_mobile/` : application mobile Expo (gelée pendant la refonte du socle)
+- `solivio_mobile/` : application mobile Expo (en suspens, priorité au web responsive)
 - `docs/` : documentation du projet (`archive/` pour les documents historiques)
 - `docker-compose-dev.yml` : services de développement (PostgreSQL, Mailpit)
 - `docker-compose.yml` : stack déployée (préproduction et production), complétée sur le serveur par le routage Traefik (`docker-compose.prod.traefik.yml.example`) et le rattachement à l'observabilité (`docker-compose.*.observability.yml`)
 - `docker/deploy/` : script et procédure de déploiement
-- `docker/backup/` : sauvegarde, restauration et test de restauration
+- `docker/backup/` : service de sauvegarde (image, planification), restauration et journal des tests de restauration
 - `.github/workflows/ci.yml` : intégration continue puis déploiement (préproduction depuis `dev`, production depuis `main`)
 - `CLAUDE.md` : règles de développement du projet
 

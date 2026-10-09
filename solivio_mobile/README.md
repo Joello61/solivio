@@ -2,9 +2,9 @@
 
 Application mobile de Solivio pour les bénévoles et les bénéficiaires : Expo SDK 54, React Native 0.81, Expo Router, NativeWind. Elle consomme la même API que le frontend web, en mode Bearer (ADR-007, `docs/architecture_technique.md`).
 
-## Gelée pendant la refonte du socle
+## Gelée, en attente de remise à niveau
 
-Depuis octobre 2026, le code de ce dossier n'évolue plus, en attendant la fin de la refonte du socle et la revue des fonctionnalités. Il est exclu de l'intégration continue et des mises à jour automatiques de dépendances.
+Depuis octobre 2026, le code de ce dossier n'évolue plus. La refonte du socle est terminée (9 octobre 2026) et le mobile est mis en suspens : l'effort porte sur le frontend web, rendu pleinement responsive pour l'usage sur téléphone. Il est exclu de l'intégration continue et des mises à jour automatiques de dépendances.
 
 **L'application ne fonctionne plus avec l'API actuelle.** Les ruptures à reprendre sont listées dans l'ADR-007 (`docs/architecture_technique.md`).
 
