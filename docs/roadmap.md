@@ -179,12 +179,14 @@ flowchart TD
 - sauvegardes quotidiennes chiffrées vers Cloudflare R2 par un service dédié (ADR-009), premier test de restauration réussi le 8 octobre 2026 (`docker/backup/README.md`) ;
 - déploiement sans coupure par `docker-rollout` derrière Traefik (ADR-010).
 
-**Reste ouvert, à traiter avant ou pendant la phase 6 :**
+La clé Google Maps et le secret client Google publiés dans l'historique du dépôt ont été révoqués.
 
-- révoquer la clé Google Maps et le secret client Google publiés dans l'historique du dépôt ;
+**Reste ouvert, à traiter au fil de la phase 6 :**
+
 - tester dans le navigateur, en préproduction puis en production, l'inscription (email reçu par Brevo), la connexion et la connexion Google ;
-- ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue ;
-- reprendre l'application mobile (ADR-007) : elle reste gelée, avec des ruptures d'API connues.
+- ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue.
+
+**Décision (9 octobre 2026) : le web d'abord.** L'application mobile reste en suspens (ADR-007), avec ses ruptures d'API connues. L'effort porte sur le frontend web, rendu pleinement responsive pour servir aussi sur téléphone, en priorité l'inscription et le pointage (exigence mobile d'abord des spécifications).
 
 ## 9. Phase 6 - Mise en conditions réelles
 

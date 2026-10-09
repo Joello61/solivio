@@ -255,7 +255,7 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 
 - **Statut** : acceptée (octobre 2026). Remplace la mention de Capacitor de la version 1.0 de ce document.
 - **Décision** : l'application mobile reste une application Expo / React Native, distincte du frontend web, qui consomme l'API en mode Bearer.
-- **Conséquences** : gelée depuis la refonte du socle (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
+- **Conséquences** : gelée depuis la refonte du socle, puis mise en suspens le 9 octobre 2026 au profit d'un frontend web pleinement responsive (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
 - **Ruptures d'API à reprendre dans le mobile** (refonte d'octobre 2026) :
   - `POST /api/auth/switch-tenant` et `/api/admin/associations` n'existent plus : retirer l'écran `tenant-select`, `switchTenant()` et l'écran d'administration des associations ;
   - `TokenResponse` ne contient plus `tenants`, `MeResponse` ne contient plus `tenantActif` ;

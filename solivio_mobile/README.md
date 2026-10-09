@@ -4,7 +4,7 @@ Application mobile de Solivio pour les bénévoles et les bénéficiaires : Expo
 
 ## Gelée, en attente de remise à niveau
 
-Depuis octobre 2026, le code de ce dossier n'évolue plus. La refonte du socle est terminée (9 octobre 2026) ; la reprise du mobile viendra avec la revue des fonctionnalités. Il est exclu de l'intégration continue et des mises à jour automatiques de dépendances.
+Depuis octobre 2026, le code de ce dossier n'évolue plus. La refonte du socle est terminée (9 octobre 2026) et le mobile est mis en suspens : l'effort porte sur le frontend web, rendu pleinement responsive pour l'usage sur téléphone. Il est exclu de l'intégration continue et des mises à jour automatiques de dépendances.
 
 **L'application ne fonctionne plus avec l'API actuelle.** Les ruptures à reprendre sont listées dans l'ADR-007 (`docs/architecture_technique.md`).
 

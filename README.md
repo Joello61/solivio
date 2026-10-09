@@ -29,7 +29,7 @@ La documentation complète du projet (note d'intention, spécifications fonction
 |---|---|
 | Backend | Spring Boot 4, Java 25, Spring Modulith (modules vérifiés, événements internes) |
 | Frontend web | Next.js 16, React 19, TypeScript, Tailwind CSS v4 |
-| Mobile | Expo, React Native (gelé, en attente de remise à niveau) |
+| Mobile | Expo, React Native (en suspens : priorité au web responsive) |
 | Base de données | PostgreSQL 18 |
 | Authentification | JWT intégré au backend, connexion Google |
 | Secrets | Variables d'environnement injectées par Infisical |
@@ -110,7 +110,7 @@ Chaque fusion déclenche l'intégration continue puis le déploiement de l'envir
 
 - `solivio-api/` : backend Spring Boot (`src/`, `pom.xml`, `Dockerfile`)
 - `solivio_frontend/` : frontend Next.js (`app/`, `components/`, `lib/`, `Dockerfile`)
-- `solivio_mobile/` : application mobile Expo (gelée, en attente de remise à niveau)
+- `solivio_mobile/` : application mobile Expo (en suspens, priorité au web responsive)
 - `docs/` : documentation du projet (`archive/` pour les documents historiques)
 - `docker-compose-dev.yml` : services de développement (PostgreSQL, Mailpit)
 - `docker-compose.yml` : stack déployée (préproduction et production), complétée sur le serveur par le routage Traefik (`docker-compose.prod.traefik.yml.example`) et le rattachement à l'observabilité (`docker-compose.*.observability.yml`)
