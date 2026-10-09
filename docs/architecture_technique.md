@@ -111,7 +111,7 @@ Conséquence : la livraison est garantie **au moins une fois**. Un écouteur doi
 
 L'authentification est assurée par le backend lui-même (ADR-004), sans fournisseur d'identité externe à héberger :
 
-- connexion par email et mot de passe (haché en Argon2id), avec vérification de l'email et réinitialisation par code à usage unique ;
+- connexion par email et mot de passe (haché en Argon2id), avec vérification de l'email et réinitialisation par code à usage unique. Tant que l'email n'est pas vérifié, la connexion est refusée avec le code `EMAIL_NOT_VERIFIED`, renvoyé seulement après un mot de passe correct ; le client propose alors la saisie d'un nouveau code. Les points d'entrée de vérification et de renvoi ne révèlent pas si une adresse a un compte ;
 - connexion Google (OAuth 2.0 / OpenID Connect via Spring Security), avec rattachement au compte existant par email ;
 - jeton d'accès JWT signé (HMAC-SHA256), de courte durée ;
 - jeton de rafraîchissement aléatoire, stocké haché en base, avec rotation à chaque usage et révocation possible.

@@ -108,6 +108,37 @@ class RegisterServiceTest {
     }
 
     @Test
+    void verifierEmail_adresseInconnue_memeErreurQuUnCodeInvalide() {
+        when(compteRepository.findByEmail("inconnu@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.verifierEmail("inconnu@example.com", "123456"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Code de verification invalide ou expire");
+    }
+
+    @Test
+    void renvoyerVerification_adresseInconnue_neFaitRienSansErreur() {
+        when(compteRepository.findByEmail("inconnu@example.com")).thenReturn(Optional.empty());
+
+        service.renvoyerVerification("inconnu@example.com");
+
+        verify(verificationCodeService, never()).generer(any(), any());
+        verify(emailService, never()).envoyerVerificationEmail(any(), any());
+    }
+
+    @Test
+    void renvoyerVerification_envoieUnNouveauCodeSiNonVerifie() {
+        Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+        when(verificationCodeService.generer(compte, VerificationCode.TYPE_EMAIL))
+            .thenReturn(codeVerification(compte));
+
+        service.renvoyerVerification("alice@example.com");
+
+        verify(emailService).envoyerVerificationEmail(compte, "123456");
+    }
+
+    @Test
     void inscrireViaInvitation_lanceExceptionSiTokenInvalide() {
         UUID token = UUID.randomUUID();
         when(invitationRepository.findByTokenWithDetails(token)).thenReturn(Optional.empty());

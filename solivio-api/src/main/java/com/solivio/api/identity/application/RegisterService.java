@@ -83,13 +83,15 @@ public class RegisterService {
 
     @Transactional
     public void verifierEmail(String email, String code) {
+        // Adresse inconnue et code faux donnent la meme reponse : la page de
+        // verification ne doit pas permettre de tester l'existence d'un compte.
         Compte compte = compteRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
+            .orElseThrow(RegisterService::codeInvalide);
 
         boolean valide = verificationCodeService.valider(
             compte, code, VerificationCode.TYPE_EMAIL);
         if (!valide) {
-            throw new IllegalArgumentException("Code de verification invalide ou expire");
+            throw codeInvalide();
         }
 
         compte.setEmailVerifie(true);
@@ -99,13 +101,14 @@ public class RegisterService {
 
     @Transactional
     public void renvoyerVerification(String email) {
-        Compte compte = compteRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
+        // Silencieux pour une adresse inconnue ou deja verifiee, pour la meme raison.
+        compteRepository.findByEmail(email)
+            .filter(compte -> !compte.isEmailVerifie())
+            .ifPresent(this::envoyerVerificationEmail);
+    }
 
-        if (compte.isEmailVerifie()) {
-            return;
-        }
-        envoyerVerificationEmail(compte);
+    private static IllegalArgumentException codeInvalide() {
+        return new IllegalArgumentException("Code de verification invalide ou expire");
     }
 
     /**

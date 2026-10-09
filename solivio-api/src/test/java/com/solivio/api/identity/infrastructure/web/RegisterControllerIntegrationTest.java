@@ -27,6 +27,7 @@ import java.time.Instant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SolivioIntegrationTest
@@ -93,6 +94,25 @@ class RegisterControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void verifyEmail_adresseInconnue_memeReponseQuUnCodeInvalide() throws Exception {
+        VerifyEmailRequest request = new VerifyEmailRequest("inconnu@example.com", "123456");
+
+        mockMvc.perform(post("/api/auth/verify-email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error.message").value("Code de verification invalide ou expire"));
+    }
+
+    @Test
+    void resendVerification_adresseInconnue_retourne204() throws Exception {
+        mockMvc.perform(post("/api/auth/resend-verification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\": \"inconnu@example.com\"}"))
+            .andExpect(status().isNoContent());
     }
 
     @Test
