@@ -92,9 +92,11 @@ export BACKUP_IMAGE="$BACKUP_IMAGE"
 
 # Les fichiers compose suivent exactement le commit dont les images ont ete
 # construites (HEAD detache). Le fichier Traefik, non suivi, n'est pas touche.
+# --force : le serveur ne garde aucune modification locale d'un fichier suivi ; une
+# difference de fins de ligne (mvnw.cmd, corrige par #60) bloquait le checkout.
 echo "=== Synchronisation du depot au commit ${IMAGE_TAG} ==="
 git fetch --quiet origin "$BRANCH"
-git checkout --quiet "$IMAGE_TAG"
+git checkout --quiet --force "$IMAGE_TAG"
 
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.traefik.yml -f $OBSERVABILITY_FILE"
 
