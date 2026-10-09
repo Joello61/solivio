@@ -262,6 +262,7 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
   - l'inscription et la finalisation d'un compte Google ne prennent plus de `codeAssociation` ;
   - les erreurs suivent l'enveloppe `{"error": {"code", "message", "details", "request_id"}}` : le mobile lit encore `detail` (ProblemDetail) et n'affiche plus que des messages génériques ;
   - les mots de passe suivent la nouvelle politique (8 à 128 caractères, mots de passe courants refusés), et la connexion peut répondre `429` (limite de débit ou compte temporairement verrouillé).
+  - un email non vérifié fait répondre la connexion `403 EMAIL_NOT_VERIFIED` (et non plus `ACCOUNT_DISABLED`) : proposer la saisie du code et son renvoi.
 
 ### ADR-008 - GitHub Actions et GHCR
 
