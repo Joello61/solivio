@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +32,10 @@ class RappelVeilleJobTest {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // "Aujourd'hui" au sens du job (heure de Paris), pas de la JVM : la CI tourne en
+    // UTC, et entre minuit a Paris et minuit UTC les deux dates different.
+    private final LocalDate aujourdhui = LocalDate.now(ZoneId.of(RappelVeilleJob.FUSEAU));
+
     private UUID distributionId;
     private UUID personneId;
 
@@ -50,7 +55,7 @@ class RappelVeilleJobTest {
                 + "(id, titre, date, statut, capacite_beneficiaires, mode_creneau, base_repartition, cree_par_id) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             distributionId, "Distribution Rappel",
-            LocalDate.now().plusDays(1), "PUBLIEE", 30,
+            aujourdhui.plusDays(1), "PUBLIEE", 30,
             "CRENEAU_UNIQUE", "INSCRITS", personneId
         );
         jdbcTemplate.update(
@@ -81,10 +86,10 @@ class RappelVeilleJobTest {
         // Modifier la date de la distribution pour qu'elle soit aujourd'hui (pas demain)
         jdbcTemplate.update(
             "UPDATE distribution SET date = ? WHERE id = ?",
-            LocalDate.now(), distributionId
+            aujourdhui, distributionId
         );
 
-        rappelVeilleJob.emettreRappels(LocalDate.now().plusDays(1));
+        rappelVeilleJob.emettreRappels(aujourdhui.plusDays(1));
 
         await().during(3, TimeUnit.SECONDS).atMost(4, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("paul@example.com") == 0);

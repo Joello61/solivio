@@ -2,7 +2,7 @@
 
 > Comment le produit est construit : style architectural, pile technique, exploitation, et décisions d'architecture (ADR).
 
-**Document structurant - version 2.0**
+**Document structurant - version 2.1**
 **Statut : référence de travail**
 **Dernière mise à jour : octobre 2026**
 
@@ -155,7 +155,7 @@ L'application refuse de démarrer si un secret obligatoire manque (par exemple u
 
 L'application mobile est une application **Expo / React Native** (Expo Router, NativeWind), distincte du frontend web (ADR-007). Elle consomme la même API que le web, en mode Bearer. Capacitor, un temps envisagé dans une version antérieure de ce document, n'est pas retenu.
 
-Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'API de cette refonte (retrait du choix d'association, du code d'association à l'inscription) seront repris lors de sa remise à niveau.
+Elle est gelée depuis la refonte du socle d'octobre 2026 : les changements d'API de cette refonte (retrait du choix d'association, du code d'association à l'inscription) seront repris lors de sa remise à niveau (ADR-007).
 
 ## 10. Conteneurisation et déploiement
 
@@ -163,8 +163,8 @@ Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'A
 - En développement, Docker Compose lance PostgreSQL (et un serveur SMTP de test) ; backend et frontend tournent sur la machine ou en conteneur.
 - En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api`, `/oauth2` et `/login/oauth2` sont routés vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS. Deux routes `/api` appartiennent au serveur Next.js (`/api/auth/server-refresh`, `/api/health`) et passent en priorité. Le frontend est donc construit sans URL d'API : une même image sert la préproduction et la production.
 - Sauvegarde quotidienne de la base et des fichiers déposés par le service `backup`, chiffrée par clé publique et copiée sur Cloudflare R2, avec un test de restauration trimestriel (ADR-009, `docker/backup/README.md`).
-- Environnements : la branche `dev` alimente l'environnement de préproduction (staging), la branche `main` la production.
-- Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008). Les images ne sont jamais construites sur le serveur.
+- Environnements : la branche `dev` alimente la préproduction (`https://staging.solivio.joeltech.fr`, projet Compose `solivio-staging`), la branche `main` la production (`https://solivio.joeltech.fr`, projet `solivio`). Les deux tournent sur le même VPS, avec des secrets Infisical distincts.
+- Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008), sans coupure grâce à `docker-rollout` (ADR-010). Les images ne sont jamais construites sur le serveur.
 
 ## 11. L'observabilité
 
@@ -177,7 +177,8 @@ L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `i
   - `solivio_distributions_terminees_total`, `solivio_distributions_annulees_total` ;
   - `solivio_evenements_publications_incompletes` et `solivio_evenements_publications_echouees`, état du registre des événements internes, support de l'alerte sur les emails non envoyés.
 - **Traces** : OpenTelemetry (OTLP HTTP) vers Tempo dans le profil `prod` (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, par défaut `http://tempo:4318/v1/traces`), y compris les interactions entre modules publiées par Spring Modulith. Seule la propagation W3C est acceptée. L'attribut `deployment.environment.name` vient de `DEPLOYMENT_ENVIRONMENT` (`staging` ou `production`).
-- **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana).
+- **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana) : tableau de bord "Solivio - Application" (variable d'environnement), six alertes de production (backend injoignable, réponses 5xx, latence, échecs de connexion, événements internes en échec, erreurs dans les journaux). La préproduction est collectée sur un réseau séparé (`observability-staging`), sans alerte.
+- **Disponibilité** : moniteurs Uptime Kuma sur PostgreSQL (nom complet du conteneur), sur l'URL publique de santé de chaque environnement et sur les sauvegardes (moniteur "push").
 - **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques.
 
 ## 12. La sécurité
@@ -254,7 +255,7 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 
 - **Statut** : acceptée (octobre 2026). Remplace la mention de Capacitor de la version 1.0 de ce document.
 - **Décision** : l'application mobile reste une application Expo / React Native, distincte du frontend web, qui consomme l'API en mode Bearer.
-- **Conséquences** : gelée pendant la refonte du socle (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
+- **Conséquences** : gelée depuis la refonte du socle, puis mise en suspens le 9 octobre 2026 au profit d'un frontend web pleinement responsive (`solivio_mobile/README.md`) ; à sa reprise : mise à jour du SDK, reprise des ruptures d'API ci-dessous, ajout de tests et d'un job d'intégration continue, builds via EAS.
 - **Ruptures d'API à reprendre dans le mobile** (refonte d'octobre 2026) :
   - `POST /api/auth/switch-tenant` et `/api/admin/associations` n'existent plus : retirer l'écran `tenant-select`, `switchTenant()` et l'écran d'administration des associations ;
   - `TokenResponse` ne contient plus `tenants`, `MeResponse` ne contient plus `tenantActif` ;
@@ -274,6 +275,13 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Contexte** : une tâche cron sur l'hôte demandait une phrase de chiffrement et des clés de stockage en clair dans des fichiers du serveur, hors d'Infisical, et une configuration manuelle que rien ne versionne. Cobage, sur le même VPS, sauvegarde déjà depuis un conteneur vers R2.
 - **Décision** : un service `backup` dans le fichier Compose de chaque environnement (image construite par la CI, planification par supercronic) exécute `pg_dump`, archive les fichiers déposés, chiffre pour une clé publique GPG versionnée et envoie l'archive dans un bucket R2 dédié, avec un jeton R2 limité à ce bucket et donné à ce seul service. Rétention dégressive (7 jours, 4 semaines, 3 mois) ; moniteur "push" Uptime Kuma.
 - **Conséquences** : aucun secret ni configuration de sauvegarde sur l'hôte ; la clé privée vit hors du VPS, la restauration commence donc par un déchiffrement sur une machine de confiance ; les secrets R2 deviennent obligatoires au déploiement.
+
+### ADR-010 - Déploiement sans coupure par docker-rollout derrière Traefik
+
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : `docker compose up` remplaçait backend et frontend en place, d'où une interruption à chaque déploiement, le temps que la nouvelle version démarre. Cobage a résolu ce problème avec `docker-rollout`.
+- **Décision** : le script de déploiement bascule backend et frontend avec `docker-rollout` (v0.14, figé par commit et vérifié par empreinte) : la nouvelle version démarre à côté de l'ancienne, Traefik ne lui envoie du trafic qu'une fois son contrôle de santé au vert (readiness pour le backend), puis l'ancienne est vidée et arrêtée. Le vidage passe par le contrôle de santé : un fichier `/tmp/drain` le fait échouer, Traefik retire le conteneur du routage, puis l'arrêt gracieux termine les requêtes en cours. Pas de nginx : contrairement à Cobage (PHP-FPM), les deux applications servent HTTP elles-mêmes et Traefik découvre les conteneurs dynamiquement.
+- **Conséquences** : une version qui ne devient jamais saine est retirée et l'ancienne continue de servir ; les migrations Flyway restent additives, l'ancienne version tournant sur le nouveau schéma pendant la bascule ; le nom des conteneurs backend et frontend change à chaque déploiement (`-1`, `-2`...), aucune surveillance ne doit le viser ; pendant le chevauchement (une à deux minutes), les tâches planifiées existent en double, un déploiement à 08:00 pourrait donc envoyer deux fois le rappel de la veille.
 
 ## 15. Synthèse
 

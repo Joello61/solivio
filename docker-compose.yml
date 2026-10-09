@@ -54,6 +54,12 @@ services:
       SOLIVIO_UPLOADS_AVATARS_DIR: /var/solivio/uploads/avatars
       JAVA_OPTS: "-XX:MaxRAMPercentage=75"
     mem_limit: 1g
+    # Bascule sans coupure (ADR-010) : avant l'arret, le conteneur devient malsain et
+    # Traefik le retire du routage (deux sondes de 5 s) ; l'arret gracieux de Spring
+    # Boot (30 s par phase) termine ensuite les requetes en cours.
+    labels:
+      docker-rollout.pre-stop-hook: "touch /tmp/drain && sleep 15"
+    stop_grace_period: 40s
     volumes:
       - uploads_data:/var/solivio/uploads
     depends_on:
@@ -67,6 +73,8 @@ services:
       # Appels faits par le serveur Next.js (composants serveur, routes /api internes).
       API_URL: http://backend:8080
     mem_limit: 512m
+    labels:
+      docker-rollout.pre-stop-hook: "touch /tmp/drain && sleep 15"
     depends_on:
       backend:
         condition: service_healthy
