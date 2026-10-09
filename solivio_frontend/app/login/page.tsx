@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +13,14 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
+import { CheckCircle2 } from "lucide-react";
 import { AUTH_LOGIN_URL, login } from "@/lib/auth";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
+  const emailVerifie = searchParams.get("verified") === "1";
 
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -39,6 +42,12 @@ function LoginForm() {
       router.push(redirect);
       router.refresh();
     } catch (err: unknown) {
+      // Bon mot de passe mais adresse jamais confirmee : la saisie du code se fait
+      // sur la page de verification, qui envoie un nouveau code (le precedent a pu expirer).
+      if ((err as { code?: string }).code === "EMAIL_NOT_VERIFIED") {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}&raison=non-verifie`);
+        return;
+      }
       const msg =
         err instanceof Error
           ? (err as { detail?: string }).detail ?? err.message
@@ -51,6 +60,13 @@ function LoginForm() {
 
   return (
     <AuthLayout title="Connexion" description="Acces a votre espace association">
+      {emailVerifie && (
+        <Alert role="status">
+          <CheckCircle2 />
+          <AlertDescription>Adresse email verifiee. Vous pouvez vous connecter.</AlertDescription>
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Adresse email</Label>

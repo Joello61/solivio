@@ -30,6 +30,10 @@ export async function verifyEmail(email: string, code: string): Promise<void> {
   return apiPost<void>("/api/auth/verify-email", { email, code });
 }
 
+export async function resendVerification(email: string): Promise<void> {
+  return apiPost<void>("/api/auth/resend-verification", { email });
+}
+
 export async function forgotPassword(email: string): Promise<void> {
   return apiPost<void>("/api/auth/forgot-password", { email });
 }
