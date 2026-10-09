@@ -49,8 +49,9 @@ USER solivio
 EXPOSE 3000
 
 # 127.0.0.1 et non localhost : dans Alpine, localhost resout d'abord en IPv6 alors
-# que le serveur Next.js n'ecoute qu'en IPv4 (HOSTNAME=0.0.0.0).
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
+# que le serveur Next.js n'ecoute qu'en IPv4 (HOSTNAME=0.0.0.0). /tmp/drain : voir
+# le Dockerfile du backend, meme bascule sans coupure.
+HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --start-interval=5s --retries=2 \
+  CMD [ ! -f /tmp/drain ] && wget -qO- http://127.0.0.1:3000/api/health || exit 1
 
 ENTRYPOINT ["node", "server.js"]

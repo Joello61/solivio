@@ -49,8 +49,12 @@ USER solivio
 # jamais route, joignable uniquement depuis les reseaux Docker.
 EXPOSE 8080 8081
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-  CMD wget -qO- http://localhost:8081/actuator/health/liveness || exit 1
+# Traefik ne route que vers un conteneur sain : la sonde suit donc la readiness, pas
+# la liveness. /tmp/drain est cree avant l'arret lors d'un deploiement (docker-rollout,
+# label docker-rollout.pre-stop-hook) : le conteneur devient malsain, Traefik cesse de
+# lui envoyer du trafic, puis il est arrete. L'intervalle court borne cette attente.
+HEALTHCHECK --interval=5s --timeout=3s --start-period=120s --start-interval=5s --retries=2 \
+  CMD [ ! -f /tmp/drain ] && wget -qO- http://localhost:8081/actuator/health/readiness || exit 1
 
 # JAVA_OPTS se regle a l'execution, par exemple "-XX:MaxRAMPercentage=75".
 ENV JAVA_OPTS=""

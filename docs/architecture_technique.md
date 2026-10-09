@@ -164,7 +164,7 @@ Elle est gelée pendant la refonte du socle d'octobre 2026 : les changements d'A
 - En production, l'application est déployée sur le VPS commun derrière **Traefik** (HTTPS Let's Encrypt). Un seul hôte public : `/api`, `/oauth2` et `/login/oauth2` sont routés vers le backend, le reste vers le frontend, ce qui permet de garder des cookies `SameSite=Strict` sans CORS. Deux routes `/api` appartiennent au serveur Next.js (`/api/auth/server-refresh`, `/api/health`) et passent en priorité. Le frontend est donc construit sans URL d'API : une même image sert la préproduction et la production.
 - Sauvegarde quotidienne de la base et des fichiers déposés par le service `backup`, chiffrée par clé publique et copiée sur Cloudflare R2, avec un test de restauration trimestriel (ADR-009, `docker/backup/README.md`).
 - Environnements : la branche `dev` alimente l'environnement de préproduction (staging), la branche `main` la production.
-- Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008). Les images ne sont jamais construites sur le serveur.
+- Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008), sans coupure grâce à `docker-rollout` (ADR-010). Les images ne sont jamais construites sur le serveur.
 
 ## 11. L'observabilité
 
@@ -274,6 +274,13 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Contexte** : une tâche cron sur l'hôte demandait une phrase de chiffrement et des clés de stockage en clair dans des fichiers du serveur, hors d'Infisical, et une configuration manuelle que rien ne versionne. Cobage, sur le même VPS, sauvegarde déjà depuis un conteneur vers R2.
 - **Décision** : un service `backup` dans le fichier Compose de chaque environnement (image construite par la CI, planification par supercronic) exécute `pg_dump`, archive les fichiers déposés, chiffre pour une clé publique GPG versionnée et envoie l'archive dans un bucket R2 dédié, avec un jeton R2 limité à ce bucket et donné à ce seul service. Rétention dégressive (7 jours, 4 semaines, 3 mois) ; moniteur "push" Uptime Kuma.
 - **Conséquences** : aucun secret ni configuration de sauvegarde sur l'hôte ; la clé privée vit hors du VPS, la restauration commence donc par un déchiffrement sur une machine de confiance ; les secrets R2 deviennent obligatoires au déploiement.
+
+### ADR-010 - Déploiement sans coupure par docker-rollout derrière Traefik
+
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : `docker compose up` remplaçait backend et frontend en place, d'où une interruption à chaque déploiement, le temps que la nouvelle version démarre. Cobage a résolu ce problème avec `docker-rollout`.
+- **Décision** : le script de déploiement bascule backend et frontend avec `docker-rollout` (v0.14, figé par commit et vérifié par empreinte) : la nouvelle version démarre à côté de l'ancienne, Traefik ne lui envoie du trafic qu'une fois son contrôle de santé au vert (readiness pour le backend), puis l'ancienne est vidée et arrêtée. Le vidage passe par le contrôle de santé : un fichier `/tmp/drain` le fait échouer, Traefik retire le conteneur du routage, puis l'arrêt gracieux termine les requêtes en cours. Pas de nginx : contrairement à Cobage (PHP-FPM), les deux applications servent HTTP elles-mêmes et Traefik découvre les conteneurs dynamiquement.
+- **Conséquences** : une version qui ne devient jamais saine est retirée et l'ancienne continue de servir ; les migrations Flyway restent additives, l'ancienne version tournant sur le nouveau schéma pendant la bascule ; le nom des conteneurs backend et frontend change à chaque déploiement (`-1`, `-2`...), aucune surveillance ne doit le viser ; pendant le chevauchement (une à deux minutes), les tâches planifiées existent en double, un déploiement à 08:00 pourrait donc envoyer deux fois le rappel de la veille.
 
 ## 15. Synthèse
 
