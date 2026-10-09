@@ -1,6 +1,7 @@
 package com.solivio.api.shared.infrastructure.web;
 
 import com.solivio.api.shared.exception.ConflictException;
+import com.solivio.api.shared.exception.EmailNonVerifieException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.exception.TropDeTentativesException;
 import com.solivio.api.shared.web.ApiError;
@@ -42,8 +43,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiError> handleDisabled(DisabledException ex) {
-        return reponse(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED",
-            "Votre compte est desactive ou l'email n'a pas ete verifie.");
+        return reponse(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED", "Votre compte est desactive.");
+    }
+
+    @ExceptionHandler(EmailNonVerifieException.class)
+    public ResponseEntity<ApiError> handleEmailNonVerifie(EmailNonVerifieException ex) {
+        return reponse(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED", ex.getMessage());
     }
 
     // Spring Security 7 : AuthorizationDeniedException est une RuntimeException qui echappe

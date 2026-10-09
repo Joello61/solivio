@@ -106,6 +106,43 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void login_emailNonVerifie_retourne403EmailNotVerifiedAvecLeBonMotDePasse() throws Exception {
+        compte.setEmailVerifie(false);
+        compteRepository.save(compte);
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error.code").value("EMAIL_NOT_VERIFIED"))
+            .andExpect(cookie().doesNotExist("access_token"));
+    }
+
+    @Test
+    void login_emailNonVerifie_mauvaisMotDePasse_neRevelePasLEtatDuCompte() throws Exception {
+        compte.setEmailVerifie(false);
+        compteRepository.save(compte);
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "faux-mdp", false))))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test
+    void login_compteInactif_retourne403AccountDisabled() throws Exception {
+        compte.setActif(false);
+        compteRepository.save(compte);
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new LoginRequest("alice@example.com", "password123!", false))))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error.code").value("ACCOUNT_DISABLED"));
+    }
+
+    @Test
     void login_verrouilleLeCompteApresCinqEchecs() throws Exception {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/api/auth/login")
