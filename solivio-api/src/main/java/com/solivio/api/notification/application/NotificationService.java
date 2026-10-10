@@ -1,5 +1,6 @@
 package com.solivio.api.notification.application;
 
+import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution.InscriptionAnnulee;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
@@ -97,16 +98,16 @@ public class NotificationService {
     }
 
     @Transactional
-    public void notifierAnnulationDistribution(UUID distributionId) {
+    public void notifierAnnulationDistribution(UUID distributionId, List<InscriptionAnnulee> inscriptions) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
         String sujet = "Distribution annulee - " + distribution.titre();
-        List<DestinataireMail> destinataires = inscriptionQueryPort.trouverInscritsConfirmes(distributionId);
-        for (DestinataireMail dest : destinataires) {
-            ContexteEmail contexte = construireContexte(
-                dest.prenom(), dest.typeInscription(), dest.creneauId(), distributionId, distribution);
-            envoyerEtTracer(dest.personneId(), distributionId,
+        for (InscriptionAnnulee inscription : inscriptions) {
+            PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(inscription.personneId());
+            ContexteEmail contexte = construireContexte(personne.prenom(), inscription.typeInscription(),
+                inscription.creneauId(), distributionId, distribution);
+            envoyerEtTracer(personne.id(), distributionId,
                 TypeEvenementNotification.ANNULATION_DISTRIBUTION, sujet,
-                () -> emailService.envoyerAnnulationDistribution(dest.email(), contexte));
+                () -> emailService.envoyerAnnulationDistribution(personne.email(), contexte));
         }
     }
 

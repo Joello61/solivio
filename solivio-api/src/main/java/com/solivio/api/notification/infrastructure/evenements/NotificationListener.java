@@ -2,12 +2,12 @@ package com.solivio.api.notification.infrastructure.evenements;
 
 import com.solivio.api.collecte.events.MissionCollecteAnnulee;
 import com.solivio.api.collecte.events.MissionCollecteCreee;
-import com.solivio.api.distribution.events.DistributionAnnulee;
 import com.solivio.api.evenement.events.EvenementAnnule;
 import com.solivio.api.evenement.events.EvenementPublie;
 import com.solivio.api.inscription.events.DesistementTardifBenevole;
 import com.solivio.api.inscription.events.InscriptionConfirmee;
 import com.solivio.api.inscription.events.InscriptionPromue;
+import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution;
 import com.solivio.api.notification.application.NotificationService;
 import com.solivio.api.reconditionnement.events.SessionReconditionnementAnnulee;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -45,9 +45,11 @@ public class NotificationListener {
         notificationService.notifierDesistementTardifBenevole(event.personneId(), event.distributionId());
     }
 
+    // On ecoute l'annulation des inscriptions, et non DistributionAnnulee : lire les
+    // inscrits en parallele du module inscription pourrait arriver apres leur annulation.
     @ApplicationModuleListener
-    void on(DistributionAnnulee event) {
-        notificationService.notifierAnnulationDistribution(event.distributionId());
+    void on(InscriptionsAnnuleesParDistribution event) {
+        notificationService.notifierAnnulationDistribution(event.distributionId(), event.inscriptions());
     }
 
     @ApplicationModuleListener
