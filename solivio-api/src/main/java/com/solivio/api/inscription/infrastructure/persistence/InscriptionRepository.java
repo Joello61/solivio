@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -54,15 +53,15 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         @Param("distId") UUID distributionId, @Param("type") TypeInscription type
     );
 
-    // RG1 : frequence - inscriptions CONFIRMEE d'un beneficiaire sur une periode
+    // RG1 : inscriptions beneficiaire actives (confirmees ou en attente) d'une
+    // personne sur un ensemble de distributions
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.personneId = :personneId AND i.type = 'BENEFICIAIRE' "
-        + "AND i.statut = 'CONFIRMEE' "
-        + "AND i.dateInscription BETWEEN :debut AND :fin")
-    long compterInscriptionsConfirmeesPeriode(
+        + "AND i.statut IN ('CONFIRMEE', 'LISTE_ATTENTE') "
+        + "AND i.distributionId IN :distributionIds")
+    long compterInscriptionsBeneficiaireActives(
         @Param("personneId") UUID personneId,
-        @Param("debut") Instant debut,
-        @Param("fin") Instant fin
+        @Param("distributionIds") Collection<UUID> distributionIds
     );
 
     // Pointage : recherche par nom ou prenom (insensible a la casse)

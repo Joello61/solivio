@@ -96,4 +96,14 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             .map(Distribution::getId)
             .toList();
     }
+
+    @Override
+    public List<UUID> trouverIdsNonAnnuleesEntre(LocalDate debut, LocalDate fin) {
+        return distributionRepository
+            .findByDateBetweenAndStatutIn(debut, fin, List.of(
+                StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS, StatutDistribution.TERMINEE))
+            .stream()
+            .map(Distribution::getId)
+            .toList();
+    }
 }

@@ -20,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,7 +28,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -123,9 +121,6 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(ancienne));
 
         when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
-        when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
-            eq(personneId), any(Instant.class), any(Instant.class))
-        ).thenReturn(0L);
         when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
             distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)
         ).thenReturn(0L);
@@ -152,15 +147,17 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.empty());
 
         when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
-        when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
-            eq(personneId), any(Instant.class), any(Instant.class))
-        ).thenReturn(1L);
+        UUID autreDistribution = UUID.randomUUID();
+        when(distributionQueryPort.trouverIdsNonAnnuleesEntre(any(), any()))
+            .thenReturn(List.of(distributionId, autreDistribution));
+        when(inscriptionRepository.compterInscriptionsBeneficiaireActives(personneId, List.of(autreDistribution)))
+            .thenReturn(1L);
 
         assertThatThrownBy(() -> service.inscrire(
             distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("frequence");
+            .hasMessageContaining("cette semaine");
     }
 
     @Test
@@ -189,7 +186,7 @@ class InscriptionServiceTest {
 
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
         assertThat(response.roles()).isEqualTo(List.of());
-        verify(inscriptionRepository, never()).compterInscriptionsConfirmeesPeriode(any(), any(), any());
+        verify(inscriptionRepository, never()).compterInscriptionsBeneficiaireActives(any(), any());
     }
 
     // --- RG3 : liste d'attente et promotion ---
@@ -202,9 +199,6 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)
         ).thenReturn(Optional.empty());
         when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
-        when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
-            eq(personneId), any(Instant.class), any(Instant.class))
-        ).thenReturn(0L);
 
         when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
             distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)
@@ -521,13 +515,62 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
             distributionId, personneId, TypeInscription.BENEFICIAIRE)).thenReturn(Optional.empty());
         when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
-        when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
-            eq(personneId), any(Instant.class), any(Instant.class))).thenReturn(0L);
         when(distributionQueryPort.trouverCreneau(creneauId, distributionId))
             .thenReturn(new DistributionQueryPort.CreneauInfo(creneauId, capaciteCreneau, null, null));
         lenient().when(inscriptionRepository.findMaxRangListeAttente(distributionId, TypeInscription.BENEFICIAIRE))
             .thenReturn(Optional.empty());
         when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    // --- C6 : frequence par semaine calendaire ---
+
+    @Test
+    void inscrire_chercheLesDistributionsDuLundiAuDimancheDeLaDistributionVisee() {
+        java.time.LocalDate dimanche = java.time.LocalDate.of(2026, 10, 18);
+        preparerInscriptionBeneficiaireLe(dimanche, 1);
+
+        service.inscrire(distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE);
+
+        verify(distributionQueryPort).trouverIdsNonAnnuleesEntre(
+            java.time.LocalDate.of(2026, 10, 12), dimanche);
+    }
+
+    @Test
+    void inscrire_autoriseSousUneLimiteConfigureeADeux() {
+        preparerInscriptionBeneficiaireLe(java.time.LocalDate.of(2026, 10, 14), 2);
+        UUID autre = UUID.randomUUID();
+        when(distributionQueryPort.trouverIdsNonAnnuleesEntre(any(), any())).thenReturn(List.of(autre));
+        when(inscriptionRepository.compterInscriptionsBeneficiaireActives(personneId, List.of(autre)))
+            .thenReturn(1L);
+
+        InscriptionResponse response = service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE);
+
+        assertThat(response.statut()).isEqualTo("CONFIRMEE");
+    }
+
+    @Test
+    void inscrire_refuseQuandLaLimiteConfigureeEstAtteinte() {
+        preparerInscriptionBeneficiaireLe(java.time.LocalDate.of(2026, 10, 14), 2);
+        List<UUID> autres = List.of(UUID.randomUUID(), UUID.randomUUID());
+        when(distributionQueryPort.trouverIdsNonAnnuleesEntre(any(), any())).thenReturn(autres);
+        when(inscriptionRepository.compterInscriptionsBeneficiaireActives(personneId, autres)).thenReturn(2L);
+
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("2 distributions cette semaine");
+    }
+
+    private void preparerInscriptionBeneficiaireLe(java.time.LocalDate date, int limite) {
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10,
+                "CRENEAU_UNIQUE", "INSCRITS", date));
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE)).thenReturn(Optional.empty());
+        when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(limite);
+        lenient().when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     // --- C5 : annulation d'une distribution ---
