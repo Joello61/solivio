@@ -19,7 +19,7 @@ class MetriquesMetierTest {
     void chaqueEvenement_incrementeSonCompteur() {
         metriques.on(new DistributionTerminee(UUID.randomUUID(), LocalDate.now()));
         metriques.on(new DistributionTerminee(UUID.randomUUID(), LocalDate.now()));
-        metriques.on(new DesistementTardifBenevole(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
+        metriques.on(new DesistementTardifBenevole(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null));
 
         assertThat(registry.get("solivio.distributions.terminees").counter().count()).isEqualTo(2);
         assertThat(registry.get("solivio.desistements.tardifs").counter().count()).isEqualTo(1);

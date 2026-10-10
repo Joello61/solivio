@@ -48,16 +48,21 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String erreur;
 
+    @Column(name = "cle_idempotence", length = 200)
+    private String cleIdempotence;
+
     @Column(name = "date_envoi", nullable = false)
     private Instant dateEnvoi = Instant.now();
 
     public static Notification envoye(
+        String cleIdempotence,
         UUID personneId,
         UUID distributionId,
         TypeEvenementNotification typeEvenement,
         String sujet
     ) {
         Notification n = new Notification();
+        n.cleIdempotence = cleIdempotence;
         n.personneId = personneId;
         n.distributionId = distributionId;
         n.typeEvenement = typeEvenement;
@@ -67,6 +72,7 @@ public class Notification {
     }
 
     public static Notification echec(
+        String cleIdempotence,
         UUID personneId,
         UUID distributionId,
         TypeEvenementNotification typeEvenement,
@@ -74,6 +80,7 @@ public class Notification {
         String erreur
     ) {
         Notification n = new Notification();
+        n.cleIdempotence = cleIdempotence;
         n.personneId = personneId;
         n.distributionId = distributionId;
         n.typeEvenement = typeEvenement;

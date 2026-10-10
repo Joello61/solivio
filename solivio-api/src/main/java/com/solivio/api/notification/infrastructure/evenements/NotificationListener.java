@@ -16,8 +16,9 @@ import org.springframework.stereotype.Component;
 /**
  * Traduit les evenements des autres modules en emails. Chaque methode s'execute
  * apres validation de la transaction emettrice, de facon asynchrone ; une
- * exception laisse la publication incomplete pour qu'elle soit relancee.
- * La livraison est garantie au moins une fois (ADR-003).
+ * exception (dont NotificationsIncompletesException) laisse la publication en
+ * echec pour qu'elle soit relancee. La livraison est garantie au moins une fois
+ * (ADR-003) ; la cle d'idempotence de chaque notification evite les doublons.
  */
 @Component
 public class NotificationListener {
@@ -31,18 +32,21 @@ public class NotificationListener {
     @ApplicationModuleListener
     void on(InscriptionConfirmee event) {
         notificationService.notifierConfirmationInscription(
-            event.personneId(), event.distributionId(), event.typeInscription(), event.creneauId());
+            event.personneId(), event.distributionId(), event.typeInscription(), event.creneauId(),
+            event.occurrenceId());
     }
 
     @ApplicationModuleListener
     void on(InscriptionPromue event) {
         notificationService.notifierPromotionListeAttente(
-            event.personneId(), event.distributionId(), event.typeInscription(), event.creneauId());
+            event.personneId(), event.distributionId(), event.typeInscription(), event.creneauId(),
+            event.occurrenceId());
     }
 
     @ApplicationModuleListener
     void on(DesistementTardifBenevole event) {
-        notificationService.notifierDesistementTardifBenevole(event.personneId(), event.distributionId());
+        notificationService.notifierDesistementTardifBenevole(
+            event.personneId(), event.distributionId(), event.occurrenceId());
     }
 
     // On ecoute l'annulation des inscriptions, et non DistributionAnnulee : lire les
