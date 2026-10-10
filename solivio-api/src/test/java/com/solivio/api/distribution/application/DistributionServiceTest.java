@@ -11,15 +11,21 @@ import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionReq
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
+import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -40,6 +47,9 @@ class DistributionServiceTest {
     @Mock private CreneauRepository creneauRepository;
     @Mock private DistributionEventPublisher eventPublisher;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AssociationQueryPort associationQueryPort;
+
+    private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
 
     private DistributionService service;
     private UUID distributionId;
@@ -48,9 +58,7 @@ class DistributionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new DistributionService(
-            distributionRepository, creneauRepository, eventPublisher, personneQueryPort
-        );
+        service = serviceA(Clock.systemUTC());
         distributionId = UUID.randomUUID();
         creeParId = UUID.randomUUID();
         distribution = new Distribution(
@@ -218,5 +226,57 @@ class DistributionServiceTest {
         DistributionResponse response = service.demarrer(distributionId);
 
         assertThat(response.statut()).isEqualTo("EN_COURS");
+    }
+
+    // --- I7 : fuseau de l'association ---
+
+    // A 0h30 a Paris, il est encore la veille en UTC (fuseau du conteneur) :
+    // la distribution du jour doit pouvoir demarrer.
+    @Test
+    void demarrer_aMinuitTrenteAParis_utiliseLaDateDeLAssociation() {
+        DistributionService serviceAMinuit = serviceA(
+            Clock.fixed(Instant.parse("2026-10-14T22:30:00Z"), ZoneOffset.UTC));
+        Distribution duJour = new Distribution("Distribution", null, null, LocalDate.of(2026, 10, 15),
+            50, 10, ModeCreneauDistribution.CRENEAU_UNIQUE, creeParId);
+        duJour.setId(distributionId);
+        duJour.transitionnerVers(StatutDistribution.PUBLIEE, null);
+        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(duJour));
+        when(distributionRepository.save(any(Distribution.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DistributionResponse response = serviceAMinuit.demarrer(distributionId);
+
+        assertThat(response.statut()).isEqualTo("EN_COURS");
+    }
+
+    // --- I8 : validation a la creation ---
+
+    @Test
+    void creer_refuseUneDatePassee() {
+        CreateDistributionRequest hier = new CreateDistributionRequest("Distribution", null, null,
+            LocalDate.now(PARIS).minusDays(1), 10, null, null,
+            List.of(new AjouterCreneauRequest(LocalTime.of(10, 0), LocalTime.of(12, 0), 10)));
+
+        assertThatThrownBy(() -> service.creer(hier, "coord@example.com"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("deja passee");
+        verifyNoInteractions(distributionRepository);
+    }
+
+    @Test
+    void creer_refusePlusieursCreneauxEnCreneauUnique() {
+        CreateDistributionRequest deuxCreneaux = new CreateDistributionRequest("Distribution", null, null,
+            LocalDate.now(PARIS).plusDays(3), 10, null, "CRENEAU_UNIQUE",
+            List.of(new AjouterCreneauRequest(LocalTime.of(10, 0), LocalTime.of(11, 0), 5),
+                new AjouterCreneauRequest(LocalTime.of(11, 0), LocalTime.of(12, 0), 5)));
+
+        assertThatThrownBy(() -> service.creer(deuxCreneaux, "coord@example.com"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("un seul creneau");
+    }
+
+    private DistributionService serviceA(Clock clock) {
+        lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(PARIS);
+        return new DistributionService(distributionRepository, creneauRepository, eventPublisher,
+            personneQueryPort, new HorlogeAssociation(clock, associationQueryPort));
     }
 }

@@ -49,6 +49,9 @@ class RepartitionControllerIntegrationTest {
     private String tokenBeneficiaire;
     private UUID coordId;
 
+    // Une date fixe finirait dans le passe, refusee a la creation.
+    private static final String DANS_UNE_SEMAINE = java.time.LocalDate.now().plusDays(7).toString();
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
@@ -141,6 +144,27 @@ class RepartitionControllerIntegrationTest {
             .andExpect(jsonPath("$.length()").value(1));
     }
 
+    // I8 : le libelle est nettoye avant persistance, et borne en longueur.
+    @Test
+    void saisirDenree_nettoieLeLibelleEtRefuseUnLibelleTropLong() throws Exception {
+        UUID distributionId = creerDistribution();
+
+        mockMvc.perform(post("/api/distributions/" + distributionId + "/denrees")
+                .cookie(new Cookie("access_token", tokenCoordinateur))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"libelle\":\"<script>alert(1)</script>Riz\",\"unite\":\"KILOGRAMME\","
+                    + "\"nombreContenants\":1,\"quantiteParContenant\":5.0}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.libelle").value("Riz"));
+
+        mockMvc.perform(post("/api/distributions/" + distributionId + "/denrees")
+                .cookie(new Cookie("access_token", tokenCoordinateur))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"libelle\":\"" + "x".repeat(201) + "\",\"unite\":\"KILOGRAMME\","
+                    + "\"nombreContenants\":1,\"quantiteParContenant\":5.0}"))
+            .andExpect(status().isBadRequest());
+    }
+
     @Test
     void modifierDenree_metsAJourLesChamps() throws Exception {
         UUID distributionId = creerDistribution();
@@ -213,7 +237,7 @@ class RepartitionControllerIntegrationTest {
         String body = mockMvc.perform(post("/api/distributions")
                 .cookie(new Cookie("access_token", tokenCoordinateur))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"titre\":\"Dist Test\",\"date\":\"2026-12-01\","
+                .content("{\"titre\":\"Dist Test\",\"date\":\"" + DANS_UNE_SEMAINE + "\","
                     + "\"capaciteBeneficiaires\":30,\"modeCreneau\":\"CRENEAU_UNIQUE\","
                     + "\"creneaux\":[{\"heureDebut\":\"17:00\",\"heureFin\":\"18:00\","
                     + "\"capacite\":30}]}"))

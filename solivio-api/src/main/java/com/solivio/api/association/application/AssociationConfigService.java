@@ -4,10 +4,11 @@ import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.ZoneId;
 
 
 @Service
@@ -28,7 +29,7 @@ public class AssociationConfigService {
     public AssociationResponse mettreAJour(UpdateAssociationRequest request) {
         Association asso = charger();
         if (request.nom() != null && !request.nom().isBlank()) {
-            asso.setNom(Jsoup.clean(request.nom(), Safelist.none()));
+            asso.setNom(Assainissement.nettoyer(request.nom()));
         }
         if (request.logoUrl() != null) {
             asso.setLogoUrl(request.logoUrl());
@@ -40,6 +41,9 @@ public class AssociationConfigService {
             asso.setCouleurSecondaire(request.couleurSecondaire());
         }
         if (request.fuseauHoraire() != null && !request.fuseauHoraire().isBlank()) {
+            if (!ZoneId.getAvailableZoneIds().contains(request.fuseauHoraire())) {
+                throw new IllegalArgumentException("Fuseau horaire inconnu : " + request.fuseauHoraire());
+            }
             asso.setFuseauHoraire(request.fuseauHoraire());
         }
         if (request.frequenceMaxParSemaine() != null) {

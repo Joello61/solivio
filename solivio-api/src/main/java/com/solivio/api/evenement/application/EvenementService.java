@@ -13,10 +13,9 @@ import com.solivio.api.evenement.infrastructure.web.dto.CreateEvenementRequest;
 import com.solivio.api.evenement.infrastructure.web.dto.EvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.UpdateEvenementRequest;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +50,8 @@ public class EvenementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         Evenement evenement = new Evenement(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             parseType(request.type()),
             request.lieuPlaceId(),
             request.lieuAdresseFormatee(),
@@ -79,10 +78,10 @@ public class EvenementService {
                 "Modification impossible : seul un evenement en BROUILLON peut etre modifie");
         }
         if (request.titre() != null) {
-            evenement.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
+            evenement.setTitre(Assainissement.nettoyer(request.titre()));
         }
         if (request.description() != null) {
-            evenement.setDescription(Jsoup.clean(request.description(), Safelist.none()));
+            evenement.setDescription(Assainissement.nettoyer(request.description()));
         }
         if (request.type() != null) {
             evenement.setType(parseType(request.type()));
@@ -142,7 +141,7 @@ public class EvenementService {
 
     public EvenementResponse annuler(UUID evenementId, AnnulerEvenementRequest request) {
         Evenement evenement = trouverOuEchouer(evenementId);
-        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        String raisonSaine = Assainissement.nettoyer(request.raison());
         evenement.transitionnerVers(StatutEvenement.ANNULE, raisonSaine);
         evenementRepository.save(evenement);
         eventPublisher.publierAnnule(evenementId, evenement.getDateHeureDebut());

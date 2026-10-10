@@ -11,6 +11,7 @@ import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,15 +43,16 @@ public class RepartitionService {
         validerModifiable(distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
+        String libelle = Assainissement.nettoyer(request.libelle());
 
         DenreeDistribution denree = new DenreeDistribution(
             distributionId,
-            request.libelle(),
+            libelle,
             unite,
             request.nombreContenants(),
             request.quantiteParContenant()
         );
-        catalogueDenreeService.enregistrerSiInconnu(request.libelle());
+        catalogueDenreeService.enregistrerSiInconnu(libelle);
         denreeRepository.save(denree);
         return toResponse(denree);
     }
@@ -60,13 +62,14 @@ public class RepartitionService {
         DenreeDistribution denree = trouverOuEchouer(denreeId, distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
-        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(request.libelle());
-        denree.setLibelle(request.libelle());
+        String libelle = Assainissement.nettoyer(request.libelle());
+        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(libelle);
+        denree.setLibelle(libelle);
         denree.setUnite(unite);
         denree.setNombreContenants(request.nombreContenants());
         denree.setQuantiteParContenant(request.quantiteParContenant());
         if (libelleChange) {
-            catalogueDenreeService.enregistrerSiInconnu(request.libelle());
+            catalogueDenreeService.enregistrerSiInconnu(libelle);
         }
         denreeRepository.save(denree);
         return toResponse(denree);

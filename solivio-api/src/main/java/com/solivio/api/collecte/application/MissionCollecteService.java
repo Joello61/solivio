@@ -12,11 +12,10 @@ import com.solivio.api.collecte.infrastructure.web.dto.MissionCollecteResponse;
 import com.solivio.api.collecte.infrastructure.web.dto.UpdateMissionCollecteRequest;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +50,8 @@ public class MissionCollecteService {
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         int capacite = request.capacitePersonnes() != null ? request.capacitePersonnes() : 6;
         MissionCollecte mission = new MissionCollecte(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             placeId(request.lieuCollecte()),
             adresse(request.lieuCollecte()),
             latitude(request.lieuCollecte()),
@@ -76,10 +75,10 @@ public class MissionCollecteService {
             throw new ConflictException("Modification impossible : la mission n'est pas disponible");
         }
         if (request.titre() != null) {
-            mission.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
+            mission.setTitre(Assainissement.nettoyer(request.titre()));
         }
         if (request.description() != null) {
-            mission.setDescription(Jsoup.clean(request.description(), Safelist.none()));
+            mission.setDescription(Assainissement.nettoyer(request.description()));
         }
         if (request.dateHeure() != null) {
             mission.setDateHeure(request.dateHeure());
@@ -110,7 +109,7 @@ public class MissionCollecteService {
             throw new NotFoundException("Mission de collecte introuvable : " + missionId);
         }
         UUID benevoleAssigneId = mission.getBenevoleId();
-        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        String raisonSaine = Assainissement.nettoyer(request.raison());
         mission.annuler(par.id(), raisonSaine);
         missionRepository.save(mission);
         eventPublisher.publierAnnulee(mission.getId(), mission.getDateHeure(), benevoleAssigneId);

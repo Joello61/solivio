@@ -105,6 +105,16 @@ class AssociationControllerIntegrationTest {
             .andExpect(jsonPath("$.frequenceMaxParSemaine").value(2));
     }
 
+    // I7 : le fuseau sert a calculer "aujourd'hui" ; une valeur inconnue est refusee.
+    @Test
+    void mettreAJourAssociation_refuseUnFuseauInconnu() throws Exception {
+        mockMvc.perform(patch("/api/association")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fuseauHoraire\":\"Europe/Atlantide\"}"))
+            .andExpect(status().isBadRequest());
+    }
+
     @Test
     void mettreAJourAssociation_interditAuxBeneficiaires() throws Exception {
         mockMvc.perform(patch("/api/association")
