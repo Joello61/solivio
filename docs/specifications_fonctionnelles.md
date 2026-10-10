@@ -272,7 +272,7 @@ Gérer des campagnes (collecte, sensibilisation, recrutement) avec objectif, dur
 
 Ces règles métier transverses conditionnent le comportement du produit. Elles sont en V1 sauf mention contraire.
 
-**RG1 - Fréquence d'inscription des bénéficiaires.** L'association peut définir une limite (par exemple : un bénéficiaire ne peut s'inscrire qu'à une distribution par semaine). En V1, cette limite est un paramètre simple ; sa configuration fine par l'association est un raffinement ultérieur.
+**RG1 - Fréquence d'inscription des bénéficiaires.** L'association peut définir une limite (par exemple : un bénéficiaire ne peut s'inscrire qu'à une distribution par semaine). En V1, cette limite est un paramètre simple ; sa configuration fine par l'association est un raffinement ultérieur. Précisions retenues en octobre 2026 : la limite par défaut est d'une distribution par semaine ; la semaine est la semaine calendaire (du lundi au dimanche) de la distribution visée ; les inscriptions confirmées et celles en liste d'attente comptent, celles des distributions annulées non.
 
 **RG2 - Unicité par distribution.** Un bénéficiaire ne peut s'inscrire qu'une fois à une même distribution (cohérent avec la règle réelle "un colis par personne par distribution").
 

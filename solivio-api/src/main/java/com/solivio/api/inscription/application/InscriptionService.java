@@ -20,9 +20,9 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class InscriptionService {
 
-    // Frequence par defaut si l'association n'a pas configure de limite (RG1).
-    private static final int FREQUENCE_DEFAUT_JOURS = 7;
+    // Limite hebdomadaire si l'association n'en a pas configure (RG1).
+    private static final int FREQUENCE_PAR_DEFAUT = 1;
 
     private final InscriptionRepository inscriptionRepository;
     private final DistributionQueryPort distributionQueryPort;
@@ -95,7 +95,7 @@ public class InscriptionService {
 
         // RG1 : frequence (beneficiaires uniquement)
         if (type == TypeInscription.BENEFICIAIRE) {
-            verifierFrequence(personne.id());
+            verifierFrequence(personne.id(), distrib);
         }
 
         DistributionQueryPort.CreneauInfo creneau = null;
@@ -320,17 +320,27 @@ public class InscriptionService {
             .toList();
     }
 
-    private void verifierFrequence(UUID personneId) {
+    // RG1 : au plus N distributions par semaine calendaire (lundi-dimanche) de la
+    // distribution visee. Les inscriptions en attente comptent : on ne peut pas
+    // attendre partout puis etre promu partout. Les distributions annulees non.
+    private void verifierFrequence(UUID personneId, DistributionQueryPort.DistributionInfo distrib) {
         Integer configMax = associationQueryPort.frequenceMaxParSemaine();
-        // null = pas de limite configuree, on applique la limite par defaut (1 par semaine).
-        int maxParSemaine = (configMax != null && configMax > 0) ? configMax : 1;
-        Instant debut = Instant.now().minus(FREQUENCE_DEFAUT_JOURS, ChronoUnit.DAYS);
-        long count = inscriptionRepository.compterInscriptionsConfirmeesPeriode(personneId, debut, Instant.now());
-        if (count >= maxParSemaine) {
-            throw new ConflictException(
-                "Limite de frequence atteinte : maximum " + maxParSemaine
-                + " inscription(s) confirmee(s) par semaine."
-            );
+        int maxParSemaine = (configMax != null && configMax > 0) ? configMax : FREQUENCE_PAR_DEFAUT;
+        LocalDate lundi = distrib.date().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        List<UUID> autresDistributions = distributionQueryPort
+            .trouverIdsNonAnnuleesEntre(lundi, lundi.plusDays(6)).stream()
+            .filter(id -> !id.equals(distrib.id()))
+            .toList();
+        if (autresDistributions.isEmpty()) {
+            return;
+        }
+        long inscriptions = inscriptionRepository.compterInscriptionsBeneficiaireActives(
+            personneId, autresDistributions);
+        if (inscriptions >= maxParSemaine) {
+            throw new ConflictException(maxParSemaine == 1
+                ? "Vous etes deja inscrit(e) a une distribution cette semaine."
+                : "Vous etes deja inscrit(e) a " + maxParSemaine + " distributions cette semaine, "
+                    + "la limite fixee par l'association.");
         }
     }
 
