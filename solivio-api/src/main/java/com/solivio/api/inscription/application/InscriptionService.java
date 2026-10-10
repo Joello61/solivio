@@ -6,6 +6,7 @@ import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
+import com.solivio.api.inscription.infrastructure.persistence.VerrouDistribution;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
@@ -42,19 +43,22 @@ public class InscriptionService {
     private final PersonneQueryPort personneQueryPort;
     private final AssociationQueryPort associationQueryPort;
     private final InscriptionEventPublisher eventPublisher;
+    private final VerrouDistribution verrouDistribution;
 
     public InscriptionService(
         InscriptionRepository inscriptionRepository,
         DistributionQueryPort distributionQueryPort,
         PersonneQueryPort personneQueryPort,
         AssociationQueryPort associationQueryPort,
-        InscriptionEventPublisher eventPublisher
+        InscriptionEventPublisher eventPublisher,
+        VerrouDistribution verrouDistribution
     ) {
         this.inscriptionRepository = inscriptionRepository;
         this.distributionQueryPort = distributionQueryPort;
         this.personneQueryPort = personneQueryPort;
         this.associationQueryPort = associationQueryPort;
         this.eventPublisher = eventPublisher;
+        this.verrouDistribution = verrouDistribution;
     }
 
     public InscriptionResponse inscrire(
@@ -77,6 +81,7 @@ public class InscriptionService {
         }
 
         PersonneQueryPort.PersonneInfo personne = personneQueryPort.trouverPersonne(emailInscrit);
+        verrouDistribution.verrouiller(distributionId);
 
         Optional<Inscription> existante = inscriptionRepository
             .findByDistributionIdAndPersonneIdAndType(distributionId, personne.id(), type);
@@ -93,15 +98,14 @@ public class InscriptionService {
             verifierFrequence(personne.id());
         }
 
-        // Validation du creneau
+        DistributionQueryPort.CreneauInfo creneau = null;
         if (creneauId != null) {
-            distributionQueryPort.trouverCreneau(creneauId, distributionId);
+            creneau = distributionQueryPort.trouverCreneau(creneauId, distributionId);
         } else if ("CRENEAUX_DECOUPES".equals(distrib.modeCreneau())) {
             throw new IllegalArgumentException("Un creneau est obligatoire pour ce mode de distribution.");
         }
 
-        // Calcul de la capacite disponible
-        boolean placeDisponible = verifierCapacite(distrib, distributionId, creneauId, type);
+        boolean placeDisponible = placeDisponible(distrib, creneau, type);
 
         Inscription inscription;
         if (existante.isPresent()) {
@@ -132,6 +136,7 @@ public class InscriptionService {
     // Spec 4.5 : chacun gere ses propres inscriptions, y compris face a un coordinateur.
     // Une inscription d'autrui repond comme une inscription inexistante.
     public void desinscrire(UUID distributionId, UUID inscriptionId, String emailDemandeur) {
+        verrouDistribution.verrouiller(distributionId);
         Inscription inscription = trouverOuEchouer(inscriptionId, distributionId);
         PersonneQueryPort.PersonneInfo demandeur = personneQueryPort.trouverPersonne(emailDemandeur);
         if (!inscription.getPersonneId().equals(demandeur.id())) {
@@ -166,11 +171,7 @@ public class InscriptionService {
 
         // RG3 : promotion automatique si une place confirmee se libere
         if (etaitConfirmee) {
-            promouvoirSuivantEnAttente(
-                inscription.getDistributionId(),
-                inscription.getCreneauId(),
-                inscription.getType()
-            );
+            promouvoirSuivantEnAttente(distrib, inscription.getType());
         }
     }
 
@@ -319,30 +320,33 @@ public class InscriptionService {
         }
     }
 
-    private boolean verifierCapacite(
+    // RG3 : un beneficiaire a besoin d'une place dans son creneau (mode decoupe)
+    // et d'une place sur la distribution ; un benevole, d'une place sur la
+    // distribution seulement, la capacite d'un creneau visant les beneficiaires.
+    private boolean placeDisponible(
         DistributionQueryPort.DistributionInfo distrib,
-        UUID distributionId,
-        UUID creneauId,
+        DistributionQueryPort.CreneauInfo creneau,
         TypeInscription type
     ) {
-        if (type == TypeInscription.BENEVOLE && distrib.capaciteBenevoles() == null) {
+        if (type == TypeInscription.BENEVOLE) {
+            return distrib.capaciteBenevoles() == null
+                || compterConfirmes(distrib.id(), type) < distrib.capaciteBenevoles();
+        }
+        if (compterConfirmes(distrib.id(), type) >= distrib.capaciteBeneficiaires()) {
+            return false;
+        }
+        if (creneau == null || !"CRENEAUX_DECOUPES".equals(distrib.modeCreneau())) {
             return true;
         }
-        int capaciteMax = type == TypeInscription.BENEFICIAIRE
-            ? distrib.capaciteBeneficiaires()
-            : distrib.capaciteBenevoles();
+        return inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
+            distrib.id(), creneau.id(), type, StatutInscription.CONFIRMEE
+        ) < creneau.capacite();
+    }
 
-        long inscritsConfirmes;
-        if (creneauId != null && "CRENEAUX_DECOUPES".equals(distrib.modeCreneau())) {
-            inscritsConfirmes = inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
-                distributionId, creneauId, type, StatutInscription.CONFIRMEE
-            );
-        } else {
-            inscritsConfirmes = inscriptionRepository.countByDistributionIdAndTypeAndStatut(
-                distributionId, type, StatutInscription.CONFIRMEE
-            );
-        }
-        return inscritsConfirmes < capaciteMax;
+    private long compterConfirmes(UUID distributionId, TypeInscription type) {
+        return inscriptionRepository.countByDistributionIdAndTypeAndStatut(
+            distributionId, type, StatutInscription.CONFIRMEE
+        );
     }
 
     private int calculerProchainRang(UUID distributionId, TypeInscription type) {
@@ -351,22 +355,23 @@ public class InscriptionService {
             .orElse(1);
     }
 
-    private void promouvoirSuivantEnAttente(
-        UUID distributionId,
-        UUID creneauId,
-        TypeInscription type
-    ) {
-        Optional<Inscription> suivant = creneauId != null
-            ? inscriptionRepository.findFirstByDistributionIdAndCreneauIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-                distributionId, creneauId, type, StatutInscription.LISTE_ATTENTE)
-            : inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-                distributionId, type, StatutInscription.LISTE_ATTENTE);
-
-        suivant.ifPresent(i -> {
-            i.promouvoir();
-            inscriptionRepository.save(i);
-            eventPublisher.publierPromue(i);
-        });
+    // Promeut, dans l'ordre de la liste d'attente, la premiere personne pour qui
+    // une place existe : la place liberee peut ne pas etre dans son creneau.
+    private void promouvoirSuivantEnAttente(DistributionQueryPort.DistributionInfo distrib, TypeInscription type) {
+        List<Inscription> enAttente = inscriptionRepository
+            .findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+                distrib.id(), type, StatutInscription.LISTE_ATTENTE);
+        for (Inscription candidate : enAttente) {
+            DistributionQueryPort.CreneauInfo creneau = candidate.getCreneauId() == null
+                ? null
+                : distributionQueryPort.trouverCreneau(candidate.getCreneauId(), distrib.id());
+            if (placeDisponible(distrib, creneau, type)) {
+                candidate.promouvoir();
+                inscriptionRepository.save(candidate);
+                eventPublisher.publierPromue(candidate);
+                return;
+            }
+        }
     }
 
     private Inscription trouverOuEchouer(UUID inscriptionId, UUID distributionId) {
