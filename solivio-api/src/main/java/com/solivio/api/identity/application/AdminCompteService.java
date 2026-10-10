@@ -22,15 +22,18 @@ public class AdminCompteService {
     private final CompteRepository compteRepository;
     private final MembreAssociationRepository membreRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final GardeMembres garde;
 
     public AdminCompteService(
         CompteRepository compteRepository,
         MembreAssociationRepository membreRepository,
-        RefreshTokenRepository refreshTokenRepository
+        RefreshTokenRepository refreshTokenRepository,
+        GardeMembres garde
     ) {
         this.compteRepository = compteRepository;
         this.membreRepository = membreRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.garde = garde;
     }
 
     @Transactional(readOnly = true)
@@ -51,9 +54,13 @@ public class AdminCompteService {
     }
 
     @Transactional
-    public CompteAdminResponse mettreAJourStatut(UUID id, boolean actif) {
+    public CompteAdminResponse mettreAJourStatut(UUID id, boolean actif, UUID acteurCompteId) {
+        garde.interdireSurSoi(acteurCompteId, id);
         Compte compte = compteRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Compte introuvable : " + id));
+        if (!actif) {
+            garde.garderUnResponsable(id);
+        }
         compte.setActif(actif);
         if (!actif) {
             // Revoquer toutes les sessions actives lors de la desactivation.
@@ -63,7 +70,9 @@ public class AdminCompteService {
     }
 
     @Transactional
-    public CompteAdminResponse mettreAJourSuperAdmin(UUID id, boolean superAdmin) {
+    public CompteAdminResponse mettreAJourSuperAdmin(UUID id, boolean superAdmin, UUID acteurCompteId) {
+        // Interdire de se retirer soi-meme le drapeau garantit qu'il reste un super admin.
+        garde.interdireSurSoi(acteurCompteId, id);
         Compte compte = compteRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Compte introuvable : " + id));
         compte.setSuperAdmin(superAdmin);
@@ -71,9 +80,11 @@ public class AdminCompteService {
     }
 
     @Transactional
-    public void supprimer(UUID id) {
+    public void supprimer(UUID id, UUID acteurCompteId) {
+        garde.interdireSurSoi(acteurCompteId, id);
         Compte compte = compteRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Compte introuvable : " + id));
+        garde.garderUnResponsable(id);
         refreshTokenRepository.revoquerTousParCompte(id);
         compteRepository.delete(compte);
     }

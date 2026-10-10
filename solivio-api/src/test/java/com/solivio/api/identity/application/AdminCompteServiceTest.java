@@ -32,14 +32,16 @@ class AdminCompteServiceTest {
     @Mock private CompteRepository compteRepository;
     @Mock private MembreAssociationRepository membreRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private GardeMembres garde;
 
     private AdminCompteService service;
     private UUID compteId;
+    private final UUID acteurId = UUID.randomUUID();
     private Compte compte;
 
     @BeforeEach
     void setUp() {
-        service = new AdminCompteService(compteRepository, membreRepository, refreshTokenRepository);
+        service = new AdminCompteService(compteRepository, membreRepository, refreshTokenRepository, garde);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
     }
@@ -75,7 +77,7 @@ class AdminCompteServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
-        service.mettreAJourStatut(compteId, false);
+        service.mettreAJourStatut(compteId, false, acteurId);
 
         assertThat(compte.isActif()).isFalse();
         verify(refreshTokenRepository).revoquerTousParCompte(compteId);
@@ -88,7 +90,7 @@ class AdminCompteServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
-        service.mettreAJourStatut(compteId, true);
+        service.mettreAJourStatut(compteId, true, acteurId);
 
         assertThat(compte.isActif()).isTrue();
         // Lors de la reactivation, pas de revocation necessaire.
@@ -101,7 +103,7 @@ class AdminCompteServiceTest {
         when(compteRepository.save(any())).thenReturn(compte);
         when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
 
-        service.mettreAJourSuperAdmin(compteId, true);
+        service.mettreAJourSuperAdmin(compteId, true, acteurId);
 
         assertThat(compte.isSuperAdmin()).isTrue();
     }
@@ -110,10 +112,24 @@ class AdminCompteServiceTest {
     void supprimer_revoqueSessiosEtSupprime() {
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
 
-        service.supprimer(compteId);
+        service.supprimer(compteId, acteurId);
 
+        verify(garde).interdireSurSoi(acteurId, compteId);
+        verify(garde).garderUnResponsable(compteId);
         verify(refreshTokenRepository).revoquerTousParCompte(compteId);
         verify(compteRepository).delete(compte);
+    }
+
+    @Test
+    void mettreAJourStatut_desactivationVerifieQuUnResponsableReste() {
+        when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
+        when(compteRepository.save(any())).thenReturn(compte);
+        when(membreRepository.findByCompteId(any())).thenReturn(Optional.empty());
+
+        service.mettreAJourStatut(compteId, false, acteurId);
+
+        verify(garde).interdireSurSoi(acteurId, compteId);
+        verify(garde).garderUnResponsable(compteId);
     }
 
     @Test

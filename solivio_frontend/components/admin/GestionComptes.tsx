@@ -31,6 +31,7 @@ import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 
 interface Props {
   page: PageResponse<CompteAdminResponse>;
+  currentUserId: string;
   recherche: string;
   currentPage: number;
 }
@@ -43,7 +44,7 @@ function getInitiales(prenom: string, nom: string): string {
 
 // --- Carte mobile ---
 
-function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
+function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -81,6 +82,7 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
               {compte.prenom} {compte.nom}
+              {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{compte.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -107,7 +109,9 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
         {erreur && <p className="text-xs text-destructive">{erreur}</p>}
 
         <div className="pt-3 border-t border-border/60 flex flex-wrap gap-1">
-          {pending ? (
+          {estSoi ? (
+            <p className="text-xs text-muted-foreground">Votre compte : aucune action possible ici.</p>
+          ) : pending ? (
             <Spinner size="sm" />
           ) : (
             <>
@@ -245,7 +249,7 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
 
 // --- Ligne desktop ---
 
-function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
+function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -306,7 +310,9 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
 
         <td className="py-3.5">
           <div className="flex items-center gap-1">
-            {pending ? (
+            {estSoi ? (
+              <span className="text-xs text-muted-foreground px-2">Votre compte</span>
+            ) : pending ? (
               <Spinner size="sm" className="mx-2" />
             ) : (
               <>
@@ -445,7 +451,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
 
 // --- Composant principal ---
 
-export function GestionComptes({ page, recherche: rechercheInitiale, currentPage }: Props) {
+export function GestionComptes({ page, currentUserId, recherche: rechercheInitiale, currentPage }: Props) {
   const router = useRouter();
   const [recherche, setRecherche] = useState(rechercheInitiale);
   const [filtreStatut, setFiltreStatut] = useState("tous");
@@ -539,7 +545,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
           {/* Vue mobile : cartes */}
           <div className="space-y-3 lg:hidden">
             {filtres.map((c) => (
-              <CarteCompte key={c.id} compte={c} />
+              <CarteCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
             ))}
           </div>
 
@@ -556,7 +562,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
               </thead>
               <tbody>
                 {filtres.map((c) => (
-                  <LigneCompte key={c.id} compte={c} />
+                  <LigneCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
                 ))}
               </tbody>
             </table>

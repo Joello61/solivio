@@ -33,6 +33,7 @@ class AssociationControllerIntegrationTest {
     private String tokenResponsable;
     private String tokenBeneficiaire;
     private UUID compteResponsableId;
+    private UUID compteCoordinateurId;
 
     @BeforeEach
     void setUp() {
@@ -48,6 +49,14 @@ class AssociationControllerIntegrationTest {
             "INSERT INTO membre (compte_id, role) VALUES (?, 'responsable')",
             compteResponsableId
         );
+
+        compteCoordinateurId = UUID.randomUUID();
+        jdbcTemplate.update(
+            "INSERT INTO compte (id, email, password_hash, nom, prenom, email_verifie) "
+                + "VALUES (?, ?, 'hash', 'Coord', 'Config', true)",
+            compteCoordinateurId, "coord@cfg.com"
+        );
+        jdbcTemplate.update("INSERT INTO membre (compte_id, role) VALUES (?, 'coordinateur')", compteCoordinateurId);
 
         tokenResponsable = jwtService.genererAccessToken(
             compteResponsableId, "resp@cfg.com", "Resp", "Config", List.of("responsable"), null, false
@@ -111,15 +120,13 @@ class AssociationControllerIntegrationTest {
                 .cookie(new Cookie("access_token", tokenResponsable)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].email").value("resp@cfg.com"))
-            .andExpect(jsonPath("$[0].role").value("responsable"));
+            .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
     void changerStatutMembre_suspenduEtReactive() throws Exception {
         // Suspension
-        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+        mockMvc.perform(patch("/api/association/membres/" + compteCoordinateurId + "/statut")
                 .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"statut\":\"suspendu\"}"))
@@ -127,7 +134,7 @@ class AssociationControllerIntegrationTest {
             .andExpect(jsonPath("$.statut").value("suspendu"));
 
         // Reactivation
-        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+        mockMvc.perform(patch("/api/association/membres/" + compteCoordinateurId + "/statut")
                 .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"statut\":\"actif\"}"))
@@ -137,7 +144,7 @@ class AssociationControllerIntegrationTest {
 
     @Test
     void changerStatutMembre_refuseStatutInvalide() throws Exception {
-        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+        mockMvc.perform(patch("/api/association/membres/" + compteCoordinateurId + "/statut")
                 .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"statut\":\"inconnu\"}"))
@@ -146,9 +153,29 @@ class AssociationControllerIntegrationTest {
 
     @Test
     void supprimerMembre_desactiveLeCompte() throws Exception {
-        mockMvc.perform(delete("/api/association/membres/" + compteResponsableId)
+        mockMvc.perform(delete("/api/association/membres/" + compteCoordinateurId)
                 .cookie(new Cookie("access_token", tokenResponsable)))
             .andExpect(status().isNoContent());
+    }
+
+    // I2 : un responsable ne peut ni se suspendre ni se retirer lui-meme.
+    @Test
+    void changerSonPropreStatut_retourne409() throws Exception {
+        mockMvc.perform(patch("/api/association/membres/" + compteResponsableId + "/statut")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"statut\":\"suspendu\"}"))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void retirerLeDernierResponsable_parUnSuperAdmin_retourne409() throws Exception {
+        String tokenSuperAdmin = jwtService.genererAccessToken(
+            UUID.randomUUID(), "root@cfg.com", "Root", "Admin", List.of(), null, true);
+
+        mockMvc.perform(delete("/api/association/membres/" + compteResponsableId)
+                .cookie(new Cookie("access_token", tokenSuperAdmin)))
+            .andExpect(status().isConflict());
     }
 
     @Test

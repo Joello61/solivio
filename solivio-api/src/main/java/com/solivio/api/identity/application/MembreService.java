@@ -19,10 +19,15 @@ import java.util.UUID;
 @Transactional
 public class MembreService {
 
-    private final MembreAssociationRepository membreRepository;
+    private static final String RESPONSABLE = "responsable";
+    private static final String SUSPENDU = "suspendu";
 
-    public MembreService(MembreAssociationRepository membreRepository) {
+    private final MembreAssociationRepository membreRepository;
+    private final GardeMembres garde;
+
+    public MembreService(MembreAssociationRepository membreRepository, GardeMembres garde) {
         this.membreRepository = membreRepository;
+        this.garde = garde;
     }
 
     @Transactional(readOnly = true)
@@ -32,22 +37,30 @@ public class MembreService {
             .toList();
     }
 
-    public MembreResponse changerStatut(UUID compteId, String statut) {
+    public MembreResponse changerStatut(UUID compteId, String statut, UUID acteurCompteId) {
+        garde.interdireSurSoi(acteurCompteId, compteId);
         MembreAssociation membre = trouverOuEchouer(compteId);
+        if (SUSPENDU.equals(statut)) {
+            garde.garderUnResponsable(compteId);
+        }
         membre.setStatut(statut);
         return toResponse(membreRepository.save(membre));
     }
 
-    public MembreResponse mettreAJourRole(UUID compteId, UpdateRoleMembreRequest request) {
+    public MembreResponse mettreAJourRole(UUID compteId, UpdateRoleMembreRequest request, UUID acteurCompteId) {
+        garde.interdireSurSoi(acteurCompteId, compteId);
         MembreAssociation membre = trouverOuEchouer(compteId);
+        if (!RESPONSABLE.equals(request.role())) {
+            garde.garderUnResponsable(compteId);
+        }
         membre.setRole(request.role());
         membre.setCoordoType(request.coordoType());
         return toResponse(membreRepository.save(membre));
     }
 
     // Cloture logique : le membre perd son role mais garde son historique.
-    public void suspendre(UUID compteId) {
-        changerStatut(compteId, "suspendu");
+    public void suspendre(UUID compteId, UUID acteurCompteId) {
+        changerStatut(compteId, SUSPENDU, acteurCompteId);
     }
 
     private MembreAssociation trouverOuEchouer(UUID compteId) {

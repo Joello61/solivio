@@ -62,6 +62,7 @@ export default async function AdminUtilisateursPage({ searchParams }: PageProps)
 
       <GestionComptes
         page={comptes}
+        currentUserId={me.id}
         recherche={q ?? ""}
         currentPage={page}
       />
