@@ -183,8 +183,9 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
             helper.setText(corps, true);
             mailSender.send(message);
         } catch (MessagingException | MailException e) {
-            log.error("Echec envoi email a {} ({}): {}", destinataire, sujet, e.getMessage());
-            throw new NotificationEmailException(destinataire, sujet, e);
+            NotificationEmailException echec = new NotificationEmailException(e);
+            log.error("Echec envoi du template {} : {}", template, echec.getMessage());
+            throw echec;
         }
     }
 }

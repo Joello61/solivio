@@ -26,8 +26,8 @@ public class PersonneProvisioningService {
     @Transactional
     public void provisionner(String email, String nom, String prenom) {
         if (!personneRepository.existsByEmail(email)) {
-            personneRepository.save(new Personne(nom, prenom, email));
-            log.debug("Personne provisionnee pour le compte {}", email);
+            Personne personne = personneRepository.save(new Personne(nom, prenom, email));
+            log.debug("Personne {} provisionnee", personne.getId());
         }
     }
 }

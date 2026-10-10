@@ -315,9 +315,10 @@ public class NotificationService {
                             evenement.lieuAdresseFormatee(), raison);
                         try {
                             emailService.envoyerAnnulationEvenement(contactEmail, ctx);
-                            log.debug("Annulation evenement notifiee a l'email general {}", contactEmail);
+                            log.debug("Annulation de l'evenement {} notifiee a l'email general", evenementId);
                         } catch (NotificationEmailException e) {
-                            log.error("Echec envoi annulation evenement a {} : {}", contactEmail, e.getMessage());
+                            log.error("Echec envoi a l'email general de l'annulation de l'evenement {} : {}",
+                                evenementId, e.getMessage());
                         }
                     });
                 }

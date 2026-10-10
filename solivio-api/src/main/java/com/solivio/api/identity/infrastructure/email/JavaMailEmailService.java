@@ -3,6 +3,7 @@ package com.solivio.api.identity.infrastructure.email;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Invitation;
 import com.solivio.api.shared.association.AssociationQueryPort;
+import com.solivio.api.shared.journal.DonneesPersonnelles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,9 +104,10 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
             helper.setText(corps, true);
             mailSender.send(message);
         } catch (MessagingException | org.springframework.mail.MailException e) {
-            log.error("Echec envoi email a {} ({}): {}", destinataire, sujet, e.getMessage());
+            log.error("Echec envoi du template {} : {}", template, DonneesPersonnelles.resumerErreur(e));
         } catch (Exception e) {
-            log.error("Erreur inattendue lors de l'envoi email a {} : {}", destinataire, e.getMessage());
+            log.error("Erreur inattendue lors de l'envoi du template {} : {}", template,
+                DonneesPersonnelles.resumerErreur(e));
         }
     }
 
