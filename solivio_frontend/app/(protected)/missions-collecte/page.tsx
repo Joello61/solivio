@@ -48,7 +48,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
   const { me, missions } = await fetchData(cookieHeader, statut);
 
   const estGestionnaire = me?.roles.some((r) =>
-    ["admin", "coordinateur", "responsable", "super_admin"].includes(r),
+    ["coordinateur", "responsable", "super_admin"].includes(r),
   );
 
   return (

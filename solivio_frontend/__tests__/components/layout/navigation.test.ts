@@ -69,6 +69,19 @@ describe("NAV_SECTIONS", () => {
     // Certains items peuvent avoir des restrictions (ex: Mes missions pour les bénévoles)
   });
 
+  // Le backend refuse au coordinateur GET /membres et PATCH /association.
+  it("ne propose ni Membres ni Configuration au coordinateur", () => {
+    const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["coordinateur"])).map((i) => i.href);
+    expect(hrefs).not.toContain("/association/membres");
+    expect(hrefs).not.toContain("/association/configuration");
+  });
+
+  it("ne reference plus le role admin supprime", () => {
+    NAV_SECTIONS.flatMap((s) => s.items).forEach((item) => {
+      expect(item.roles ?? []).not.toContain("admin");
+    });
+  });
+
   it("la section Administration contient uniquement des items super_admin", () => {
     const adminSection = NAV_SECTIONS.find((s) => s.title === "Administration");
     expect(adminSection).toBeDefined();

@@ -40,7 +40,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
   if (!mission) notFound();
 
   const estGestionnaire = me?.roles.some((r) =>
-    ["admin", "coordinateur", "responsable", "super_admin"].includes(r),
+    ["coordinateur", "responsable", "super_admin"].includes(r),
   ) ?? false;
   const estBenevole = me?.roles.includes("benevole") ?? false;
   const meId = me?.id ?? null;

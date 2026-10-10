@@ -52,7 +52,7 @@ export default async function DetailEvenementPage({ params }: Props) {
   if (!evenement) notFound();
 
   const estGestionnaire =
-    me?.roles.some((r) => ["admin", "coordinateur", "responsable", "super_admin"].includes(r)) ??
+    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
     false;
   const estBenevole = me?.roles.includes("benevole") ?? false;
   const estBeneficiaire = me?.roles.includes("beneficiaire") ?? false;
