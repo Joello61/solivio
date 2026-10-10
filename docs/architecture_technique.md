@@ -128,7 +128,9 @@ Le backend accepte les deux modes. Derrière Traefik, Spring Boot doit faire con
 
 ### 5.3 Rôles
 
-`super_admin` (drapeau sur le compte), `admin`, `responsable`, `coordinateur`, `benevole`, `beneficiaire`. Les rôles sont portés dans le jeton et vérifiés côté backend (`@PreAuthorize`). Le frontend n'est jamais une frontière de sécurité.
+`super_admin` (drapeau sur le compte), `responsable`, `coordinateur`, `benevole`, `beneficiaire`. Les rôles sont portés dans le jeton et vérifiés côté backend (`@PreAuthorize`). Le frontend n'est jamais une frontière de sécurité.
+
+Les rôles forment une hiérarchie (ADR-011) : `responsable` > `coordinateur` > `benevole`. Un responsable passe donc tout contrôle réservé au coordinateur ou au bénévole. `beneficiaire` reste en dehors, et `super_admin` est cité explicitement là où il est autorisé. Les contrôles faits dans le code métier sur les rôles bruts (`SolivioUserDetails.aUnDesRoles`, type d'inscription) ne suivent pas la hiérarchie.
 
 ## 6. La base de données : PostgreSQL
 
@@ -286,6 +288,13 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Contexte** : `docker compose up` remplaçait backend et frontend en place, d'où une interruption à chaque déploiement, le temps que la nouvelle version démarre. Cobage a résolu ce problème avec `docker-rollout`.
 - **Décision** : le script de déploiement bascule backend et frontend avec `docker-rollout` (v0.14, figé par commit et vérifié par empreinte) : la nouvelle version démarre à côté de l'ancienne, Traefik ne lui envoie du trafic qu'une fois son contrôle de santé au vert (readiness pour le backend), puis l'ancienne est vidée et arrêtée. Le vidage passe par le contrôle de santé : un fichier `/tmp/drain` le fait échouer, Traefik retire le conteneur du routage, puis l'arrêt gracieux termine les requêtes en cours. Pas de nginx : contrairement à Cobage (PHP-FPM), les deux applications servent HTTP elles-mêmes et Traefik découvre les conteneurs dynamiquement.
 - **Conséquences** : une version qui ne devient jamais saine est retirée et l'ancienne continue de servir ; les migrations Flyway restent additives, l'ancienne version tournant sur le nouveau schéma pendant la bascule ; le nom des conteneurs backend et frontend change à chaque déploiement (`-1`, `-2`...), aucune surveillance ne doit le viser ; pendant le chevauchement (une à deux minutes), les tâches planifiées existent en double ; un déploiement à 08:00 émet deux fois le rappel de la veille, mais la clé d'idempotence `RAPPEL_VEILLE:{distribution}` (section 4.2) n'envoie l'email qu'une fois par personne.
+
+### ADR-011 - Suppression du rôle admin et hiérarchie des rôles
+
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : le rôle `admin` n'était défini dans aucun document et donnait des droits disparates (inviter, email libre, événements, collectes, mais ni distributions, ni membres, ni configuration, ni statistiques). Avec une seule association (ADR-001), il doublait `responsable` pour la direction de l'association et le drapeau `super_admin` pour l'administration technique. Sans hiérarchie, chaque `@PreAuthorize` devait aussi recopier la liste complète des rôles autorisés.
+- **Décision** : `admin` est supprimé (migration V12 : les éventuels admins deviennent responsables, contraintes `CHECK` resserrées). Un bean `RoleHierarchy` déclare `responsable` > `coordinateur` > `benevole`, pris en compte par la sécurité des méthodes.
+- **Conséquences** : coordinateurs et responsables passent les contrôles « bénévole » (par exemple prendre une mission de collecte) ; un jeton émis avant la migration avec le rôle `admin` ne donne plus aucun droit ; la V12 resserre une contrainte, contrairement à la règle additive de l'ADR-010, sans risque tant qu'aucune invitation `admin` n'est créée pendant la bascule (aucun écran ne le propose).
 
 ## 15. Synthèse
 

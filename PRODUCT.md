@@ -8,7 +8,7 @@ Fiche produit courte. Le détail fonctionnel est dans `docs/specifications_fonct
 
 | Utilisateur | Ce qu'il fait dans Solivio |
 |---|---|
-| Responsable, admin | Configure l'association, gère les membres, consulte les statistiques, exporte les données |
+| Responsable | Configure l'association, gère les membres, consulte les statistiques, exporte les données |
 | Coordinateur | Crée et publie les distributions, gère les inscriptions, saisit les denrées, pilote le pointage |
 | Bénévole | S'inscrit aux distributions et aux missions, pointe les bénéficiaires le jour J |
 | Bénéficiaire | S'inscrit à une distribution, reçoit confirmations et rappels |
