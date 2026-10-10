@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, AlertTriangle, UserCheck, UserX, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, Eraser, UserCheck, UserX, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,13 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { changerStatutCompte, changerSuperAdmin, supprimerCompteAdmin } from "@/lib/api/profil";
+import {
+  changerStatutCompte,
+  changerSuperAdmin,
+  effacerDonneesCompteAdmin,
+  supprimerCompteAdmin,
+} from "@/lib/api/profil";
+import { DialogEffacementCompte } from "@/components/admin/DialogEffacementCompte";
 import { libelleRole } from "@/lib/roles";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 
@@ -36,7 +42,7 @@ interface Props {
   currentPage: number;
 }
 
-type DialogType = "actif" | "admin" | "supprimer" | null;
+type DialogType = "actif" | "admin" | "supprimer" | "effacer" | null;
 
 function getInitiales(prenom: string, nom: string): string {
   return `${prenom[0] ?? ""}${nom[0] ?? ""}`.toUpperCase();
@@ -151,6 +157,15 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 Supprimer
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDialogOuvert("effacer")}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Eraser className="h-3.5 w-3.5 mr-1" />
+                Effacer les données
+              </Button>
             </>
           )}
         </div>
@@ -243,6 +258,13 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogEffacementCompte
+        compte={compte}
+        open={dialogOuvert === "effacer"}
+        onFermer={() => setDialogOuvert(null)}
+        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
+      />
     </>
   );
 }
@@ -352,6 +374,15 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                   <Trash2 className="h-3.5 w-3.5 mr-1" />
                   Supprimer
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDialogOuvert("effacer")}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Eraser className="h-3.5 w-3.5 mr-1" />
+                  Effacer les données
+                </Button>
               </>
             )}
           </div>
@@ -445,6 +476,13 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogEffacementCompte
+        compte={compte}
+        open={dialogOuvert === "effacer"}
+        onFermer={() => setDialogOuvert(null)}
+        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
+      />
     </>
   );
 }

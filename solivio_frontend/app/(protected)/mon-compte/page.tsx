@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { MeResponse } from "@/types/auth";
+import { EffacementDonnees } from "@/components/account/EffacementDonnees";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
 import { ROLE_LABELS } from "@/lib/roles";
 
@@ -181,6 +182,8 @@ export default async function MonComptePage() {
           <FormulaireMonCompte user={user} />
         </div>
       </div>
+
+      <EffacementDonnees />
     </div>
   );
 }
