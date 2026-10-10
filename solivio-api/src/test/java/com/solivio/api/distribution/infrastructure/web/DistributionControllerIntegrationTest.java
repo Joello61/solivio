@@ -114,6 +114,34 @@ class DistributionControllerIntegrationTest {
             .andExpect(status().isForbidden());
     }
 
+    // I8 : entrees bornees et coherentes, 400 et non 500.
+    @Test
+    void creer_refuseLesEntreesInvalides() throws Exception {
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Coord', 'Test', ?)",
+            UUID.randomUUID(), "coord@test.com");
+        String dans3Jours = java.time.LocalDate.now().plusDays(3).toString();
+        String creneau = "\"creneaux\":[{\"heureDebut\":\"10:00\",\"heureFin\":\"12:00\",\"capacite\":10}]";
+
+        creerDistribution("{\"titre\":\"T\",\"date\":\"" + dans3Jours + "\",\"capaciteBeneficiaires\":10,"
+            + "\"description\":\"" + "x".repeat(2001) + "\"," + creneau + "}");
+        creerDistribution("{\"titre\":\"T\",\"date\":\"" + dans3Jours + "\",\"capaciteBeneficiaires\":10,"
+            + "\"capaciteBenevoles\":-1," + creneau + "}");
+        creerDistribution("{\"titre\":\"T\",\"date\":\"" + java.time.LocalDate.now().minusDays(2)
+            + "\",\"capaciteBeneficiaires\":10," + creneau + "}");
+        creerDistribution("{\"titre\":\"T\",\"date\":\"" + dans3Jours + "\",\"capaciteBeneficiaires\":10,"
+            + "\"modeCreneau\":\"CRENEAU_UNIQUE\",\"creneaux\":["
+            + "{\"heureDebut\":\"10:00\",\"heureFin\":\"11:00\",\"capacite\":5},"
+            + "{\"heureDebut\":\"11:00\",\"heureFin\":\"12:00\",\"capacite\":5}]}");
+    }
+
+    private void creerDistribution(String corps) throws Exception {
+        mockMvc.perform(post("/api/distributions")
+                .cookie(new Cookie("access_token", tokenCoordinateur))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corps))
+            .andExpect(status().isBadRequest());
+    }
+
     // I4 : un brouillon n'existe pas pour qui ne gere pas les distributions.
     @Test
     void detail_brouillon_introuvablePourUnBeneficiaire() throws Exception {

@@ -1,5 +1,6 @@
 package com.solivio.api.shared.infrastructure.evenements;
 
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.modulith.events.CompletedEventPublications;
@@ -45,7 +46,7 @@ public class MaintenancePublicationsJob {
         failedPublications.resubmit(OPTIONS_RELANCE);
     }
 
-    @Scheduled(cron = "0 30 3 * * *", zone = "Europe/Paris")
+    @Scheduled(cron = "0 30 3 * * *", zone = HorlogeAssociation.FUSEAU_PAR_DEFAUT)
     public void purgerLArchive() {
         completedPublications.deletePublicationsOlderThan(CONSERVATION_ARCHIVE);
     }

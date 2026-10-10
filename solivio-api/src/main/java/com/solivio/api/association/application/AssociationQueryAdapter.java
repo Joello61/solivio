@@ -1,9 +1,12 @@
 package com.solivio.api.association.application;
 
 import com.solivio.api.shared.association.AssociationQueryPort;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.Optional;
 
 @Component
@@ -29,5 +32,14 @@ public class AssociationQueryAdapter implements AssociationQueryPort {
     @Override
     public String nomAssociation() {
         return configService.charger().getNom();
+    }
+
+    @Override
+    public ZoneId fuseauHoraire() {
+        try {
+            return ZoneId.of(configService.charger().getFuseauHoraire());
+        } catch (DateTimeException e) {
+            return HorlogeAssociation.ZONE_PAR_DEFAUT;
+        }
     }
 }

@@ -10,12 +10,13 @@ import com.solivio.api.inscription.infrastructure.persistence.VerrouDistribution
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
-import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
 import com.solivio.api.shared.association.AssociationQueryPort;
+import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +45,7 @@ public class InscriptionService {
     private final AssociationQueryPort associationQueryPort;
     private final InscriptionEventPublisher eventPublisher;
     private final VerrouDistribution verrouDistribution;
+    private final HorlogeAssociation horloge;
 
     public InscriptionService(
         InscriptionRepository inscriptionRepository,
@@ -51,7 +53,8 @@ public class InscriptionService {
         PersonneQueryPort personneQueryPort,
         AssociationQueryPort associationQueryPort,
         InscriptionEventPublisher eventPublisher,
-        VerrouDistribution verrouDistribution
+        VerrouDistribution verrouDistribution,
+        HorlogeAssociation horloge
     ) {
         this.inscriptionRepository = inscriptionRepository;
         this.distributionQueryPort = distributionQueryPort;
@@ -59,6 +62,7 @@ public class InscriptionService {
         this.associationQueryPort = associationQueryPort;
         this.eventPublisher = eventPublisher;
         this.verrouDistribution = verrouDistribution;
+        this.horloge = horloge;
     }
 
     public InscriptionResponse inscrire(
@@ -164,7 +168,7 @@ public class InscriptionService {
 
         // Alerte desistement tardif : benevole confirme se desinscrit dans les 24h avant la distribution.
         if (etaitConfirmee && estBenevole) {
-            if (distrib.date() != null && !distrib.date().isAfter(LocalDate.now().plusDays(1))) {
+            if (distrib.date() != null && !distrib.date().isAfter(horloge.aujourdhui().plusDays(1))) {
                 eventPublisher.publierDesistementTardifBenevole(inscription);
             }
         }

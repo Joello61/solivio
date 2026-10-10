@@ -1,8 +1,5 @@
 package com.solivio.api.reconditionnement.application;
 
-import com.solivio.api.shared.lieu.LieuResponse;
-import com.solivio.api.shared.lieu.LieuRequest;
-import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutPresenceReconditionnement;
@@ -17,11 +14,13 @@ import com.solivio.api.reconditionnement.infrastructure.web.dto.PointageRecondit
 import com.solivio.api.reconditionnement.infrastructure.web.dto.SessionReconditionnementResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,8 +58,8 @@ public class SessionReconditionnementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         SessionReconditionnement session = new SessionReconditionnement(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             toLieu(request.lieu()),
             request.dateHeureDebut(),
             request.dateHeureFin(),
@@ -94,7 +93,7 @@ public class SessionReconditionnementService {
         UUID sessionId, AnnulerSessionRequest request
     ) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
-        String motifSain = request.motif() != null ? Jsoup.clean(request.motif(), Safelist.none()) : null;
+        String motifSain = Assainissement.nettoyer(request.motif());
         session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, motifSain);
         sessionRepository.save(session);
         eventPublisher.publierAnnulee(sessionId, session.getDateHeureDebut());

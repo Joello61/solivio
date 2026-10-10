@@ -6,8 +6,7 @@ import com.solivio.api.repartition.infrastructure.persistence.CatalogueDenreeRep
 import com.solivio.api.repartition.infrastructure.web.dto.CatalogueDenreeResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.web.Assainissement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,7 +48,7 @@ public class CatalogueDenreeService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void enregistrerSiInconnu(String libelle) {
-        String libelleSain = Jsoup.clean(libelle, Safelist.none());
+        String libelleSain = Assainissement.nettoyer(libelle);
         if (catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
             return;
         }
@@ -63,7 +62,7 @@ public class CatalogueDenreeService {
 
     @Transactional
     public CatalogueDenreeResponse creer(String libelle, UUID acteurId) {
-        String libelleSain = Jsoup.clean(libelle, Safelist.none());
+        String libelleSain = Assainissement.nettoyer(libelle);
         if (catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
             throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);
         }
@@ -77,7 +76,7 @@ public class CatalogueDenreeService {
         CatalogueDenree denree = catalogueRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Denree catalogue introuvable : " + id));
 
-        String libelleSain = Jsoup.clean(newLibelle, Safelist.none());
+        String libelleSain = Assainissement.nettoyer(newLibelle);
         boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(libelleSain);
         if (libelleChange && catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
             throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);

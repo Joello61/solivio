@@ -1,8 +1,5 @@
 package com.solivio.api.distribution.application;
 
-import com.solivio.api.shared.lieu.LieuResponse;
-import com.solivio.api.shared.lieu.LieuRequest;
-import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
@@ -17,12 +14,14 @@ import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.temps.HorlogeAssociation;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,27 +34,33 @@ public class DistributionService {
     private final CreneauRepository creneauRepository;
     private final DistributionEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final HorlogeAssociation horloge;
 
     public DistributionService(
         DistributionRepository distributionRepository,
         CreneauRepository creneauRepository,
         DistributionEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        HorlogeAssociation horloge
     ) {
         this.distributionRepository = distributionRepository;
         this.creneauRepository = creneauRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.horloge = horloge;
     }
 
     public DistributionResponse creer(CreateDistributionRequest request, String emailCreateur) {
-        validerCreneaux(request);
-        PersonneQueryPort.PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
+        if (request.date().isBefore(horloge.aujourdhui())) {
+            throw new IllegalArgumentException("La date de la distribution est deja passee.");
+        }
         ModeCreneauDistribution mode = parseModeCreneauDistribution(request.modeCreneau());
+        validerCreneaux(request, mode);
+        PersonneQueryPort.PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
 
         Distribution distribution = new Distribution(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             toLieu(request.lieu()),
             request.date(),
             request.capaciteBeneficiaires(),
@@ -83,7 +88,7 @@ public class DistributionService {
 
     public DistributionResponse demarrer(UUID distributionId) {
         Distribution d = trouverOuEchouer(distributionId);
-        if (d.getDate().isAfter(LocalDate.now())) {
+        if (d.getDate().isAfter(horloge.aujourdhui())) {
             throw new ConflictException(
                 "La distribution ne peut pas etre demarree avant sa date : " + d.getDate()
             );
@@ -103,7 +108,7 @@ public class DistributionService {
 
     public DistributionResponse annuler(UUID distributionId, String motif) {
         Distribution d = trouverOuEchouer(distributionId);
-        String motifSain = motif != null ? Jsoup.clean(motif, Safelist.none()) : null;
+        String motifSain = Assainissement.nettoyer(motif);
         d.transitionnerVers(StatutDistribution.ANNULEE, motifSain);
         distributionRepository.save(d);
         eventPublisher.publierAnnulee(distributionId, d.getDate());
@@ -140,9 +145,12 @@ public class DistributionService {
             .orElseThrow(() -> new NotFoundException("Distribution introuvable : " + distributionId));
     }
 
-    private void validerCreneaux(CreateDistributionRequest request) {
+    private void validerCreneaux(CreateDistributionRequest request, ModeCreneauDistribution mode) {
         if (request.creneaux() == null || request.creneaux().isEmpty()) {
             throw new IllegalArgumentException("Au moins un creneau est requis.");
+        }
+        if (mode == ModeCreneauDistribution.CRENEAU_UNIQUE && request.creneaux().size() > 1) {
+            throw new IllegalArgumentException("Une distribution en creneau unique n'a qu'un seul creneau.");
         }
         for (AjouterCreneauRequest c : request.creneaux()) {
             LocalTime debut = c.heureDebut();
