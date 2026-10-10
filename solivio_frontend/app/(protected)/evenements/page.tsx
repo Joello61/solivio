@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, CalendarDays } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EvenementCard } from "@/components/evenement/EvenementCard";
 import type { EvenementResponse } from "@/types/evenement";
-import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Événements" };
 
@@ -18,20 +17,15 @@ const FILTRES = [
   { label: "Brouillons", statut: "BROUILLON" },
 ] as const;
 
-async function fetchData(cookieHeader: string, statut: string, type: string) {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
+async function fetchData(statut: string, type: string) {
   const qs = new URLSearchParams();
   if (statut) qs.set("statut", statut);
   if (type) qs.set("type", type);
-
-  const [evRes, meRes] = await Promise.all([
-    fetch(`${baseUrl}/api/evenements?${qs}`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
+  const [evenements, me] = await Promise.all([
+    lireServeur<EvenementResponse[]>(`/api/evenements?${qs}`),
+    lireMoi(),
   ]);
-  const evenements = evRes.ok ? ((await evRes.json()) as EvenementResponse[]) : [];
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  return { evenements, me };
+  return { evenements: evenements ?? [], me };
 }
 
 interface Props {
@@ -40,9 +34,7 @@ interface Props {
 
 export default async function EvenementsPage({ searchParams }: Props) {
   const { statut = "", type = "" } = await searchParams;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { evenements, me } = await fetchData(cookieHeader, statut, type);
+  const { evenements, me } = await fetchData(statut, type);
 
   const estGestionnaire =
     me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??

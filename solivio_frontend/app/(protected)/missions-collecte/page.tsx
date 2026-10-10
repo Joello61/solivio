@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, Truck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,22 +19,16 @@ const ONGLETS: { statut: StatutMission | null; label: string }[] = [
   { statut: "ANNULEE", label: "Annulées" },
 ];
 
-async function fetchData(cookieHeader: string, statut?: string): Promise<{
+async function fetchData(statut?: string): Promise<{
   me: MeResponse | null;
   missions: MissionCollecteResponse[];
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-  const qs = statut ? `?statut=${statut}` : "";
-
-  const [meRes, missionsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/missions-collecte${qs}`, { headers, cache: "no-store" }),
+  const qs = statut ? `?statut=${encodeURIComponent(statut)}` : "";
+  const [me, missions] = await Promise.all([
+    lireMoi(),
+    lireServeur<MissionCollecteResponse[]>(`/api/missions-collecte${qs}`),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const missions = missionsRes.ok ? ((await missionsRes.json()) as MissionCollecteResponse[]) : [];
-  return { me, missions };
+  return { me, missions: missions ?? [] };
 }
 
 interface Props {
@@ -43,9 +37,7 @@ interface Props {
 
 export default async function MissionsCollectePage({ searchParams }: Props) {
   const { statut } = await searchParams;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { me, missions } = await fetchData(cookieHeader, statut);
+  const { me, missions } = await fetchData(statut);
 
   const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
 

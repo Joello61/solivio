@@ -5,14 +5,6 @@ import type {
   CreateSessionReconditionnementPayload,
 } from "@/types/reconditionnement";
 
-export function listerSessions(): Promise<SessionReconditionnementResponse[]> {
-  return apiGet<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement");
-}
-
-export function detailSession(id: string): Promise<SessionReconditionnementResponse> {
-  return apiGet<SessionReconditionnementResponse>(`/api/sessions-reconditionnement/${id}`);
-}
-
 export function creerSession(
   payload: CreateSessionReconditionnementPayload
 ): Promise<SessionReconditionnementResponse> {

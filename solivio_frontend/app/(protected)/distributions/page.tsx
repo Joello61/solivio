@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, CalendarX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,32 +10,19 @@ import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Distributions" };
 
-async function fetchMeEtDistributions(cookieHeader: string): Promise<{
+async function fetchMeEtDistributions(): Promise<{
   me: MeResponse | null;
   distributions: DistributionResponse[];
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [meRes, distribRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/distributions`, { headers, cache: "no-store" }),
+  const [me, distributions] = await Promise.all([
+    lireMoi(),
+    lireServeur<DistributionResponse[]>("/api/distributions"),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const distributions = distribRes.ok ? ((await distribRes.json()) as DistributionResponse[]) : [];
-
-  return { me, distributions };
+  return { me, distributions: distributions ?? [] };
 }
 
 export default async function DistributionsPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const { me, distributions } = await fetchMeEtDistributions(cookieHeader);
+  const { me, distributions } = await fetchMeEtDistributions();
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),

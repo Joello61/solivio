@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, AlertCircle } from "lucide-react";
 import { SessionActions } from "@/components/reconditionnement/SessionActions";
@@ -7,7 +8,6 @@ import { StatutBadge } from "@/components/reconditionnement/StatutBadge";
 import { ListeInscritsReco } from "@/components/reconditionnement/ListeInscritsReco";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { SessionReconditionnementResponse, InscriptionReconditionnementResponse } from "@/types/reconditionnement";
-import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Session de reconditionnement" };
 
@@ -22,36 +22,19 @@ function formatDateTime(iso: string): string {
   });
 }
 
-async function fetchData(id: string, cookieHeader: string) {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const h = { Cookie: cookieHeader };
-
-  const [sessionRes, meRes] = await Promise.all([
-    fetch(`${base}/api/sessions-reconditionnement/${id}`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/auth/me`, { headers: h, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [session, me] = await Promise.all([
+    lireServeur<SessionReconditionnementResponse>(`/api/sessions-reconditionnement/${id}`),
+    lireMoi(),
   ]);
+  if (!session) return null;
 
-  if (!sessionRes.ok) return null;
-
-  const session = (await sessionRes.json()) as SessionReconditionnementResponse;
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
-
-  const inscritsRes = estGestionnaire
-    ? await fetch(`${base}/api/sessions-reconditionnement/${id}/inscrits`, {
-        headers: h,
-        cache: "no-store",
-      })
-    : null;
-
-  const inscrits =
-    inscritsRes?.ok
-      ? ((await inscritsRes.json()) as InscriptionReconditionnementResponse[])
-      : [];
-
+  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
+  const inscrits = estGestionnaire
+    ? ((await lireServeur<InscriptionReconditionnementResponse[]>(
+        `/api/sessions-reconditionnement/${id}/inscrits`,
+      )) ?? [])
+    : [];
   return { session, me, inscrits };
 }
 
@@ -61,13 +44,8 @@ export default async function SessionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
 
-  const data = await fetchData(id, cookieHeader);
+  const data = await fetchData(id);
   if (!data) notFound();
 
   const { session, me, inscrits } = data;

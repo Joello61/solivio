@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
 import { StatutBadge } from "@/components/evenement/StatutBadge";
 import { EvenementActions } from "@/components/evenement/EvenementActions";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
-import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Détail événement" };
 
@@ -16,26 +15,14 @@ const LABEL_TYPE: Record<string, string> = {
   AUTRE: "Événement",
 };
 
-async function fetchData(id: string, cookieHeader: string) {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-  const [evRes, meRes] = await Promise.all([
-    fetch(`${baseUrl}/api/evenements/${id}`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [evenement, me] = await Promise.all([
+    lireServeur<EvenementResponse>(`/api/evenements/${id}`),
+    lireMoi(),
   ]);
-  const evenement = evRes.ok ? ((await evRes.json()) as EvenementResponse) : null;
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  let mesParticipations: ParticipationEvenementResponse[] = [];
-  if (me) {
-    const mesEvRes = await fetch(`${baseUrl}/api/evenements/mes-evenements`, {
-      headers,
-      cache: "no-store",
-    });
-    mesParticipations = mesEvRes.ok
-      ? ((await mesEvRes.json()) as ParticipationEvenementResponse[])
-      : [];
-  }
+  const mesParticipations = me
+    ? ((await lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements")) ?? [])
+    : [];
   return { evenement, me, mesParticipations };
 }
 
@@ -45,9 +32,7 @@ interface Props {
 
 export default async function DetailEvenementPage({ params }: Props) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { evenement, me, mesParticipations } = await fetchData(id, cookieHeader);
+  const { evenement, me, mesParticipations } = await fetchData(id);
 
   if (!evenement) notFound();
 

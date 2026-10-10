@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { CalendarDays } from "lucide-react";
 import type { ParticipationEvenementResponse } from "@/types/evenement";
@@ -17,19 +17,12 @@ const COULEUR_PRESENCE: Record<string, string> = {
   ABSENT: "bg-red-100 text-red-700",
 };
 
-async function fetchParticipations(cookieHeader: string): Promise<ParticipationEvenementResponse[]> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const res = await fetch(`${baseUrl}/api/evenements/mes-evenements`, {
-    headers: { Cookie: cookieHeader },
-    cache: "no-store",
-  });
-  return res.ok ? ((await res.json()) as ParticipationEvenementResponse[]) : [];
+async function fetchParticipations(): Promise<ParticipationEvenementResponse[]> {
+  return (await lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements")) ?? [];
 }
 
 export default async function MesEvenementsPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const participations = await fetchParticipations(cookieHeader);
+  const participations = await fetchParticipations();
 
   return (
     <div className="space-y-6">

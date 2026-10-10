@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { lireServeur } from "@/lib/api/serveur";
 import { Truck } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MissionCollecteCard } from "@/components/collecte/MissionCollecteCard";
@@ -7,19 +7,12 @@ import type { MissionCollecteResponse } from "@/types/collecte";
 
 export const metadata: Metadata = { title: "Mes missions collecte" };
 
-async function fetchMesMissions(cookieHeader: string): Promise<MissionCollecteResponse[]> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const res = await fetch(`${baseUrl}/api/missions-collecte/mes-missions`, {
-    headers: { Cookie: cookieHeader },
-    cache: "no-store",
-  });
-  return res.ok ? ((await res.json()) as MissionCollecteResponse[]) : [];
+async function fetchMesMissions(): Promise<MissionCollecteResponse[]> {
+  return (await lireServeur<MissionCollecteResponse[]>("/api/missions-collecte/mes-missions")) ?? [];
 }
 
 export default async function MesMissionsCollectePage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const missions = await fetchMesMissions(cookieHeader);
+  const missions = await fetchMesMissions();
 
   return (
     <div className="space-y-8">

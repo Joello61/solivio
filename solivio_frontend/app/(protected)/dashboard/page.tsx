@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
@@ -8,48 +9,24 @@ import type { StatistiquePeriodeResponse } from "@/types/association";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
-async function fetchDashboardData(cookieHeader: string): Promise<{
+async function fetchDashboardData(): Promise<{
   me: MeResponse | null;
   statsMois: StatistiquePeriodeResponse | null;
   statsErreur: boolean;
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
   const now = new Date();
   const debut = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const dernierJour = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const fin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(dernierJour).padStart(2, "0")}`;
 
-  const meRes = await fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" });
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  const estGestionnairePrecheck = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
-
-  let statsMois: StatistiquePeriodeResponse | null = null;
-  let statsErreur = false;
-
-  if (estGestionnairePrecheck) {
-    try {
-      const statsRes = await fetch(
-        `${baseUrl}/api/statistiques/periode?debut=${debut}&fin=${fin}`,
-        { headers, cache: "no-store" },
-      );
-      if (statsRes.ok) {
-        statsMois = (await statsRes.json()) as StatistiquePeriodeResponse;
-      } else {
-        console.error("[dashboard] stats endpoint:", statsRes.status, statsRes.statusText);
-        statsErreur = true;
-      }
-    } catch (err) {
-      console.error("[dashboard] stats fetch failed:", err);
-      statsErreur = true;
-    }
+  const me = await lireMoi();
+  if (!estGestionnaireDistribution(me?.roles ?? [])) {
+    return { me, statsMois: null, statsErreur: false };
   }
-
-  return { me, statsMois, statsErreur };
+  const statsMois = await lireServeur<StatistiquePeriodeResponse>(
+    `/api/statistiques/periode?debut=${debut}&fin=${fin}`,
+  ).catch(() => null);
+  return { me, statsMois, statsErreur: statsMois === null };
 }
 
 interface CarteStatistiqueProps {
@@ -111,13 +88,7 @@ function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
 }
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const { me, statsMois, statsErreur } = await fetchDashboardData(cookieHeader);
+  const { me, statsMois, statsErreur } = await fetchDashboardData();
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),

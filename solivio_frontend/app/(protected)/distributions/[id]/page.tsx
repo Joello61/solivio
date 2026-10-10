@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -32,46 +32,28 @@ import type { StatistiqueDistributionResponse } from "@/types/association";
 
 export const metadata: Metadata = { title: "Détail distribution" };
 
-async function fetchData(
-  id: string,
-  cookieHeader: string,
-): Promise<{
+async function fetchData(id: string): Promise<{
   distribution: DistributionResponse | null;
   me: MeResponse | null;
   inscrits: InscriptionResponse[];
   mesInscriptions: InscriptionResponse[];
   stats: StatistiqueDistributionResponse | null;
 }> {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const h = { Cookie: cookieHeader };
-
-  const [distRes, meRes] = await Promise.all([
-    fetch(`${base}/api/distributions/${id}`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/auth/me`, { headers: h, cache: "no-store" }),
+  const [distribution, me] = await Promise.all([
+    lireServeur<DistributionResponse>(`/api/distributions/${id}`),
+    lireMoi(),
   ]);
-
-  if (!distRes.ok) return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null };
-
-  const distribution = (await distRes.json()) as DistributionResponse;
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
+  if (!distribution) return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null };
 
   const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
-
-  const [inscritsRes, mesRes, statsRes] = await Promise.all([
-    estGestionnaire
-      ? fetch(`${base}/api/distributions/${id}/inscriptions`, { headers: h, cache: "no-store" })
-      : Promise.resolve(null),
-    fetch(`${base}/api/distributions/${id}/inscriptions/mes`, { headers: h, cache: "no-store" }),
+  const [inscrits, mesInscriptions, stats] = await Promise.all([
+    estGestionnaire ? lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions`) : null,
+    lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions/mes`),
     estGestionnaire && distribution.statut === "TERMINEE"
-      ? fetch(`${base}/api/statistiques/distributions/${id}`, { headers: h, cache: "no-store" })
-      : Promise.resolve(null),
+      ? lireServeur<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${id}`)
+      : null,
   ]);
-
-  const inscrits = inscritsRes?.ok ? ((await inscritsRes.json()) as InscriptionResponse[]) : [];
-  const mesInscriptions = mesRes?.ok ? ((await mesRes.json()) as InscriptionResponse[]) : [];
-  const stats = statsRes?.ok ? ((await statsRes.json()) as StatistiqueDistributionResponse) : null;
-
-  return { distribution, me, inscrits, mesInscriptions, stats };
+  return { distribution, me, inscrits: inscrits ?? [], mesInscriptions: mesInscriptions ?? [], stats };
 }
 
 interface PageProps {
@@ -80,13 +62,8 @@ interface PageProps {
 
 export default async function DistributionDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
 
-  const { distribution, me, inscrits, mesInscriptions, stats } = await fetchData(id, cookieHeader);
+  const { distribution, me, inscrits, mesInscriptions, stats } = await fetchData(id);
 
   if (!distribution) notFound();
 

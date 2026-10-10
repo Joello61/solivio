@@ -1,37 +1,24 @@
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { GestionMembres } from "@/components/association/GestionMembres";
 import type { MembreResponse } from "@/types/association";
 import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Membres de l'association" };
 
-async function fetchMembresEtMe(cookieHeader: string): Promise<{
+async function fetchMembresEtMe(): Promise<{
   membres: MembreResponse[];
   me: MeResponse | null;
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [membresRes, meRes] = await Promise.all([
-    fetch(`${baseUrl}/api/association/membres`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
+  const [membres, me] = await Promise.all([
+    lireServeur<MembreResponse[]>("/api/association/membres"),
+    lireMoi(),
   ]);
-
-  const membres = membresRes.ok ? ((await membresRes.json()) as MembreResponse[]) : [];
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  return { membres, me };
+  return { membres: membres ?? [], me };
 }
 
 export default async function MembresPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const { membres, me } = await fetchMembresEtMe(cookieHeader);
+  const { membres, me } = await fetchMembresEtMe();
 
   return (
     <div className="space-y-8">

@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireServeur } from "@/lib/api/serveur";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, Package } from "lucide-react";
@@ -9,22 +9,13 @@ import type { DistributionResponse, DenreeResponse, DotationResponse } from "@/t
 
 export const metadata: Metadata = { title: "Répartition des denrées" };
 
-async function fetchData(id: string, cookieHeader: string) {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const h = { Cookie: cookieHeader };
-
-  const [distribRes, denreesRes, dotationRes] = await Promise.all([
-    fetch(`${base}/api/distributions/${id}`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/distributions/${id}/denrees`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/distributions/${id}/repartition`, { headers: h, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [distribution, denrees, dotation] = await Promise.all([
+    lireServeur<DistributionResponse>(`/api/distributions/${id}`),
+    lireServeur<DenreeResponse[]>(`/api/distributions/${id}/denrees`),
+    lireServeur<DotationResponse>(`/api/distributions/${id}/repartition`),
   ]);
-
-  if (!distribRes.ok || !denreesRes.ok || !dotationRes.ok) return null;
-
-  const distribution = (await distribRes.json()) as DistributionResponse;
-  const denrees = (await denreesRes.json()) as DenreeResponse[];
-  const dotation = (await dotationRes.json()) as DotationResponse;
-
+  if (!distribution || !denrees || !dotation) return null;
   return { distribution, denrees, dotation };
 }
 
@@ -34,13 +25,8 @@ interface PageProps {
 
 export default async function RepartitionPage({ params }: PageProps) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
 
-  const data = await fetchData(id, cookieHeader);
+  const data = await fetchData(id);
   if (!data) notFound();
 
   const modifiable =

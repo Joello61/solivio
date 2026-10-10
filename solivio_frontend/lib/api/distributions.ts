@@ -14,14 +14,6 @@ import type {
   PointageAdHocResponse,
 } from "@/types/distribution";
 
-export function listerDistributions(): Promise<DistributionResponse[]> {
-  return apiGet<DistributionResponse[]>("/api/distributions");
-}
-
-export function detailDistribution(id: string): Promise<DistributionResponse> {
-  return apiGet<DistributionResponse>(`/api/distributions/${id}`);
-}
-
 export function creerDistribution(payload: CreateDistributionPayload): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>("/api/distributions", payload);
 }

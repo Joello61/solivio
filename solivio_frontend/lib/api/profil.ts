@@ -1,10 +1,9 @@
-import { apiFetch, apiFetchRaw, apiGet } from "@/lib/api";
+import { apiFetch, apiFetchRaw } from "@/lib/api";
 import type {
   UpdateProfilPayload,
   ProfilBeneficiaireResponse,
   UpdateProfilBeneficiairePayload,
   CompteAdminResponse,
-  PageResponse,
 } from "@/types/profil";
 import type { MeResponse } from "@/types/auth";
 
@@ -24,10 +23,6 @@ export function uploadAvatar(file: File): Promise<MeResponse> {
   });
 }
 
-export function lireProfilBeneficiaire(): Promise<ProfilBeneficiaireResponse> {
-  return apiGet<ProfilBeneficiaireResponse>("/api/me/profil-beneficiaire");
-}
-
 export function mettreAJourProfilBeneficiaire(
   payload: UpdateProfilBeneficiairePayload
 ): Promise<ProfilBeneficiaireResponse> {
@@ -38,20 +33,6 @@ export function mettreAJourProfilBeneficiaire(
 }
 
 // --- Admin ---
-
-export function listerComptesAdmin(
-  q?: string,
-  page = 0,
-  taille = 20
-): Promise<PageResponse<CompteAdminResponse>> {
-  const params = new URLSearchParams({ page: String(page), taille: String(taille) });
-  if (q) params.set("q", q);
-  return apiGet<PageResponse<CompteAdminResponse>>(`/api/admin/comptes?${params}`);
-}
-
-export function lireCompteAdmin(id: string): Promise<CompteAdminResponse> {
-  return apiGet<CompteAdminResponse>(`/api/admin/comptes/${id}`);
-}
 
 export function changerStatutCompte(id: string, actif: boolean): Promise<CompteAdminResponse> {
   return apiFetch<CompteAdminResponse>(`/api/admin/comptes/${id}/statut`, {

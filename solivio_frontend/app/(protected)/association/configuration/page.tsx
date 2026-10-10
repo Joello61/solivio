@@ -1,32 +1,13 @@
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { lireServeur } from "@/lib/api/serveur";
 import { FormulaireConfiguration } from "@/components/association/FormulaireConfiguration";
 import type { AssociationResponse } from "@/types/association";
 
 export const metadata: Metadata = { title: "Configuration de l'association" };
 
-async function fetchAssociation(cookieHeader: string): Promise<AssociationResponse | null> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  try {
-    const res = await fetch(`${baseUrl}/api/association`, {
-      headers: { Cookie: cookieHeader },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return res.json() as Promise<AssociationResponse>;
-  } catch {
-    return null;
-  }
-}
 
 export default async function ConfigurationPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const association = await fetchAssociation(cookieHeader);
+  const association = await lireServeur<AssociationResponse>("/api/association");
 
   if (!association) {
     return (
