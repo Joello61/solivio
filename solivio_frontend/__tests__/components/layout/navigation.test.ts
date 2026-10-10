@@ -76,6 +76,12 @@ describe("NAV_SECTIONS", () => {
     expect(hrefs).not.toContain("/association/configuration");
   });
 
+  it("ne propose pas les missions de collecte au beneficiaire", () => {
+    const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["beneficiaire"])).map((i) => i.href);
+    expect(hrefs).not.toContain("/missions-collecte");
+    expect(hrefs).not.toContain("/mes-missions-collecte");
+  });
+
   it("ne reference plus le role admin supprime", () => {
     NAV_SECTIONS.flatMap((s) => s.items).forEach((item) => {
       expect(item.roles ?? []).not.toContain("admin");

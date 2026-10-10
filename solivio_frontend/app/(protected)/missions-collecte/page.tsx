@@ -47,9 +47,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
   const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
   const { me, missions } = await fetchData(cookieHeader, statut);
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
 
   return (
     <div className="space-y-8">

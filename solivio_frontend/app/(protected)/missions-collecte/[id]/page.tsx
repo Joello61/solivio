@@ -39,11 +39,10 @@ export default async function DetailMissionCollectePage({ params }: Props) {
 
   if (!mission) notFound();
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  ) ?? false;
-  const estBenevole = me?.roles.includes("benevole") ?? false;
-  const meId = me?.id ?? null;
+  // Les missions sont gerees par les responsables ; coordinateurs et responsables
+  // agissent aussi comme benevoles (hierarchie des roles, ADR-011).
+  const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r)) ?? false;
+  const estBenevole = me?.roles.some((r) => ["benevole", "coordinateur", "responsable"].includes(r)) ?? false;
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -143,8 +142,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
       <MissionActions
         missionId={mission.id}
         statut={mission.statut}
-        benevoleId={mission.benevoleId}
-        meId={meId}
+        assigneAuLecteur={mission.assigneAuLecteur}
         estGestionnaire={estGestionnaire}
         estBenevole={estBenevole}
       />
