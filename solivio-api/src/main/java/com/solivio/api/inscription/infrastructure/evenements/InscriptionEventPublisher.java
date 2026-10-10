@@ -27,12 +27,14 @@ public class InscriptionEventPublisher {
 
     public void publierConfirmee(Inscription inscription) {
         events.publishEvent(new InscriptionConfirmee(inscription.getId(), inscription.getDistributionId(),
-            inscription.getPersonneId(), inscription.getType().name(), inscription.getCreneauId()));
+            inscription.getPersonneId(), inscription.getType().name(), inscription.getCreneauId(),
+            UUID.randomUUID()));
     }
 
     public void publierPromue(Inscription inscription) {
         events.publishEvent(new InscriptionPromue(inscription.getId(), inscription.getDistributionId(),
-            inscription.getPersonneId(), inscription.getType().name(), inscription.getCreneauId()));
+            inscription.getPersonneId(), inscription.getType().name(), inscription.getCreneauId(),
+            UUID.randomUUID()));
     }
 
     public void publierAnnuleesParDistribution(UUID distributionId, List<Inscription> inscriptions) {
@@ -44,6 +46,6 @@ public class InscriptionEventPublisher {
 
     public void publierDesistementTardifBenevole(Inscription inscription) {
         events.publishEvent(new DesistementTardifBenevole(inscription.getId(),
-            inscription.getDistributionId(), inscription.getPersonneId()));
+            inscription.getDistributionId(), inscription.getPersonneId(), UUID.randomUUID()));
     }
 }

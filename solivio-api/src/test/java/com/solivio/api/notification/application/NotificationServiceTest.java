@@ -9,7 +9,6 @@ import com.solivio.api.notification.domain.Notification;
 import com.solivio.api.notification.domain.StatutNotification;
 import com.solivio.api.notification.domain.TypeEvenementNotification;
 import com.solivio.api.notification.infrastructure.email.NotificationEmailException;
-import com.solivio.api.notification.infrastructure.persistence.NotificationRepository;
 import com.solivio.api.shared.collecte.MissionCollecteQueryPort;
 import com.solivio.api.shared.collecte.MissionCollecteQueryPort.MissionInfo;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
@@ -38,10 +37,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -51,7 +52,7 @@ import static org.mockito.Mockito.when;
 class NotificationServiceTest {
 
     @Mock private NotificationEmailService emailService;
-    @Mock private NotificationRepository notificationRepository;
+    @Mock private NotificationTraceur traceur;
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private DistributionQueryPort distributionQueryPort;
     @Mock private InscriptionQueryPort inscriptionQueryPort;
@@ -70,7 +71,7 @@ class NotificationServiceTest {
     @BeforeEach
     void setUp() {
         service = new NotificationService(
-            emailService, notificationRepository,
+            emailService, traceur,
             personneQueryPort, distributionQueryPort, inscriptionQueryPort,
             sessionReconditionnementQueryPort, missionCollecteQueryPort,
             evenementQueryPort, associationQueryPort
@@ -87,12 +88,12 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
 
-        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null);
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null, UUID.randomUUID());
 
         verify(emailService).envoyerConfirmationInscription(
             eq("marie@example.com"), any(ContexteEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         Notification trace = captor.getValue();
         assertThat(trace.getStatut()).isEqualTo(StatutNotification.ENVOYE);
         assertThat(trace.getTypeEvenement()).isEqualTo(TypeEvenementNotification.CONFIRMATION_INSCRIPTION);
@@ -105,7 +106,7 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
 
-        service.notifierConfirmationInscription(personneId, distributionId, "BENEVOLE", null);
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEVOLE", null, UUID.randomUUID());
 
         ArgumentCaptor<ContexteEmail> captor = ArgumentCaptor.forClass(ContexteEmail.class);
         verify(emailService).envoyerConfirmationInscription(eq("marie@example.com"), captor.capture());
@@ -114,16 +115,18 @@ class NotificationServiceTest {
     }
 
     @Test
-    void notifierConfirmationInscription_echecSMTP_traceEchec() {
+    void notifierConfirmationInscription_echecSMTP_traceEchecEtLeveException() {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
         doThrow(new NotificationEmailException(new RuntimeException("SMTP KO")))
             .when(emailService).envoyerConfirmationInscription(anyString(), any(ContexteEmail.class));
 
-        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null);
+        assertThatThrownBy(() -> service.notifierConfirmationInscription(
+            personneId, distributionId, "BENEFICIAIRE", null, UUID.randomUUID()))
+            .isInstanceOf(NotificationsIncompletesException.class);
 
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getStatut()).isEqualTo(StatutNotification.ECHEC);
         assertThat(captor.getValue().getErreur()).isNotBlank();
     }
@@ -133,12 +136,12 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
 
-        service.notifierPromotionListeAttente(personneId, distributionId, "BENEFICIAIRE", null);
+        service.notifierPromotionListeAttente(personneId, distributionId, "BENEFICIAIRE", null, UUID.randomUUID());
 
         verify(emailService).envoyerPromotionListeAttente(
             eq("marie@example.com"), any(ContexteEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.PROMOTION_LISTE_ATTENTE);
     }
@@ -159,7 +162,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerAnnulationDistribution(eq("a@ex.com"), any(ContexteEmail.class));
         verify(emailService).envoyerAnnulationDistribution(eq("b@ex.com"), any(ContexteEmail.class));
-        verify(notificationRepository, times(2)).save(any(Notification.class));
+        verify(traceur, times(2)).tracer(any(Notification.class));
     }
 
     @Test
@@ -169,7 +172,7 @@ class NotificationServiceTest {
         service.notifierAnnulationDistribution(distributionId, List.of());
 
         verify(emailService, never()).envoyerAnnulationDistribution(anyString(), any());
-        verify(notificationRepository, never()).save(any());
+        verify(traceur, never()).tracer(any());
     }
 
     @Test
@@ -183,7 +186,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerRappelVeille(eq("c@ex.com"), any(ContexteEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement()).isEqualTo(TypeEvenementNotification.RAPPEL_VEILLE);
     }
 
@@ -195,7 +198,7 @@ class NotificationServiceTest {
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
         when(distributionQueryPort.trouverCreneau(creneauId, distributionId)).thenReturn(creneau);
 
-        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", creneauId);
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", creneauId, UUID.randomUUID());
 
         ArgumentCaptor<ContexteEmail> captor = ArgumentCaptor.forClass(ContexteEmail.class);
         verify(emailService).envoyerConfirmationInscription(eq("marie@example.com"), captor.capture());
@@ -210,12 +213,12 @@ class NotificationServiceTest {
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
         when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of(coord));
 
-        service.notifierDesistementTardifBenevole(personneId, distributionId);
+        service.notifierDesistementTardifBenevole(personneId, distributionId, UUID.randomUUID());
 
         verify(emailService).envoyerDesistementTardifBenevole(
             eq("coord@ex.com"), eq("Luc"), eq("Marie"), eq("Dupont"), any(DistributionDetailInfo.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.DESISTEMENT_TARDIF_BENEVOLE);
         assertThat(captor.getValue().getPersonneId()).isEqualTo(coordId);
@@ -234,7 +237,7 @@ class NotificationServiceTest {
         verify(emailService).envoyerConfirmationInscriptionReconditionnement(
             eq("marie@example.com"), any(ContexteReconditionnementEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT);
         assertThat(captor.getValue().getStatut()).isEqualTo(StatutNotification.ENVOYE);
@@ -256,7 +259,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerAnnulationSessionReconditionnement(
             eq("i@ex.com"), any(ContexteReconditionnementEmail.class));
-        verify(notificationRepository).save(any(Notification.class));
+        verify(traceur).tracer(any(Notification.class));
     }
 
     @Test
@@ -271,7 +274,7 @@ class NotificationServiceTest {
         service.notifierAnnulationSessionReconditionnement(sessionId);
 
         verify(emailService, never()).envoyerAnnulationSessionReconditionnement(anyString(), any());
-        verify(notificationRepository, never()).save(any());
+        verify(traceur, never()).tracer(any());
     }
 
     @Test
@@ -288,7 +291,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerCreationMissionCollecte(eq("b1@ex.com"), any(ContexteCollecteEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.CREATION_MISSION_COLLECTE);
     }
@@ -307,7 +310,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerAnnulationMissionCollecte(eq("bev@ex.com"), any(ContexteCollecteEmail.class));
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+        verify(traceur).tracer(captor.capture());
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.ANNULATION_MISSION_COLLECTE);
     }
@@ -317,7 +320,7 @@ class NotificationServiceTest {
         service.notifierAnnulationMissionCollecte(UUID.randomUUID(), null);
 
         verify(emailService, never()).envoyerAnnulationMissionCollecte(anyString(), any());
-        verify(notificationRepository, never()).save(any());
+        verify(traceur, never()).tracer(any());
     }
 
     // --- publication evenement ---
@@ -335,7 +338,7 @@ class NotificationServiceTest {
         service.notifierPublicationEvenement(evenementId);
 
         verify(emailService).envoyerPublicationEvenement(eq("b1@ev.com"), any(ContexteEvenementEmail.class));
-        verify(notificationRepository).save(any(Notification.class));
+        verify(traceur).tracer(any(Notification.class));
     }
 
     @Test
@@ -351,7 +354,7 @@ class NotificationServiceTest {
         service.notifierPublicationEvenement(evenementId);
 
         verify(emailService).envoyerPublicationEvenement(eq("p@ev.com"), any(ContexteEvenementEmail.class));
-        verify(notificationRepository).save(any(Notification.class));
+        verify(traceur).tracer(any(Notification.class));
     }
 
     @Test
@@ -417,7 +420,7 @@ class NotificationServiceTest {
         service.notifierAnnulationEvenement(evenementId);
 
         verify(emailService).envoyerAnnulationEvenement(eq("ins@ev.com"), any(ContexteEvenementEmail.class));
-        verify(notificationRepository).save(any(Notification.class));
+        verify(traceur).tracer(any(Notification.class));
     }
 
     @Test
@@ -489,7 +492,7 @@ class NotificationServiceTest {
 
         verify(emailService).envoyerAnnulationEvenement(eq("bev@ev.com"), any(ContexteEvenementEmail.class));
         verify(emailService).envoyerAnnulationEvenement(eq("ben@ev.com"), any(ContexteEvenementEmail.class));
-        verify(notificationRepository, times(2)).save(any(Notification.class));
+        verify(traceur, times(2)).tracer(any(Notification.class));
     }
 
     @Test
@@ -507,5 +510,87 @@ class NotificationServiceTest {
 
         // meme id dans benevoles et beneficiaires -> un seul email
         verify(emailService, times(1)).envoyerAnnulationEvenement(eq("x@ev.com"), any());
+    }
+
+    // --- idempotence et relance (ADR-003) ---
+
+    @Test
+    void notifierConfirmationInscription_cleDejaEnvoyee_nEnvoieRien() {
+        UUID occurrenceId = UUID.randomUUID();
+        when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(traceur.dejaEnvoyee("CONFIRMATION_INSCRIPTION:" + occurrenceId, personneId)).thenReturn(true);
+
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null, occurrenceId);
+
+        verify(emailService, never()).envoyerConfirmationInscription(anyString(), any());
+        verify(traceur, never()).tracer(any());
+    }
+
+    @Test
+    void notifierConfirmationInscription_publicationAnterieureSansOccurrence_envoieSansCle() {
+        when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+
+        service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null, null);
+
+        verify(traceur).dejaEnvoyee(null, personneId);
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(traceur).tracer(captor.capture());
+        assertThat(captor.getValue().getCleIdempotence()).isNull();
+    }
+
+    @Test
+    void notifierRappelVeille_unEchecSurTrois_traceTousEtLeveException() {
+        DestinataireMail a = new DestinataireMail(UUID.randomUUID(), "a@ex.com", "A", "BENEFICIAIRE", null);
+        DestinataireMail b = new DestinataireMail(UUID.randomUUID(), "b@ex.com", "B", "BENEFICIAIRE", null);
+        DestinataireMail c = new DestinataireMail(UUID.randomUUID(), "c@ex.com", "C", "BENEVOLE", null);
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(inscriptionQueryPort.trouverInscritsConfirmes(distributionId)).thenReturn(List.of(a, b, c));
+        lenient().doThrow(new NotificationEmailException(new RuntimeException("SMTP KO")))
+            .when(emailService).envoyerRappelVeille(eq("b@ex.com"), any());
+
+        assertThatThrownBy(() -> service.notifierRappelVeille(distributionId))
+            .isInstanceOf(NotificationsIncompletesException.class)
+            .hasMessageContaining("1 notification(s) RAPPEL_VEILLE");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(traceur, times(3)).tracer(captor.capture());
+        assertThat(captor.getAllValues()).extracting(Notification::getStatut)
+            .containsExactly(StatutNotification.ENVOYE, StatutNotification.ECHEC, StatutNotification.ENVOYE);
+        assertThat(captor.getAllValues()).extracting(Notification::getCleIdempotence)
+            .containsOnly("RAPPEL_VEILLE:" + distributionId);
+    }
+
+    @Test
+    void notifierRappelVeille_relance_neRenvoieQuAuDestinataireEnEchec() {
+        DestinataireMail servi = new DestinataireMail(UUID.randomUUID(), "a@ex.com", "A", "BENEFICIAIRE", null);
+        DestinataireMail enEchec = new DestinataireMail(UUID.randomUUID(), "b@ex.com", "B", "BENEFICIAIRE", null);
+        String cle = "RAPPEL_VEILLE:" + distributionId;
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(inscriptionQueryPort.trouverInscritsConfirmes(distributionId)).thenReturn(List.of(servi, enEchec));
+        when(traceur.dejaEnvoyee(cle, servi.personneId())).thenReturn(true);
+
+        service.notifierRappelVeille(distributionId);
+
+        verify(emailService, never()).envoyerRappelVeille(eq("a@ex.com"), any());
+        verify(emailService).envoyerRappelVeille(eq("b@ex.com"), any());
+    }
+
+    @Test
+    void notifierAnnulationEvenement_echecDUnInscrit_leveException() {
+        UUID evenementId = UUID.randomUUID();
+        UUID inscritId = UUID.randomUUID();
+        EvenementInfo info = new EvenementInfo(evenementId, "Atelier", ZonedDateTime.now(),
+            null, false, false, null, "OBLIGATOIRE", "Annule");
+        when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
+        when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of(inscritId));
+        when(personneQueryPort.trouverPersonneParId(inscritId))
+            .thenReturn(new PersonneContactInfo(inscritId, "i@ev.com", "Kim", "Blanc"));
+        doThrow(new NotificationEmailException(new RuntimeException("SMTP")))
+            .when(emailService).envoyerAnnulationEvenement(eq("i@ev.com"), any());
+
+        assertThatThrownBy(() -> service.notifierAnnulationEvenement(evenementId))
+            .isInstanceOf(NotificationsIncompletesException.class);
     }
 }

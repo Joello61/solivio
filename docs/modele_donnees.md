@@ -260,7 +260,8 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | canal | énumération | email (V1) ; sms, push réservés pour la V2 |
 | sujet | texte | Objet du message |
 | statut | énumération | envoye, echec |
-| erreur | texte | Détail en cas d'échec |
+| erreur | texte | Détail en cas d'échec, sans adresse email |
+| cle_idempotence | texte | Type de notification et identifiant de l'occurrence (par exemple `RAPPEL_VEILLE:{distribution}`) ; unique par personne parmi les envois réussis. Vide pour l'email libre |
 | date_envoi | date-heure | Horodatage |
 
 > En V1, le contenu des messages est codé en dur (pas de modèles éditables). L'entité `modele_notification` est réservée pour la V2 (section 5).

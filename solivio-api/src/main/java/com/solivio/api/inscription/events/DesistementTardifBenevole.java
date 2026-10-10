@@ -4,5 +4,11 @@ import java.util.UUID;
 
 /**
  * Un benevole se desiste peu avant la distribution : les coordinateurs sont alertes.
+ * occurrenceId : voir InscriptionConfirmee.
  */
-public record DesistementTardifBenevole(UUID inscriptionId, UUID distributionId, UUID personneId) {}
+public record DesistementTardifBenevole(
+    UUID inscriptionId,
+    UUID distributionId,
+    UUID personneId,
+    UUID occurrenceId
+) {}
