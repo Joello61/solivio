@@ -25,6 +25,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testMatch: /public\.spec\.ts/,
     },
+    // Creation de compte de bout en bout : sans session, code lu dans Mailpit.
+    {
+      name: "creation-compte",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /creation-compte\.spec\.ts/,
+    },
     // Tests des parcours proteges. Depend du projet "setup" pour les cookies.
     {
       name: "chromium",
@@ -33,7 +39,7 @@ export default defineConfig({
         storageState: AUTH_STATE_FILE,
       },
       dependencies: ["setup"],
-      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/],
+      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/, /creation-compte\.spec\.ts/],
     },
   ],
 });

@@ -11,9 +11,11 @@ vi.mock("@/lib/auth", () => ({
   getMe: vi.fn(),
 }));
 
+const navigation = vi.hoisted(() => ({ push: vi.fn(), params: new URLSearchParams() }));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: navigation.push, refresh: vi.fn() }),
+  useSearchParams: () => navigation.params,
 }));
 
 vi.mock("next/link", () => ({
@@ -33,6 +35,7 @@ function renderLogin() {
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    navigation.params = new URLSearchParams();
   });
 
   it("affiche les champs email et mot de passe", () => {
@@ -126,6 +129,35 @@ describe("LoginPage", () => {
     });
 
     expect(authLib.login).toHaveBeenCalledWith("alice@example.com", "motdepasse123", false);
+  });
+
+  it("redirige vers la verification si l'email n'est pas verifie", async () => {
+    vi.mocked(authLib.login).mockRejectedValue(
+      Object.assign(new Error("Email non verifie"), { code: "EMAIL_NOT_VERIFIED", status: 403 }),
+    );
+    renderLogin();
+
+    fireEvent.change(screen.getByLabelText(/Adresse email/), {
+      target: { value: "alice+test@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Mot de passe/), {
+      target: { value: "motdepasse123" },
+    });
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole("button", { name: "Se connecter" }).closest("form")!);
+    });
+
+    expect(navigation.push).toHaveBeenCalledWith(
+      "/verify-email?email=alice%2Btest%40example.com&raison=non-verifie",
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("confirme la verification de l'email au retour de la page de code", () => {
+    navigation.params = new URLSearchParams("verified=1");
+    renderLogin();
+    expect(screen.getByRole("status")).toHaveTextContent(/Adresse email verifiee/);
   });
 
   it("coche 'Rester connecte' change l'etat du checkbox", async () => {

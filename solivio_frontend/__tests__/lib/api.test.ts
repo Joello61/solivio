@@ -6,10 +6,12 @@ function mockFetch(responses: Array<{ ok: boolean; status: number; body?: unknow
   return vi.fn().mockImplementation(() => {
     const r = responses[call] ?? responses[responses.length - 1];
     call++;
+    const texte = r.body === undefined ? "" : JSON.stringify(r.body);
     return Promise.resolve({
       ok: r.ok,
       status: r.status,
-      json: () => Promise.resolve(r.body ?? {}),
+      json: () => (texte ? Promise.resolve(JSON.parse(texte)) : Promise.reject(new SyntaxError())),
+      text: () => Promise.resolve(texte),
     });
   });
 }
@@ -37,6 +39,14 @@ describe("apiFetch", () => {
     global.fetch = mockFetch([{ ok: true, status: 204, body: undefined }]);
     const result = await apiFetch<void>("/api/test");
     expect(result).toBeUndefined();
+  });
+
+  it("retourne undefined pour un 201 ou un 200 sans corps", async () => {
+    global.fetch = mockFetch([{ ok: true, status: 201 }]);
+    await expect(apiFetch<void>("/api/auth/register")).resolves.toBeUndefined();
+
+    global.fetch = mockFetch([{ ok: true, status: 200 }]);
+    await expect(apiFetch<void>("/api/test")).resolves.toBeUndefined();
   });
 
   it("leve une erreur avec le message, le code et le request_id du backend", async () => {

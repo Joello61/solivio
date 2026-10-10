@@ -56,6 +56,14 @@ function allerALaConnexion(): void {
   }
 }
 
+// Un succes peut arriver sans corps, et pas seulement en 204 : l'inscription repond
+// 201, le pointage ad hoc et l'email libre 200, sans contenu. response.json() echoue
+// sur un corps vide.
+async function lireCorps<T>(response: Response): Promise<T> {
+  const texte = await response.text();
+  return (texte ? JSON.parse(texte) : undefined) as T;
+}
+
 type ApiErrorBody = {
   error?: { code?: string; message?: string; details?: unknown; request_id?: string };
 };
@@ -94,8 +102,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     if (refreshed) {
       const retryResponse = await fetch(`${API_URL}${path}`, buildInit(init, noCredentials));
       if (retryResponse.ok) {
-        if (retryResponse.status === 204) return undefined as T;
-        return retryResponse.json() as Promise<T>;
+        return lireCorps<T>(retryResponse);
       }
       // Le retry a aussi echoue : on laisse tomber vers la redirection.
     }
@@ -110,11 +117,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     throw parseErrorResponse(body, response.status);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
+  return lireCorps<T>(response);
 }
 
 export function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -140,8 +143,7 @@ export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T
     if (refreshed) {
       const retry = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
       if (retry.ok) {
-        if (retry.status === 204) return undefined as T;
-        return retry.json() as Promise<T>;
+        return lireCorps<T>(retry);
       }
     }
     allerALaConnexion();
@@ -153,6 +155,5 @@ export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T
     throw parseErrorResponse(body, response.status);
   }
 
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  return lireCorps<T>(response);
 }

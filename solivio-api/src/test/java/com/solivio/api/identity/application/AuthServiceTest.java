@@ -11,6 +11,7 @@ import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
+import com.solivio.api.shared.exception.EmailNonVerifieException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -226,7 +227,20 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_emailNonVerifie_refuseApresLeMotDePasseSansEmettreDeJeton() {
+        when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
+        when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
+
+        assertThatThrownBy(() -> service.login("alice@example.com", "password123!", false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
+            .isInstanceOf(EmailNonVerifieException.class);
+        verify(jwtService, org.mockito.Mockito.never())
+            .genererAccessToken(any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean());
+    }
+
+    @Test
     void login_emetUnJetonAvecLeRoleEtProvisionneLaPersonne() throws Exception {
+        compte.setEmailVerifie(true);
         when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
         MembreAssociation membre = new MembreAssociation(compte, "coordinateur");
@@ -247,6 +261,7 @@ class AuthServiceTest {
 
     @Test
     void login_membreSuspendu_emetUnJetonSansRole() throws Exception {
+        compte.setEmailVerifie(true);
         when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
         when(membreRepo.findActifByCompteId(compteId)).thenReturn(Optional.empty());
