@@ -35,7 +35,7 @@ public class InscriptionController {
 
     // Un membre suspendu porte un jeton sans role : il ne peut plus s'inscrire.
     @PostMapping
-    @PreAuthorize("hasAnyRole('BENEFICIAIRE','BENEVOLE','COORDINATEUR','RESPONSABLE','ADMIN')")
+    @PreAuthorize("hasAnyRole('BENEFICIAIRE','BENEVOLE','COORDINATEUR','RESPONSABLE')")
     public ResponseEntity<InscriptionResponse> inscrire(
         @PathVariable UUID distributionId,
         @Valid @RequestBody InscrireRequest request,

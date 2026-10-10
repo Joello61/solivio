@@ -53,7 +53,7 @@ public class EvenementController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> creer(
         @Valid @RequestBody CreateEvenementRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
@@ -69,7 +69,7 @@ public class EvenementController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> modifier(
         @PathVariable UUID id,
         @Valid @RequestBody UpdateEvenementRequest request,
@@ -81,7 +81,7 @@ public class EvenementController {
     }
 
     @PutMapping("/{id}/publier")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> publier(
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
@@ -92,7 +92,7 @@ public class EvenementController {
     }
 
     @PutMapping("/{id}/annuler")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> annuler(
         @PathVariable UUID id,
         @Valid @RequestBody AnnulerEvenementRequest request,

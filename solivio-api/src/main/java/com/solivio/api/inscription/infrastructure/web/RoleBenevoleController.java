@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/distributions/{distributionId}/inscriptions/{inscriptionId}/roles")
-@PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','COORDINATEUR')")
+@PreAuthorize("hasAnyRole('RESPONSABLE','COORDINATEUR')")
 public class RoleBenevoleController {
 
     private final RoleBenevoleService roleBenevoleService;

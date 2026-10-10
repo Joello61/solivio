@@ -59,7 +59,7 @@ class JwtServiceTest {
     void estValide_retourneFalseTokenFalsifie() {
         UUID compteId = UUID.randomUUID();
         String token = jwtService.genererAccessToken(
-            compteId, "eve@example.com", "Evil", "Eve", List.of("admin"), null, false);
+            compteId, "eve@example.com", "Evil", "Eve", List.of("responsable"), null, false);
 
         String tokenFalsifie = token + "tampered";
         assertThat(jwtService.estValide(tokenFalsifie)).isFalse();

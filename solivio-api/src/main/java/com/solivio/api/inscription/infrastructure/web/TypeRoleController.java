@@ -35,14 +35,14 @@ public class TypeRoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','COORDINATEUR')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','COORDINATEUR')")
     public ResponseEntity<TypeRoleResponse> creer(@Valid @RequestBody TypeRoleRequest request) {
         TypeRoleResponse response = typeRoleService.creer(request.libelle(), request.parentId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','COORDINATEUR')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','COORDINATEUR')")
     public ResponseEntity<TypeRoleResponse> modifier(
         @PathVariable UUID id,
         @Valid @RequestBody TypeRoleRequest request
@@ -51,7 +51,7 @@ public class TypeRoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE')")
+    @PreAuthorize("hasRole('RESPONSABLE')")
     public ResponseEntity<Void> archiver(@PathVariable UUID id) {
         typeRoleService.archiver(id);
         return ResponseEntity.noContent().build();

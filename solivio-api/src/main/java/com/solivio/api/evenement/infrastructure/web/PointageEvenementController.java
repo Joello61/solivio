@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/evenements/{id}/pointage")
-@PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','ADMIN','SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
 public class PointageEvenementController {
 
     private final ParticipationEvenementService participationService;

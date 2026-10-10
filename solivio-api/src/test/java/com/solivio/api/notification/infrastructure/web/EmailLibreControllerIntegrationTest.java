@@ -32,7 +32,7 @@ class EmailLibreControllerIntegrationTest {
 
     private MockMvc mockMvc;
     private Association association;
-    private String tokenAdmin;
+    private String tokenResponsable;
     private String tokenBenevole;
 
     private static final String TENANT = "email-libre-test";
@@ -46,8 +46,8 @@ class EmailLibreControllerIntegrationTest {
             "INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
             personneAdminId, "Admin", "Test", "admin@el.com");
 
-        tokenAdmin = jwtService.genererAccessToken(
-            UUID.randomUUID(), "admin@el.com", "Admin", "Test", List.of("admin"), null, false
+        tokenResponsable = jwtService.genererAccessToken(
+            UUID.randomUUID(), "admin@el.com", "Admin", "Test", List.of("responsable"), null, false
         );
         tokenBenevole = jwtService.genererAccessToken(
             UUID.randomUUID(), "ben@el.com", "Ben", "Test", List.of("benevole"), null, false
@@ -61,9 +61,9 @@ class EmailLibreControllerIntegrationTest {
     }
 
     @Test
-    void envoyerEmailLibre_retourne200AvecAdmin() throws Exception {
+    void envoyerEmailLibre_retourne200AvecResponsable() throws Exception {
         mockMvc.perform(post("/api/notifications/email-libre")
-                .cookie(new Cookie("access_token", tokenAdmin))
+                .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
@@ -93,7 +93,7 @@ class EmailLibreControllerIntegrationTest {
     @Test
     void envoyerEmailLibre_retourne400SiSujetManquant() throws Exception {
         mockMvc.perform(post("/api/notifications/email-libre")
-                .cookie(new Cookie("access_token", tokenAdmin))
+                .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
@@ -107,7 +107,7 @@ class EmailLibreControllerIntegrationTest {
     @Test
     void envoyerEmailLibre_retourne400SiCibleManquante() throws Exception {
         mockMvc.perform(post("/api/notifications/email-libre")
-                .cookie(new Cookie("access_token", tokenAdmin))
+                .cookie(new Cookie("access_token", tokenResponsable))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {

@@ -45,13 +45,13 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/association/configuration",
         label: "Configuration",
         icon: SlidersHorizontal,
-        roles: ["coordinateur", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
       },
       {
         href: "/association/membres",
         label: "Membres",
         icon: Users,
-        roles: ["coordinateur", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
       },
       {
         href: "/association/catalogue-denrees",
@@ -68,7 +68,7 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/notifications/email-libre",
         label: "Email aux membres",
         icon: Mail,
-        roles: ["admin", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
       },
       {
         href: "/admin/utilisateurs",

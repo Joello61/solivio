@@ -89,7 +89,7 @@ L'ancien découpage entre un registre global et des données par association est
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | compte | référence | Le compte, unique |
-| role | énumération | admin, responsable, coordinateur, benevole, beneficiaire |
+| role | énumération | responsable, coordinateur, benevole, beneficiaire (hiérarchie : responsable > coordinateur > benevole, ADR-011) |
 | coordo_type | texte | Sous-type libre d'un coordinateur (ex : coordo_sec) |
 | statut | énumération | actif, suspendu, invite_en_attente |
 | invite_par | référence | Compte qui a invité, optionnel |
@@ -228,7 +228,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | type_role | référence | Entrée du catalogue (optionnel) |
 | libelle_libre | texte | Libellé ad hoc si pas de catalogue (optionnel) |
 
-> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par admin, responsable ou coordinateur après l'inscription du bénévole.
+> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par un responsable ou un coordinateur après l'inscription du bénévole.
 
 ### 4.4 Répartition des denrées
 

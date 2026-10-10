@@ -45,7 +45,7 @@ export default async function EvenementsPage({ searchParams }: Props) {
   const { evenements, me } = await fetchData(cookieHeader, statut, type);
 
   const estGestionnaire =
-    me?.roles.some((r) => ["admin", "coordinateur", "responsable", "super_admin"].includes(r)) ??
+    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
     false;
 
   return (

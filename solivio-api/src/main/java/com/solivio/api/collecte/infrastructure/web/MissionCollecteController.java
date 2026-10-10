@@ -47,7 +47,7 @@ public class MissionCollecteController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<MissionCollecteResponse> creer(
         @Valid @RequestBody CreateMissionCollecteRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
@@ -63,7 +63,7 @@ public class MissionCollecteController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<MissionCollecteResponse> modifier(
         @PathVariable UUID id,
         @Valid @RequestBody UpdateMissionCollecteRequest request,
@@ -75,7 +75,7 @@ public class MissionCollecteController {
     }
 
     @PutMapping("/{id}/annuler")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN','BENEVOLE')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN','BENEVOLE')")
     public ResponseEntity<MissionCollecteResponse> annuler(
         @PathVariable UUID id,
         @Valid @RequestBody AnnulerMissionRequest request,
@@ -110,7 +110,7 @@ public class MissionCollecteController {
     }
 
     @PutMapping("/{id}/valider-collecte")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<MissionCollecteResponse> validerCollecte(
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user

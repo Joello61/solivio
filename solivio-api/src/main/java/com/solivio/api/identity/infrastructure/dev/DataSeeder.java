@@ -70,9 +70,6 @@ public class DataSeeder implements CommandLineRunner {
         creerCompte("superadmin", hash, "Admin", "Super", null, null, true);
         rapport.add("Super admin   : superadmin" + DOMAINE);
 
-        creerCompte("admin", hash, "Admin", "Linkee", "admin", null, false);
-        rapport.add("Admin         : admin" + DOMAINE);
-
         for (int i = 1; i <= 3; i++) {
             creerCompte("resp" + i, hash, "Resp" + i, "Linkee", "responsable", null, false);
         }

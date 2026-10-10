@@ -34,7 +34,7 @@ public class InvitationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'RESPONSABLE')")
+    @PreAuthorize("hasRole('RESPONSABLE')")
     public ResponseEntity<Map<String, String>> inviter(
             @Valid @RequestBody InviterMembreRequest request,
             @AuthenticationPrincipal SolivioUserDetails userDetails) {

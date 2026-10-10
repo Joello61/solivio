@@ -15,17 +15,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { MeResponse } from "@/types/auth";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
+import { ROLE_LABELS } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Mon compte" };
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  admin: "Administrateur",
-  responsable: "Responsable",
-  coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
-};
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
