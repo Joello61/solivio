@@ -1,5 +1,6 @@
 package com.solivio.api.identity.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -23,17 +24,20 @@ public class AdminCompteService {
     private final MembreAssociationRepository membreRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final GardeMembres garde;
+    private final AuditService auditService;
 
     public AdminCompteService(
         CompteRepository compteRepository,
         MembreAssociationRepository membreRepository,
         RefreshTokenRepository refreshTokenRepository,
-        GardeMembres garde
+        GardeMembres garde,
+        AuditService auditService
     ) {
         this.compteRepository = compteRepository;
         this.membreRepository = membreRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.garde = garde;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -66,6 +70,7 @@ public class AdminCompteService {
             // Revoquer toutes les sessions actives lors de la desactivation.
             refreshTokenRepository.revoquerTousParCompte(id);
         }
+        auditService.tracer(acteurCompteId, actif ? "COMPTE_ACTIVE" : "COMPTE_DESACTIVE", "compte", id);
         return toResponse(compteRepository.save(compte));
     }
 
@@ -76,6 +81,7 @@ public class AdminCompteService {
         Compte compte = compteRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Compte introuvable : " + id));
         compte.setSuperAdmin(superAdmin);
+        auditService.tracer(acteurCompteId, "SUPER_ADMIN_MODIFIE", "compte", id);
         return toResponse(compteRepository.save(compte));
     }
 
@@ -87,6 +93,7 @@ public class AdminCompteService {
         garde.garderUnResponsable(id);
         refreshTokenRepository.revoquerTousParCompte(id);
         compteRepository.delete(compte);
+        auditService.tracer(acteurCompteId, "COMPTE_SUPPRIME", "compte", id);
     }
 
     private CompteAdminResponse toResponse(Compte compte) {

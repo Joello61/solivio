@@ -1,5 +1,6 @@
 package com.solivio.api.identity.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -33,6 +34,7 @@ class AdminCompteServiceTest {
     @Mock private MembreAssociationRepository membreRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private GardeMembres garde;
+    @Mock private AuditService auditService;
 
     private AdminCompteService service;
     private UUID compteId;
@@ -41,7 +43,7 @@ class AdminCompteServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AdminCompteService(compteRepository, membreRepository, refreshTokenRepository, garde);
+        service = new AdminCompteService(compteRepository, membreRepository, refreshTokenRepository, garde, auditService);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
     }

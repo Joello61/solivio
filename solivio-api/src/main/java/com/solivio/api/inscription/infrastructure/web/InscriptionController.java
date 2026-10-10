@@ -1,6 +1,5 @@
 package com.solivio.api.inscription.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscrireRequest;
@@ -26,11 +25,9 @@ import java.util.UUID;
 public class InscriptionController {
 
     private final InscriptionService inscriptionService;
-    private final AuditService auditService;
 
-    public InscriptionController(InscriptionService inscriptionService, AuditService auditService) {
+    public InscriptionController(InscriptionService inscriptionService) {
         this.inscriptionService = inscriptionService;
-        this.auditService = auditService;
     }
 
     // Un membre suspendu porte un jeton sans role : il ne peut plus s'inscrire.
@@ -48,7 +45,6 @@ public class InscriptionController {
             request.creneauId(),
             user.roles()
         );
-        auditService.tracer(user.getCompteId(), "INSCRIPTION_CREEE", "inscription", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -75,7 +71,6 @@ public class InscriptionController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         inscriptionService.desinscrire(distributionId, inscriptionId, user.getUsername());
-        auditService.tracer(user.getCompteId(), "INSCRIPTION_ANNULEE", "inscription", inscriptionId);
         return ResponseEntity.noContent().build();
     }
 }

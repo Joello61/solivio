@@ -1,5 +1,6 @@
 package com.solivio.api.identity.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.events.PersonneEffacee;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
@@ -36,6 +37,7 @@ public class EffacementService {
     private final GardeMembres garde;
     private final ApplicationEventPublisher events;
     private final Clock clock;
+    private final AuditService auditService;
 
     public EffacementService(
         CompteRepository compteRepository,
@@ -46,7 +48,8 @@ public class EffacementService {
         AvatarService avatarService,
         GardeMembres garde,
         ApplicationEventPublisher events,
-        Clock clock
+        Clock clock,
+        AuditService auditService
     ) {
         this.compteRepository = compteRepository;
         this.personneRepository = personneRepository;
@@ -57,6 +60,7 @@ public class EffacementService {
         this.garde = garde;
         this.events = events;
         this.clock = clock;
+        this.auditService = auditService;
     }
 
     public void effacer(UUID compteId) {
@@ -76,5 +80,6 @@ public class EffacementService {
         refreshTokenRepository.revoquerTousParCompte(compteId);
         compteRepository.delete(compte);
         avatarService.supprimerAvatar(compteId);
+        auditService.tracer("DONNEES_EFFACEES", "compte", compteId);
     }
 }

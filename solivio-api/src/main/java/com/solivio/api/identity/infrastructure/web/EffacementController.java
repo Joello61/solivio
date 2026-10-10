@@ -1,6 +1,5 @@
 package com.solivio.api.identity.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.application.AuthService;
 import com.solivio.api.identity.application.EffacementService;
@@ -23,19 +22,15 @@ import java.util.UUID;
 @RestController
 public class EffacementController {
 
-    private static final String ACTION = "DONNEES_EFFACEES";
-
     private final EffacementService effacementService;
     private final AuthService authService;
     private final GardeMembres garde;
-    private final AuditService auditService;
 
     public EffacementController(EffacementService effacementService, AuthService authService,
-                                GardeMembres garde, AuditService auditService) {
+                                GardeMembres garde) {
         this.effacementService = effacementService;
         this.authService = authService;
         this.garde = garde;
-        this.auditService = auditService;
     }
 
     @DeleteMapping("/api/me")
@@ -45,7 +40,6 @@ public class EffacementController {
         HttpServletResponse response
     ) {
         effacementService.effacer(user.getCompteId());
-        auditService.tracer(user.getCompteId(), ACTION, "compte", user.getCompteId());
         authService.supprimerCookies(response);
         return ResponseEntity.noContent().build();
     }
@@ -59,7 +53,6 @@ public class EffacementController {
         // Pour ses propres donnees, le super admin passe par DELETE /api/me.
         garde.interdireSurSoi(user.getCompteId(), id);
         effacementService.effacer(id);
-        auditService.tracer(user.getCompteId(), ACTION, "compte", id);
         return ResponseEntity.noContent().build();
     }
 }

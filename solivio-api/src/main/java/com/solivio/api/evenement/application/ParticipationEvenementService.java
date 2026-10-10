@@ -1,5 +1,6 @@
 package com.solivio.api.evenement.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.domain.Evenement;
 import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.ParticipationEvenement;
@@ -28,15 +29,18 @@ public class ParticipationEvenementService {
     private final EvenementRepository evenementRepository;
     private final ParticipationEvenementRepository participationRepository;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public ParticipationEvenementService(
         EvenementRepository evenementRepository,
         ParticipationEvenementRepository participationRepository,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.evenementRepository = evenementRepository;
         this.participationRepository = participationRepository;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     /**
@@ -66,6 +70,7 @@ public class ParticipationEvenementService {
         ParticipationEvenement participation =
             new ParticipationEvenement(evenementId, personne.id(), role);
         participationRepository.save(participation);
+        auditService.tracer("EVENEMENT_INSCRIPTION", "evenement", evenementId);
         return toResponse(participation, evenement, personne.nom() + " " + personne.prenom());
     }
 
@@ -79,6 +84,7 @@ public class ParticipationEvenementService {
         if (lesMinnes.isEmpty()) {
             throw new NotFoundException("Vous n'etes pas inscrit a cet evenement");
         }
+        auditService.tracer("EVENEMENT_DESINSCRIPTION", "evenement", evenementId);
         participationRepository.deleteAll(lesMinnes);
     }
 
@@ -131,6 +137,7 @@ public class ParticipationEvenementService {
             .orElseThrow(() -> new NotFoundException("Participation introuvable"));
         participation.setPresence(PresenceEvenement.valueOf(presenceStr.toUpperCase()));
         participationRepository.save(participation);
+        auditService.tracer("EVENEMENT_POINTAGE", "participation_evenement", participationId);
         try {
             PersonneContactInfo info = personneQueryPort.trouverPersonneParId(participation.getPersonneId());
             return toResponse(participation, evenement, info.nom() + " " + info.prenom());

@@ -1,6 +1,5 @@
 package com.solivio.api.identity.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.application.AdminCompteService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.CompteAdminResponse;
@@ -28,11 +27,9 @@ import java.util.UUID;
 public class AdminCompteController {
 
     private final AdminCompteService adminCompteService;
-    private final AuditService auditService;
 
-    public AdminCompteController(AdminCompteService adminCompteService, AuditService auditService) {
+    public AdminCompteController(AdminCompteService adminCompteService) {
         this.adminCompteService = adminCompteService;
-        this.auditService = auditService;
     }
 
     @GetMapping
@@ -57,8 +54,6 @@ public class AdminCompteController {
     ) {
         CompteAdminResponse response = adminCompteService.mettreAJourStatut(
             id, request.actif(), userDetails.getCompteId());
-        String action = request.actif() ? "COMPTE_ACTIVE" : "COMPTE_DESACTIVE";
-        auditService.tracer(userDetails.getCompteId(), action, "compte", id);
         return ResponseEntity.ok(response);
     }
 
@@ -70,7 +65,6 @@ public class AdminCompteController {
     ) {
         CompteAdminResponse response = adminCompteService.mettreAJourSuperAdmin(
             id, request.superAdmin(), userDetails.getCompteId());
-        auditService.tracer(userDetails.getCompteId(), "SUPER_ADMIN_MODIFIE", "compte", id);
         return ResponseEntity.ok(response);
     }
 
@@ -80,7 +74,6 @@ public class AdminCompteController {
         @AuthenticationPrincipal SolivioUserDetails userDetails
     ) {
         adminCompteService.supprimer(id, userDetails.getCompteId());
-        auditService.tracer(userDetails.getCompteId(), "COMPTE_SUPPRIME", "compte", id);
         return ResponseEntity.noContent().build();
     }
 }

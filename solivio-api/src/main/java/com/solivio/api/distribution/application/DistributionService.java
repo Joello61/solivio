@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
@@ -35,19 +36,22 @@ public class DistributionService {
     private final DistributionEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
     private final HorlogeAssociation horloge;
+    private final AuditService auditService;
 
     public DistributionService(
         DistributionRepository distributionRepository,
         CreneauRepository creneauRepository,
         DistributionEventPublisher eventPublisher,
         PersonneQueryPort personneQueryPort,
-        HorlogeAssociation horloge
+        HorlogeAssociation horloge,
+        AuditService auditService
     ) {
         this.distributionRepository = distributionRepository;
         this.creneauRepository = creneauRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
         this.horloge = horloge;
+        this.auditService = auditService;
     }
 
     public DistributionResponse creer(CreateDistributionRequest request, String emailCreateur) {
@@ -76,6 +80,7 @@ public class DistributionService {
             ))
             .toList();
 
+        auditService.tracer("DISTRIBUTION_CREEE", "distribution", distribution.getId());
         return toResponse(distribution, creneaux);
     }
 
@@ -83,6 +88,7 @@ public class DistributionService {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
+        auditService.tracer("DISTRIBUTION_PUBLIEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
@@ -94,6 +100,7 @@ public class DistributionService {
             );
         }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
+        auditService.tracer("DISTRIBUTION_DEMARREE", "distribution", distributionId);
         return toResponse(distributionRepository.save(d),
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
@@ -103,6 +110,7 @@ public class DistributionService {
         d.transitionnerVers(StatutDistribution.TERMINEE, null);
         distributionRepository.save(d);
         eventPublisher.publierTerminee(distributionId, d.getDate());
+        auditService.tracer("DISTRIBUTION_TERMINEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
@@ -112,6 +120,7 @@ public class DistributionService {
         d.transitionnerVers(StatutDistribution.ANNULEE, motifSain);
         distributionRepository.save(d);
         eventPublisher.publierAnnulee(distributionId, d.getDate());
+        auditService.tracer("DISTRIBUTION_ANNULEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 

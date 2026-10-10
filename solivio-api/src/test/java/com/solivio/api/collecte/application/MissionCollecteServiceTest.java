@@ -1,5 +1,6 @@
 package com.solivio.api.collecte.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
 import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
@@ -37,6 +38,7 @@ class MissionCollecteServiceTest {
     @Mock private MissionCollecteRepository missionRepository;
     @Mock private CollecteEventPublisher eventPublisher;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AuditService auditService;
 
     private MissionCollecteService service;
     private UUID missionId;
@@ -46,7 +48,7 @@ class MissionCollecteServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MissionCollecteService(missionRepository, eventPublisher, personneQueryPort);
+        service = new MissionCollecteService(missionRepository, eventPublisher, personneQueryPort, auditService);
         missionId = UUID.randomUUID();
         creeParId = UUID.randomUUID();
         benevoleId = UUID.randomUUID();

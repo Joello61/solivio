@@ -1,6 +1,5 @@
 package com.solivio.api.identity.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.application.MembreService;
 import com.solivio.api.identity.infrastructure.web.dto.MembreResponse;
@@ -30,18 +29,14 @@ import java.util.UUID;
 public class MembreController {
 
     private final MembreService membreService;
-    private final AuditService auditService;
 
-    public MembreController(MembreService membreService, AuditService auditService) {
+    public MembreController(MembreService membreService) {
         this.membreService = membreService;
-        this.auditService = auditService;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<List<MembreResponse>> listerMembres(
-        @AuthenticationPrincipal SolivioUserDetails user
-    ) {
+    public ResponseEntity<List<MembreResponse>> listerMembres() {
         return ResponseEntity.ok(membreService.lister());
     }
 
@@ -54,7 +49,6 @@ public class MembreController {
     ) {
         MembreResponse response =
             membreService.mettreAJourRole(compteId, request, user.getCompteId());
-        auditService.tracer(user.getCompteId(), "ROLE_MEMBRE_MODIFIE", "compte", compteId);
         return ResponseEntity.ok(response);
     }
 
@@ -66,8 +60,6 @@ public class MembreController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MembreResponse response = membreService.changerStatut(compteId, request.statut(), user.getCompteId());
-        String action = "suspendu".equals(request.statut()) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
-        auditService.tracer(user.getCompteId(), action, "compte", compteId);
         return ResponseEntity.ok(response);
     }
 
@@ -78,7 +70,6 @@ public class MembreController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         membreService.suspendre(compteId, user.getCompteId());
-        auditService.tracer(user.getCompteId(), "MEMBRE_SUSPENDU", "compte", compteId);
         return ResponseEntity.noContent().build();
     }
 }

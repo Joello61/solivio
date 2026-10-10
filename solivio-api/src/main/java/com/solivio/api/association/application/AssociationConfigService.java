@@ -4,6 +4,7 @@ import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +17,11 @@ import java.time.ZoneId;
 public class AssociationConfigService {
 
     private final AssociationRepository associationRepository;
+    private final AuditService auditService;
 
-    public AssociationConfigService(AssociationRepository associationRepository) {
+    public AssociationConfigService(AssociationRepository associationRepository, AuditService auditService) {
         this.associationRepository = associationRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +60,7 @@ public class AssociationConfigService {
         if (request.contactTelephone() != null) {
             asso.setContactTelephone(request.contactTelephone());
         }
+        auditService.tracer("ASSOCIATION_MODIFIEE", "association", asso.getId());
         return toResponse(associationRepository.save(asso));
     }
 

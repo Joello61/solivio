@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.events.PersonneEffacee;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
@@ -47,6 +48,7 @@ public class InscriptionService {
     private final InscriptionEventPublisher eventPublisher;
     private final VerrouDistribution verrouDistribution;
     private final HorlogeAssociation horloge;
+    private final AuditService auditService;
 
     public InscriptionService(
         InscriptionRepository inscriptionRepository,
@@ -55,7 +57,8 @@ public class InscriptionService {
         AssociationQueryPort associationQueryPort,
         InscriptionEventPublisher eventPublisher,
         VerrouDistribution verrouDistribution,
-        HorlogeAssociation horloge
+        HorlogeAssociation horloge,
+        AuditService auditService
     ) {
         this.inscriptionRepository = inscriptionRepository;
         this.distributionQueryPort = distributionQueryPort;
@@ -64,6 +67,7 @@ public class InscriptionService {
         this.eventPublisher = eventPublisher;
         this.verrouDistribution = verrouDistribution;
         this.horloge = horloge;
+        this.auditService = auditService;
     }
 
     public InscriptionResponse inscrire(
@@ -135,6 +139,7 @@ public class InscriptionService {
             eventPublisher.publierConfirmee(inscription);
         }
 
+        auditService.tracer("INSCRIPTION_CREEE", "inscription", inscription.getId());
         return toResponse(inscription);
     }
 
@@ -178,6 +183,7 @@ public class InscriptionService {
         if (etaitConfirmee) {
             promouvoirSuivantEnAttente(distrib, inscription.getType());
         }
+        auditService.tracer("INSCRIPTION_ANNULEE", "inscription", inscriptionId);
     }
 
     // RGPD : les inscriptions copient nom et prenom, anonymises comme la personne.
@@ -226,6 +232,7 @@ public class InscriptionService {
         StatutPresence statutPresence = parsePresence(statutPresenceStr);
         inscription.pointer(statutPresence, pointeur.id());
         inscriptionRepository.save(inscription);
+        auditService.tracer("POINTAGE", "inscription", inscriptionId);
         return toResponse(inscription);
     }
 

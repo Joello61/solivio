@@ -1,6 +1,7 @@
 package com.solivio.api.association.application;
 
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
+import com.solivio.api.audit.application.AuditService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,19 +39,24 @@ public class AssociationExportService {
     private final AssociationConfigService configService;
     private final JdbcTemplate jdbcTemplate;
     private final JsonMapper jsonMapper;
+    private final AuditService auditService;
 
     public AssociationExportService(
         AssociationConfigService configService,
         JdbcTemplate jdbcTemplate,
-        JsonMapper jsonMapper
+        JsonMapper jsonMapper,
+        AuditService auditService
     ) {
         this.configService = configService;
         this.jdbcTemplate = jdbcTemplate;
         this.jsonMapper = jsonMapper;
+        this.auditService = auditService;
     }
 
-    @Transactional(readOnly = true)
+    // Lecture et ecriture : l'export, qui contient les profils beneficiaires, est trace.
+    @Transactional
     public byte[] exporterEnZip() {
+        auditService.tracer("EXPORT_DONNEES", "association", null);
         return construireZip(configService.lire());
     }
 

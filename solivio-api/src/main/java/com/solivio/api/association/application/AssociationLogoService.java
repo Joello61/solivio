@@ -3,6 +3,7 @@ package com.solivio.api.association.application;
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
+import com.solivio.api.audit.application.AuditService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,11 +49,13 @@ public class AssociationLogoService {
     private final AssociationRepository associationRepository;
     private final AssociationConfigService configService;
     private final Path logosDir;
+    private final AuditService auditService;
 
     public AssociationLogoService(
         AssociationRepository associationRepository,
         AssociationConfigService configService,
-        @Value("${solivio.uploads.logos-dir}") String logosDirPath
+        @Value("${solivio.uploads.logos-dir}") String logosDirPath,
+        AuditService auditService
     ) {
         this.associationRepository = associationRepository;
         this.configService = configService;
@@ -62,6 +65,7 @@ public class AssociationLogoService {
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de creer le repertoire logos : " + logosDirPath, e);
         }
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -82,6 +86,7 @@ public class AssociationLogoService {
         asso.setLogoUrl(URL_LOGO);
         associationRepository.save(asso);
 
+        auditService.tracer("LOGO_MODIFIE", "association", asso.getId());
         log.debug("Logo enregistre : {}", destination);
         return configService.lire();
     }

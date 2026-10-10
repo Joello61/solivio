@@ -1,6 +1,5 @@
 package com.solivio.api.inscription.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.InscriptionService;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
@@ -27,11 +26,9 @@ import java.util.UUID;
 public class PointageController {
 
     private final InscriptionService inscriptionService;
-    private final AuditService auditService;
 
-    public PointageController(InscriptionService inscriptionService, AuditService auditService) {
+    public PointageController(InscriptionService inscriptionService) {
         this.inscriptionService = inscriptionService;
-        this.auditService = auditService;
     }
 
     // Recherche par nom/prenom. Aucune donnee sensible (profil_beneficiaire) n'est retournee (RG5).
@@ -56,7 +53,6 @@ public class PointageController {
         InscriptionResponse response = inscriptionService.pointer(
             distributionId, inscriptionId, request.presence(), user.getUsername(), estGestionnaire(user)
         );
-        auditService.tracer(user.getCompteId(), "POINTAGE", "inscription", inscriptionId);
         return ResponseEntity.ok(response);
     }
 

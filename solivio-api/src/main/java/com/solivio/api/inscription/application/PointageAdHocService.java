@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.PointageAdHoc;
 import com.solivio.api.inscription.domain.StatutInscription;
@@ -32,19 +33,22 @@ public class PointageAdHocService {
     private final PersonneQueryPort personneQueryPort;
     private final DistributionQueryPort distributionQueryPort;
     private final InvitationPort invitationPort;
+    private final AuditService auditService;
 
     public PointageAdHocService(
         PointageAdHocRepository adHocRepository,
         InscriptionRepository inscriptionRepository,
         PersonneQueryPort personneQueryPort,
         DistributionQueryPort distributionQueryPort,
-        InvitationPort invitationPort
+        InvitationPort invitationPort,
+        AuditService auditService
     ) {
         this.adHocRepository = adHocRepository;
         this.inscriptionRepository = inscriptionRepository;
         this.personneQueryPort = personneQueryPort;
         this.distributionQueryPort = distributionQueryPort;
         this.invitationPort = invitationPort;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -91,6 +95,7 @@ public class PointageAdHocService {
 
         inscription.pointer(StatutPresence.PRESENT, pointeur.id());
         inscriptionRepository.save(inscription);
+        auditService.tracer("AJOUT_BENEVOLE_AD_HOC", "distribution", distributionId);
 
         return new PointageInfoResponse(
             inscription.getId(),
@@ -114,6 +119,7 @@ public class PointageAdHocService {
 
         String emailNormalise = (email != null && !email.isBlank()) ? email.trim() : null;
         PointageAdHoc adHoc = new PointageAdHoc(distributionId, nom.trim(), prenom.trim(), emailNormalise, role);
+        auditService.tracer("AJOUT_VISITEUR_AD_HOC", "distribution", distributionId);
         return toResponse(adHocRepository.save(adHoc));
     }
 
@@ -140,6 +146,7 @@ public class PointageAdHocService {
 
         adHoc.setInvitationEnvoyee(true);
         adHocRepository.save(adHoc);
+        auditService.tracer(compteIdInvitant, "INVITATION_VISITEUR_AD_HOC", "pointage_ad_hoc", adHocId);
     }
 
     private void verifierDistributionActive(UUID distributionId) {

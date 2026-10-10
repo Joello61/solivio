@@ -1,6 +1,5 @@
 package com.solivio.api.evenement.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.application.ParticipationEvenementService;
 import com.solivio.api.evenement.domain.RoleParticipation;
 import com.solivio.api.evenement.infrastructure.web.dto.ParticipationEvenementResponse;
@@ -27,14 +26,11 @@ import java.util.UUID;
 public class ParticipationEvenementController {
 
     private final ParticipationEvenementService participationService;
-    private final AuditService auditService;
 
     public ParticipationEvenementController(
-        ParticipationEvenementService participationService,
-        AuditService auditService
+        ParticipationEvenementService participationService
     ) {
         this.participationService = participationService;
-        this.auditService = auditService;
     }
 
     @PostMapping
@@ -49,7 +45,6 @@ public class ParticipationEvenementController {
         RoleParticipation role = RoleParticipation.valueOf(request.role().toUpperCase());
         ParticipationEvenementResponse response =
             participationService.inscrire(id, user.getUsername(), role, roles);
-        auditService.tracer(user.getCompteId(), "EVENEMENT_INSCRIPTION", "evenement", id);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -59,7 +54,6 @@ public class ParticipationEvenementController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         participationService.seDesinscrire(id, user.getUsername());
-        auditService.tracer(user.getCompteId(), "EVENEMENT_DESINSCRIPTION", "evenement", id);
         return ResponseEntity.noContent().build();
     }
 
