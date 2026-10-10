@@ -15,6 +15,7 @@ import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -59,8 +61,12 @@ public class InscriptionService {
         UUID distributionId,
         String emailInscrit,
         String typeStr,
-        UUID creneauId
+        UUID creneauId,
+        Set<String> rolesUtilisateur
     ) {
+        TypeInscription type = parseType(typeStr);
+        verifierRolePourType(type, rolesUtilisateur);
+
         DistributionQueryPort.DistributionInfo distrib =
             distributionQueryPort.trouverDistribution(distributionId);
 
@@ -70,7 +76,6 @@ public class InscriptionService {
             );
         }
 
-        TypeInscription type = parseType(typeStr);
         PersonneQueryPort.PersonneInfo personne = personneQueryPort.trouverPersonne(emailInscrit);
 
         Optional<Inscription> existante = inscriptionRepository
@@ -124,18 +129,27 @@ public class InscriptionService {
         return toResponse(inscription);
     }
 
-    public void desinscrire(UUID inscriptionId, String emailDemandeur) {
-        Inscription inscription = trouverOuEchouer(inscriptionId);
+    // Spec 4.5 : chacun gere ses propres inscriptions, y compris face a un coordinateur.
+    // Une inscription d'autrui repond comme une inscription inexistante.
+    public void desinscrire(UUID distributionId, UUID inscriptionId, String emailDemandeur) {
+        Inscription inscription = trouverOuEchouer(inscriptionId, distributionId);
         PersonneQueryPort.PersonneInfo demandeur = personneQueryPort.trouverPersonne(emailDemandeur);
-
-        boolean estProprietaire = inscription.getPersonneId().equals(demandeur.id());
-        if (!estProprietaire) {
-            // La verification de role (coordinateur) est faite dans le controller via @PreAuthorize.
-            // Ici on laisse passer si le controller autorise l'appel.
+        if (!inscription.getPersonneId().equals(demandeur.id())) {
+            throw inscriptionIntrouvable();
         }
 
         if (inscription.getStatut() == StatutInscription.ANNULEE) {
             throw new ConflictException("Cette inscription est deja annulee.");
+        }
+        if (inscription.getPresence() != StatutPresence.NON_POINTE) {
+            throw new ConflictException("Desinscription impossible : votre presence a deja ete pointee.");
+        }
+        DistributionQueryPort.DistributionInfo distrib =
+            distributionQueryPort.trouverDistribution(distributionId);
+        if ("TERMINEE".equals(distrib.statut()) || "ANNULEE".equals(distrib.statut())) {
+            throw new ConflictException(
+                "Desinscription impossible : la distribution est " + distrib.statut().toLowerCase()
+            );
         }
 
         boolean etaitConfirmee = inscription.getStatut() == StatutInscription.CONFIRMEE;
@@ -145,8 +159,6 @@ public class InscriptionService {
 
         // Alerte desistement tardif : benevole confirme se desinscrit dans les 24h avant la distribution.
         if (etaitConfirmee && estBenevole) {
-            DistributionQueryPort.DistributionInfo distrib =
-                distributionQueryPort.trouverDistribution(inscription.getDistributionId());
             if (distrib.date() != null && !distrib.date().isAfter(LocalDate.now().plusDays(1))) {
                 eventPublisher.publierDesistementTardifBenevole(inscription);
             }
@@ -163,13 +175,17 @@ public class InscriptionService {
     }
 
     public InscriptionResponse pointer(
+        UUID distributionId,
         UUID inscriptionId,
         String statutPresenceStr,
-        String emailPointeur
+        String emailPointeur,
+        boolean gestionnaire
     ) {
-        Inscription inscription = trouverOuEchouer(inscriptionId);
+        PersonneQueryPort.PersonneInfo pointeur = personneQueryPort.trouverPersonne(emailPointeur);
+        verifierAccesPointage(distributionId, pointeur.id(), gestionnaire);
+        Inscription inscription = trouverOuEchouer(inscriptionId, distributionId);
         DistributionQueryPort.DistributionInfo distrib =
-            distributionQueryPort.trouverDistribution(inscription.getDistributionId());
+            distributionQueryPort.trouverDistribution(distributionId);
 
         if (!"EN_COURS".equals(distrib.statut()) && !"TERMINEE".equals(distrib.statut())) {
             throw new ConflictException(
@@ -180,7 +196,6 @@ public class InscriptionService {
             throw new ConflictException("Seules les inscriptions confirmees peuvent etre pointees.");
         }
 
-        PersonneQueryPort.PersonneInfo pointeur = personneQueryPort.trouverPersonne(emailPointeur);
         StatutPresence statutPresence = parsePresence(statutPresenceStr);
         inscription.pointer(statutPresence, pointeur.id());
         inscriptionRepository.save(inscription);
@@ -269,7 +284,16 @@ public class InscriptionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PointageInfoResponse> rechercherPourPointage(UUID distributionId, String recherche) {
+    public List<PointageInfoResponse> rechercherPourPointage(
+        UUID distributionId,
+        String recherche,
+        String emailPointeur,
+        boolean gestionnaire
+    ) {
+        if (!gestionnaire) {
+            PersonneQueryPort.PersonneInfo pointeur = personneQueryPort.trouverPersonne(emailPointeur);
+            verifierAccesPointage(distributionId, pointeur.id(), false);
+        }
         String terme = recherche == null ? "" : recherche.trim();
         return inscriptionRepository.rechercherPourPointage(distributionId, terme)
             .stream()
@@ -345,9 +369,38 @@ public class InscriptionService {
         });
     }
 
-    private Inscription trouverOuEchouer(UUID inscriptionId) {
-        return inscriptionRepository.findById(inscriptionId)
-            .orElseThrow(() -> new NotFoundException("Inscription introuvable : " + inscriptionId));
+    private Inscription trouverOuEchouer(UUID inscriptionId, UUID distributionId) {
+        return inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId)
+            .orElseThrow(InscriptionService::inscriptionIntrouvable);
+    }
+
+    private static NotFoundException inscriptionIntrouvable() {
+        return new NotFoundException("Inscription introuvable.");
+    }
+
+    // Un benevole ne pointe que les distributions ou il est lui-meme inscrit et confirme.
+    private void verifierAccesPointage(UUID distributionId, UUID pointeurId, boolean gestionnaire) {
+        if (gestionnaire) {
+            return;
+        }
+        boolean benevoleInscrit = inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+            distributionId, pointeurId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE
+        );
+        if (!benevoleInscrit) {
+            throw new NotFoundException("Distribution introuvable.");
+        }
+    }
+
+    // Une inscription beneficiaire est reservee au role beneficiaire ; une inscription
+    // benevole est ouverte a tous les autres roles (decision du 10 octobre 2026).
+    private static void verifierRolePourType(TypeInscription type, Set<String> roles) {
+        boolean beneficiaire = roles.contains("beneficiaire");
+        boolean autorise = type == TypeInscription.BENEFICIAIRE ? beneficiaire : !beneficiaire;
+        if (!autorise) {
+            throw new AuthorizationDeniedException(type == TypeInscription.BENEFICIAIRE
+                ? "Seuls les beneficiaires peuvent s'inscrire en tant que beneficiaire."
+                : "Les beneficiaires ne peuvent pas s'inscrire en tant que benevole.");
+        }
     }
 
     private TypeInscription parseType(String typeStr) {

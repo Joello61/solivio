@@ -16,6 +16,12 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
 
     List<Inscription> findByDistributionIdOrderByNomAscPrenomAsc(UUID distributionId);
 
+    Optional<Inscription> findByIdAndDistributionId(UUID id, UUID distributionId);
+
+    boolean existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+        UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut
+    );
+
     List<Inscription> findByDistributionIdAndStatutOrderByNomAscPrenomAsc(
         UUID distributionId, StatutInscription statut
     );

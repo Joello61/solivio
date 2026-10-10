@@ -33,7 +33,9 @@ public class InscriptionController {
         this.auditService = auditService;
     }
 
+    // Un membre suspendu porte un jeton sans role : il ne peut plus s'inscrire.
     @PostMapping
+    @PreAuthorize("hasAnyRole('BENEFICIAIRE','BENEVOLE','COORDINATEUR','RESPONSABLE','ADMIN')")
     public ResponseEntity<InscriptionResponse> inscrire(
         @PathVariable UUID distributionId,
         @Valid @RequestBody InscrireRequest request,
@@ -43,7 +45,8 @@ public class InscriptionController {
             distributionId,
             user.getUsername(),
             request.type(),
-            request.creneauId()
+            request.creneauId(),
+            user.roles()
         );
         auditService.tracer(user.getCompteId(), "INSCRIPTION_CREEE", "inscription", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -71,7 +74,7 @@ public class InscriptionController {
         @PathVariable UUID inscriptionId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        inscriptionService.desinscrire(inscriptionId, user.getUsername());
+        inscriptionService.desinscrire(distributionId, inscriptionId, user.getUsername());
         auditService.tracer(user.getCompteId(), "INSCRIPTION_ANNULEE", "inscription", inscriptionId);
         return ResponseEntity.noContent().build();
     }

@@ -113,11 +113,10 @@ class InscriptionControllerIntegrationTest {
     }
 
     @Test
-    void pointage_retourneListe200PourBenevole() throws Exception {
+    void pointage_retourne404PourBenevoleSansPersonneNiInscription() throws Exception {
         mockMvc.perform(get("/api/distributions/00000000-0000-0000-0000-000000000000/pointage")
                 .cookie(new Cookie("access_token", tokenBenevole))
                 .param("q", ""))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+            .andExpect(status().isNotFound());
     }
 }
