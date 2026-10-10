@@ -48,17 +48,20 @@ public class DistributionController {
     public ResponseEntity<List<DistributionResponse>> lister(
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        boolean voitTout = user.aUnDesRoles("coordinateur", "responsable", "super_admin");
-        List<DistributionResponse> liste = voitTout
+        List<DistributionResponse> liste = estGestionnaire(user)
             ? distributionService.lister()
             : distributionService.listerPubliees();
         return ResponseEntity.ok(liste);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DistributionResponse> detail(@PathVariable UUID id) {
-        return ResponseEntity.ok(distributionService.detail(id));
+    public ResponseEntity<DistributionResponse> detail(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(distributionService.detail(id, estGestionnaire(user)));
     }
+
 
     @PostMapping("/{id}/publier")
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
@@ -103,5 +106,9 @@ public class DistributionController {
         DistributionResponse response = distributionService.annuler(id, request.motif());
         auditService.tracer(user.getCompteId(), "DISTRIBUTION_ANNULEE", "distribution", id);
         return ResponseEntity.ok(response);
+    }
+
+    private static boolean estGestionnaire(SolivioUserDetails user) {
+        return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }
 }

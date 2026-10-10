@@ -38,12 +38,15 @@ public class MissionCollecteController {
         this.auditService = auditService;
     }
 
+    // Reserve aux benevoles, et par la hierarchie aux coordinateurs et responsables.
     @GetMapping
+    @PreAuthorize("hasAnyRole('BENEVOLE','SUPER_ADMIN')")
     public ResponseEntity<List<MissionCollecteResponse>> lister(
-        @RequestParam(required = false) String statut
+        @RequestParam(required = false) String statut,
+        @AuthenticationPrincipal SolivioUserDetails user
     ) {
         StatutMission filtre = statut != null ? StatutMission.valueOf(statut.toUpperCase()) : null;
-        return ResponseEntity.ok(missionService.lister(filtre));
+        return ResponseEntity.ok(missionService.lister(filtre, user.getUsername(), estGestionnaire(user)));
     }
 
     @PostMapping
@@ -58,8 +61,12 @@ public class MissionCollecteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MissionCollecteResponse> detail(@PathVariable UUID id) {
-        return ResponseEntity.ok(missionService.detail(id));
+    @PreAuthorize("hasAnyRole('BENEVOLE','SUPER_ADMIN')")
+    public ResponseEntity<MissionCollecteResponse> detail(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(missionService.detail(id, user.getUsername(), estGestionnaire(user)));
     }
 
     @PutMapping("/{id}")
@@ -82,7 +89,7 @@ public class MissionCollecteController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MissionCollecteResponse response = missionService.annuler(id, request,
-            user.getUsername());
+            user.getUsername(), estGestionnaire(user));
         auditService.tracer(user.getCompteId(), "MISSION_COLLECTE_ANNULEE", "mission_collecte", id);
         return ResponseEntity.ok(response);
     }
@@ -132,9 +139,16 @@ public class MissionCollecteController {
     }
 
     @GetMapping("/mes-missions")
+    @PreAuthorize("hasRole('BENEVOLE')")
     public ResponseEntity<List<MissionCollecteResponse>> mesMissions(
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         return ResponseEntity.ok(missionService.mesMissions(user.getUsername()));
+    }
+
+    // Les missions sont creees et validees par les responsables : eux seuls voient
+    // qui est assigne et peuvent annuler n'importe quelle mission.
+    private static boolean estGestionnaire(SolivioUserDetails user) {
+        return user.aUnDesRoles("responsable", "super_admin");
     }
 }

@@ -30,6 +30,7 @@ export interface MissionCollecteResponse {
   statut: StatutMission;
   benevoleId: string | null;
   benevoleNomComplet: string | null;
+  assigneAuLecteur: boolean;
   datePriseEnCharge: string | null;
   dateCollecteEffectuee: string | null;
   dateDepotValide: string | null;

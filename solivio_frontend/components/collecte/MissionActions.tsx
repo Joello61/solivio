@@ -16,20 +16,20 @@ import type { StatutMission } from "@/types/collecte";
 interface Props {
   missionId: string;
   statut: StatutMission;
-  benevoleId: string | null;
-  meId: string | null;
+  assigneAuLecteur: boolean;
   estGestionnaire: boolean;
   estBenevole: boolean;
 }
 
-export function MissionActions({ missionId, statut, benevoleId, meId, estGestionnaire, estBenevole }: Props) {
+export function MissionActions({ missionId, statut, assigneAuLecteur, estGestionnaire, estBenevole }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [raisonAnnulation, setRaisonAnnulation] = useState("");
   const [showAnnulationForm, setShowAnnulationForm] = useState(false);
 
-  const estAssigne = meId !== null && meId === benevoleId;
+  // Le backend compare a la personne : l'id du compte ne correspond jamais a benevoleId.
+  const estAssigne = assigneAuLecteur;
 
   async function executer(action: string, fn: () => Promise<unknown>) {
     setPending(action);
@@ -49,7 +49,7 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
   const peutLiberer = estBenevole && estAssigne && statut === "PRISE_EN_CHARGE";
   const peutValiderCollecte = estGestionnaire && statut === "PRISE_EN_CHARGE";
   const peutValiderDepot = estBenevole && estAssigne && statut === "COLLECTE_EFFECTUEE";
-  const peutAnnuler = estGestionnaire && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
+  const peutAnnuler = (estGestionnaire || estAssigne) && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
 
   if (!peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
     return null;

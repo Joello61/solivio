@@ -113,4 +113,40 @@ class DistributionControllerIntegrationTest {
                 .cookie(new Cookie("access_token", tokenBeneficiaire)))
             .andExpect(status().isForbidden());
     }
+
+    // I4 : un brouillon n'existe pas pour qui ne gere pas les distributions.
+    @Test
+    void detail_brouillon_introuvablePourUnBeneficiaire() throws Exception {
+        UUID brouillon = insererDistribution("BROUILLON");
+
+        mockMvc.perform(get("/api/distributions/" + brouillon)
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/distributions/" + brouillon)
+                .cookie(new Cookie("access_token", tokenCoordinateur)))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void detail_publiee_visiblePourUnBeneficiaire() throws Exception {
+        UUID publiee = insererDistribution("PUBLIEE");
+
+        mockMvc.perform(get("/api/distributions/" + publiee)
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statut").value("PUBLIEE"));
+    }
+
+    private UUID insererDistribution(String statut) {
+        UUID createur = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Coord', 'Test', ?)",
+            createur, createur + "@test.com");
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update(
+            "INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
+                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE + 7, ?, 10, "
+                + "'CRENEAU_UNIQUE', 'INSCRITS', ?)",
+            id, statut, createur);
+        return id;
+    }
 }

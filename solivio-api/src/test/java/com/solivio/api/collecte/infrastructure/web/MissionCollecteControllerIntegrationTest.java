@@ -204,4 +204,82 @@ class MissionCollecteControllerIntegrationTest {
             .andExpect(jsonPath("$.statut").value("ANNULEE"))
             .andExpect(jsonPath("$.raisonAnnulation").value("Intemperies"));
     }
+
+    // I4 : les missions ne concernent pas les beneficiaires.
+    @Test
+    void lister_refuseUnBeneficiaire() throws Exception {
+        String tokenBeneficiaire = jwtService.genererAccessToken(
+            UUID.randomUUID(), "benef@collecte.com", "Benef", "Test", List.of("beneficiaire"), null, false);
+
+        mockMvc.perform(get("/api/missions-collecte")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+    }
+
+    // I4 : un benevole voit son nom sur sa mission, jamais celui d'un autre.
+    @Test
+    void lister_masqueLeNomDesAutresBenevoles() throws Exception {
+        String missionId = creerMissionPriseParBen();
+        String tokenAutre = tokenAutreBenevole();
+
+        mockMvc.perform(get("/api/missions-collecte/" + missionId)
+                .cookie(new Cookie("access_token", tokenAutre)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.benevoleNomComplet").doesNotExist())
+            .andExpect(jsonPath("$.assigneAuLecteur").value(false));
+        mockMvc.perform(get("/api/missions-collecte")
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].benevoleNomComplet").exists())
+            .andExpect(jsonPath("$[0].assigneAuLecteur").value(true));
+        mockMvc.perform(get("/api/missions-collecte/" + missionId)
+                .cookie(new Cookie("access_token", tokenAdmin)))
+            .andExpect(jsonPath("$.benevoleNomComplet").exists());
+    }
+
+    // I3 : seul le benevole assigne (ou un responsable) annule une mission.
+    @Test
+    void annuler_parUnBenevoleNonAssigne_retourne404() throws Exception {
+        String missionId = creerMissionPriseParBen();
+
+        mockMvc.perform(put("/api/missions-collecte/" + missionId + "/annuler")
+                .cookie(new Cookie("access_token", tokenAutreBenevole()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"raison":"Pas la mienne"}
+                    """))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(put("/api/missions-collecte/" + missionId + "/annuler")
+                .cookie(new Cookie("access_token", tokenBenevole))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"raison":"Empechement"}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statut").value("ANNULEE"));
+    }
+
+    private String creerMissionPriseParBen() throws Exception {
+        String body = mockMvc.perform(post("/api/missions-collecte")
+                .cookie(new Cookie("access_token", tokenAdmin))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"titre":"Collecte","dateHeure":"2026-12-20T09:00:00+01:00"}
+                    """))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        String missionId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+            .readTree(body).get("id").asText();
+        mockMvc.perform(post("/api/missions-collecte/" + missionId + "/prendre")
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isOk());
+        return missionId;
+    }
+
+    private String tokenAutreBenevole() {
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Autre', 'Ben', ?)",
+            UUID.randomUUID(), "autre@collecte.com");
+        return jwtService.genererAccessToken(
+            UUID.randomUUID(), "autre@collecte.com", "Autre", "Ben", List.of("benevole"), null, false);
+    }
 }
