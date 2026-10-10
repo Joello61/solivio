@@ -50,7 +50,7 @@ export function DistributionCard({ distribution, estGestionnaire }: Props) {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Users className="size-4 shrink-0" />
           <span>
-            {distribution.capaciteBeneficiaires} beneficiaires
+            {distribution.capaciteBeneficiaires} bénéficiaires
             {distribution.capaciteBenevoles ? ` - ${distribution.capaciteBenevoles} benevoles` : ""}
           </span>
         </div>

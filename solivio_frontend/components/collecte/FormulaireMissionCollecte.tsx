@@ -108,13 +108,13 @@ export function FormulaireMissionCollecte() {
           </div>
 
           <div className="space-y-1.5">
-            <Label>Lieu de depot</Label>
+            <Label>Lieu de dépôt</Label>
             <APIProvider apiKey={mapsApiKey}>
               <AdresseAutocomplete
                 value={lieuDepot?.adresseFormatee}
                 onSelect={setLieuDepot}
                 onClear={() => setLieuDepot(undefined)}
-                placeholder="Adresse de depot..."
+                placeholder="Adresse de dépôt..."
               />
             </APIProvider>
           </div>
@@ -133,7 +133,7 @@ export function FormulaireMissionCollecte() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="capacitePersonnes">Nombre de benevoles</Label>
+        <Label htmlFor="capacitePersonnes">Nombre de bénévoles</Label>
         <Input
           id="capacitePersonnes"
           type="number"
@@ -145,7 +145,7 @@ export function FormulaireMissionCollecte() {
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner className="mr-2 size-4" /> : null}
-        Creer la mission
+        Créer la mission
       </Button>
     </form>
   );

@@ -51,14 +51,14 @@ describe("GestionComptes", () => {
   // Le backend refuse toute action sur son propre compte (409).
   it("ne propose aucune action sur son propre compte", () => {
     render(<GestionComptes page={pageUnSeulCompte} currentUserId="compte-1" recherche="" currentPage={0} />);
-    expect(screen.queryByRole("button", { name: /Desactiver/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Désactiver/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Supprimer/i })).not.toBeInTheDocument();
     expect(screen.getAllByText("(vous)")[0]).toBeInTheDocument();
   });
 
   it("affiche le message vide si aucun compte", () => {
     render(<GestionComptes page={pageVide} currentUserId="moi" recherche="" currentPage={0} />);
-    expect(screen.getByText(/Aucun compte trouve/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun compte trouvé/)).toBeInTheDocument();
   });
 
   it("affiche la liste des comptes", () => {
@@ -70,13 +70,13 @@ describe("GestionComptes", () => {
 
   it("affiche le role du membre", () => {
     render(<GestionComptes page={pageUnSeulCompte} currentUserId="moi" recherche="" currentPage={0} />);
-    expect(screen.getAllByText("Benevole")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Bénévole")[0]).toBeInTheDocument();
   });
 
   it("signale un membre suspendu", () => {
     const suspendu = { ...compteActif, statutMembre: "suspendu" };
     render(<GestionComptes page={{ ...pageUnSeulCompte, content: [suspendu] }} currentUserId="moi" recherche="" currentPage={0} />);
-    expect(screen.getAllByText("Benevole (suspendu)")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Bénévole (suspendu)")[0]).toBeInTheDocument();
   });
 
   it("affiche le badge Actif pour un compte actif", () => {
@@ -100,7 +100,7 @@ describe("GestionComptes", () => {
 
   it("n'affiche pas la pagination si une seule page", () => {
     render(<GestionComptes page={pageUnSeulCompte} currentUserId="moi" recherche="" currentPage={0} />);
-    expect(screen.queryByRole("button", { name: /Precedent/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Précédent/ })).not.toBeInTheDocument();
   });
 
   it("affiche la pagination si plusieurs pages", () => {
@@ -110,7 +110,7 @@ describe("GestionComptes", () => {
       totalElements: 60,
     };
     render(<GestionComptes page={pagePlusieurs} currentUserId="moi" recherche="" currentPage={1} />);
-    expect(screen.getByRole("button", { name: "Precedent" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
     expect(screen.getByText("Page 2 / 3")).toBeInTheDocument();
   });
@@ -120,13 +120,13 @@ describe("GestionComptes", () => {
     render(<GestionComptes page={pageUnSeulCompte} currentUserId="moi" recherche="" currentPage={0} />);
 
     // Ouvre le dialog via le premier bouton Desactiver (vue mobile)
-    fireEvent.click(screen.getAllByRole("button", { name: /Desactiver/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /Désactiver/i })[0]);
 
     // Attend l'affichage du dialog et confirme l'action
     await waitFor(() => {
-      expect(screen.getByText("Desactiver le compte")).toBeInTheDocument();
+      expect(screen.getByText("Désactiver le compte")).toBeInTheDocument();
     });
-    const boutons = screen.getAllByRole("button", { name: /Desactiver/i });
+    const boutons = screen.getAllByRole("button", { name: /Désactiver/i });
     fireEvent.click(boutons[boutons.length - 1]);
 
     await waitFor(() => {

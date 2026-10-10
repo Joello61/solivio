@@ -135,7 +135,7 @@ export function EvenementActions({
           disabled={pending !== null}
           className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-60"
         >
-          {pending === "desinscrire" ? "Desinscription..." : "Se desinscrire"}
+          {pending === "desinscrire" ? "Desinscription..." : "Se désinscrire"}
         </button>
       )}
 
@@ -144,7 +144,7 @@ export function EvenementActions({
           onClick={() => setShowAnnuler(true)}
           className="w-full rounded-xl border border-destructive/30 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
         >
-          Annuler l&apos;evenement
+          Annuler l&apos;événement
         </button>
       )}
 

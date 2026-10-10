@@ -54,7 +54,7 @@ export default async function DistributionsPage() {
           <h1 className="text-3xl font-bold text-foreground font-display">Distributions</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez et suivez toutes les distributions de l'association."
+              ? "Gérez et suivez toutes les distributions de l'association."
               : "Consultez et inscrivez-vous aux distributions disponibles."}
           </p>
         </div>
@@ -71,10 +71,10 @@ export default async function DistributionsPage() {
         <div className="flex flex-wrap gap-2">
           {[
             { statut: "BROUILLON", label: "Brouillon", cls: "bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
-            { statut: "PUBLIEE",   label: "Publiee",   cls: "bg-primary text-primary-foreground border-transparent" },
+            { statut: "PUBLIEE",   label: "Publiée",   cls: "bg-primary text-primary-foreground border-transparent" },
             { statut: "EN_COURS",  label: "En cours",  cls: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-800/40" },
-            { statut: "TERMINEE",  label: "Terminee",  cls: "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
-            { statut: "ANNULEE",   label: "Annulee",   cls: "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40" },
+            { statut: "TERMINEE",  label: "Terminée",  cls: "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
+            { statut: "ANNULEE",   label: "Annulée",   cls: "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40" },
           ]
             .filter((s) => (nbParStatut[s.statut] ?? 0) > 0)
             .map((s) => (
@@ -97,12 +97,12 @@ export default async function DistributionsPage() {
             title="Aucune distribution"
             description={
               estGestionnaire
-                ? "Aucune distribution n'a ete creee. Commencez par en creer une."
+                ? "Aucune distribution n'a été créée. Commencez par en créer une."
                 : "Aucune distribution n'est disponible pour le moment."
             }
             action={
               estGestionnaire
-                ? { label: "Creer une distribution", href: "/distributions/nouvelle" }
+                ? { label: "Créer une distribution", href: "/distributions/nouvelle" }
                 : undefined
             }
           />

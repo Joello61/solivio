@@ -33,7 +33,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_FUTURE}
       />,
     );
-    expect(screen.getByRole("button", { name: /demarrer/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /démarrer/i })).toBeDisabled();
   });
 
   it("affiche le message d'information quand le demarrage est bloque", () => {
@@ -44,7 +44,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_FUTURE}
       />,
     );
-    expect(screen.getByText(/demarrage sera possible le/i)).toBeInTheDocument();
+    expect(screen.getByText(/démarrage sera possible le/i)).toBeInTheDocument();
   });
 
   it("active le bouton Demarrer si la date est passee", () => {
@@ -55,7 +55,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_PASSEE}
       />,
     );
-    expect(screen.getByRole("button", { name: /demarrer/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /démarrer/i })).not.toBeDisabled();
   });
 
   it("active le bouton Demarrer si la date est aujourd'hui", () => {
@@ -66,7 +66,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_AUJOURD_HUI}
       />,
     );
-    expect(screen.getByRole("button", { name: /demarrer/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /démarrer/i })).not.toBeDisabled();
   });
 
   it("n'affiche pas le message d'information quand le demarrage est possible", () => {
@@ -77,7 +77,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_PASSEE}
       />,
     );
-    expect(screen.queryByText(/demarrage sera possible le/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/démarrage sera possible le/i)).not.toBeInTheDocument();
   });
 
   it("appelle demarrerDistribution et rafraichit apres clic", async () => {
@@ -89,7 +89,7 @@ describe("DistributionActions - garde temporelle sur Demarrer", () => {
         distributionDate={DATE_PASSEE}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /demarrer/i }));
+    await userEvent.click(screen.getByRole("button", { name: /démarrer/i }));
     expect(demarrerDistribution).toHaveBeenCalledWith("id-1");
     expect(mockRefresh).toHaveBeenCalled();
   });

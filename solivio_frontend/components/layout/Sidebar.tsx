@@ -223,7 +223,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
         <button
           onClick={handleLogout}
           disabled={pendingLogout}
-          title={collapsed ? "Se deconnecter" : undefined}
+          title={collapsed ? "Se déconnecter" : undefined}
           className={cn(
             "flex w-full items-center rounded-xl text-sm font-medium",
             "text-muted-foreground hover:bg-destructive/8 hover:text-destructive",
@@ -238,7 +238,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             <LogOut className="h-4 w-4 shrink-0" />
           )}
           {!collapsed && (
-            <span>{pendingLogout ? "Deconnexion..." : "Se deconnecter"}</span>
+            <span>{pendingLogout ? "Deconnexion..." : "Se déconnecter"}</span>
           )}
         </button>
 

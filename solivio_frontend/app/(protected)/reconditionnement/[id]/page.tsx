@@ -97,7 +97,7 @@ export default async function SessionDetailPage({
         <div className="flex items-center gap-2 text-sm">
           <Calendar className="size-4 shrink-0 text-muted-foreground" />
           <span>
-            <span className="font-medium text-foreground">Debut :</span>{" "}
+            <span className="font-medium text-foreground">Début :</span>{" "}
             <span className="text-muted-foreground">{formatDateTime(session.dateHeureDebut)}</span>
           </span>
         </div>

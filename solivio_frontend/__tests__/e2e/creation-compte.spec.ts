@@ -48,11 +48,11 @@ test.describe("Creation de compte", () => {
 
     // 1. Inscription : la page de saisie du code s'affiche.
     await page.goto("/register");
-    await page.getByLabel("Prenom").fill("Camille");
+    await page.getByLabel("Prénom").fill("Camille");
     await page.getByLabel("Nom", { exact: true }).fill("Essai");
     await page.getByLabel("Adresse email").fill(email);
     await page.getByLabel("Mot de passe", { exact: true }).fill(MOT_DE_PASSE);
-    await page.getByRole("button", { name: "Creer mon compte" }).click();
+    await page.getByRole("button", { name: "Créer mon compte" }).click();
 
     await expect(page).toHaveURL(/\/verify-email\?email=/);
     await codeDuDernierEmail(request, email, 1);

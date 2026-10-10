@@ -47,7 +47,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
       setNouveauLibelle("");
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la creation.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors de la création.");
     } finally {
       setPending(false);
     }
@@ -114,7 +114,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
         <Input
           value={nouveauLibelle}
           onChange={(e) => setNouveauLibelle(e.target.value)}
-          placeholder="Nouvelle denree (ex : Pommes de terre)"
+          placeholder="Nouvelle denrée (ex : Pommes de terre)"
           className="flex-1"
           disabled={pending}
         />
@@ -137,7 +137,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="secondary">{denrees.length}</Badge>
             <span className="text-sm text-muted-foreground">
-              denree{denrees.length !== 1 ? "s" : ""}
+              denrée{denrees.length !== 1 ? "s" : ""}
             </span>
           </div>
 
@@ -214,10 +214,10 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
             <AlertDialogMedia className="bg-destructive/10">
               <AlertTriangle className="text-destructive" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer la denree</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer la denrée</AlertDialogTitle>
             <AlertDialogDescription>
-              &quot;{suppressionCible?.libelle}&quot; sera supprimee du catalogue.
-              Cette action est irreversible.
+              &quot;{suppressionCible?.libelle}&quot; sera supprimée du catalogue.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

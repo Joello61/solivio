@@ -105,7 +105,7 @@ export function MissionActions({ missionId, statut, assigneAuLecteur, estGestion
             size="sm"
           >
             {pending === "valider-depot" ? <Spinner className="mr-2 size-4" /> : null}
-            Valider le depot
+            Valider le dépôt
           </Button>
         )}
 

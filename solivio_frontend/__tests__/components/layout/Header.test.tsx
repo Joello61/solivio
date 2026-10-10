@@ -84,7 +84,7 @@ describe("Header", () => {
   it("affiche le bouton Se deconnecter apres ouverture du menu", () => {
     render(<Header user={userBase} />);
     fireEvent.click(screen.getByRole("button", { name: /Alice Dupont/i }));
-    expect(screen.getByRole("button", { name: "Se deconnecter" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Se déconnecter" })).toBeInTheDocument();
   });
 
   it("ferme le menu en recliquant sur le declencheur", () => {

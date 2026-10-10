@@ -35,17 +35,17 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <AuthLayout title="Email envoye">
+      <AuthLayout title="Email envoyé">
         <div className="flex flex-col items-center gap-5 py-2">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/50">
             <CheckCircle className="h-8 w-8 text-primary" />
           </div>
           <div className="text-center space-y-2">
-            <p className="text-base font-semibold text-foreground font-display">Code envoye !</p>
+            <p className="text-base font-semibold text-foreground font-display">Code envoyé !</p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Si un compte est associe a{" "}
               <strong className="text-foreground">{email}</strong>, vous allez recevoir
-              un email avec un code de reinitialisation.
+              un email avec un code de réinitialisation.
             </p>
           </div>
         </div>
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           href={`/reset-password?email=${encodeURIComponent(email)}`}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 h-10 text-sm font-semibold text-primary-foreground shadow-primary hover:opacity-90 active:scale-[0.98] transition-all duration-150"
         >
-          Saisir le code de verification
+          Saisir le code de vérification
           <ArrowRight className="h-4 w-4 shrink-0" />
         </Link>
         <p className="text-center text-sm text-muted-foreground">
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Mot de passe oublie"
-      description="Entrez votre adresse email pour recevoir un code de reinitialisation."
+      description="Entrez votre adresse email pour recevoir un code de réinitialisation."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">

@@ -53,7 +53,7 @@ export default async function MonComptePage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground font-display">Mon compte</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gerer vos informations personnelles et votre photo de profil.
+          Gérer vos informations personnelles et votre photo de profil.
         </p>
       </div>
 
@@ -67,10 +67,10 @@ export default async function MonComptePage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-150">
-              Dossier beneficiaire
+              Dossier bénéficiaire
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Completez votre dossier social pour beneficier des distributions.
+              Complétez votre dossier social pour bénéficier des distributions.
             </p>
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
@@ -91,7 +91,7 @@ export default async function MonComptePage() {
             {/* Roles */}
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Role{user.roles.length > 1 ? "s" : ""}
+                Rôle{user.roles.length > 1 ? "s" : ""}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {user.roles.map((role) => (
@@ -127,7 +127,7 @@ export default async function MonComptePage() {
                       user.emailVerifie ? "text-teal-600 dark:text-teal-400" : "text-amber-600 dark:text-amber-400",
                     ].join(" ")}
                   >
-                    {user.emailVerifie ? "Verifie" : "Non verifie"}
+                    {user.emailVerifie ? "Vérifié" : "Non vérifié"}
                   </p>
                 </div>
               </div>

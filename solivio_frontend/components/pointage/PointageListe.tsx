@@ -160,7 +160,7 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
           )}
           <Input
             className="pl-9"
-            placeholder="Rechercher par nom ou prenom..."
+            placeholder="Rechercher par nom ou prénom..."
             aria-label="Rechercher un inscrit"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
@@ -179,7 +179,7 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
       {!recherchePending && aRecherche && resultats.length === 0 && recherche && (
         <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Aucun inscrit trouve pour &quot;{recherche}&quot;.
+            Aucun inscrit trouvé pour &quot;{recherche}&quot;.
           </p>
         </div>
       )}
@@ -202,7 +202,7 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
                   </p>
                   <div className="flex gap-2">
                     <Badge variant="outline" className="text-xs">
-                      {r.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
+                      {r.type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole"}
                     </Badge>
                     {r.presence !== "NON_POINTE" && (
                       <Badge

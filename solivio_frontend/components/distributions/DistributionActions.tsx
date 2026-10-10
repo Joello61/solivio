@@ -99,13 +99,13 @@ export function DistributionActions({ distributionId, statut, distributionDate }
             onClick={() => executer("demarrer")}
             disabled={pending !== null || estDateFuture}
           >
-            {pending === "demarrer" ? <><Spinner size="sm" /> Demarrage...</> : "Demarrer"}
+            {pending === "demarrer" ? <><Spinner size="sm" /> Démarrage...</> : "Démarrer"}
           </Button>
         )}
 
         {statut === "EN_COURS" && (
           <Button size="sm" onClick={() => executer("terminer")} disabled={pending !== null}>
-            {pending === "terminer" ? <><Spinner size="sm" /> Cloture...</> : "Terminer"}
+            {pending === "terminer" ? <><Spinner size="sm" /> Clôture...</> : "Terminer"}
           </Button>
         )}
 
@@ -122,7 +122,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
 
         {statut === "PUBLIEE" && estDateFuture && (
           <p className="w-full text-xs text-muted-foreground">
-            Le demarrage sera possible le{" "}
+            Le démarrage sera possible le{" "}
             {dateDistrib.toLocaleDateString("fr-FR", {
               weekday: "long",
               day: "numeric",
@@ -141,7 +141,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
             </div>
             <DialogTitle>Annuler la distribution</DialogTitle>
             <DialogDescription>
-              Cette action est irreversible. Les participants inscrits seront notifies.
+              Cette action est irréversible. Les participants inscrits seront notifies.
             </DialogDescription>
           </DialogHeader>
 
@@ -154,7 +154,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
               rows={3}
-              placeholder="Ex : manque de denrees disponibles..."
+              placeholder="Ex : manque de denrées disponibles..."
               className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 resize-none"
               autoFocus
             />

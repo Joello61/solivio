@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { CalendarDays } from "lucide-react";
 import type { ParticipationEvenementResponse } from "@/types/evenement";
 
-export const metadata: Metadata = { title: "Mes evenements" };
+export const metadata: Metadata = { title: "Mes événements" };
 
 const LABEL_ROLE: Record<string, string> = {
   STAFF: "Staff",
@@ -33,14 +33,14 @@ export default async function MesEvenementsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground font-display">Mes evenements</h1>
+      <h1 className="text-3xl font-bold text-foreground font-display">Mes événements</h1>
 
       {participations.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
           <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center">
             <CalendarDays className="size-7 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground">Vous n&apos;etes inscrit a aucun evenement.</p>
+          <p className="text-sm text-muted-foreground">Vous n&apos;êtes inscrit a aucun événement.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -53,10 +53,10 @@ export default async function MesEvenementsPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    {p.personneNomComplet ?? "Evenement"}
+                    {p.personneNomComplet ?? "Événement"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Role : {LABEL_ROLE[p.role] ?? p.role} - Inscrit le{" "}
+                    Rôle : {LABEL_ROLE[p.role] ?? p.role} - Inscrit le{" "}
                     {new Date(p.dateInscription).toLocaleDateString("fr-FR")}
                   </p>
                 </div>

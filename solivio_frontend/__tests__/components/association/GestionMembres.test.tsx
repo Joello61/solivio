@@ -123,6 +123,6 @@ describe("GestionMembres", () => {
       { ...membres[1], statut: "suspendu" },
     ];
     render(<GestionMembres membres={membresSuspendus} currentUserId="user-1" />);
-    expect(screen.getAllByRole("button", { name: /reactiver/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /réactiver/i })[0]).toBeInTheDocument();
   });
 });

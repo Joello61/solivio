@@ -100,7 +100,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               )}
               {!compte.emailVerifie && (
                 <Badge variant="outline" className="text-[11px] text-amber-600 border-amber-300">
-                  Email non verifie
+                  Email non vérifié
                 </Badge>
               )}
             </div>
@@ -131,9 +131,9 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                 }
               >
                 {compte.actif ? (
-                  <><UserX className="h-3.5 w-3.5 mr-1" />Desactiver</>
+                  <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
                 ) : (
-                  <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                  <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                 )}
               </Button>
               <Button
@@ -181,12 +181,12 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               <AlertTriangle className="text-amber-600" />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {compte.actif ? "Desactiver le compte" : "Reactiver le compte"}
+              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera desactive. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera reactive. L'utilisateur pourra a nouveau se connecter.`}
+                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra a nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -195,7 +195,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               variant={compte.actif ? "outline" : "default"}
               onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
             >
-              {compte.actif ? "Desactiver" : "Reactiver"}
+              {compte.actif ? "Désactiver" : "Réactiver"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -217,8 +217,8 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès a l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès a l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -243,8 +243,8 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogMedia>
             <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
             <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprime
-              definitivement. Cette action est irreversible.
+              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
+              définitivement. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -253,7 +253,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               variant="destructive"
               onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
             >
-              Supprimer definitivement
+              Supprimer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -318,7 +318,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             {compte.superAdmin && <Badge variant="secondary">Super admin</Badge>}
             {!compte.emailVerifie && (
               <Badge variant="outline" className="text-amber-600 border-amber-300">
-                Email non verifie
+                Email non vérifié
               </Badge>
             )}
           </div>
@@ -348,9 +348,9 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                   }
                 >
                   {compte.actif ? (
-                    <><UserX className="h-3.5 w-3.5 mr-1" />Desactiver</>
+                    <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
                   ) : (
-                    <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                    <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                   )}
                 </Button>
                 <Button
@@ -399,12 +399,12 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               <AlertTriangle className="text-amber-600" />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {compte.actif ? "Desactiver le compte" : "Reactiver le compte"}
+              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera desactive. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera reactive. L'utilisateur pourra a nouveau se connecter.`}
+                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra a nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -413,7 +413,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               variant={compte.actif ? "outline" : "default"}
               onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
             >
-              {compte.actif ? "Desactiver" : "Reactiver"}
+              {compte.actif ? "Désactiver" : "Réactiver"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -435,8 +435,8 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès a l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès a l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -461,8 +461,8 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogMedia>
             <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
             <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprime
-              definitivement. Cette action est irreversible.
+              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
+              définitivement. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -471,7 +471,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
               variant="destructive"
               onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
             >
-              Supprimer definitivement
+              Supprimer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -531,7 +531,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
               <Input
                 value={recherche}
                 onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Nom, prenom ou email..."
+                placeholder="Nom, prénom ou email..."
                 className="pl-8"
               />
             </div>
@@ -576,7 +576,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
 
       {filtres.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50 dark:bg-neutral-900/50 px-6 py-12 text-center">
-          <p className="text-sm text-muted-foreground">Aucun compte trouve.</p>
+          <p className="text-sm text-muted-foreground">Aucun compte trouvé.</p>
         </div>
       ) : (
         <>
@@ -617,7 +617,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
             onClick={() => naviguerPage(currentPage - 1)}
             disabled={currentPage === 0}
           >
-            Precedent
+            Précédent
           </Button>
           <span className="text-sm text-muted-foreground">
             Page {currentPage + 1} / {page.totalPages}

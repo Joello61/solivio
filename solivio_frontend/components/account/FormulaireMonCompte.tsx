@@ -42,7 +42,7 @@ export function FormulaireMonCompte({ user }: Props) {
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise a jour.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise à jour.");
     } finally {
       setPending(false);
     }
@@ -131,7 +131,7 @@ export function FormulaireMonCompte({ user }: Props) {
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="prenom">Prenom</Label>
+            <Label htmlFor="prenom">Prénom</Label>
             <Input
               id="prenom"
               value={prenom}
@@ -156,12 +156,12 @@ export function FormulaireMonCompte({ user }: Props) {
           <Label htmlFor="email">Email</Label>
           <Input id="email" value={user.email} disabled className="bg-muted/50 cursor-not-allowed" />
           <p className="text-xs text-muted-foreground">
-            L&apos;adresse email ne peut pas etre modifiee ici.
+            L&apos;adresse email ne peut pas être modifiée ici.
           </p>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="telephone">Telephone</Label>
+          <Label htmlFor="telephone">Téléphone</Label>
           <Input
             id="telephone"
             type="tel"

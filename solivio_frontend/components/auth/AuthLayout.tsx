@@ -50,8 +50,8 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
               {[
                 { icon: ClipboardCheck, text: "Inscriptions en un clic, confirmation automatique" },
                 { icon: MapPin, text: "Pointage sur le terrain, meme hors connexion" },
-                { icon: Package, text: "Repartition des denrees calculee instantanement" },
-                { icon: ShieldCheck, text: "Donnees beneficiaires protegees par conception" },
+                { icon: Package, text: "Répartition des denrées calculée instantanement" },
+                { icon: ShieldCheck, text: "Données bénéficiaires protegees par conception" },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-center gap-3">
                   <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 border border-white/20">
@@ -91,7 +91,7 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
             La solidarite,<br />organisee simplement.
           </p>
           <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>
-            Inscriptions, distributions, repartition des denrees.
+            Inscriptions, distributions, répartition des denrées.
           </p>
         </div>
 

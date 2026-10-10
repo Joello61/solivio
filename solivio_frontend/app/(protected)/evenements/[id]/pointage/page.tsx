@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { PointageEvenementClient } from "./PointageEvenementClient";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 
-export const metadata: Metadata = { title: "Pointage evenement" };
+export const metadata: Metadata = { title: "Pointage événement" };
 
 async function fetchData(id: string, cookieHeader: string) {
   const baseUrl = process.env.API_URL ?? "http://localhost:8080";

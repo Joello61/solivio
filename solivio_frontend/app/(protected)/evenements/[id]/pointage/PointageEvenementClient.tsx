@@ -76,7 +76,7 @@ export function PointageEvenementClient({ evenementId, participationsInitiales }
       <div className="rounded-2xl border border-border/60 overflow-hidden">
         {filtrees.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Aucun participant trouve.
+            Aucun participant trouvé.
           </div>
         ) : (
           <ul className="divide-y divide-border/40">

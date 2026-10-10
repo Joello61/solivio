@@ -148,7 +148,7 @@ export default async function DashboardPage() {
           </div>
           {statsErreur ? (
             <div className="rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-5 py-4 text-sm text-muted-foreground">
-              Statistiques indisponibles. Verifiez que le service est accessible.
+              Statistiques indisponibles. Vérifiez que le service est accessible.
             </div>
           ) : statsMois ? (
             <div className="grid gap-4 sm:grid-cols-3">
@@ -160,16 +160,16 @@ export default async function DashboardPage() {
                 couleur="blue"
               />
               <CarteStatistique
-                titre="Beneficiaires servis"
+                titre="Bénéficiaires servis"
                 valeur={statsMois.nbBeneficiairesDistinctsServis}
-                description="beneficiaires distincts"
+                description="bénéficiaires distincts"
                 icon={Heart}
                 couleur="green"
               />
               <CarteStatistique
-                titre="Benevoles mobilises"
+                titre="Bénévoles mobilises"
                 valeur={statsMois.nbBenevolesDistincts}
-                description="benevoles distincts"
+                description="bénévoles distincts"
                 icon={Users}
                 couleur="purple"
               />
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
 
       {/* Acces rapide */}
       <section className="space-y-4">
-        <h2 className="text-base font-semibold text-foreground font-display">Acces rapide</h2>
+        <h2 className="text-base font-semibold text-foreground font-display">Accès rapide</h2>
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           <AccesRapide href="/distributions" icon={Calendar} label="Distributions" />
           <AccesRapide href="/mes-inscriptions" icon={Users} label="Mes inscriptions" />

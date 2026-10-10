@@ -18,14 +18,14 @@ const schema = z
   .object({
     titre: z.string().min(1, "Le titre est requis").max(200),
     description: z.string().optional(),
-    dateHeureDebut: z.string().min(1, "La date/heure de debut est requise"),
+    dateHeureDebut: z.string().min(1, "La date/heure de début est requise"),
     dateHeureFin: z.string().min(1, "La date/heure de fin est requise"),
     capacite: z.string().optional(),
   })
   .refine(
     (d) =>
       !d.dateHeureDebut || !d.dateHeureFin || d.dateHeureFin > d.dateHeureDebut,
-    { message: "La fin doit etre apres le debut", path: ["dateHeureFin"] },
+    { message: "La fin doit être après le début", path: ["dateHeureFin"] },
   );
 
 type FormValues = z.infer<typeof schema>;
@@ -104,7 +104,7 @@ export function FormulaireSession() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="dateHeureDebut">Date et heure de debut *</Label>
+          <Label htmlFor="dateHeureDebut">Date et heure de début *</Label>
           <Input
             id="dateHeureDebut"
             type="datetime-local"
@@ -153,7 +153,7 @@ export function FormulaireSession() {
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner size="sm" className="mr-2" /> : null}
-        Creer la session
+        Créer la session
       </Button>
     </form>
   );

@@ -128,11 +128,11 @@ export function FormulaireEvenement() {
       return;
     }
     if (!form.dateHeureDebut || !form.dateHeureFin) {
-      setErreurStep1("Les dates de debut et de fin sont requises.");
+      setErreurStep1("Les dates de début et de fin sont requises.");
       return;
     }
     if (form.dateHeureFin <= form.dateHeureDebut) {
-      setErreurStep1("La date de fin doit etre apres la date de debut.");
+      setErreurStep1("La date de fin doit être après la date de début.");
       return;
     }
     setErreurStep1(null);
@@ -266,7 +266,7 @@ export function FormulaireEvenement() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="debut">
-                    Debut <span className="text-destructive">*</span>
+                    Début <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="debut"
@@ -317,7 +317,7 @@ export function FormulaireEvenement() {
               {/* Section : Besoin staff */}
               <div className="p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground font-display">
-                  Besoin de staff benevole
+                  Besoin de staff bénévole
                 </h3>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -327,7 +327,7 @@ export function FormulaireEvenement() {
                     className="size-4 rounded accent-primary"
                   />
                   <span className="text-sm text-foreground">
-                    Cet evenement recherche des benevoles staff
+                    Cet événement recherche des bénévoles staff
                   </span>
                 </label>
                 {form.aBesoiNStaff && (
@@ -359,7 +359,7 @@ export function FormulaireEvenement() {
                     className="size-4 rounded accent-primary"
                   />
                   <span className="text-sm text-foreground">
-                    Cet evenement est ouvert aux participants
+                    Cet événement est ouvert aux participants
                   </span>
                 </label>
                 {form.ouvertParticipants && (
@@ -374,8 +374,8 @@ export function FormulaireEvenement() {
                           <SelectValue placeholder="-- Choisir --" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="BENEVOLES">Benevoles uniquement</SelectItem>
-                          <SelectItem value="BENEFICIAIRES">Beneficiaires uniquement</SelectItem>
+                          <SelectItem value="BENEVOLES">Bénévoles uniquement</SelectItem>
+                          <SelectItem value="BENEFICIAIRES">Bénéficiaires uniquement</SelectItem>
                           <SelectItem value="TOUS">Tous</SelectItem>
                         </SelectContent>
                       </Select>
@@ -456,10 +456,10 @@ export function FormulaireEvenement() {
                 <Button type="submit" disabled={pending} className="flex-1">
                   {pending ? (
                     <>
-                      <Spinner size="sm" className="mr-2" /> Creation...
+                      <Spinner size="sm" className="mr-2" /> Création...
                     </>
                   ) : (
-                    "Creer l'evenement"
+                    "Créer l'événement"
                   )}
                 </Button>
               </div>

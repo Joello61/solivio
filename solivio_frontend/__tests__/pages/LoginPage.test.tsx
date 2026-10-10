@@ -56,7 +56,7 @@ describe("LoginPage", () => {
 
   it("affiche le lien d'inscription", () => {
     renderLogin();
-    expect(screen.getByText(/Creer un compte/)).toBeInTheDocument();
+    expect(screen.getByText(/Créer un compte/)).toBeInTheDocument();
   });
 
   it("desactive le bouton pendant la soumission", async () => {
@@ -163,7 +163,7 @@ describe("LoginPage", () => {
   it("coche 'Rester connecte' change l'etat du checkbox", async () => {
     const user = userEvent.setup();
     renderLogin();
-    const checkbox = screen.getByRole("checkbox", { name: /Rester connecte/ });
+    const checkbox = screen.getByRole("checkbox", { name: /Rester connecté/ });
     expect(checkbox).not.toBeChecked();
     await user.click(checkbox);
     expect(checkbox).toBeChecked();

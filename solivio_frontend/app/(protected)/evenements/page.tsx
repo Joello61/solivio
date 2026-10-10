@@ -8,7 +8,7 @@ import { EvenementCard } from "@/components/evenement/EvenementCard";
 import type { EvenementResponse } from "@/types/evenement";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Evenements" };
+export const metadata: Metadata = { title: "Événements" };
 
 const FILTRES = [
   { label: "Tous", statut: "" },
@@ -52,17 +52,17 @@ export default async function EvenementsPage({ searchParams }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground font-display">Evenements</h1>
+          <h1 className="text-3xl font-bold text-foreground font-display">Événements</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez et suivez tous les evenements de l'association."
+              ? "Gérez et suivez tous les événements de l'association."
               : "Consultez et inscrivez-vous aux evenements disponibles."}
           </p>
         </div>
         {estGestionnaire && (
           <Link href="/evenements/nouveau" className={buttonVariants({ size: "sm" })}>
             <Plus className="mr-2 size-4" />
-            Nouvel evenement
+            Nouvel événement
           </Link>
         )}
       </div>
@@ -87,15 +87,15 @@ export default async function EvenementsPage({ searchParams }: Props) {
         <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
           <EmptyState
             icon={CalendarDays}
-            title="Aucun evenement"
+            title="Aucun événement"
             description={
               estGestionnaire
-                ? "Aucun evenement n'a ete cree. Commencez par en creer un."
-                : "Aucun evenement n'est disponible pour le moment."
+                ? "Aucun événement n'a été créé. Commencez par en créer un."
+                : "Aucun événement n'est disponible pour le moment."
             }
             action={
               estGestionnaire
-                ? { label: "Creer un evenement", href: "/evenements/nouveau" }
+                ? { label: "Créer un événement", href: "/evenements/nouveau" }
                 : undefined
             }
           />

@@ -5,7 +5,7 @@ import { CatalogueGestionPanel } from "./CatalogueGestionPanel";
 import type { CatalogueDenreeResponse } from "@/types/distribution";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Catalogue des denrees" };
+export const metadata: Metadata = { title: "Catalogue des denrées" };
 
 async function fetchDonneesInitiales(cookieHeader: string): Promise<{
   denrees: CatalogueDenreeResponse[];
@@ -45,9 +45,9 @@ export default async function CatalogueDenreesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">Catalogue des denrees</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Catalogue des denrées</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {denrees.length} denree{denrees.length !== 1 ? "s" : ""} dans le catalogue.
+          {denrees.length} denrée{denrees.length !== 1 ? "s" : ""} dans le catalogue.
         </p>
       </div>
 

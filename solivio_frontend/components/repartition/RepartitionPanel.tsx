@@ -87,7 +87,7 @@ export function RepartitionPanel({
       setDotation(nouvelDotation);
       setModalMode(null);
     } catch {
-      setErreur("Erreur lors de l'ajout de la denree.");
+      setErreur("Erreur lors de l'ajout de la denrée.");
     }
   }
 
@@ -154,7 +154,7 @@ export function RepartitionPanel({
         {!modifiable && (
           <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-4 py-3 text-sm text-muted-foreground">
             <Scale className="h-4 w-4 shrink-0" />
-            Cette distribution est cloturee. Les denrees sont en lecture seule.
+            Cette distribution est clôturée. Les denrées sont en lecture seule.
           </div>
         )}
 
@@ -168,7 +168,7 @@ export function RepartitionPanel({
               {dotation.nbBeneficiaires}
             </span>
             <span className="text-sm text-muted-foreground">
-              beneficiaire{dotation.nbBeneficiaires > 1 ? "s" : ""}
+              bénéficiaire{dotation.nbBeneficiaires > 1 ? "s" : ""}
             </span>
           </div>
           <div
@@ -188,7 +188,7 @@ export function RepartitionPanel({
                     : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
-                {b === "INSCRITS" ? "Inscrits" : "Presents reels"}
+                {b === "INSCRITS" ? "Inscrits" : "Présents reels"}
               </button>
             ))}
           </div>
@@ -201,11 +201,11 @@ export function RepartitionPanel({
           {denrees.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50/80 dark:bg-neutral-900/50 px-6 py-10 text-center">
               <p className="text-sm text-muted-foreground">
-                Aucune denree saisie pour cette distribution.
+                Aucune denrée saisie pour cette distribution.
               </p>
               {modifiable && (
                 <p className="text-xs text-muted-foreground/60 mt-1">
-                  Cliquez sur &quot;Ajouter une denree&quot; pour commencer.
+                  Cliquez sur &quot;Ajouter une denrée&quot; pour commencer.
                 </p>
               )}
             </div>
@@ -294,7 +294,7 @@ export function RepartitionPanel({
         {modifiable && (
           <Button variant="outline" size="sm" onClick={ouvrirCreation} className="w-full">
             <Plus className="mr-2 size-4" />
-            Ajouter une denree
+            Ajouter une denrée
           </Button>
         )}
       </div>
@@ -304,7 +304,7 @@ export function RepartitionPanel({
         <DialogContent showCloseButton>
           <DialogHeader>
             <DialogTitle>
-              {modalMode === "modifier" ? "Modifier la denree" : "Nouvelle denree"}
+              {modalMode === "modifier" ? "Modifier la denrée" : "Nouvelle denrée"}
             </DialogTitle>
           </DialogHeader>
           <FormulaireDenree
@@ -329,9 +329,9 @@ export function RepartitionPanel({
             <AlertDialogMedia className="bg-destructive/10">
               <AlertTriangle className="text-destructive" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer la denree</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer la denrée</AlertDialogTitle>
             <AlertDialogDescription>
-              &quot;{suppressionCible?.libelle}&quot; sera supprimee de cette distribution.
+              &quot;{suppressionCible?.libelle}&quot; sera supprimée de cette distribution.
               La dotation sera recalculee automatiquement.
             </AlertDialogDescription>
           </AlertDialogHeader>
