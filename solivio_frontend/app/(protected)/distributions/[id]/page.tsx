@@ -21,11 +21,16 @@ import { DistributionActions } from "@/components/distributions/DistributionActi
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
-import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
+import type { DistributionResponse, InscriptionResponse } from "@/types/distribution";
+import {
+  estGestionnaireDistribution,
+  peutPointer,
+  typeInscriptionPossible,
+} from "@/lib/droits-distribution";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiqueDistributionResponse } from "@/types/association";
 
-export const metadata: Metadata = { title: "Detail distribution" };
+export const metadata: Metadata = { title: "Détail distribution" };
 
 async function fetchData(
   id: string,
@@ -50,9 +55,7 @@ async function fetchData(
   const distribution = (await distRes.json()) as DistributionResponse;
   const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
 
   const [inscritsRes, mesRes, statsRes] = await Promise.all([
     estGestionnaire
@@ -87,9 +90,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
   if (!distribution) notFound();
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
 
   const dateFormatee = new Date(distribution.date + "T00:00:00").toLocaleDateString("fr-FR", {
     weekday: "long",
@@ -110,6 +111,9 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   );
 
   const inscritsVisibles = inscrits.filter((i) => i.statut !== "ANNULEE");
+  const typeInscription = typeInscriptionPossible(me?.roles ?? []);
+  const pointageBenevole =
+    !estGestionnaire && peutPointer(me?.roles ?? [], distribution.statut, mesInscriptions);
 
   return (
     <div className="space-y-8">
@@ -184,7 +188,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                         {" "}/ {distribution.capaciteBeneficiaires}
                       </span>
                     </p>
-                    <p className="text-xs text-muted-foreground">beneficiaires confirmes</p>
+                    <p className="text-xs text-muted-foreground">bénéficiaires confirmés</p>
                   </div>
                 </div>
                 {distribution.capaciteBenevoles != null && (
@@ -199,7 +203,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                           {" "}/ {distribution.capaciteBenevoles}
                         </span>
                       </p>
-                      <p className="text-xs text-muted-foreground">benevoles confirmes</p>
+                      <p className="text-xs text-muted-foreground">bénévoles confirmés</p>
                     </div>
                   </div>
                 )}
@@ -227,7 +231,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                       </span>
                       <div className="flex flex-wrap gap-1.5 justify-end">
                         <Badge variant="outline" className="shrink-0">
-                          {inscrit.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
+                          {inscrit.type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole"}
                         </Badge>
                         {inscrit.statut === "LISTE_ATTENTE" && (
                           <Badge variant="secondary" className="shrink-0">
@@ -279,7 +283,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">Pointage</p>
-                      <p className="text-xs text-muted-foreground">Pointer les presences en temps reel</p>
+                      <p className="text-xs text-muted-foreground">Pointer les présences en temps réel</p>
                     </div>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                   </Link>
@@ -292,7 +296,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                     <Package className="size-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Repartition des denrees</p>
+                    <p className="text-sm font-medium text-foreground">Répartition des denrées</p>
                     <p className="text-xs text-muted-foreground">Calculer et ajuster les dotations</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
@@ -332,7 +336,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle className="size-3.5 text-teal-600 dark:text-teal-400" />
-                    <p className="text-xs text-muted-foreground">Presents</p>
+                    <p className="text-xs text-muted-foreground">Présents</p>
                   </div>
                   <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">
                     {stats.nbPresentsBeneficiaires}
@@ -356,7 +360,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
               <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Percent className="size-4 text-primary" />
-                  <p className="text-sm font-medium text-primary">Taux de presence</p>
+                  <p className="text-sm font-medium text-primary">Taux de présence</p>
                 </div>
                 <p className="text-2xl font-bold text-primary leading-none">
                   {Number(stats.tauxPresence).toFixed(1)} %
@@ -366,15 +370,30 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-3 text-sm border-t border-border pt-3">
                   <Users className="size-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    <strong className="text-foreground">{stats.nbInscritsBenevoles}</strong> benevoles presents
+                    <strong className="text-foreground">{stats.nbInscritsBenevoles}</strong> bénévoles présents
                   </span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Mon inscription (beneficiaire) */}
-          {!estGestionnaire && distribution.statut === "PUBLIEE" && me && (
+          {/* Pointage pour un benevole inscrit (le backend le lui ouvre) */}
+          {pointageBenevole && (
+            <Link
+              href={`/distributions/${id}/pointage`}
+              className="group flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm hover:border-primary/40 transition-all"
+            >
+              <ClipboardList className="size-5 shrink-0 text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Pointage</p>
+                <p className="text-xs text-muted-foreground">Pointer les arrivées des bénéficiaires</p>
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+            </Link>
+          )}
+
+          {/* Mon inscription : ouverte a tout membre qui peut s'inscrire (spec 4.5) */}
+          {typeInscription && distribution.statut === "PUBLIEE" && (
             <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Mon inscription
@@ -383,24 +402,32 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 distributionId={id}
                 creneaux={distribution.creneaux}
                 inscriptionExistante={monInscription ?? null}
-                typeParDefaut={
-                  (me.roles.includes("benevole") && !me.roles.includes("beneficiaire")
-                    ? "BENEVOLE"
-                    : "BENEFICIAIRE") as TypeInscription
-                }
+                typeParDefaut={typeInscription}
               />
             </div>
           )}
 
-          {/* Message pour les beneficiaires sur une distrib non publiee */}
+          {/* Inscription en lecture seule une fois la distribution demarree */}
+          {monInscription && (distribution.statut === "EN_COURS" || distribution.statut === "TERMINEE") && (
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-1">
+              <p className="text-sm font-semibold text-foreground font-display">Mon inscription</p>
+              <p className="text-sm text-muted-foreground">
+                {monInscription.statut === "CONFIRMEE"
+                  ? `Inscription confirmée (${monInscription.type === "BENEVOLE" ? "bénévole" : "bénéficiaire"}).`
+                  : "Vous étiez sur liste d'attente."}
+              </p>
+            </div>
+          )}
+
+          {/* Message sur une distribution non publiee */}
           {!estGestionnaire && distribution.statut !== "PUBLIEE" && (
             <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
               <p className="text-sm text-muted-foreground">
                 {distribution.statut === "BROUILLON" &&
                   "Cette distribution n'est pas encore ouverte aux inscriptions."}
                 {distribution.statut === "EN_COURS" && "Cette distribution est en cours."}
-                {distribution.statut === "TERMINEE" && "Cette distribution est terminee."}
-                {distribution.statut === "ANNULEE" && "Cette distribution a ete annulee."}
+                {distribution.statut === "TERMINEE" && "Cette distribution est terminée."}
+                {distribution.statut === "ANNULEE" && "Cette distribution a été annulée."}
               </p>
             </div>
           )}
