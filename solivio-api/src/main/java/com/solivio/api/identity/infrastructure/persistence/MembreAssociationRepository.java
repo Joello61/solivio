@@ -1,7 +1,9 @@
 package com.solivio.api.identity.infrastructure.persistence;
 
 import com.solivio.api.identity.domain.MembreAssociation;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -22,4 +24,8 @@ public interface MembreAssociationRepository extends JpaRepository<MembreAssocia
     @Query("SELECT m FROM MembreAssociation m JOIN FETCH m.compte"
         + " WHERE m.role = :role AND m.statut = 'actif'")
     List<MembreAssociation> findActifsByRole(String role);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM MembreAssociation m WHERE m.role = 'responsable' AND m.statut = 'actif'")
+    List<MembreAssociation> verrouillerResponsablesActifs();
 }

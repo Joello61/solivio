@@ -53,7 +53,7 @@ public class MembreController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MembreResponse response =
-            membreService.mettreAJourRole(compteId, request);
+            membreService.mettreAJourRole(compteId, request, user.getCompteId());
         auditService.tracer(user.getCompteId(), "ROLE_MEMBRE_MODIFIE", "compte", compteId);
         return ResponseEntity.ok(response);
     }
@@ -65,7 +65,7 @@ public class MembreController {
         @Valid @RequestBody UpdateStatutMembreRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MembreResponse response = membreService.changerStatut(compteId, request.statut());
+        MembreResponse response = membreService.changerStatut(compteId, request.statut(), user.getCompteId());
         String action = "suspendu".equals(request.statut()) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
         auditService.tracer(user.getCompteId(), action, "compte", compteId);
         return ResponseEntity.ok(response);
@@ -77,7 +77,7 @@ public class MembreController {
         @PathVariable UUID compteId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        membreService.suspendre(compteId);
+        membreService.suspendre(compteId, user.getCompteId());
         auditService.tracer(user.getCompteId(), "MEMBRE_SUSPENDU", "compte", compteId);
         return ResponseEntity.noContent().build();
     }

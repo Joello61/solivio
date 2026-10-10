@@ -55,7 +55,8 @@ public class AdminCompteController {
         @Valid @RequestBody UpdateStatutCompteRequest request,
         @AuthenticationPrincipal SolivioUserDetails userDetails
     ) {
-        CompteAdminResponse response = adminCompteService.mettreAJourStatut(id, request.actif());
+        CompteAdminResponse response = adminCompteService.mettreAJourStatut(
+            id, request.actif(), userDetails.getCompteId());
         String action = request.actif() ? "COMPTE_ACTIVE" : "COMPTE_DESACTIVE";
         auditService.tracer(userDetails.getCompteId(), action, "compte", id);
         return ResponseEntity.ok(response);
@@ -67,7 +68,8 @@ public class AdminCompteController {
         @Valid @RequestBody UpdateSuperAdminRequest request,
         @AuthenticationPrincipal SolivioUserDetails userDetails
     ) {
-        CompteAdminResponse response = adminCompteService.mettreAJourSuperAdmin(id, request.superAdmin());
+        CompteAdminResponse response = adminCompteService.mettreAJourSuperAdmin(
+            id, request.superAdmin(), userDetails.getCompteId());
         auditService.tracer(userDetails.getCompteId(), "SUPER_ADMIN_MODIFIE", "compte", id);
         return ResponseEntity.ok(response);
     }
@@ -77,8 +79,8 @@ public class AdminCompteController {
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails userDetails
     ) {
+        adminCompteService.supprimer(id, userDetails.getCompteId());
         auditService.tracer(userDetails.getCompteId(), "COMPTE_SUPPRIME", "compte", id);
-        adminCompteService.supprimer(id);
         return ResponseEntity.noContent().build();
     }
 }
