@@ -32,7 +32,7 @@ public class SolivioUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Compte compte = compteRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("Compte introuvable : " + email));
+            .orElseThrow(() -> new UsernameNotFoundException("Compte introuvable."));
 
         return new SolivioUserDetails(
             compte.getId(),
