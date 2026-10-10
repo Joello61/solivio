@@ -1,6 +1,7 @@
 package com.solivio.api.distribution.application;
 
 import com.solivio.api.audit.application.AuditService;
+import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
@@ -228,6 +229,25 @@ class DistributionServiceTest {
         DistributionResponse response = service.demarrer(distributionId);
 
         assertThat(response.statut()).isEqualTo("EN_COURS");
+    }
+
+    // --- I11 : listes ---
+
+    @Test
+    void lister_chargeLesCreneauxEnUneSeuleRequete() {
+        Distribution autre = new Distribution("Autre", null, null, LocalDate.now().plusDays(9),
+            20, null, ModeCreneauDistribution.CRENEAUX_DECOUPES, creeParId);
+        autre.setId(UUID.randomUUID());
+        when(distributionRepository.findAllByOrderByDateDesc()).thenReturn(List.of(autre, distribution));
+        when(creneauRepository.findByDistributionIdInOrderByHeureDebut(List.of(autre.getId(), distributionId)))
+            .thenReturn(List.of(new Creneau(autre.getId(), LocalTime.of(9, 0), LocalTime.of(10, 0), 10)));
+
+        List<DistributionResponse> liste = service.lister();
+
+        assertThat(liste).hasSize(2);
+        assertThat(liste.get(0).creneaux()).hasSize(1);
+        assertThat(liste.get(1).creneaux()).isEmpty();
+        verify(creneauRepository, never()).findByDistributionIdOrderByHeureDebut(any());
     }
 
     // --- I7 : fuseau de l'association ---

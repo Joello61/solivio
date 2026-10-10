@@ -165,16 +165,40 @@ class DistributionControllerIntegrationTest {
             .andExpect(jsonPath("$.statut").value("PUBLIEE"));
     }
 
+    // I11 : a venir et du jour seulement, en cours comprises, de la plus proche a la plus lointaine.
+    @Test
+    void lister_pourUnBeneficiaire_distributionsAVenirTrieesParDate() throws Exception {
+        UUID passee = insererDistribution("PUBLIEE", -3);
+        UUID dans10Jours = insererDistribution("PUBLIEE", 10);
+        UUID enCours = insererDistribution("EN_COURS", 0);
+        UUID dans2Jours = insererDistribution("PUBLIEE", 2);
+        insererDistribution("BROUILLON", 4);
+
+        String corps = mockMvc.perform(get("/api/distributions")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        List<String> ids = com.jayway.jsonpath.JsonPath.read(corps, "$[*].id");
+        org.assertj.core.api.Assertions.assertThat(ids)
+            .containsExactly(enCours.toString(), dans2Jours.toString(), dans10Jours.toString())
+            .doesNotContain(passee.toString());
+    }
+
     private UUID insererDistribution(String statut) {
+        return insererDistribution(statut, 7);
+    }
+
+    private UUID insererDistribution(String statut, int dansJours) {
         UUID createur = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Coord', 'Test', ?)",
             createur, createur + "@test.com");
         UUID id = UUID.randomUUID();
         jdbcTemplate.update(
             "INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
-                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE + 7, ?, 10, "
+                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE + ?, ?, 10, "
                 + "'CRENEAU_UNIQUE', 'INSCRITS', ?)",
-            id, statut, createur);
+            id, dansJours, statut, createur);
         return id;
     }
 }

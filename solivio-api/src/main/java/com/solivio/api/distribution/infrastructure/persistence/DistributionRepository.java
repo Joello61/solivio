@@ -13,7 +13,9 @@ public interface DistributionRepository extends JpaRepository<Distribution, UUID
 
     List<Distribution> findAllByOrderByDateDesc();
 
-    List<Distribution> findByStatutOrderByDateDesc(StatutDistribution statut);
+    List<Distribution> findByStatutInAndDateGreaterThanEqualOrderByDateAsc(
+        Collection<StatutDistribution> statuts, LocalDate depuis
+    );
 
     List<Distribution> findByDateAndStatut(LocalDate date, StatutDistribution statut);
 
