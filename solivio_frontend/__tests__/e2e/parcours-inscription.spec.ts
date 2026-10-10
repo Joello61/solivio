@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
 
 // Tests E2E du parcours inscription beneficiaire.
 // Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
@@ -13,11 +14,17 @@ import { test, expect } from "@playwright/test";
 // la vraie base, mais on ne verifie pas l'etat persiste ici.
 
 test.describe("Parcours inscription beneficiaire", () => {
+  // La base de test n'a pas de distribution : on en cree une, sinon les tests
+  // qui partent de la liste seraient sautes, y compris en CI.
+  test.beforeAll(async () => {
+    if (await backendDisponible()) await assurerDistributionPubliee();
+  });
+
   test("la liste des distributions est accessible", async ({ page }) => {
     await page.goto("/distributions");
 
     if (page.url().includes("/login")) {
-      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
+      sauterHorsCi(test, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
@@ -28,13 +35,13 @@ test.describe("Parcours inscription beneficiaire", () => {
     await page.goto("/distributions");
 
     if (page.url().includes("/login")) {
-      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
+      sauterHorsCi(test, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
     // Si aucune distribution, le message "Aucune distribution" est affiche
     const aucuneDistrib = page.getByText(/aucune distribution/i);
-    const premiereDistribCard = page.locator("a[href^='/distributions/']").first();
+    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
 
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
@@ -49,27 +56,27 @@ test.describe("Parcours inscription beneficiaire", () => {
     await expect(page.locator("h1")).toBeVisible();
   });
 
-  test("bouton S'inscrire present pour un beneficiaire sur une distribution publiee", async ({ page }) => {
+  test("un membre s'inscrit sur une distribution publiee", async ({ page }) => {
     await page.goto("/distributions");
 
     if (page.url().includes("/login")) {
-      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
+      sauterHorsCi(test, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']").first();
+    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
-      test.skip(true, "Aucune distribution disponible dans la base de test");
+      sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
       return;
     }
 
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
-    // Le bouton S'inscrire n'est present que si : utilisateur non gestionnaire + distribution PUBLIEE
-    // Ce test est conditionnel a ces deux criteres.
+    // Le bouton S'inscrire est present pour tout membre qui peut s'inscrire (le
+    // coordinateur du test s'inscrit en benevole) sur une distribution publiee.
     const boutonInscrire = page.getByRole("button", { name: /s'inscrire/i });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
@@ -78,46 +85,24 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    // Mocker l'appel POST d'inscription pour eviter d'affecter la base de test
-    await page.route("**/api/distributions/*/inscriptions", async (route) => {
-      if (route.request().method() === "POST") {
-        await route.fulfill({
-          status: 201,
-          json: {
-            id: "insc-e2e",
-            distributionId: "dist-e2e",
-            statut: "CONFIRMEE",
-            type: "BENEFICIAIRE",
-            rangListeAttente: null,
-            roles: [],
-            presence: "NON_POINTE",
-            dateInscription: new Date().toISOString(),
-            nombreAbsencesPassees: 0,
-          },
-        });
-      } else {
-        await route.fallback();
-      }
-    });
-
+    // Inscription reelle sur la distribution creee pour le test (base de test).
     await boutonInscrire.click();
-    // Le bouton affiche "Inscription..." pendant la requete
-    await expect(boutonInscrire).toBeDisabled();
+    await expect(page.getByRole("button", { name: /se désinscrire/i })).toBeVisible();
   });
 
   test("erreur affichee si l'inscription echoue (distribution pleine)", async ({ page }) => {
     await page.goto("/distributions");
 
     if (page.url().includes("/login")) {
-      test.skip(true, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
+      sauterHorsCi(test, "Backend non disponible - lancer docker compose up et definir E2E_EMAIL/E2E_PASSWORD");
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']").first();
+    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
-      test.skip(true, "Aucune distribution disponible dans la base de test");
+      sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
       return;
     }
 

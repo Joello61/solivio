@@ -31,6 +31,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testMatch: /creation-compte\.spec\.ts/,
     },
+    // Parcours critiques sur telephone, contre le vrai backend : chaque test ouvre
+    // ses propres sessions (Pixel 7 tourne sous Chromium, deja installe en CI).
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"] },
+      testMatch: /parcours-pointage\.spec\.ts/,
+    },
     // Tests des parcours proteges. Depend du projet "setup" pour les cookies.
     {
       name: "chromium",
@@ -39,7 +46,7 @@ export default defineConfig({
         storageState: AUTH_STATE_FILE,
       },
       dependencies: ["setup"],
-      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/, /creation-compte\.spec\.ts/],
+      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/, /creation-compte\.spec\.ts/, /parcours-pointage\.spec\.ts/],
     },
   ],
 });
