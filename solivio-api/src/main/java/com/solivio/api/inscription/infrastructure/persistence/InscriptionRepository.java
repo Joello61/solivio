@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,8 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
     List<Inscription> findByDistributionIdOrderByNomAscPrenomAsc(UUID distributionId);
 
     Optional<Inscription> findByIdAndDistributionId(UUID id, UUID distributionId);
+
+    List<Inscription> findByDistributionIdAndStatutIn(UUID distributionId, Collection<StatutInscription> statuts);
 
     boolean existsByDistributionIdAndPersonneIdAndTypeAndStatut(
         UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut

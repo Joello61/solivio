@@ -175,6 +175,20 @@ public class InscriptionService {
         }
     }
 
+    // RG6 : une distribution annulee annule toutes ses inscriptions actives, sans
+    // promotion. Une seconde execution ne trouve plus rien et ne publie rien.
+    public void annulerToutesPourDistribution(UUID distributionId) {
+        verrouDistribution.verrouiller(distributionId);
+        List<Inscription> actives = inscriptionRepository.findByDistributionIdAndStatutIn(
+            distributionId, List.of(StatutInscription.CONFIRMEE, StatutInscription.LISTE_ATTENTE));
+        if (actives.isEmpty()) {
+            return;
+        }
+        actives.forEach(Inscription::annuler);
+        inscriptionRepository.saveAll(actives);
+        eventPublisher.publierAnnuleesParDistribution(distributionId, actives);
+    }
+
     public InscriptionResponse pointer(
         UUID distributionId,
         UUID inscriptionId,

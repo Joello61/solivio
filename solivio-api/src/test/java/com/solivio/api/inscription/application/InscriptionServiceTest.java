@@ -530,6 +530,36 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
+    // --- C5 : annulation d'une distribution ---
+
+    @Test
+    void annulerToutesPourDistribution_annuleConfirmeesEtAttenteSansPromotion() {
+        Inscription confirmee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        Inscription enAttente = inscriptionBeneficiaire(UUID.randomUUID(), StatutInscription.LISTE_ATTENTE);
+        List<Inscription> actives = List.of(confirmee, enAttente);
+        when(inscriptionRepository.findByDistributionIdAndStatutIn(
+            distributionId, List.of(StatutInscription.CONFIRMEE, StatutInscription.LISTE_ATTENTE))
+        ).thenReturn(actives);
+
+        service.annulerToutesPourDistribution(distributionId);
+
+        assertThat(confirmee.getStatut()).isEqualTo(StatutInscription.ANNULEE);
+        assertThat(enAttente.getStatut()).isEqualTo(StatutInscription.ANNULEE);
+        verify(verrouDistribution).verrouiller(distributionId);
+        verify(eventPublisher).publierAnnuleesParDistribution(distributionId, actives);
+        verify(eventPublisher, never()).publierPromue(any());
+    }
+
+    @Test
+    void annulerToutesPourDistribution_neRepubliePasQuandToutEstDejaAnnule() {
+        when(inscriptionRepository.findByDistributionIdAndStatutIn(any(), any())).thenReturn(List.of());
+
+        service.annulerToutesPourDistribution(distributionId);
+
+        verify(eventPublisher, never()).publierAnnuleesParDistribution(any(), any());
+        verify(inscriptionRepository, never()).saveAll(any());
+    }
+
     // --- C1 : desinscription reservee au proprietaire ---
 
     @Test

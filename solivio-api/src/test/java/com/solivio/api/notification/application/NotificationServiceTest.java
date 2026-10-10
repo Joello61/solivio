@@ -1,5 +1,6 @@
 package com.solivio.api.notification.application;
 
+import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution.InscriptionAnnulee;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
@@ -143,16 +144,18 @@ class NotificationServiceTest {
     }
 
     @Test
-    void notifierAnnulationDistribution_envoieEmailATousLesInscrits() {
-        DestinataireMail dest1 = new DestinataireMail(
-            UUID.randomUUID(), "a@ex.com", "Alice", "BENEFICIAIRE", null);
-        DestinataireMail dest2 = new DestinataireMail(
-            UUID.randomUUID(), "b@ex.com", "Bob", "BENEVOLE", null);
+    void notifierAnnulationDistribution_envoieEmailAChaqueInscriptionAnnulee() {
+        UUID aliceId = UUID.randomUUID();
+        UUID bobId = UUID.randomUUID();
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
-        when(inscriptionQueryPort.trouverInscritsConfirmes(distributionId))
-            .thenReturn(List.of(dest1, dest2));
+        when(personneQueryPort.trouverPersonneParId(aliceId))
+            .thenReturn(new PersonneContactInfo(aliceId, "a@ex.com", "Alice", "A"));
+        when(personneQueryPort.trouverPersonneParId(bobId))
+            .thenReturn(new PersonneContactInfo(bobId, "b@ex.com", "Bob", "B"));
 
-        service.notifierAnnulationDistribution(distributionId);
+        service.notifierAnnulationDistribution(distributionId, List.of(
+            new InscriptionAnnulee(UUID.randomUUID(), aliceId, "BENEFICIAIRE", null),
+            new InscriptionAnnulee(UUID.randomUUID(), bobId, "BENEVOLE", null)));
 
         verify(emailService).envoyerAnnulationDistribution(eq("a@ex.com"), any(ContexteEmail.class));
         verify(emailService).envoyerAnnulationDistribution(eq("b@ex.com"), any(ContexteEmail.class));
@@ -160,11 +163,10 @@ class NotificationServiceTest {
     }
 
     @Test
-    void notifierAnnulationDistribution_aucunInscrit_nEnvoiePasDemail() {
+    void notifierAnnulationDistribution_aucuneInscription_nEnvoiePasDemail() {
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
-        when(inscriptionQueryPort.trouverInscritsConfirmes(distributionId)).thenReturn(List.of());
 
-        service.notifierAnnulationDistribution(distributionId);
+        service.notifierAnnulationDistribution(distributionId, List.of());
 
         verify(emailService, never()).envoyerAnnulationDistribution(anyString(), any());
         verify(notificationRepository, never()).save(any());
