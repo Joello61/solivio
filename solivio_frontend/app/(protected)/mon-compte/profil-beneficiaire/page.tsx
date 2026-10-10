@@ -32,7 +32,7 @@ export default async function ProfilBeneficiairePage() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6">
         <FormulaireProfilBeneficiaire profil={profil} />
       </div>
     </div>

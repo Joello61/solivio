@@ -22,15 +22,15 @@ const badgeVariants = cva(
 
         /* Secondaire : teal pale */
         secondary:
-          "bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/30 dark:border-teal-800/50 dark:text-teal-300",
+          "bg-primary/10 border-primary/25 text-primary",
 
         /* Succes : identique secondaire (teal = succes dans ce contexte) */
         success:
-          "bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/30 dark:border-teal-800/50 dark:text-teal-300",
+          "bg-primary/10 border-primary/25 text-primary",
 
         /* Avertissement : coral/orange */
         warning:
-          "bg-coral-50 border-coral-200 text-coral-700 dark:bg-coral-950/30 dark:border-coral-800/50 dark:text-coral-300",
+          "bg-accent/10 border-accent/30 text-accent-strong",
 
         /* Accent : coral plein */
         accent:

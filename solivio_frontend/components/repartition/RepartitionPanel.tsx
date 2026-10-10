@@ -152,7 +152,7 @@ export function RepartitionPanel({
     <>
       <div className="space-y-6">
         {!modifiable && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-4 py-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted px-4 py-3 text-sm text-muted-foreground">
             <Scale className="h-4 w-4 shrink-0" />
             Cette distribution est clôturée. Les denrées sont en lecture seule.
           </div>
@@ -161,7 +161,7 @@ export function RepartitionPanel({
         {/* Bascule inscrits / presents */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
               <Users className="size-4 text-primary" />
             </div>
             <span className="text-sm font-semibold text-foreground tabular-nums">
@@ -174,7 +174,7 @@ export function RepartitionPanel({
           <div
             role="group"
             aria-label="Base de calcul"
-            className="inline-flex gap-0.5 rounded-xl border border-border/60 bg-neutral-100/80 dark:bg-neutral-800/60 p-1"
+            className="inline-flex gap-0.5 rounded-xl border border-border/60 bg-muted/80 p-1"
           >
             {(["INSCRITS", "PRESENTS"] as const).map((b) => (
               <button
@@ -184,7 +184,7 @@ export function RepartitionPanel({
                 className={[
                   "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
                   base === b
-                    ? "bg-white dark:bg-neutral-700 text-primary font-semibold shadow-sm"
+                    ? "bg-card text-primary font-semibold shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
@@ -199,7 +199,7 @@ export function RepartitionPanel({
         {/* Liste des denrees */}
         <div className="space-y-3">
           {denrees.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50/80 dark:bg-neutral-900/50 px-6 py-10 text-center">
+            <div className="rounded-2xl border border-dashed border-border/60 bg-muted/80 px-6 py-10 text-center">
               <p className="text-sm text-muted-foreground">
                 Aucune denrée saisie pour cette distribution.
               </p>
@@ -216,7 +216,7 @@ export function RepartitionPanel({
               return (
                 <div
                   key={denree.id}
-                  className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3"
+                  className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -256,9 +256,9 @@ export function RepartitionPanel({
                   {d && (
                     <div className="pt-3 border-t border-border">
                       {d.penurie ? (
-                        <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-sm">
-                          <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                          <span className="text-amber-700 dark:text-amber-400">
+                        <div className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm">
+                          <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
+                          <span className="text-warning">
                             Stock insuffisant : {d.nbPeutRecevoir} personne
                             {d.nbPeutRecevoir > 1 ? "s" : ""} sur{" "}
                             {dotation.nbBeneficiaires} peuvent recevoir{" "}
@@ -270,7 +270,7 @@ export function RepartitionPanel({
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 px-4 py-2">
+                          <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-2">
                             <p className="text-xl font-bold text-primary leading-none tabular-nums">
                               {formatQte(d.dotation, d.unite)}
                             </p>

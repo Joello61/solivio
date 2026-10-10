@@ -33,7 +33,7 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-neutral-100 rounded-xl dark:bg-neutral-800",
+        default: "bg-muted rounded-xl",
         line: "gap-2 bg-transparent rounded-none",
       },
     },
@@ -72,11 +72,10 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         "focus-visible:ring-2 focus-visible:ring-ring/30",
         "disabled:pointer-events-none disabled:opacity-45",
         /* Variante default : fond blanc + shadow sur l'item actif */
-        "group-data-[variant=default]/tabs-list:data-active:bg-white",
+        "group-data-[variant=default]/tabs-list:data-active:bg-card",
         "group-data-[variant=default]/tabs-list:data-active:text-foreground",
         "group-data-[variant=default]/tabs-list:data-active:shadow-sm",
         "group-data-[variant=default]/tabs-list:data-active:border-border/60",
-        "dark:group-data-[variant=default]/tabs-list:data-active:bg-neutral-700",
         /* Variante line : indicateur en bas */
         "group-data-[variant=line]/tabs-list:rounded-none",
         "group-data-[variant=line]/tabs-list:px-4 group-data-[variant=line]/tabs-list:py-2.5",

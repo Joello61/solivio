@@ -16,10 +16,10 @@ interface CardProps extends React.ComponentProps<"div"> {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default:  "bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md",
-  elevated: "bg-white dark:bg-neutral-900 shadow-md hover:shadow-lg",
-  flat:     "bg-white dark:bg-neutral-900 border-border/60",
-  tinted:   "bg-teal-50 border-teal-100 dark:bg-teal-950/30 dark:border-teal-900/50",
+  default:  "bg-card shadow-sm hover:shadow-md",
+  elevated: "bg-card shadow-md hover:shadow-lg",
+  flat:     "bg-card border-border/60",
+  tinted:   "bg-primary/10 border-primary/20",
 }
 
 const sizeClasses: Record<CardSize, string> = {

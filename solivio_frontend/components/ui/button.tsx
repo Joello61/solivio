@@ -22,22 +22,22 @@ const buttonVariants = cva(
         /* Primaire : fond teal plein, shadow coloree au hover */
         default: [
           "bg-primary text-primary-foreground border-primary",
-          "hover:bg-teal-700 hover:border-teal-700",
-          "hover:shadow-[0_4px_14px_0_oklch(0.532_0.118_185_/_0.40)]",
-          "active:bg-teal-800",
+          "hover:bg-primary/90 hover:border-primary",
+          "hover:shadow-primary",
+          "active:bg-primary/90",
         ].join(" "),
 
         /* Secondaire : fond teal tres pale, texte teal */
         secondary: [
-          "bg-teal-50 text-teal-700 border-teal-100",
-          "hover:bg-teal-100 hover:border-teal-200",
+          "bg-primary/10 text-primary border-primary/20",
+          "hover:bg-primary/15 hover:border-primary/25",
         ].join(" "),
 
         /* Outline : bordure visible, fond transparent */
         outline: [
           "bg-transparent text-foreground border-border",
-          "hover:bg-muted hover:border-neutral-300",
-          "dark:border-neutral-700 dark:hover:bg-neutral-800",
+          "hover:bg-muted hover:border-border",
+          "",
         ].join(" "),
 
         /* Ghost : sans bordure ni fond, discret */
@@ -49,8 +49,8 @@ const buttonVariants = cva(
         /* Accent : coral/orange pour CTAs secondaires importants */
         accent: [
           "bg-accent text-accent-foreground border-accent",
-          "hover:bg-coral-600 hover:border-coral-600",
-          "hover:shadow-[0_4px_14px_0_oklch(0.706_0.213_47_/_0.38)]",
+          "hover:bg-accent hover:border-accent",
+          "hover:shadow-accent",
         ].join(" "),
 
         /* Destructif : rouge discret en fond, plus visible au hover */

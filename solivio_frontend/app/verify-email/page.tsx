@@ -159,11 +159,11 @@ function VerifyEmailForm() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 aria-label={`Chiffre ${i + 1}`}
                 className={[
-                  "h-14 w-11 rounded-xl border-2 bg-white text-center text-xl font-bold font-mono",
+                  "h-14 w-11 rounded-xl border-2 bg-card text-center text-xl font-bold font-mono",
                   "text-foreground caret-transparent transition-all duration-150",
                   "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20",
-                  "dark:bg-neutral-900",
-                  d ? "border-primary bg-teal-50 dark:bg-teal-950/30" : "border-border",
+                  "",
+                  d ? "border-primary bg-primary/10" : "border-border",
                 ].join(" ")}
               />
             ))}

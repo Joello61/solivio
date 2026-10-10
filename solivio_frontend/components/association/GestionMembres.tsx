@@ -131,12 +131,12 @@ function CarteMembre({
     <>
       <div
         className={[
-          "rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3 transition-opacity",
+          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
           estSuspendu ? "opacity-50" : "",
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
@@ -187,8 +187,8 @@ function CarteMembre({
                     size="sm"
                     onClick={() => setDialogOuvert("statut")}
                     className={estSuspendu
-                      ? "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
-                      : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                      ? "text-primary hover:text-primary hover:bg-primary/10"
+                      : "text-warning hover:text-warning hover:bg-warning/10"
                     }
                   >
                     {estSuspendu ? (
@@ -219,8 +219,8 @@ function CarteMembre({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-teal-50 dark:bg-teal-950/30" : "bg-amber-100 dark:bg-amber-950/30"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
+            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
+              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
               {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
@@ -340,7 +340,7 @@ function LigneMembreRow({
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${estSuspendu ? "opacity-50" : ""}`}>
         <td className="py-3.5 px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">
@@ -391,8 +391,8 @@ function LigneMembreRow({
                     size="sm"
                     onClick={() => setDialogOuvert("statut")}
                     className={estSuspendu
-                      ? "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
-                      : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                      ? "text-primary hover:text-primary hover:bg-primary/10"
+                      : "text-warning hover:text-warning hover:bg-warning/10"
                     }
                   >
                     {estSuspendu ? (
@@ -423,8 +423,8 @@ function LigneMembreRow({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-teal-50 dark:bg-teal-950/30" : "bg-amber-100 dark:bg-amber-950/30"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
+            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
+              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
               {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
@@ -496,7 +496,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
   return (
     <div className="space-y-4">
       {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -545,7 +545,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
       </div>
 
       {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50/80 dark:bg-neutral-900/50 px-6 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-border/60 bg-muted/80 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">
             {membres.length === 0 ? "Aucun membre dans cette association." : "Aucun membre ne correspond aux filtres."}
           </p>
@@ -560,10 +560,10 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           </div>
 
           {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
+                <tr className="border-b border-border/60 bg-muted/80">
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Membre</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rôle</th>

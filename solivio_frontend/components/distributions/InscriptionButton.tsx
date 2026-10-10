@@ -80,7 +80,7 @@ export function InscriptionButton({
 
       {estInscrit ? (
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 px-4 py-2.5">
+          <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-2.5">
             <p className="text-base font-bold text-primary leading-none">
               {inscriptionExistante?.statut === "LISTE_ATTENTE" ? "Liste d'attente" : "Inscrit(e)"}
             </p>

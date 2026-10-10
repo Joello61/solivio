@@ -39,7 +39,7 @@ export default async function PointagePage({ params }: PageProps) {
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
             <ClipboardList className="size-5 text-primary" />
           </div>
           <div>

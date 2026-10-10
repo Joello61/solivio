@@ -129,7 +129,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
 
       {/* Liste */}
       {denrees.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-10 text-center">
+        <div className="rounded-2xl border border-border/60 bg-muted px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">Le catalogue est vide.</p>
         </div>
       ) : (
@@ -141,9 +141,9 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
             </span>
           </div>
 
-          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
             {denrees.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 dark:hover:bg-teal-950/20 transition-colors">
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors">
                 {editId === d.id ? (
                   <>
                     <Input

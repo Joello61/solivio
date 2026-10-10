@@ -48,7 +48,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-3 text-sm">
           <Calendar className="size-4 text-muted-foreground shrink-0" />
           <span>
@@ -116,7 +116,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Historique</h2>
         <ol className="space-y-2 text-sm text-muted-foreground">
           {mission.datePriseEnCharge && (

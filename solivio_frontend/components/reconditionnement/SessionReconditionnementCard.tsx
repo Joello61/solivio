@@ -21,7 +21,7 @@ export function SessionReconditionnementCard({ session }: Props) {
   return (
     <Link
       href={`/reconditionnement/${session.id}`}
-      className="block rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-150 overflow-hidden"
+      className="block rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-150 overflow-hidden"
     >
       <div className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">

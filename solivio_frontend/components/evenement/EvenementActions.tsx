@@ -81,7 +81,7 @@ export function EvenementActions({
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-3">
+    <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
       <h2 className="text-sm font-semibold text-foreground">Actions</h2>
 
       {erreur && (
@@ -103,7 +103,7 @@ export function EvenementActions({
       {peutPointer && (
         <button
           onClick={() => router.push(`/evenements/${evenementId}/pointage`)}
-          className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="w-full rounded-xl bg-info px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-info/90 transition-colors"
         >
           Pointage
         </button>
@@ -113,7 +113,7 @@ export function EvenementActions({
         <button
           onClick={() => inscrire("STAFF")}
           disabled={pending !== null}
-          className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-600 transition-colors disabled:opacity-60"
+          className="w-full rounded-xl bg-warning px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-warning transition-colors disabled:opacity-60"
         >
           {pending === "inscrire-STAFF" ? "Inscription..." : "S'inscrire comme staff"}
         </button>
@@ -123,7 +123,7 @@ export function EvenementActions({
         <button
           onClick={() => inscrire("PARTICIPANT")}
           disabled={pending !== null}
-          className="w-full rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:opacity-60"
+          className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {pending === "inscrire-PARTICIPANT" ? "Inscription..." : "S'inscrire comme participant"}
         </button>

@@ -39,9 +39,9 @@ function presenceLabel(presence: string): string {
 }
 
 const STATUT_PILL: Record<string, string> = {
-  CONFIRMEE:     "bg-teal-50 text-primary border-teal-200 dark:bg-teal-950/30 dark:border-teal-800/40",
-  LISTE_ATTENTE: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/40",
-  ANNULEE:       "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
+  CONFIRMEE:     "bg-primary/10 text-primary border-primary/25",
+  LISTE_ATTENTE: "bg-warning/10 text-warning border-warning/30",
+  ANNULEE:       "bg-destructive/10 text-destructive border-destructive/30",
 };
 
 const STATUT_ACCENT: Record<string, string> = {
@@ -82,7 +82,7 @@ export default async function MesInscriptionsPage() {
       </div>
 
       {inscriptions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={CalendarSearch}
             title="Aucune inscription"
@@ -106,7 +106,7 @@ export default async function MesInscriptionsPage() {
                 Aucune inscription à venir.
               </p>
             ) : (
-              <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
+              <div className="rounded-2xl border border-border/60 bg-card shadow-sm divide-y divide-border/60 overflow-hidden">
                 {avenir.map((i) => (
                   <CarteInscription key={i.id} inscription={i} />
                 ))}
@@ -122,7 +122,7 @@ export default async function MesInscriptionsPage() {
                   {passees.length} inscription{passees.length > 1 ? "s" : ""}
                 </span>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden opacity-80">
+              <div className="rounded-2xl border border-border/60 bg-card shadow-sm divide-y divide-border/60 overflow-hidden opacity-80">
                 {passees.map((i) => (
                   <CarteInscription key={i.id} inscription={i} />
                 ))}
@@ -149,7 +149,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
         "group flex items-center gap-4 pl-4 pr-5 py-4",
         "border-l-[3px]",
         accentClass,
-        "hover:bg-teal-50/40 dark:hover:bg-teal-950/20 transition-colors",
+        "hover:bg-primary/5 transition-colors",
       )}
     >
       {/* Bloc date */}

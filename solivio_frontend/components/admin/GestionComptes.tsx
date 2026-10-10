@@ -77,12 +77,12 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
     <>
       <div
         className={[
-          "rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3 transition-opacity",
+          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
           !compte.actif ? "opacity-50" : "",
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
@@ -99,7 +99,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                 <Badge variant="secondary" className="text-[11px]">Super admin</Badge>
               )}
               {!compte.emailVerifie && (
-                <Badge variant="outline" className="text-[11px] text-amber-600 border-amber-300">
+                <Badge variant="outline" className="text-[11px] text-warning border-warning/30">
                   Email non vérifié
                 </Badge>
               )}
@@ -126,8 +126,8 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                 size="sm"
                 onClick={() => setDialogOuvert("actif")}
                 className={compte.actif
-                  ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                  : "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
+                  ? "text-warning hover:text-warning hover:bg-warning/10"
+                  : "text-primary hover:text-primary hover:bg-primary/10"
                 }
               >
                 {compte.actif ? (
@@ -177,8 +177,8 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-amber-100 dark:bg-amber-950/30">
-              <AlertTriangle className="text-amber-600" />
+            <AlertDialogMedia className="bg-warning/15">
+              <AlertTriangle className="text-warning" />
             </AlertDialogMedia>
             <AlertDialogTitle>
               {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
@@ -207,9 +207,9 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-amber-100 dark:bg-amber-950/30" : "bg-teal-50 dark:bg-teal-950/30"}>
+            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
               {compte.superAdmin
-                ? <ShieldOff className="text-amber-600" />
+                ? <ShieldOff className="text-warning" />
                 : <ShieldCheck className="text-primary" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
@@ -299,7 +299,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${!compte.actif ? "opacity-50" : ""}`}>
         <td className="py-3.5 pr-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">
@@ -317,7 +317,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </Badge>
             {compte.superAdmin && <Badge variant="secondary">Super admin</Badge>}
             {!compte.emailVerifie && (
-              <Badge variant="outline" className="text-amber-600 border-amber-300">
+              <Badge variant="outline" className="text-warning border-warning/30">
                 Email non vérifié
               </Badge>
             )}
@@ -343,8 +343,8 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
                   size="sm"
                   onClick={() => setDialogOuvert("actif")}
                   className={compte.actif
-                    ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                    : "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
+                    ? "text-warning hover:text-warning hover:bg-warning/10"
+                    : "text-primary hover:text-primary hover:bg-primary/10"
                   }
                 >
                   {compte.actif ? (
@@ -395,8 +395,8 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-amber-100 dark:bg-amber-950/30">
-              <AlertTriangle className="text-amber-600" />
+            <AlertDialogMedia className="bg-warning/15">
+              <AlertTriangle className="text-warning" />
             </AlertDialogMedia>
             <AlertDialogTitle>
               {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
@@ -425,9 +425,9 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-amber-100 dark:bg-amber-950/30" : "bg-teal-50 dark:bg-teal-950/30"}>
+            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
               {compte.superAdmin
-                ? <ShieldOff className="text-amber-600" />
+                ? <ShieldOff className="text-warning" />
                 : <ShieldCheck className="text-primary" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
@@ -523,7 +523,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
   return (
     <div className="space-y-4">
       {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <form onSubmit={handleSearch} className="flex gap-2 w-full sm:max-w-sm">
             <div className="relative flex-1">
@@ -575,7 +575,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
       </div>
 
       {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50 dark:bg-neutral-900/50 px-6 py-12 text-center">
+        <div className="rounded-2xl border border-dashed border-border/60 bg-muted px-6 py-12 text-center">
           <p className="text-sm text-muted-foreground">Aucun compte trouvé.</p>
         </div>
       ) : (
@@ -588,10 +588,10 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
           </div>
 
           {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
+                <tr className="border-b border-border/60 bg-muted/80">
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Utilisateur</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Associations</th>

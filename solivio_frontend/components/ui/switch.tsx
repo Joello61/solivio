@@ -23,8 +23,8 @@ function Switch({
         "aria-invalid:ring-2 aria-invalid:ring-destructive/20",
         "data-[size=default]:h-6 data-[size=default]:w-11",
         "data-[size=sm]:h-5 data-[size=sm]:w-9",
-        "data-checked:bg-primary data-unchecked:bg-neutral-200",
-        "dark:data-unchecked:bg-neutral-700",
+        "data-checked:bg-primary data-unchecked:bg-muted",
+        "",
         "data-disabled:cursor-not-allowed data-disabled:opacity-45",
         className
       )}
@@ -33,7 +33,7 @@ function Switch({
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
         className={cn(
-          "pointer-events-none block rounded-full bg-white shadow-sm ring-0",
+          "pointer-events-none block rounded-full bg-card shadow-sm ring-0",
           "transition-transform duration-200",
           "group-data-[size=default]/switch:size-[18px]",
           "group-data-[size=sm]/switch:size-[14px]",

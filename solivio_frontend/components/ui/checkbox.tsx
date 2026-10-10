@@ -11,7 +11,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
       data-slot="checkbox"
       className={cn(
         "peer relative flex size-5 shrink-0 items-center justify-center rounded-md",
-        "border-2 border-border bg-white",
+        "border-2 border-border bg-card",
         "transition-all duration-150 outline-none",
         "after:absolute after:-inset-x-3 after:-inset-y-2",
         "focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:border-ring",
@@ -19,7 +19,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
         "group-has-disabled/field:opacity-45",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
         "data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground",
-        "dark:bg-neutral-900 dark:border-neutral-600",
+        "",
         "dark:data-checked:bg-primary dark:data-checked:border-primary",
         className
       )}

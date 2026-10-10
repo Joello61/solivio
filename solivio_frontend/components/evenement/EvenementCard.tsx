@@ -19,7 +19,7 @@ export function EvenementCard({ evenement }: Props) {
   return (
     <Link
       href={`/evenements/${evenement.id}`}
-      className="block rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition-shadow p-5 space-y-3"
+      className="block rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow p-5 space-y-3"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 flex-1 min-w-0">

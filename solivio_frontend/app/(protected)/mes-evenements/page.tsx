@@ -12,9 +12,9 @@ const LABEL_ROLE: Record<string, string> = {
 };
 
 const COULEUR_PRESENCE: Record<string, string> = {
-  NON_POINTE: "bg-slate-100 text-slate-600",
-  PRESENT: "bg-emerald-100 text-emerald-700",
-  ABSENT: "bg-red-100 text-red-700",
+  NON_POINTE: "bg-muted text-muted-foreground",
+  PRESENT: "bg-success/15 text-success",
+  ABSENT: "bg-destructive/15 text-destructive",
 };
 
 async function fetchParticipations(): Promise<ParticipationEvenementResponse[]> {
@@ -41,7 +41,7 @@ export default async function MesEvenementsPage() {
             <Link
               key={p.id}
               href={`/evenements/${p.evenementId}`}
-              className="block rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition-shadow p-5"
+              className="block rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow p-5"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
