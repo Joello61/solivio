@@ -125,8 +125,12 @@ public class DistributionService {
     }
 
     @Transactional(readOnly = true)
-    public DistributionResponse detail(UUID distributionId) {
+    public DistributionResponse detail(UUID distributionId, boolean gestionnaire) {
         Distribution d = trouverOuEchouer(distributionId);
+        // Un brouillon n'existe pas pour qui ne gere pas les distributions (404, pas 403).
+        if (!gestionnaire && d.getStatut() == StatutDistribution.BROUILLON) {
+            throw new NotFoundException("Distribution introuvable : " + distributionId);
+        }
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
