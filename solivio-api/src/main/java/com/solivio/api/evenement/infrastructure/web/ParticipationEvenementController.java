@@ -64,7 +64,7 @@ public class ParticipationEvenementController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<List<ParticipationEvenementResponse>> listerParticipants(
         @PathVariable UUID id
     ) {

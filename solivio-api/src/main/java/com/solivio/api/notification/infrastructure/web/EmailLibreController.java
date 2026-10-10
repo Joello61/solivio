@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/notifications")
-@PreAuthorize("hasAnyRole('ADMIN', 'RESPONSABLE', 'SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('RESPONSABLE', 'SUPER_ADMIN')")
 public class EmailLibreController {
 
     private final EmailLibreService emailLibreService;
