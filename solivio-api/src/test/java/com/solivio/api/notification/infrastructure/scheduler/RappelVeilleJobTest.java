@@ -1,5 +1,6 @@
 package com.solivio.api.notification.infrastructure.scheduler;
 
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import com.solivio.api.support.SolivioIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +34,7 @@ class RappelVeilleJobTest {
 
     // "Aujourd'hui" au sens du job (heure de Paris), pas de la JVM : la CI tourne en
     // UTC, et entre minuit a Paris et minuit UTC les deux dates different.
-    private final LocalDate aujourdhui = LocalDate.now(ZoneId.of(RappelVeilleJob.FUSEAU));
+    private final LocalDate aujourdhui = LocalDate.now(HorlogeAssociation.ZONE_PAR_DEFAUT);
 
     private UUID distributionId;
     private UUID personneId;

@@ -2,6 +2,7 @@ package com.solivio.api.notification.infrastructure.scheduler;
 
 import com.solivio.api.notification.infrastructure.evenements.RappelEventPublisher;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,29 +18,30 @@ public class RappelVeilleJob {
 
     private static final Logger log = LoggerFactory.getLogger(RappelVeilleJob.class);
 
-    // Les distributions et l'association vivent en heure de Paris ; le conteneur
-    // tourne souvent en UTC, d'ou un fuseau explicite pour le cron et pour "demain".
-    static final String FUSEAU = "Europe/Paris";
-
     private final DistributionQueryPort distributionQueryPort;
     private final RappelEventPublisher rappelEventPublisher;
+    private final HorlogeAssociation horloge;
 
     public RappelVeilleJob(
         DistributionQueryPort distributionQueryPort,
-        RappelEventPublisher rappelEventPublisher
+        RappelEventPublisher rappelEventPublisher,
+        HorlogeAssociation horloge
     ) {
         this.distributionQueryPort = distributionQueryPort;
         this.rappelEventPublisher = rappelEventPublisher;
+        this.horloge = horloge;
     }
 
     /**
      * Declenche chaque matin a 8h (heure de Paris) et emet un rappel pour
      * chaque distribution publiee du lendemain.
      */
-    @Scheduled(cron = "0 0 8 * * *", zone = FUSEAU)
+    // Le conteneur tourne en UTC : fuseau explicite pour le cron, et "demain" dans
+    // le fuseau de l'association.
+    @Scheduled(cron = "0 0 8 * * *", zone = HorlogeAssociation.FUSEAU_PAR_DEFAUT)
     @Transactional
     public void emettreRappelsVeille() {
-        LocalDate demain = LocalDate.now(ZoneId.of(FUSEAU)).plusDays(1);
+        LocalDate demain = horloge.aujourdhui().plusDays(1);
         log.info("Job rappel veille : recherche des distributions pour le {}", demain);
         emettreRappels(demain);
     }

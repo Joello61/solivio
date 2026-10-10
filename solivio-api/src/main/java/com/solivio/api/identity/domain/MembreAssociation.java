@@ -1,5 +1,6 @@
 package com.solivio.api.identity.domain;
 
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -49,7 +50,7 @@ public class MembreAssociation {
     private Compte invitePar;
 
     @Column(name = "date_debut", nullable = false)
-    private LocalDate dateDebut = LocalDate.now();
+    private LocalDate dateDebut = LocalDate.now(HorlogeAssociation.ZONE_PAR_DEFAUT);
 
     @Column(name = "date_fin")
     private LocalDate dateFin;
@@ -60,6 +61,7 @@ public class MembreAssociation {
     }
 
     public boolean estActive() {
-        return "actif".equals(statut) && (dateFin == null || dateFin.isAfter(LocalDate.now()));
+        return "actif".equals(statut)
+            && (dateFin == null || dateFin.isAfter(LocalDate.now(HorlogeAssociation.ZONE_PAR_DEFAUT)));
     }
 }

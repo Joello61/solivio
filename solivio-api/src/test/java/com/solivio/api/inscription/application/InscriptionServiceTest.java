@@ -13,6 +13,7 @@ import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +48,8 @@ class InscriptionServiceTest {
     @Mock private InscriptionEventPublisher eventPublisher;
     @Mock private VerrouDistribution verrouDistribution;
 
+    private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
+
     private InscriptionService service;
 
     private UUID distributionId;
@@ -59,8 +66,10 @@ class InscriptionServiceTest {
     void setUp() {
         service = new InscriptionService(
             inscriptionRepository, distributionQueryPort, personneQueryPort,
-            associationQueryPort, eventPublisher, verrouDistribution
+            associationQueryPort, eventPublisher, verrouDistribution,
+            new HorlogeAssociation(Clock.systemUTC(), associationQueryPort)
         );
+        lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(PARIS);
         distributionId = UUID.randomUUID();
         personneId = UUID.randomUUID();
         inscriptionId = UUID.randomUUID();
@@ -419,6 +428,32 @@ class InscriptionServiceTest {
         service.desinscrire(distributionId, inscriptionId, "ben@example.com");
 
         verify(eventPublisher, never()).publierDesistementTardifBenevole(any());
+    }
+
+    // I7 : a 0h30 a Paris, il est encore la veille en UTC ; une distribution du
+    // lendemain (heure de Paris) rend bien le desistement tardif.
+    @Test
+    void desinscrire_desistementTardifCalculeDansLeFuseauDeLAssociation() {
+        Clock minuitTrenteAParis = Clock.fixed(Instant.parse("2026-10-14T22:30:00Z"), ZoneOffset.UTC);
+        InscriptionService serviceAMinuit = new InscriptionService(
+            inscriptionRepository, distributionQueryPort, personneQueryPort,
+            associationQueryPort, eventPublisher, verrouDistribution,
+            new HorlogeAssociation(minuitTrenteAParis, associationQueryPort));
+        Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
+        benevoleConfirme.setId(inscriptionId);
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(benevoleConfirme));
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(
+            new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10,
+                "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.of(2026, 10, 16)));
+        when(inscriptionRepository.save(any(Inscription.class))).thenReturn(benevoleConfirme);
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            any(), any(), any())).thenReturn(List.of());
+
+        serviceAMinuit.desinscrire(distributionId, inscriptionId, "ben@example.com");
+
+        verify(eventPublisher).publierDesistementTardifBenevole(benevoleConfirme);
     }
 
     // --- C3 : capacite par creneau ---
