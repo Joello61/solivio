@@ -117,7 +117,7 @@ class NotificationServiceTest {
     void notifierConfirmationInscription_echecSMTP_traceEchec() {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
-        doThrow(new NotificationEmailException("marie@example.com", "sujet", new RuntimeException("SMTP KO")))
+        doThrow(new NotificationEmailException(new RuntimeException("SMTP KO")))
             .when(emailService).envoyerConfirmationInscription(anyString(), any(ContexteEmail.class));
 
         service.notifierConfirmationInscription(personneId, distributionId, "BENEFICIAIRE", null);
@@ -448,7 +448,7 @@ class NotificationServiceTest {
         when(evenementQueryPort.trouverInscrits(evenementId)).thenReturn(List.of());
         when(associationQueryPort.trouverContactEmail())
             .thenReturn(Optional.of("contact@asso.fr"));
-        doThrow(new NotificationEmailException("contact@asso.fr", "sujet", new RuntimeException("SMTP")))
+        doThrow(new NotificationEmailException(new RuntimeException("SMTP")))
             .when(emailService).envoyerAnnulationEvenement(eq("contact@asso.fr"), any());
 
         // ne doit pas lever d'exception
