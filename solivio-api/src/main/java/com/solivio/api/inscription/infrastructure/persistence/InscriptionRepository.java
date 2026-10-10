@@ -4,6 +4,7 @@ import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.TypeInscription;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -131,4 +132,9 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "WHERE i.distributionId IN :distributionIds "
         + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
     long compterBenevolesDistincts(@Param("distributionIds") List<UUID> distributionIds);
+
+    @Modifying
+    @Query("UPDATE Inscription i SET i.nom = :nom, i.prenom = :prenom WHERE i.personneId = :personneId")
+    int remplacerNomPrenom(@Param("personneId") UUID personneId, @Param("nom") String nom,
+                           @Param("prenom") String prenom);
 }

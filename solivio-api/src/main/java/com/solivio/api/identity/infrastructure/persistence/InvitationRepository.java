@@ -13,4 +13,6 @@ public interface InvitationRepository extends JpaRepository<Invitation, UUID> {
     Optional<Invitation> findByTokenWithDetails(UUID token);
 
     boolean existsByEmailAndStatut(String email, String statut);
+
+    void deleteByEmail(String email);
 }

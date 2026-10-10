@@ -234,7 +234,7 @@ public class AuthService {
         return tokenBrut;
     }
 
-    private void supprimerCookies(HttpServletResponse response) {
+    public void supprimerCookies(HttpServletResponse response) {
         response.addHeader("Set-Cookie",
             ResponseCookie.from("refresh_token", "")
                 .maxAge(0).path("/").httpOnly(true).sameSite("Strict")

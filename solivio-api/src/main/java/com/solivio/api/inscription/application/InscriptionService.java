@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.identity.events.PersonneEffacee;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.StatutPresence;
@@ -177,6 +178,13 @@ public class InscriptionService {
         if (etaitConfirmee) {
             promouvoirSuivantEnAttente(distrib, inscription.getType());
         }
+    }
+
+    // RGPD : les inscriptions copient nom et prenom, anonymises comme la personne.
+    // Idempotent, l'ecouteur pouvant etre rejoue.
+    public void anonymiserPersonne(UUID personneId) {
+        inscriptionRepository.remplacerNomPrenom(
+            personneId, PersonneEffacee.NOM_ANONYME, PersonneEffacee.PRENOM_ANONYME);
     }
 
     // RG6 : une distribution annulee annule toutes ses inscriptions actives, sans

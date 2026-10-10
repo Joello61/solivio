@@ -331,7 +331,7 @@ Lecture : le compte porte la connexion et le rôle (membre) ; la personne porte 
 
 **Horodatage.** Les entités importantes portent une date de création ; les modifications sensibles passent par le journal d'audit.
 
-**Effacement logique.** Les personnes et les entités porteuses d'historique ne sont pas supprimées physiquement mais marquées supprimées, sauf demande explicite de suppression définitive (droit à l'effacement RGPD), qui elle est réelle et complète.
+**Effacement logique.** Les personnes et les entités porteuses d'historique ne sont pas supprimées physiquement mais marquées supprimées, sauf demande explicite de suppression définitive (droit à l'effacement RGPD), qui elle est réelle et complète : le compte, ses identifiants, ses jetons, son avatar et le profil bénéficiaire sont supprimés ; la personne et les copies de son nom (inscriptions) sont anonymisées de façon irréversible, ce qui en fait des données qui ne sont plus personnelles tout en gardant l'historique et les compteurs. La personne peut le demander elle-même depuis son compte ; un super administrateur traite les demandes reçues hors de l'application.
 
 **Pseudonymisation.** Les statistiques et les journaux ne manipulent pas d'identité nominative : ils comptent et agrègent. L'exposition nominative est réservée aux écrans à accès restreint.
 

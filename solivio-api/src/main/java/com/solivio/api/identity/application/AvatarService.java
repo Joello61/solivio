@@ -132,6 +132,10 @@ public class AvatarService {
         }
     }
 
+    public void supprimerAvatar(UUID compteId) {
+        supprimerAncienAvatar(compteId);
+    }
+
     private void supprimerAncienAvatar(UUID compteId) {
         trouverFichierAvatar(compteId).ifPresent(p -> {
             try {
