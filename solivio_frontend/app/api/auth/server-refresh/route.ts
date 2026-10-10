@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cheminDeRetourSur } from "@/lib/redirection";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
 
@@ -16,12 +17,7 @@ const API_URL = process.env.API_URL ?? "http://localhost:8080";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = request.nextUrl;
 
-  const raw = searchParams.get("returnTo") ?? "/dashboard";
-  // Protection contre les redirections ouvertes : chemin relatif uniquement.
-  const returnTo =
-    raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("://")
-      ? raw
-      : "/dashboard";
+  const returnTo = cheminDeRetourSur(searchParams.get("returnTo"), request.nextUrl.origin);
 
   const refreshToken = request.cookies.get("refresh_token")?.value;
   if (!refreshToken) {
