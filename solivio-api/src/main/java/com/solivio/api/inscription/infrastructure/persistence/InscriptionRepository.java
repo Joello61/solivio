@@ -39,14 +39,9 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID distributionId, UUID creneauId, TypeInscription type, StatutInscription statut
     );
 
-    // Prochain en liste d'attente (rang le plus bas)
-    Optional<Inscription> findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+    // Liste d'attente dans l'ordre de promotion (RG3)
+    List<Inscription> findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
         UUID distributionId, TypeInscription type, StatutInscription statut
-    );
-
-    // Prochain en liste d'attente pour un creneau specifique
-    Optional<Inscription> findFirstByDistributionIdAndCreneauIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-        UUID distributionId, UUID creneauId, TypeInscription type, StatutInscription statut
     );
 
     // Rang max en liste d'attente pour calculer le rang du nouvel inscrit

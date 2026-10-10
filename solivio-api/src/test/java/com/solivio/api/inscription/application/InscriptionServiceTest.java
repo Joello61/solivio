@@ -6,6 +6,7 @@ import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
+import com.solivio.api.inscription.infrastructure.persistence.VerrouDistribution;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +43,7 @@ class InscriptionServiceTest {
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private AssociationQueryPort associationQueryPort;
     @Mock private InscriptionEventPublisher eventPublisher;
+    @Mock private VerrouDistribution verrouDistribution;
 
     private InscriptionService service;
 
@@ -58,7 +61,7 @@ class InscriptionServiceTest {
     void setUp() {
         service = new InscriptionService(
             inscriptionRepository, distributionQueryPort, personneQueryPort,
-            associationQueryPort, eventPublisher
+            associationQueryPort, eventPublisher, verrouDistribution
         );
         distributionId = UUID.randomUUID();
         personneId = UUID.randomUUID();
@@ -237,9 +240,9 @@ class InscriptionServiceTest {
         Inscription enAttente = inscriptionBeneficiaire(personneEnAttenteId, StatutInscription.LISTE_ATTENTE);
         enAttente.placerEnListeAttente(1);
 
-        when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
             distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.LISTE_ATTENTE)
-        ).thenReturn(Optional.of(enAttente));
+        ).thenReturn(List.of(enAttente));
 
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
@@ -395,8 +398,8 @@ class InscriptionServiceTest {
                 "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.now());
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribAujourdhui);
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(benevoleConfirme);
-        when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-            any(), any(), any())).thenReturn(Optional.empty());
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            any(), any(), any())).thenReturn(List.of());
 
         service.desinscrire(distributionId, inscriptionId, "ben@example.com");
 
@@ -416,12 +419,115 @@ class InscriptionServiceTest {
                 "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.now().plusDays(7));
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribLointaine);
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(benevoleConfirme);
-        when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-            any(), any(), any())).thenReturn(Optional.empty());
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            any(), any(), any())).thenReturn(List.of());
 
         service.desinscrire(distributionId, inscriptionId, "ben@example.com");
 
         verify(eventPublisher, never()).publierDesistementTardifBenevole(any());
+    }
+
+    // --- C3 : capacite par creneau ---
+
+    @Test
+    void inscrire_placeEnAttenteQuandLeCreneauEstPleinMemeSiLaDistributionALaPlace() {
+        UUID creneauId = UUID.randomUUID();
+        preparerInscriptionDecoupee(creneauId, 2);
+        when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
+            distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(2L);
+        when(inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
+            distributionId, creneauId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(2L);
+
+        InscriptionResponse response = service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", creneauId, ROLES_BENEFICIAIRE);
+
+        assertThat(response.statut()).isEqualTo("LISTE_ATTENTE");
+        verify(verrouDistribution).verrouiller(distributionId);
+    }
+
+    @Test
+    void inscrire_placeEnAttenteQuandLaDistributionEstPleineMemeSiLeCreneauALaPlace() {
+        UUID creneauId = UUID.randomUUID();
+        preparerInscriptionDecoupee(creneauId, 20);
+        when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
+            distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(50L);
+
+        InscriptionResponse response = service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", creneauId, ROLES_BENEFICIAIRE);
+
+        assertThat(response.statut()).isEqualTo("LISTE_ATTENTE");
+    }
+
+    @Test
+    void inscrire_confirmeQuandLeCreneauEtLaDistributionOntDeLaPlace() {
+        UUID creneauId = UUID.randomUUID();
+        preparerInscriptionDecoupee(creneauId, 2);
+        when(inscriptionRepository.countByDistributionIdAndTypeAndStatut(
+            distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(10L);
+        when(inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
+            distributionId, creneauId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(1L);
+
+        InscriptionResponse response = service.inscrire(
+            distributionId, "marie@example.com", "BENEFICIAIRE", creneauId, ROLES_BENEFICIAIRE);
+
+        assertThat(response.statut()).isEqualTo("CONFIRMEE");
+    }
+
+    @Test
+    void desinscrire_promeutLaPremierePersonneEnAttenteDontLeCreneauALaPlace() {
+        UUID creneauPlein = UUID.randomUUID();
+        UUID creneauLibere = UUID.randomUUID();
+        DistributionQueryPort.DistributionInfo decoupee = new DistributionQueryPort.DistributionInfo(
+            distributionId, "PUBLIEE", 50, 10, "CRENEAUX_DECOUPES", "INSCRITS",
+            java.time.LocalDate.now().plusDays(3));
+        Inscription confirmee = new Inscription(
+            distributionId, creneauLibere, personneId, "Dupont", "Marie", TypeInscription.BENEFICIAIRE);
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(confirmee));
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(decoupee);
+
+        Inscription premiere = new Inscription(
+            distributionId, creneauPlein, UUID.randomUUID(), "A", "A", TypeInscription.BENEFICIAIRE);
+        premiere.placerEnListeAttente(1);
+        Inscription seconde = new Inscription(
+            distributionId, creneauLibere, UUID.randomUUID(), "B", "B", TypeInscription.BENEFICIAIRE);
+        seconde.placerEnListeAttente(2);
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+            distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.LISTE_ATTENTE)
+        ).thenReturn(List.of(premiere, seconde));
+        when(distributionQueryPort.trouverCreneau(creneauPlein, distributionId))
+            .thenReturn(new DistributionQueryPort.CreneauInfo(creneauPlein, 1, null, null));
+        when(distributionQueryPort.trouverCreneau(creneauLibere, distributionId))
+            .thenReturn(new DistributionQueryPort.CreneauInfo(creneauLibere, 1, null, null));
+        when(inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
+            distributionId, creneauPlein, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(1L);
+        when(inscriptionRepository.countByDistributionIdAndCreneauIdAndTypeAndStatut(
+            distributionId, creneauLibere, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE)).thenReturn(0L);
+
+        service.desinscrire(distributionId, inscriptionId, "marie@example.com");
+
+        assertThat(premiere.getStatut()).isEqualTo(StatutInscription.LISTE_ATTENTE);
+        assertThat(seconde.getStatut()).isEqualTo(StatutInscription.CONFIRMEE);
+        verify(eventPublisher).publierPromue(seconde);
+    }
+
+    private void preparerInscriptionDecoupee(UUID creneauId, int capaciteCreneau) {
+        DistributionQueryPort.DistributionInfo decoupee = new DistributionQueryPort.DistributionInfo(
+            distributionId, "PUBLIEE", 50, 10, "CRENEAUX_DECOUPES", "INSCRITS",
+            java.time.LocalDate.now().plusDays(3));
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(decoupee);
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
+            distributionId, personneId, TypeInscription.BENEFICIAIRE)).thenReturn(Optional.empty());
+        when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(1);
+        when(inscriptionRepository.compterInscriptionsConfirmeesPeriode(
+            eq(personneId), any(Instant.class), any(Instant.class))).thenReturn(0L);
+        when(distributionQueryPort.trouverCreneau(creneauId, distributionId))
+            .thenReturn(new DistributionQueryPort.CreneauInfo(creneauId, capaciteCreneau, null, null));
+        lenient().when(inscriptionRepository.findMaxRangListeAttente(distributionId, TypeInscription.BENEFICIAIRE))
+            .thenReturn(Optional.empty());
+        when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     // --- C1 : desinscription reservee au proprietaire ---
