@@ -17,10 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +47,9 @@ class InscriptionServiceTest {
     private UUID distributionId;
     private UUID personneId;
     private UUID inscriptionId;
+
+    private static final Set<String> ROLES_BENEFICIAIRE = Set.of("beneficiaire");
+    private static final Set<String> ROLES_BENEVOLE = Set.of("benevole");
 
     private DistributionQueryPort.DistributionInfo distribPubliee;
     private PersonneQueryPort.PersonneInfo personne;
@@ -79,7 +84,7 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(existante));
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja inscrit");
@@ -96,7 +101,7 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(enAttente));
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja inscrit");
@@ -124,7 +129,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         );
 
         // La ligne reactivee est la meme instance (pas de new Inscription)
@@ -149,7 +154,7 @@ class InscriptionServiceTest {
         ).thenReturn(1L);
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("frequence");
@@ -176,7 +181,7 @@ class InscriptionServiceTest {
         });
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "ben@example.com", "BENEVOLE", null
+            distributionId, "ben@example.com", "BENEVOLE", null, ROLES_BENEVOLE
         );
 
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
@@ -212,7 +217,7 @@ class InscriptionServiceTest {
         });
 
         InscriptionResponse response = service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         );
 
         assertThat(response.statut()).isEqualTo("LISTE_ATTENTE");
@@ -224,7 +229,8 @@ class InscriptionServiceTest {
     void desinscrire_promeuvoleProchainEnAttente() {
         Inscription confirmee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
         confirmee.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(confirmee));
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
         UUID personneEnAttenteId = UUID.randomUUID();
@@ -236,8 +242,9 @@ class InscriptionServiceTest {
         ).thenReturn(Optional.of(enAttente));
 
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
-        service.desinscrire(inscriptionId, "marie@example.com");
+        service.desinscrire(distributionId, inscriptionId, "marie@example.com");
 
         verify(eventPublisher).publierPromue(enAttente);
         assertThat(enAttente.getStatut()).isEqualTo(StatutInscription.CONFIRMEE);
@@ -248,10 +255,12 @@ class InscriptionServiceTest {
     void desinscrire_echoueSiInscriptionDejaAnnulee() {
         Inscription annulee = inscriptionBeneficiaire(personneId, StatutInscription.ANNULEE);
         annulee.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(annulee));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(annulee));
         when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
 
-        assertThatThrownBy(() -> service.desinscrire(inscriptionId, "marie@example.com"))
+        assertThatThrownBy(() -> service.desinscrire(
+            distributionId, inscriptionId, "marie@example.com"))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("deja annulee");
     }
@@ -262,7 +271,8 @@ class InscriptionServiceTest {
     void pointer_marqueCommePresent() {
         Inscription confirmee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
         confirmee.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribEnCours =
             new DistributionQueryPort.DistributionInfo(distributionId, "EN_COURS", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
@@ -276,31 +286,37 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
 
         InscriptionResponse response =
-            service.pointer(inscriptionId, "PRESENT", "coord@example.com");
+            service.pointer(distributionId, inscriptionId, "PRESENT", "coord@example.com", true);
 
         assertThat(response.presence()).isEqualTo("PRESENT");
     }
 
     @Test
     void pointer_echoueSiDistributionNonEnCours() {
+        when(personneQueryPort.trouverPersonne("coord@example.com")).thenReturn(personne);
         Inscription confirmee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
         confirmee.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(confirmee));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(confirmee));
 
         DistributionQueryPort.DistributionInfo distribPubliee =
             new DistributionQueryPort.DistributionInfo(distributionId, "PUBLIEE", 50, 10, "CRENEAU_UNIQUE", "INSCRITS",
                 java.time.LocalDate.now().plusDays(5));
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
-        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com"))
+        assertThatThrownBy(() -> service.pointer(
+            distributionId, inscriptionId, "PRESENT", "coord@example.com", true))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("en cours");
     }
 
     @Test
     void pointer_echoueSiInscriptionInexistante() {
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.pointer(inscriptionId, "PRESENT", "coord@example.com"))
+        when(personneQueryPort.trouverPersonne("coord@example.com")).thenReturn(personne);
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.pointer(
+            distributionId, inscriptionId, "PRESENT", "coord@example.com", true))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -314,7 +330,7 @@ class InscriptionServiceTest {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(brouillon);
 
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "BENEFICIAIRE", null
+            distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("publiee");
@@ -322,10 +338,8 @@ class InscriptionServiceTest {
 
     @Test
     void inscrire_echoueSiTypeInvalide() {
-        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
-
         assertThatThrownBy(() -> service.inscrire(
-            distributionId, "marie@example.com", "INCONNU", null
+            distributionId, "marie@example.com", "INCONNU", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("invalide");
@@ -372,7 +386,8 @@ class InscriptionServiceTest {
     void desinscrire_publieDesistementTardifSiBenevoleConfirmeEtDistributionImminente() {
         Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
         benevoleConfirme.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(benevoleConfirme));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(benevoleConfirme));
         when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
 
         DistributionQueryPort.DistributionInfo distribAujourdhui =
@@ -383,7 +398,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
             any(), any(), any())).thenReturn(Optional.empty());
 
-        service.desinscrire(inscriptionId, "ben@example.com");
+        service.desinscrire(distributionId, inscriptionId, "ben@example.com");
 
         verify(eventPublisher).publierDesistementTardifBenevole(benevoleConfirme);
     }
@@ -392,7 +407,8 @@ class InscriptionServiceTest {
     void desinscrire_nePubliePasDesistementSiDistributionLointaine() {
         Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
         benevoleConfirme.setId(inscriptionId);
-        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(benevoleConfirme));
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(benevoleConfirme));
         when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
 
         DistributionQueryPort.DistributionInfo distribLointaine =
@@ -403,9 +419,117 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
             any(), any(), any())).thenReturn(Optional.empty());
 
-        service.desinscrire(inscriptionId, "ben@example.com");
+        service.desinscrire(distributionId, inscriptionId, "ben@example.com");
 
         verify(eventPublisher, never()).publierDesistementTardifBenevole(any());
+    }
+
+    // --- C1 : desinscription reservee au proprietaire ---
+
+    @Test
+    void desinscrire_repond404PourLInscriptionDUneAutrePersonne() {
+        Inscription autrui = inscriptionBeneficiaire(UUID.randomUUID(), StatutInscription.CONFIRMEE);
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(autrui));
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+
+        assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
+            .isInstanceOf(NotFoundException.class);
+        assertThat(autrui.getStatut()).isEqualTo(StatutInscription.CONFIRMEE);
+        verify(inscriptionRepository, never()).save(any());
+    }
+
+    @Test
+    void desinscrire_repond404SiLInscriptionNAppartientPasALaDistribution() {
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
+            .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void desinscrire_refuseSiDistributionTerminee() {
+        Inscription confirmee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(confirmee));
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(
+            new DistributionQueryPort.DistributionInfo(distributionId, "TERMINEE", 50, 10,
+                "CRENEAU_UNIQUE", "INSCRITS", java.time.LocalDate.now()));
+
+        assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("terminee");
+    }
+
+    @Test
+    void desinscrire_refuseSiPresenceDejaPointee() {
+        Inscription pointee = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        pointee.pointer(StatutPresence.PRESENT, UUID.randomUUID());
+        when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
+            .thenReturn(Optional.of(pointee));
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+
+        assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("pointee");
+    }
+
+    // --- C2 : role requis selon le type d'inscription ---
+
+    @Test
+    void inscrire_refuseUnBeneficiaireEnTantQueBenevole() {
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "marie@example.com", "BENEVOLE", null, ROLES_BENEFICIAIRE
+        ))
+            .isInstanceOf(AuthorizationDeniedException.class);
+        verify(inscriptionRepository, never()).save(any());
+    }
+
+    @Test
+    void inscrire_refuseUnBenevoleEnTantQueBeneficiaire() {
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "ben@example.com", "BENEFICIAIRE", null, ROLES_BENEVOLE
+        ))
+            .isInstanceOf(AuthorizationDeniedException.class);
+    }
+
+    // --- C4 : pointage limite aux benevoles inscrits ---
+
+    @Test
+    void pointer_repond404PourUnBenevoleNonInscritALaDistribution() {
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
+        ).thenReturn(false);
+
+        assertThatThrownBy(() -> service.pointer(
+            distributionId, inscriptionId, "PRESENT", "ben@example.com", false))
+            .isInstanceOf(NotFoundException.class);
+        verify(inscriptionRepository, never()).findByIdAndDistributionId(any(), any());
+    }
+
+    @Test
+    void rechercherPourPointage_repond404PourUnBenevoleNonInscrit() {
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
+        ).thenReturn(false);
+
+        assertThatThrownBy(() -> service.rechercherPourPointage(distributionId, "Du", "ben@example.com", false))
+            .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void rechercherPourPointage_autoriseUnBenevoleInscritConfirme() {
+        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
+        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
+        ).thenReturn(true);
+        when(inscriptionRepository.rechercherPourPointage(distributionId, "Du")).thenReturn(List.of());
+
+        assertThat(service.rechercherPourPointage(distributionId, "Du", "ben@example.com", false)).isEmpty();
     }
 
     // --- Helpers ---

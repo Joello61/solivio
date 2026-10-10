@@ -38,9 +38,12 @@ public class PointageController {
     @GetMapping
     public ResponseEntity<List<PointageInfoResponse>> rechercher(
         @PathVariable UUID distributionId,
-        @RequestParam(defaultValue = "") String q
+        @RequestParam(defaultValue = "") String q,
+        @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(inscriptionService.rechercherPourPointage(distributionId, q));
+        return ResponseEntity.ok(inscriptionService.rechercherPourPointage(
+            distributionId, q, user.getUsername(), estGestionnaire(user)
+        ));
     }
 
     @PutMapping("/{inscriptionId}")
@@ -51,9 +54,13 @@ public class PointageController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         InscriptionResponse response = inscriptionService.pointer(
-            inscriptionId, request.presence(), user.getUsername()
+            distributionId, inscriptionId, request.presence(), user.getUsername(), estGestionnaire(user)
         );
         auditService.tracer(user.getCompteId(), "POINTAGE", "inscription", inscriptionId);
         return ResponseEntity.ok(response);
+    }
+
+    private static boolean estGestionnaire(SolivioUserDetails user) {
+        return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }
 }
