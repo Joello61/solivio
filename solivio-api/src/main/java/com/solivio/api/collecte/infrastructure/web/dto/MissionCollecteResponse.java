@@ -15,6 +15,8 @@ public record MissionCollecteResponse(
     String statut,
     UUID benevoleId,
     String benevoleNomComplet,
+    // Compare a la personne qui consulte : le frontend ne connait que l'id du compte.
+    boolean assigneAuLecteur,
     ZonedDateTime datePriseEnCharge,
     ZonedDateTime dateCollecteEffectuee,
     ZonedDateTime dateDepotValide,
