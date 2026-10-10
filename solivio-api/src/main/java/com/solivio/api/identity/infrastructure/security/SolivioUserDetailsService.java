@@ -40,7 +40,9 @@ public class SolivioUserDetailsService implements UserDetailsService {
             compte.getPasswordHash(),
             compte.isSuperAdmin(),
             List.of(new SimpleGrantedAuthority("ROLE_USER")),
-            compte.isActif() && compte.isEmailVerifie()
+            // L'email non verifie est controle par AuthService apres le mot de passe :
+            // ici, il serait signale avant, a quiconque connait l'adresse.
+            compte.isActif()
         );
     }
 }

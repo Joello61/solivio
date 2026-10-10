@@ -12,6 +12,7 @@ import com.solivio.api.identity.infrastructure.security.JwtService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.infrastructure.web.dto.MeResponse;
 import com.solivio.api.identity.infrastructure.web.dto.TokenResponse;
+import com.solivio.api.shared.exception.EmailNonVerifieException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseCookie;
@@ -78,6 +79,9 @@ public class AuthService {
 
         Compte compte = compteRepository.findByEmail(email)
             .orElseThrow(() -> new AuthenticationException("Compte introuvable") {});
+        if (!compte.isEmailVerifie()) {
+            throw new EmailNonVerifieException();
+        }
 
         // JIT : couvre les comptes anterieurs a la creation systematique de la Personne.
         personneProvisioningService.provisionner(compte.getEmail(), compte.getNom(), compte.getPrenom());

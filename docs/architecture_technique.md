@@ -111,7 +111,7 @@ Conséquence : la livraison est garantie **au moins une fois**. Un écouteur doi
 
 L'authentification est assurée par le backend lui-même (ADR-004), sans fournisseur d'identité externe à héberger :
 
-- connexion par email et mot de passe (haché en Argon2id), avec vérification de l'email et réinitialisation par code à usage unique ;
+- connexion par email et mot de passe (haché en Argon2id), avec vérification de l'email et réinitialisation par code à usage unique. Tant que l'email n'est pas vérifié, la connexion est refusée avec le code `EMAIL_NOT_VERIFIED`, renvoyé seulement après un mot de passe correct ; le client propose alors la saisie d'un nouveau code. Les points d'entrée de vérification et de renvoi ne révèlent pas si une adresse a un compte ;
 - connexion Google (OAuth 2.0 / OpenID Connect via Spring Security), avec rattachement au compte existant par email ;
 - jeton d'accès JWT signé (HMAC-SHA256), de courte durée ;
 - jeton de rafraîchissement aléatoire, stocké haché en base, avec rotation à chaque usage et révocation possible.
@@ -262,6 +262,7 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
   - l'inscription et la finalisation d'un compte Google ne prennent plus de `codeAssociation` ;
   - les erreurs suivent l'enveloppe `{"error": {"code", "message", "details", "request_id"}}` : le mobile lit encore `detail` (ProblemDetail) et n'affiche plus que des messages génériques ;
   - les mots de passe suivent la nouvelle politique (8 à 128 caractères, mots de passe courants refusés), et la connexion peut répondre `429` (limite de débit ou compte temporairement verrouillé).
+  - un email non vérifié fait répondre la connexion `403 EMAIL_NOT_VERIFIED` (et non plus `ACCOUNT_DISABLED`) : proposer la saisie du code et son renvoi.
 
 ### ADR-008 - GitHub Actions et GHCR
 

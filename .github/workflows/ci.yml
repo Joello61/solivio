@@ -123,10 +123,13 @@ jobs:
         image: axllent/mailpit:v1.31.4
         ports:
           - 1025:1025
+          # API de lecture des emails, pour le parcours de creation de compte.
+          - 8025:8025
     env:
       # Comptes du profil seed (DataSeeder), sans valeur hors developpement.
       E2E_EMAIL: coordo1@solivio.app
       E2E_PASSWORD: Solivio2026!
+      E2E_MAILPIT_URL: http://localhost:8025
     steps:
       - uses: actions/checkout@v7
 
