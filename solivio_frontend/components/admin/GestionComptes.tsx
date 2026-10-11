@@ -540,7 +540,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
+              <Select items={{ tous: "Tous", actif: "Actif", inactif: "Inactif" }} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -553,7 +553,7 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Type</span>
-              <Select value={filtreAdmin} onValueChange={(v) => { if (v) setFiltreAdmin(v); }}>
+              <Select items={{ tous: "Tous", admin: "Super admin", "non-admin": "Non admin" }} value={filtreAdmin} onValueChange={(v) => { if (v) setFiltreAdmin(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>

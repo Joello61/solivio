@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { GestionMembres } from "@/components/association/GestionMembres";
+import { InviterMembre } from "@/components/association/InviterMembre";
 import type { MembreResponse } from "@/types/association";
 import type { MeResponse } from "@/types/auth";
 
@@ -19,14 +20,19 @@ async function fetchMembresEtMe(): Promise<{
 
 export default async function MembresPage() {
   const { membres, me } = await fetchMembresEtMe();
+  // Le backend reserve l'invitation au role responsable.
+  const peutInviter = me?.roles.includes("responsable") ?? false;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">Membres</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {membres.length} membre{membres.length !== 1 ? "s" : ""} dans l&apos;association.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground font-display">Membres</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {membres.length} membre{membres.length !== 1 ? "s" : ""} dans l&apos;association.
+          </p>
+        </div>
+        {peutInviter && <InviterMembre />}
       </div>
 
       <GestionMembres membres={membres} currentUserId={me?.id ?? ""} />

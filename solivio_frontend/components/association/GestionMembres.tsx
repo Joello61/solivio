@@ -27,9 +27,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { mettreAJourRoleMembre, supprimerMembre, changerStatutMembre } from "@/lib/api/association";
 import type { MembreResponse } from "@/types/association";
+import { ROLE_LABELS } from "@/lib/roles";
 
 const ROLES = ["benevole", "coordinateur", "responsable", "super_admin"] as const;
 type RoleValue = (typeof ROLES)[number];
+
+// Base UI n'affiche le libelle de la valeur choisie que si la racine recoit les items.
+const FILTRES_STATUT = { tous: "Tous", actif: "Actif", suspendu: "Suspendu", invite_en_attente: "En attente" };
+const FILTRES_ROLE = { tous: "Tous", benevole: "Bénévole", coordinateur: "Coordinateur", responsable: "Responsable" };
 
 function labelRole(role: string): string {
   switch (role) {
@@ -163,6 +168,7 @@ function CarteMembre({
         {!estSoi && (
           <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
             <Select
+              items={ROLE_LABELS}
               value={role as RoleValue}
               onValueChange={(v) => { if (v) changerRole(v); }}
               disabled={pending || estSuspendu}
@@ -363,6 +369,7 @@ function LigneMembreRow({
             <span className="text-sm text-muted-foreground">{labelRole(role)}</span>
           ) : (
             <Select
+              items={ROLE_LABELS}
               value={role as RoleValue}
               onValueChange={(v) => { if (v) changerRole(v); }}
               disabled={pending || estSuspendu}
@@ -510,7 +517,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
+              <Select items={FILTRES_STATUT} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -524,7 +531,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Rôle</span>
-              <Select value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
+              <Select items={FILTRES_ROLE} value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>

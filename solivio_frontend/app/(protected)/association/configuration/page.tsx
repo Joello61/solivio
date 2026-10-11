@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { lireServeur } from "@/lib/api/serveur";
+import { ExportDonnees } from "@/components/association/ExportDonnees";
 import { FormulaireConfiguration } from "@/components/association/FormulaireConfiguration";
 import type { AssociationResponse } from "@/types/association";
 
@@ -34,6 +35,8 @@ export default async function ConfigurationPage() {
       <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6">
         <FormulaireConfiguration association={association} />
       </div>
+
+      <ExportDonnees />
     </div>
   );
 }

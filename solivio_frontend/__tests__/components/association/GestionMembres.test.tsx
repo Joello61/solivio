@@ -53,6 +53,13 @@ describe("GestionMembres", () => {
     expect(screen.getAllByText("Bob Martin")[0]).toBeInTheDocument();
   });
 
+  it("affiche les libelles des roles et des filtres, pas les valeurs brutes", () => {
+    render(<GestionMembres membres={membres} currentUserId="other" />);
+    expect(screen.getAllByRole("combobox").map((c) => c.textContent)).toContain("Coordinateur▼");
+    expect(screen.queryByText("coordinateur")).not.toBeInTheDocument();
+    expect(screen.queryByText("tous")).not.toBeInTheDocument();
+  });
+
   it("affiche les emails", () => {
     render(<GestionMembres membres={membres} currentUserId="other" />);
     expect(screen.getAllByText("alice@example.com")[0]).toBeInTheDocument();

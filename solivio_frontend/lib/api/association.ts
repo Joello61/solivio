@@ -1,9 +1,10 @@
-import { apiGet, apiFetch, apiFetchRaw } from "@/lib/api";
+import { apiGet, apiFetch, apiFetchRaw, apiPost, apiTelecharger } from "@/lib/api";
 import type {
   AssociationResponse,
   UpdateAssociationPayload,
   MembreResponse,
   UpdateRoleMembrePayload,
+  InviterMembrePayload,
   StatistiqueDistributionResponse,
   StatistiquePeriodeResponse,
 } from "@/types/association";
@@ -74,4 +75,12 @@ export function statsPeriode(
   return apiGet<StatistiquePeriodeResponse>(
     `/api/statistiques/periode?debut=${debut}&fin=${fin}`
   );
+}
+
+export function inviterMembre(payload: InviterMembrePayload): Promise<void> {
+  return apiPost<void>("/api/invitations", payload);
+}
+
+export function exporterDonnees(): Promise<Blob> {
+  return apiTelecharger("/api/association/export");
 }

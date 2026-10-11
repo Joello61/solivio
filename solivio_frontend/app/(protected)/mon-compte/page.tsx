@@ -13,6 +13,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ChangementMotDePasse } from "@/components/account/ChangementMotDePasse";
 import { EffacementDonnees } from "@/components/account/EffacementDonnees";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -168,6 +169,9 @@ export default async function MonComptePage() {
           <FormulaireMonCompte user={user} />
         </div>
       </div>
+
+      {/* Un compte Google n'a pas de mot de passe local. */}
+      {user.authMethod === "password" && <ChangementMotDePasse />}
 
       <EffacementDonnees />
     </div>
