@@ -116,6 +116,13 @@ export default async function DashboardPage() {
           <div className="flex items-baseline gap-2">
             <h2 className="text-base font-semibold text-foreground font-display">Statistiques</h2>
             <span className="text-sm text-muted-foreground capitalize">{moisCourant}</span>
+            <Link
+              href="/statistiques"
+              className="ml-auto inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              Voir le détail
+              <ChevronRight className="size-4" />
+            </Link>
           </div>
           {statsErreur ? (
             <div className="rounded-xl border border-border/60 bg-muted px-5 py-4 text-sm text-muted-foreground">
