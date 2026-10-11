@@ -110,6 +110,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
           <Input
             id="nombreContenants"
             type="number"
+            inputMode="numeric"
             min="1"
             step="1"
             {...register("nombreContenants", { valueAsNumber: true })}
@@ -124,6 +125,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
           <Input
             id="quantiteParContenant"
             type="number"
+            inputMode="decimal"
             min="0.001"
             step="0.001"
             {...register("quantiteParContenant", { valueAsNumber: true })}
