@@ -189,7 +189,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void notifierConfirmationInscriptionReconditionnement(UUID personneId, UUID sessionId) {
+    public void notifierConfirmationInscriptionReconditionnement(UUID personneId, UUID sessionId, UUID occurrenceId) {
         PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(personneId);
         SessionInfo session = sessionReconditionnementQueryPort.trouverSessionDetails(sessionId);
         ContexteReconditionnementEmail contexte = new ContexteReconditionnementEmail(
@@ -197,7 +197,8 @@ public class NotificationService {
             session.dateHeureFin(), session.lieu(), null);
         String sujet = "Inscription confirmee - " + session.titre();
         TypeEvenementNotification type = TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT;
-        boolean envoye = envoyer(cle(type, sessionId), personne.id(), sessionId, type, sujet,
+        // Cle par occurrence : une reinscription apres desistement recoit sa propre confirmation.
+        boolean envoye = envoyer(cle(type, occurrenceId), personne.id(), sessionId, type, sujet,
             () -> emailService.envoyerConfirmationInscriptionReconditionnement(personne.email(), contexte));
         exigerSucces(envoye ? 0 : 1, type, sessionId);
     }

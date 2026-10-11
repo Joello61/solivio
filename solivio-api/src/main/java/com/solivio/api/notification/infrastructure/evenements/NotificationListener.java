@@ -10,6 +10,7 @@ import com.solivio.api.inscription.events.InscriptionConfirmee;
 import com.solivio.api.inscription.events.InscriptionPromue;
 import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution;
 import com.solivio.api.notification.application.NotificationService;
+import com.solivio.api.reconditionnement.events.InscriptionReconditionnementConfirmee;
 import com.solivio.api.reconditionnement.events.SessionReconditionnementAnnulee;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -82,6 +83,12 @@ public class NotificationListener {
     @ApplicationModuleListener
     void on(MissionCollecteAnnulee event) {
         notificationService.notifierAnnulationMissionCollecte(event.missionId(), event.benevoleId());
+    }
+
+    @ApplicationModuleListener
+    void on(InscriptionReconditionnementConfirmee event) {
+        notificationService.notifierConfirmationInscriptionReconditionnement(
+            event.personneId(), event.sessionId(), event.occurrenceId());
     }
 
     @ApplicationModuleListener
