@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
+import { ActionPrincipaleMobile, actionPrincipale } from "@/components/distributions/ActionPrincipaleMobile";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
@@ -104,6 +105,13 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   const typeInscription = typeInscriptionPossible(me?.roles ?? []);
   const pointageBenevole =
     !estGestionnaire && peutPointer(me?.roles ?? [], distribution.statut, mesInscriptions);
+  const action = actionPrincipale({
+    statut: distribution.statut,
+    estGestionnaire,
+    pointageBenevole,
+    peutSInscrire: typeInscription !== null,
+    dejaInscrit: monInscription !== undefined,
+  });
 
   return (
     <div className="space-y-8">
@@ -385,7 +393,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Mon inscription : ouverte a tout membre qui peut s'inscrire (spec 4.5) */}
           {typeInscription && distribution.statut === "PUBLIEE" && (
-            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
+            <div id="mon-inscription" className="scroll-mt-6 rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Mon inscription
               </p>
@@ -424,6 +432,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+      <ActionPrincipaleMobile action={action} distributionId={id} />
     </div>
   );
 }
