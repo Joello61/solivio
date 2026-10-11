@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, PackageX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,34 +10,19 @@ import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Reconditionnement" };
 
-async function fetchData(cookieHeader: string): Promise<{
+async function fetchData(): Promise<{
   me: MeResponse | null;
   sessions: SessionReconditionnementResponse[];
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [meRes, sessionsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/sessions-reconditionnement`, { headers, cache: "no-store" }),
+  const [me, sessions] = await Promise.all([
+    lireMoi(),
+    lireServeur<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement"),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const sessions = sessionsRes.ok
-    ? ((await sessionsRes.json()) as SessionReconditionnementResponse[])
-    : [];
-
-  return { me, sessions };
+  return { me, sessions: sessions ?? [] };
 }
 
 export default async function ReconditionnementPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const { me, sessions } = await fetchData(cookieHeader);
+  const { me, sessions } = await fetchData();
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),

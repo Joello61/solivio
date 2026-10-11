@@ -1,21 +1,17 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { PointageEvenementClient } from "./PointageEvenementClient";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 
 export const metadata: Metadata = { title: "Pointage événement" };
 
-async function fetchData(id: string, cookieHeader: string) {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-  const [evRes, pointRes] = await Promise.all([
-    fetch(`${baseUrl}/api/evenements/${id}`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/evenements/${id}/pointage`, { headers, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [evenement, participations] = await Promise.all([
+    lireServeur<EvenementResponse>(`/api/evenements/${id}`),
+    lireServeur<ParticipationEvenementResponse[]>(`/api/evenements/${id}/pointage`),
   ]);
-  const evenement = evRes.ok ? ((await evRes.json()) as EvenementResponse) : null;
-  const participations = pointRes.ok ? ((await pointRes.json()) as ParticipationEvenementResponse[]) : [];
-  return { evenement, participations };
+  return { evenement, participations: participations ?? [] };
 }
 
 interface Props {
@@ -24,9 +20,7 @@ interface Props {
 
 export default async function PointageEvenementPage({ params }: Props) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { evenement, participations } = await fetchData(id, cookieHeader);
+  const { evenement, participations } = await fetchData(id);
 
   if (!evenement) notFound();
 

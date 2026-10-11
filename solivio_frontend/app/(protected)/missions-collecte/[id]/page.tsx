@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, MapPin, Truck, User, Users } from "lucide-react";
 import { StatutBadge } from "@/components/collecte/StatutBadge";
@@ -10,20 +10,14 @@ import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Détail mission collecte" };
 
-async function fetchData(id: string, cookieHeader: string): Promise<{
+async function fetchData(id: string): Promise<{
   me: MeResponse | null;
   mission: MissionCollecteResponse | null;
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [meRes, missionRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/missions-collecte/${id}`, { headers, cache: "no-store" }),
+  const [me, mission] = await Promise.all([
+    lireMoi(),
+    lireServeur<MissionCollecteResponse>(`/api/missions-collecte/${id}`),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const mission = missionRes.ok ? ((await missionRes.json()) as MissionCollecteResponse) : null;
   return { me, mission };
 }
 
@@ -33,9 +27,7 @@ interface Props {
 
 export default async function DetailMissionCollectePage({ params }: Props) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { me, mission } = await fetchData(id, cookieHeader);
+  const { me, mission } = await fetchData(id);
 
   if (!mission) notFound();
 

@@ -8,10 +8,6 @@ import type {
   StatistiquePeriodeResponse,
 } from "@/types/association";
 
-export function lireAssociation(): Promise<AssociationResponse> {
-  return apiGet<AssociationResponse>("/api/association");
-}
-
 export function mettreAJourAssociation(
   payload: UpdateAssociationPayload
 ): Promise<AssociationResponse> {
@@ -28,10 +24,6 @@ export function uploadLogo(file: File): Promise<AssociationResponse> {
     method: "POST",
     body: form,
   });
-}
-
-export function listerMembres(): Promise<MembreResponse[]> {
-  return apiGet<MembreResponse[]>("/api/association/membres");
 }
 
 export function mettreAJourRoleMembre(

@@ -1,5 +1,6 @@
 "use client";
 
+import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
@@ -112,10 +113,7 @@ export function FormulaireEvenement() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/public/config")
-      .then((r) => r.json())
-      .then((d: { googleMapsApiKey?: string }) => setMapsApiKey(d.googleMapsApiKey ?? ""))
-      .catch(() => setMapsApiKey(""));
+    lireCleGoogleMaps().then(setMapsApiKey);
   }, []);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {

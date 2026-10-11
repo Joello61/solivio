@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import type { MeResponse } from "@/types/auth";
+import { lireMoi } from "@/lib/api/serveur";
 import { AppShell } from "@/components/layout/AppShell";
 
 /**
@@ -13,29 +12,10 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  let user: MeResponse | null = null;
-  try {
-    const res = await fetch(
-      `${process.env.API_URL ?? "http://localhost:8080"}/api/auth/me`,
-      {
-        headers: { Cookie: cookieHeader },
-        cache: "no-store",
-      },
-    );
-    if (res.ok) {
-      user = (await res.json()) as MeResponse;
-    }
-  } catch {
-    // erreur reseau
-  }
+  // Une panne reseau renvoie aussi a la connexion.
+  const user = await lireMoi().catch(() => null);
 
   if (!user) redirect("/login");
 
-  return <AppShell user={user!}>{children}</AppShell>;
+  return <AppShell user={user}>{children}</AppShell>;
 }

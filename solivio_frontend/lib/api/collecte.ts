@@ -3,19 +3,9 @@ import type {
   MissionCollecteResponse,
   CreateMissionCollectePayload,
   UpdateMissionCollectePayload,
-  StatutMission,
 } from "@/types/collecte";
 
 const BASE = "/api/missions-collecte";
-
-export function listerMissions(statut?: StatutMission): Promise<MissionCollecteResponse[]> {
-  const qs = statut ? `?statut=${statut}` : "";
-  return apiFetch<MissionCollecteResponse[]>(`${BASE}${qs}`);
-}
-
-export function detailMission(id: string): Promise<MissionCollecteResponse> {
-  return apiFetch<MissionCollecteResponse>(`${BASE}/${id}`);
-}
 
 export function creerMission(payload: CreateMissionCollectePayload): Promise<MissionCollecteResponse> {
   return apiFetch<MissionCollecteResponse>(BASE, {
@@ -57,6 +47,3 @@ export function validerDepot(id: string): Promise<MissionCollecteResponse> {
   return apiFetch<MissionCollecteResponse>(`${BASE}/${id}/valider-depot`, { method: "PUT" });
 }
 
-export function mesMissions(): Promise<MissionCollecteResponse[]> {
-  return apiFetch<MissionCollecteResponse[]>(`${BASE}/mes-missions`);
-}

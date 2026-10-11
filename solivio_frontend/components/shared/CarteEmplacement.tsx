@@ -1,5 +1,6 @@
 "use client";
 
+import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { ExternalLink } from "lucide-react";
@@ -33,10 +34,7 @@ export function CarteEmplacement({ lieu, hauteur = "300px", interactive = false 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/public/config")
-      .then((r) => r.json())
-      .then((d: { googleMapsApiKey?: string }) => setApiKey(d.googleMapsApiKey ?? ""))
-      .catch(() => setApiKey(""));
+    lireCleGoogleMaps().then(setApiKey);
   }, []);
 
   if (lieu.latitude == null || lieu.longitude == null) {

@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { lireMoi } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -13,7 +13,6 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { MeResponse } from "@/types/auth";
 import { EffacementDonnees } from "@/components/account/EffacementDonnees";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -28,22 +27,9 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-async function fetchMe(cookieHeader: string): Promise<MeResponse | null> {
-  const res = await fetch(
-    `${process.env.API_URL ?? "http://localhost:8080"}/api/auth/me`,
-    { headers: { Cookie: cookieHeader }, cache: "no-store" }
-  );
-  return res.ok ? (res.json() as Promise<MeResponse>) : null;
-}
 
 export default async function MonComptePage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const user = await fetchMe(cookieHeader);
+  const user = await lireMoi();
   if (!user) redirect("/login");
 
   const estBeneficiaire = user.roles.includes("beneficiaire");

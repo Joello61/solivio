@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { MapPin, CalendarSearch, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,21 +20,6 @@ interface InscriptionPersonnelle {
   dateInscription: string;
 }
 
-async function fetchMesInscriptions(
-  cookieHeader: string,
-): Promise<InscriptionPersonnelle[]> {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  try {
-    const res = await fetch(`${base}/api/inscriptions/mes`, {
-      headers: { Cookie: cookieHeader },
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    return res.json() as Promise<InscriptionPersonnelle[]>;
-  } catch {
-    return [];
-  }
-}
 
 function statutLabel(statut: string, rang: number | null): string {
   if (statut === "LISTE_ATTENTE") return `Liste d'attente (rang ${rang ?? "?"})`;
@@ -71,13 +56,7 @@ const TYPE_PILL: Record<string, string> = {
 };
 
 export default async function MesInscriptionsPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const inscriptions = await fetchMesInscriptions(cookieHeader);
+  const inscriptions = (await lireServeur<InscriptionPersonnelle[]>("/api/inscriptions/mes")) ?? [];
 
   const aujourdhui = new Date().toISOString().split("T")[0];
   const avenir = inscriptions.filter(

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { accesServeur, lireMoi } from "@/lib/api/serveur";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ClipboardList } from "lucide-react";
@@ -17,15 +17,8 @@ interface PageProps {
 // Le backend repond 404 a qui n'a pas acces au pointage de cette distribution
 // (benevole non inscrit) : la page s'affiche alors comme introuvable.
 async function chargerAcces(id: string): Promise<{ me: MeResponse | null; autorise: boolean }> {
-  const cookieStore = await cookies();
-  const headers = { Cookie: cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ") };
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const [meRes, accesRes] = await Promise.all([
-    fetch(`${base}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${base}/api/distributions/${id}/pointage?q=`, { headers, cache: "no-store" }),
-  ]);
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  return { me, autorise: accesRes.ok };
+  const [me, autorise] = await Promise.all([lireMoi(), accesServeur(`/api/distributions/${id}/pointage?q=`)]);
+  return { me, autorise };
 }
 
 export default async function PointagePage({ params }: PageProps) {
