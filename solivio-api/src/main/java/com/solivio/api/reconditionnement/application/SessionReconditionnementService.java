@@ -154,6 +154,7 @@ public class SessionReconditionnementService {
             })
             .orElse(new InscriptionReconditionnement(sessionId, personne.id()));
         inscriptionRepository.save(inscription);
+        eventPublisher.publierInscriptionConfirmee(sessionId, personne.id());
         return toInscriptionResponse(inscription, session, personne.nom() + " " + personne.prenom());
     }
 

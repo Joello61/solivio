@@ -173,6 +173,7 @@ class SessionReconditionnementServiceTest {
 
         assertThat(response.statut()).isEqualTo("CONFIRMEE");
         verify(inscriptionRepository).save(any(InscriptionReconditionnement.class));
+        verify(eventPublisher).publierInscriptionConfirmee(sessionId, personneId);
     }
 
     @Test

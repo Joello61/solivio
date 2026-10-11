@@ -232,7 +232,8 @@ class NotificationServiceTest {
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(sessionReconditionnementQueryPort.trouverSessionDetails(sessionId)).thenReturn(session);
 
-        service.notifierConfirmationInscriptionReconditionnement(personneId, sessionId);
+        UUID occurrenceId = UUID.randomUUID();
+        service.notifierConfirmationInscriptionReconditionnement(personneId, sessionId, occurrenceId);
 
         verify(emailService).envoyerConfirmationInscriptionReconditionnement(
             eq("marie@example.com"), any(ContexteReconditionnementEmail.class));
@@ -241,6 +242,8 @@ class NotificationServiceTest {
         assertThat(captor.getValue().getTypeEvenement())
             .isEqualTo(TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT);
         assertThat(captor.getValue().getStatut()).isEqualTo(StatutNotification.ENVOYE);
+        assertThat(captor.getValue().getCleIdempotence())
+            .isEqualTo("CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT:" + occurrenceId);
     }
 
     @Test
