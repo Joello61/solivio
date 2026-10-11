@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
-import { creerMission } from "@/lib/api/collecte";
+import { creerMission, modifierMission } from "@/lib/api/collecte";
+import { versSaisieDateHeure } from "@/lib/utils";
+import type { LieuMissionResponse, MissionCollecteResponse } from "@/types/collecte";
 import type { LieuRequest } from "@/types/distribution";
 
 const schema = z.object({
@@ -24,11 +26,28 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function FormulaireMissionCollecte() {
+function versLieu(lieu: LieuMissionResponse | null | undefined): LieuRequest | undefined {
+  if (!lieu?.adresseFormatee) return undefined;
+  return {
+    placeId: lieu.placeId ?? undefined,
+    adresseFormatee: lieu.adresseFormatee,
+    latitude: lieu.latitude ?? undefined,
+    longitude: lieu.longitude ?? undefined,
+  };
+}
+
+function versPayload(lieu: LieuRequest | undefined) {
+  return lieu
+    ? { placeId: lieu.placeId, adresseFormatee: lieu.adresseFormatee,
+        latitude: lieu.latitude, longitude: lieu.longitude }
+    : undefined;
+}
+
+export function FormulaireMissionCollecte({ mission }: { mission?: MissionCollecteResponse } = {}) {
   const router = useRouter();
   const [erreur, setErreur] = useState<string | null>(null);
-  const [lieuCollecte, setLieuCollecte] = useState<LieuRequest | undefined>(undefined);
-  const [lieuDepot, setLieuDepot] = useState<LieuRequest | undefined>(undefined);
+  const [lieuCollecte, setLieuCollecte] = useState(() => versLieu(mission?.lieuCollecte));
+  const [lieuDepot, setLieuDepot] = useState(() => versLieu(mission?.lieuDepot));
   const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
@@ -42,29 +61,37 @@ export function FormulaireMissionCollecte() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: mission
+      ? {
+          titre: mission.titre,
+          description: mission.description ?? "",
+          dateHeure: versSaisieDateHeure(mission.dateHeure),
+          capacitePersonnes: String(mission.capacitePersonnes),
+        }
+      : undefined,
+  });
 
   async function onSubmit(values: FormValues) {
     setErreur(null);
     try {
-      const mission = await creerMission({
+      const payload = {
         titre: values.titre,
         description: values.description || undefined,
-        lieuCollecte: lieuCollecte
-          ? { placeId: lieuCollecte.placeId, adresseFormatee: lieuCollecte.adresseFormatee,
-              latitude: lieuCollecte.latitude, longitude: lieuCollecte.longitude }
-          : undefined,
-        lieuDepot: lieuDepot
-          ? { placeId: lieuDepot.placeId, adresseFormatee: lieuDepot.adresseFormatee,
-              latitude: lieuDepot.latitude, longitude: lieuDepot.longitude }
-          : undefined,
+        lieuCollecte: versPayload(lieuCollecte),
+        lieuDepot: versPayload(lieuDepot),
         dateHeure: new Date(values.dateHeure).toISOString(),
         capacitePersonnes:
           values.capacitePersonnes && values.capacitePersonnes.trim() !== ""
             ? parseInt(values.capacitePersonnes, 10)
             : undefined,
-      });
-      router.push(`/missions-collecte/${mission.id}`);
+      };
+      const enregistree = mission
+        ? await modifierMission(mission.id, payload)
+        : await creerMission(payload);
+      router.push(`/missions-collecte/${enregistree.id}`);
+      router.refresh();
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
       setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
@@ -125,7 +152,7 @@ export function FormulaireMissionCollecte() {
           id="description"
           {...register("description")}
           rows={3}
-          placeholder="Informations complementaires..."
+          placeholder="Informations complémentaires..."
           className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
@@ -143,7 +170,7 @@ export function FormulaireMissionCollecte() {
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner className="mr-2 size-4" /> : null}
-        Créer la mission
+        {mission ? "Enregistrer les modifications" : "Créer la mission"}
       </Button>
     </form>
   );

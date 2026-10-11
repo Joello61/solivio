@@ -19,7 +19,7 @@ describe("MissionActions", () => {
     render(
       <MissionActions missionId="m1" statut="PRISE_EN_CHARGE" assigneAuLecteur estGestionnaire={false} estBenevole />,
     );
-    expect(screen.getByRole("button", { name: /Se desister/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Se désister/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Annuler la mission/i })).toBeInTheDocument();
   });
 
@@ -48,5 +48,17 @@ describe("MissionActions", () => {
     );
     expect(screen.getByRole("button", { name: /Valider la collecte/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Annuler la mission/i })).toBeInTheDocument();
+  });
+
+  it("propose au responsable de modifier une mission encore disponible, pas une fois prise", () => {
+    const { rerender } = render(
+      <MissionActions missionId="m1" statut="DISPONIBLE" assigneAuLecteur={false} estGestionnaire estBenevole />,
+    );
+    expect(screen.getByRole("link", { name: /Modifier/i })).toHaveAttribute("href", "/missions-collecte/m1/modifier");
+
+    rerender(
+      <MissionActions missionId="m1" statut="PRISE_EN_CHARGE" assigneAuLecteur={false} estGestionnaire estBenevole />,
+    );
+    expect(screen.queryByRole("link", { name: /Modifier/i })).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
 import { StatutBadge } from "@/components/evenement/StatutBadge";
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: "Détail événement" };
 
 const LABEL_TYPE: Record<string, string> = {
   STAND: "Stand",
-  FETE: "Fete",
+  FETE: "Fête",
   AUTRE: "Événement",
 };
 
@@ -147,6 +148,7 @@ export default async function DetailEvenementPage({ params }: Props) {
         ouvertParticipants={evenement.ouvertParticipants}
         modeInscription={evenement.modeInscription}
         estGestionnaire={estGestionnaire}
+        estResponsable={estResponsable(me?.roles ?? [])}
         estBenevole={estBenevole}
         estBeneficiaire={estBeneficiaire}
         dejaInscrit={dejaInscrit}

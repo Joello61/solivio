@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   prendreEnCharge,
@@ -11,6 +13,7 @@ import {
   validerDepot,
   annulerMission,
 } from "@/lib/api/collecte";
+import { cn } from "@/lib/utils";
 import type { StatutMission } from "@/types/collecte";
 
 interface Props {
@@ -45,13 +48,14 @@ export function MissionActions({ missionId, statut, assigneAuLecteur, estGestion
     }
   }
 
+  const peutModifier = estGestionnaire && statut === "DISPONIBLE";
   const peutPrendre = estBenevole && statut === "DISPONIBLE";
   const peutLiberer = estBenevole && estAssigne && statut === "PRISE_EN_CHARGE";
   const peutValiderCollecte = estGestionnaire && statut === "PRISE_EN_CHARGE";
   const peutValiderDepot = estBenevole && estAssigne && statut === "COLLECTE_EFFECTUEE";
   const peutAnnuler = (estGestionnaire || estAssigne) && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
 
-  if (!peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
+  if (!peutModifier && !peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
     return null;
   }
 
@@ -75,6 +79,16 @@ export function MissionActions({ missionId, statut, assigneAuLecteur, estGestion
           </Button>
         )}
 
+        {peutModifier && (
+          <Link
+            href={`/missions-collecte/${missionId}/modifier`}
+            className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+          >
+            <Pencil className="mr-2 size-4" />
+            Modifier
+          </Link>
+        )}
+
         {peutLiberer && (
           <Button
             variant="outline"
@@ -83,7 +97,7 @@ export function MissionActions({ missionId, statut, assigneAuLecteur, estGestion
             size="sm"
           >
             {pending === "liberer" ? <Spinner className="mr-2 size-4" /> : null}
-            Se desister
+            Se désister
           </Button>
         )}
 

@@ -87,7 +87,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
           name="unite"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select items={UNITES} value={field.value} onValueChange={field.onChange}>
               <SelectTrigger id="unite" className="w-full">
                 <SelectValue />
               </SelectTrigger>
