@@ -14,6 +14,9 @@ on:
     branches: [dev, main]
   pull_request:
     branches: [dev, main]
+  # Relance sur la tete de la branche quand un deploiement trouve son commit depasse
+  # (voir .github/scripts/tete-de-branche.sh).
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -213,7 +216,7 @@ jobs:
   images:
     name: Images (GHCR)
     needs: [backend, backend-dependances, frontend, e2e, secrets]
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -269,17 +272,27 @@ jobs:
   deploy-staging:
     name: Deploiement preproduction
     needs: images
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     environment:
       name: staging
       url: https://staging.solivio.joeltech.fr
     concurrency:
       group: deploy-staging
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v7
 
+      - name: Commit encore en tete de branche
+        id: tete
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/tete-de-branche.sh
+
       - name: Deploiement SSH
+        if: steps.tete.outputs.a_jour == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -297,17 +310,27 @@ jobs:
   deploy-production:
     name: Deploiement production
     needs: images
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://solivio.joeltech.fr
     concurrency:
       group: deploy-production
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v7
 
+      - name: Commit encore en tete de branche
+        id: tete
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/tete-de-branche.sh
+
       - name: Deploiement SSH
+        if: steps.tete.outputs.a_jour == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}

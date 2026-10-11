@@ -174,6 +174,7 @@ Elle est gelée depuis la refonte du socle d'octobre 2026 : les changements d'AP
 - Sauvegarde quotidienne de la base et des fichiers déposés par le service `backup`, chiffrée par clé publique et copiée sur Cloudflare R2, avec un test de restauration trimestriel (ADR-009, `docker/backup/README.md`).
 - Environnements : la branche `dev` alimente la préproduction (`https://staging.solivio.joeltech.fr`, projet Compose `solivio-staging`), la branche `main` la production (`https://solivio.joeltech.fr`, projet `solivio`). Les deux tournent sur le même VPS, avec des secrets Infisical distincts.
 - Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008), sans coupure grâce à `docker-rollout` (ADR-010). Les images ne sont jamais construites sur le serveur.
+- Seule la tête de la branche est déployée : GitHub ne garde qu'une exécution en attente par branche, et des fusions rapprochées peuvent laisser passer en dernier l'exécution d'un commit plus ancien. Juste avant de déployer, le job vérifie que son commit est toujours la tête ; sinon il ne déploie pas et relance la CI sur la tête si aucune exécution n'est prévue pour elle (`.github/scripts/tete-de-branche.sh`, déclencheur `workflow_dispatch`).
 
 ## 11. L'observabilité
 
