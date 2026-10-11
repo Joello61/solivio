@@ -12,6 +12,10 @@ export async function logout(): Promise<void> {
   return apiPost<void>("/api/auth/logout", {});
 }
 
+export async function changerMotDePasse(motDePasseActuel: string, nouveauMotDePasse: string): Promise<void> {
+  return apiPost<void>("/api/auth/change-password", { motDePasseActuel, nouveauMotDePasse });
+}
+
 export async function getMe(): Promise<MeResponse> {
   return apiGet<MeResponse>("/api/auth/me");
 }

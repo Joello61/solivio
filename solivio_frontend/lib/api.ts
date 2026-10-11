@@ -133,17 +133,23 @@ export function apiGet<T>(path: string): Promise<T> {
  * Le navigateur positionne lui-meme le boundary requis.
  */
 export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    credentials: "include",
-  });
+  return lireCorps<T>(await fetchBrut(path, init));
+}
+
+/** Telecharge un fichier binaire (export ZIP) sous forme de Blob. */
+export async function apiTelecharger(path: string): Promise<Blob> {
+  return (await fetchBrut(path, { method: "GET" })).blob();
+}
+
+async function fetchBrut(path: string, init: RequestInit): Promise<Response> {
+  const response = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
 
   if (response.status === 401) {
     const refreshed = await tentativeRefresh();
     if (refreshed) {
       const retry = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
       if (retry.ok) {
-        return lireCorps<T>(retry);
+        return retry;
       }
     }
     allerALaConnexion();
@@ -155,5 +161,5 @@ export async function apiFetchRaw<T>(path: string, init: RequestInit): Promise<T
     throw parseErrorResponse(body, response.status);
   }
 
-  return lireCorps<T>(response);
+  return response;
 }
