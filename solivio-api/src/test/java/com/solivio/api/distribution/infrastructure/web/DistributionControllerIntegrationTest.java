@@ -3,6 +3,7 @@ package com.solivio.api.distribution.infrastructure.web;
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -189,6 +191,8 @@ class DistributionControllerIntegrationTest {
         return insererDistribution(statut, 7);
     }
 
+    // Dates dans le fuseau de l'association, comme le service : CURRENT_DATE (UTC
+    // en CI) donnait la veille entre minuit et 2h a Paris.
     private UUID insererDistribution(String statut, int dansJours) {
         UUID createur = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Coord', 'Test', ?)",
@@ -196,9 +200,9 @@ class DistributionControllerIntegrationTest {
         UUID id = UUID.randomUUID();
         jdbcTemplate.update(
             "INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
-                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE + ?, ?, 10, "
+                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', ?, ?, 10, "
                 + "'CRENEAU_UNIQUE', 'INSCRITS', ?)",
-            id, dansJours, statut, createur);
+            id, LocalDate.now(HorlogeAssociation.ZONE_PAR_DEFAUT).plusDays(dansJours), statut, createur);
         return id;
     }
 }
