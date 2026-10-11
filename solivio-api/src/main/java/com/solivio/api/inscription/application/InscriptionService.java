@@ -8,7 +8,6 @@ import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.evenements.InscriptionEventPublisher;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
-import com.solivio.api.inscription.infrastructure.persistence.VerrouDistribution;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionPersonnelleResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
@@ -19,6 +18,7 @@ import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.temps.HorlogeAssociation;
+import com.solivio.api.shared.verrou.VerrouDistribution;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,6 +184,22 @@ public class InscriptionService {
             promouvoirSuivantEnAttente(distrib, inscription.getType());
         }
         auditService.tracer("INSCRIPTION_ANNULEE", "inscription", inscriptionId);
+    }
+
+    // Apres une augmentation de capacite : promouvoir la liste d'attente tant qu'il
+    // reste des places (RG3). Une seconde execution ne trouve plus de place.
+    public void promouvoirSelonPlaces(UUID distributionId) {
+        verrouDistribution.verrouiller(distributionId);
+        DistributionQueryPort.DistributionInfo distrib = distributionQueryPort.trouverDistribution(distributionId);
+        if (!"PUBLIEE".equals(distrib.statut())) {
+            return;
+        }
+        for (TypeInscription type : TypeInscription.values()) {
+            boolean placeAttribuee = true;
+            while (placeAttribuee) {
+                placeAttribuee = promouvoirSuivantEnAttente(distrib, type);
+            }
+        }
     }
 
     // RGPD : les inscriptions copient nom et prenom, anonymises comme la personne.
@@ -400,7 +416,7 @@ public class InscriptionService {
 
     // Promeut, dans l'ordre de la liste d'attente, la premiere personne pour qui
     // une place existe : la place liberee peut ne pas etre dans son creneau.
-    private void promouvoirSuivantEnAttente(DistributionQueryPort.DistributionInfo distrib, TypeInscription type) {
+    private boolean promouvoirSuivantEnAttente(DistributionQueryPort.DistributionInfo distrib, TypeInscription type) {
         List<Inscription> enAttente = inscriptionRepository
             .findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
                 distrib.id(), type, StatutInscription.LISTE_ATTENTE);
@@ -412,9 +428,10 @@ public class InscriptionService {
                 candidate.promouvoir();
                 inscriptionRepository.save(candidate);
                 eventPublisher.publierPromue(candidate);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     private Inscription trouverOuEchouer(UUID inscriptionId, UUID distributionId) {

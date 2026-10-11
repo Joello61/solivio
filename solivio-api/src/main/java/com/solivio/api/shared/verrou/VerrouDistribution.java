@@ -1,4 +1,4 @@
-package com.solivio.api.inscription.infrastructure.persistence;
+package com.solivio.api.shared.verrou;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -8,11 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 /**
- * Serialise les inscriptions d'une meme distribution. Sans verrou, deux
- * inscriptions simultanees lisaient le meme nombre de places et depassaient la
- * capacite, ou recevaient le meme rang en liste d'attente.
- * Verrou consultatif PostgreSQL, libere a la fin de la transaction : il ne
- * touche pas aux tables du module distribution.
+ * Serialise ce qui touche aux places d'une meme distribution : inscriptions,
+ * desinscriptions, promotions (module inscription) et modification de la
+ * distribution (module distribution). Sans verrou, deux operations simultanees
+ * lisaient le meme nombre de places et depassaient la capacite.
+ * Verrou consultatif PostgreSQL sur l'identifiant de la distribution, libere a
+ * la fin de la transaction : aucun module ne touche aux tables de l'autre.
  */
 @Component
 public class VerrouDistribution {
