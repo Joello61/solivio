@@ -20,6 +20,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Notification {
 
+    /** Longueur de la colonne type_evenement (V13) : chaque TypeEvenementNotification doit y tenir. */
+    public static final int LONGUEUR_TYPE_EVENEMENT = 50;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -31,7 +34,7 @@ public class Notification {
     private UUID distributionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type_evenement", nullable = false, length = 35)
+    @Column(name = "type_evenement", nullable = false, length = LONGUEUR_TYPE_EVENEMENT)
     private TypeEvenementNotification typeEvenement;
 
     @Enumerated(EnumType.STRING)
