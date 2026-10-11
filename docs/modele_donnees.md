@@ -228,7 +228,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | type_role | référence | Entrée du catalogue (optionnel) |
 | libelle_libre | texte | Libellé ad hoc si pas de catalogue (optionnel) |
 
-> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par un responsable ou un coordinateur après l'inscription du bénévole.
+> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par un responsable ou un coordinateur après l'inscription du bénévole. Un rôle archivé (`actif` faux) reste dans l'historique mais ne peut plus être attribué.
 
 ### 4.4 Répartition des denrées
 

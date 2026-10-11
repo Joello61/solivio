@@ -11,6 +11,7 @@ import {
   Truck,
   PartyPopper,
   Mail,
+  Tags,
 } from "lucide-react";
 
 export interface NavItem {
@@ -62,6 +63,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Membres",
         icon: Users,
         roles: ["responsable", "super_admin"],
+      },
+      {
+        href: "/association/roles-benevoles",
+        label: "Rôles bénévoles",
+        icon: Tags,
+        roles: ["coordinateur", "responsable"],
       },
       {
         href: "/association/catalogue-denrees",

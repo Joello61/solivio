@@ -21,7 +21,8 @@ import { DistributionActions } from "@/components/distributions/DistributionActi
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
-import type { DistributionResponse, InscriptionResponse } from "@/types/distribution";
+import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
+import { rolesAttribuables } from "@/lib/roles-benevoles";
 import {
   estGestionnaireDistribution,
   peutPointer,
@@ -38,22 +39,33 @@ async function fetchData(id: string): Promise<{
   inscrits: InscriptionResponse[];
   mesInscriptions: InscriptionResponse[];
   stats: StatistiqueDistributionResponse | null;
+  typesRoles: TypeRoleResponse[];
 }> {
   const [distribution, me] = await Promise.all([
     lireServeur<DistributionResponse>(`/api/distributions/${id}`),
     lireMoi(),
   ]);
-  if (!distribution) return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null };
+  if (!distribution) {
+    return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null, typesRoles: [] };
+  }
 
   const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
-  const [inscrits, mesInscriptions, stats] = await Promise.all([
+  const [inscrits, mesInscriptions, stats, typesRoles] = await Promise.all([
     estGestionnaire ? lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions`) : null,
     lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions/mes`),
     estGestionnaire && distribution.statut === "TERMINEE"
       ? lireServeur<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${id}`)
       : null,
+    estGestionnaire ? lireServeur<TypeRoleResponse[]>("/api/types-roles") : null,
   ]);
-  return { distribution, me, inscrits: inscrits ?? [], mesInscriptions: mesInscriptions ?? [], stats };
+  return {
+    distribution,
+    me,
+    inscrits: inscrits ?? [],
+    mesInscriptions: mesInscriptions ?? [],
+    stats,
+    typesRoles: typesRoles ?? [],
+  };
 }
 
 interface PageProps {
@@ -63,7 +75,8 @@ interface PageProps {
 export default async function DistributionDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const { distribution, me, inscrits, mesInscriptions, stats } = await fetchData(id);
+  const { distribution, me, inscrits, mesInscriptions, stats, typesRoles } = await fetchData(id);
+  const catalogueRoles = rolesAttribuables(typesRoles);
 
   if (!distribution) notFound();
 
@@ -230,6 +243,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                           distributionId={id}
                           inscriptionId={inscrit.id}
                           rolesInitiaux={inscrit.roles}
+                          catalogue={catalogueRoles}
                         />
                       </div>
                     )}

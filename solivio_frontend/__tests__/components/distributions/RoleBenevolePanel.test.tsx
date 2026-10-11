@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import * as api from "@/lib/api/distributions";
@@ -184,5 +184,27 @@ describe("RoleBenevolePanel", () => {
     );
     fireEvent.click(screen.getByText("Ajouter un rôle"));
     expect(screen.getByText("OK")).toBeDisabled();
+  });
+
+  it("propose les roles du catalogue pas encore attribues et envoie leur identifiant", async () => {
+    vi.mocked(api.assignerRole).mockResolvedValue({ id: "role-3", typeRoleId: "t-badges", libelle: "Badges" });
+    render(
+      <RoleBenevolePanel
+        distributionId="dist-1"
+        inscriptionId="insc-1"
+        rolesInitiaux={[{ id: "role-9", typeRoleId: "t-accueil", libelle: "Accueil" }]}
+        catalogue={[
+          { id: "t-accueil", libelle: "Accueil" },
+          { id: "t-badges", libelle: "Accueil - Badges" },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Ajouter un rôle" }));
+    const groupe = screen.getByRole("group", { name: "Rôles du catalogue" });
+    expect(within(groupe).queryByRole("button", { name: "Accueil" })).not.toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Accueil - Badges" }));
+    });
+    expect(api.assignerRole).toHaveBeenCalledWith("dist-1", "insc-1", { typeRoleId: "t-badges" });
   });
 });
