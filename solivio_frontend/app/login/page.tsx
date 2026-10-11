@@ -29,7 +29,7 @@ function LoginForm() {
   // Renvoye par le backend apres une connexion Google d'un membre suspendu.
   const [error, setError] = useState<string | null>(
     searchParams.get("erreur") === "compte-suspendu"
-      ? "Votre acces a ete suspendu. Contactez un responsable de l'association."
+      ? "Votre accès a été suspendu. Contactez un responsable de l'association."
       : null
   );
 
@@ -59,11 +59,11 @@ function LoginForm() {
   }
 
   return (
-    <AuthLayout title="Connexion" description="Accès a votre espace association">
+    <AuthLayout title="Connexion" description="Accès à votre espace association">
       {emailVerifie && (
         <Alert role="status">
           <CheckCircle2 />
-          <AlertDescription>Adresse email verifiee. Vous pouvez vous connecter.</AlertDescription>
+          <AlertDescription>Adresse email vérifiée. Vous pouvez vous connecter.</AlertDescription>
         </Alert>
       )}
 
@@ -85,7 +85,7 @@ function LoginForm() {
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Mot de passe</Label>
             <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-              Mot de passe oublie ?
+              Mot de passe oublié ?
             </Link>
           </div>
           <PasswordInput

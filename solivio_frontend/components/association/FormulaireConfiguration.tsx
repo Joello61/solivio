@@ -89,14 +89,14 @@ export function FormulaireConfiguration({ association }: Props) {
       {succes && (
         <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Configuration mise à jour avec succes.</span>
+          <span className="text-sm">Configuration mise à jour avec succès.</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 items-start">
         {/* Colonne gauche : identite visuelle */}
         <div className="space-y-6">
-          <p className="text-sm font-semibold text-foreground font-display">Identite visuelle</p>
+          <p className="text-sm font-semibold text-foreground font-display">Identité visuelle</p>
 
           <div className="space-y-1.5">
             <Label htmlFor="nom">Nom de l&apos;association</Label>
@@ -218,7 +218,7 @@ export function FormulaireConfiguration({ association }: Props) {
               max="7"
               value={frequenceMax}
               onChange={(e) => setFrequenceMax(e.target.value)}
-              placeholder="Illimitee"
+              placeholder="Illimitée"
             />
             <p className="text-xs text-muted-foreground">Laisser vide pour ne pas limiter.</p>
           </div>

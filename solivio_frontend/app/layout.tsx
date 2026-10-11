@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     default: "Solivio",
     template: "%s | Solivio",
   },
-  description: "Plateforme de gestion operationnelle pour les associations de solidarite",
+  description: "Plateforme de gestion opérationnelle pour les associations de solidarité",
 };
 
 export default function RootLayout({

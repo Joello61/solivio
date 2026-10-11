@@ -107,7 +107,7 @@ function RegisterForm() {
             minLength={8}
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
-            placeholder="8 caracteres minimum"
+            placeholder="8 caractères minimum"
           />
         </div>
 

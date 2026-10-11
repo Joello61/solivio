@@ -7,7 +7,7 @@ import type { EvenementResponse } from "@/types/evenement";
 
 const LABEL_TYPE: Record<string, string> = {
   STAND: "Stand",
-  FETE: "Fete",
+  FETE: "Fête",
   AUTRE: "Événement",
 };
 

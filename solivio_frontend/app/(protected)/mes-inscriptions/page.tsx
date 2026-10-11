@@ -33,7 +33,7 @@ function typeLabel(type: string): string {
 }
 
 function presenceLabel(presence: string): string {
-  if (presence === "PRESENT") return "Present(e)";
+  if (presence === "PRESENT") return "Présent(e)";
   if (presence === "ABSENT") return "Absent(e)";
   return "Non pointe(e)";
 }

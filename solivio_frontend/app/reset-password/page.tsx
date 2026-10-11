@@ -70,7 +70,7 @@ function ResetPasswordForm() {
   return (
     <AuthLayout
       title="Nouveau mot de passe"
-      description={email ? `Code envoyé a ${email}` : "Entrez le code recu par email."}
+      description={email ? `Code envoyé à ${email}` : "Entrez le code reçu par email."}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
@@ -108,7 +108,7 @@ function ResetPasswordForm() {
             autoComplete="new-password"
             value={nouveauMotDePasse}
             onChange={(e) => setNouveauMotDePasse(e.target.value)}
-            placeholder="8 caracteres minimum"
+            placeholder="8 caractères minimum"
           />
         </div>
 
@@ -120,7 +120,7 @@ function ResetPasswordForm() {
             autoComplete="new-password"
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
-            placeholder="Repetez votre mot de passe"
+            placeholder="Répétez votre mot de passe"
           />
         </div>
 
@@ -137,7 +137,7 @@ function ResetPasswordForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/login" className="text-primary hover:underline">
-          Retour a la connexion
+          Retour à la connexion
         </Link>
       </p>
     </AuthLayout>

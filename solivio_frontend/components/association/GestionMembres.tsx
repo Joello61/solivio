@@ -227,7 +227,7 @@ function CarteMembre({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activités de l'association.`
+                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
                 : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -431,7 +431,7 @@ function LigneMembreRow({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activités de l'association.`
+                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
                 : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>

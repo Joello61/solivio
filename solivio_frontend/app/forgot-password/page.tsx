@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
         </Link>
         <p className="text-center text-sm text-muted-foreground">
           <Link href="/login" className="text-primary font-medium hover:underline">
-            Retour a la connexion
+            Retour à la connexion
           </Link>
         </p>
       </AuthLayout>
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Mot de passe oublie"
+      title="Mot de passe oublié"
       description="Entrez votre adresse email pour recevoir un code de réinitialisation."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/login" className="text-primary hover:underline">
-          Retour a la connexion
+          Retour à la connexion
         </Link>
       </p>
     </AuthLayout>

@@ -101,7 +101,7 @@ describe("FormulaireProfilBeneficiaire", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Dossier mis a jour/)).toBeInTheDocument();
+      expect(screen.getByText(/Dossier mis à jour/)).toBeInTheDocument();
     });
   });
 

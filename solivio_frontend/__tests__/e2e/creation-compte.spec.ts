@@ -65,7 +65,7 @@ test.describe("Creation de compte", () => {
     await page.getByRole("button", { name: "Se connecter" }).click();
 
     await expect(page).toHaveURL(/\/verify-email\?.*raison=non-verifie/);
-    await expect(page.getByRole("status")).toContainText("pas encore verifiee");
+    await expect(page.getByRole("status")).toContainText("pas encore vérifiée");
 
     // 3. Saisie du dernier code recu.
     const code = await codeDuDernierEmail(request, email, 2);
@@ -75,7 +75,7 @@ test.describe("Creation de compte", () => {
     await page.getByRole("button", { name: "Valider le code" }).click();
 
     await expect(page).toHaveURL(/\/login\?verified=1/);
-    await expect(page.getByRole("status")).toContainText("Adresse email verifiee");
+    await expect(page.getByRole("status")).toContainText("Adresse email vérifiée");
 
     // 4. Connexion reussie.
     await page.getByLabel("Adresse email").fill(email);

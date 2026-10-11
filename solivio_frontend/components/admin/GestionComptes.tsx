@@ -186,7 +186,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             <AlertDialogDescription>
               {compte.actif
                 ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra a nouveau se connecter.`}
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -217,8 +217,8 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'accès a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura accès a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -404,7 +404,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             <AlertDialogDescription>
               {compte.actif
                 ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra a nouveau se connecter.`}
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -435,8 +435,8 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'accès a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura accès a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

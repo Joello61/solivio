@@ -59,7 +59,7 @@ export default async function MesEvenementsPage() {
                   {p.presence === "NON_POINTE"
                     ? "Non pointe"
                     : p.presence === "PRESENT"
-                      ? "Present"
+                      ? "Présent"
                       : "Absent"}
                 </span>
               </div>

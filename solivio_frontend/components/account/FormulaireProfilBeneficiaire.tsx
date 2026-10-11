@@ -247,7 +247,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       {succes && (
         <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Dossier mis a jour avec succes.</span>
+          <span className="text-sm">Dossier mis à jour avec succès.</span>
         </div>
       )}
       {erreur && <Alert variant="destructive">{erreur}</Alert>}

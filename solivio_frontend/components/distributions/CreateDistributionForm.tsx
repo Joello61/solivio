@@ -249,7 +249,7 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                   <Input
                     id="description"
                     {...register("description")}
-                    placeholder="Informations complementaires..."
+                    placeholder="Informations complémentaires..."
                   />
                 </div>
               </div>

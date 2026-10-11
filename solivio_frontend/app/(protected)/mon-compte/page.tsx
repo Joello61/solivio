@@ -145,7 +145,7 @@ export default async function MonComptePage() {
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Mis a jour le</p>
+                  <p className="text-xs text-muted-foreground">Mis à jour le</p>
                   <p className="text-sm font-medium text-foreground">
                     {formatDate(user.dateModification)}
                   </p>

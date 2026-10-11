@@ -51,7 +51,7 @@ describe("LoginPage", () => {
 
   it("affiche le lien mot de passe oublie", () => {
     renderLogin();
-    expect(screen.getByText(/Mot de passe oublie/)).toBeInTheDocument();
+    expect(screen.getByText(/Mot de passe oublié/)).toBeInTheDocument();
   });
 
   it("affiche le lien d'inscription", () => {
@@ -157,7 +157,7 @@ describe("LoginPage", () => {
   it("confirme la verification de l'email au retour de la page de code", () => {
     navigation.params = new URLSearchParams("verified=1");
     renderLogin();
-    expect(screen.getByRole("status")).toHaveTextContent(/Adresse email verifiee/);
+    expect(screen.getByRole("status")).toHaveTextContent(/Adresse email vérifiée/);
   });
 
   it("coche 'Rester connecte' change l'etat du checkbox", async () => {

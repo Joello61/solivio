@@ -33,7 +33,7 @@ const UNITES: { value: FormValues["unite"]; label: string }[] = [
   { value: "KILOGRAMME", label: "Kilogramme (kg)" },
   { value: "LITRE", label: "Litre (L)" },
   { value: "PIECE", label: "Piece" },
-  { value: "UNITE", label: "Unite generique" },
+  { value: "UNITE", label: "Unité générique" },
 ];
 
 interface Props {
@@ -82,7 +82,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="unite">Unite</Label>
+        <Label htmlFor="unite">Unité</Label>
         <Controller
           name="unite"
           control={control}

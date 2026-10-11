@@ -37,7 +37,7 @@ test.describe("Page login", () => {
   });
 
   test("affiche un lien vers la reinitialisation du mot de passe", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /mot de passe oublie/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /mot de passe oublié/i })).toBeVisible();
   });
 
   test("identifiants incorrects : affiche un message d'erreur", async ({ page }) => {
