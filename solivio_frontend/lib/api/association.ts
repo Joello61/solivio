@@ -84,3 +84,7 @@ export function inviterMembre(payload: InviterMembrePayload): Promise<void> {
 export function exporterDonnees(): Promise<Blob> {
   return apiTelecharger("/api/association/export");
 }
+
+export function recalculerStatistiques(distributionId: string): Promise<StatistiqueDistributionResponse> {
+  return apiPost<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${distributionId}/recalculer`, {});
+}
