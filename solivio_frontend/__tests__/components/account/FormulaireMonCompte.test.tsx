@@ -73,7 +73,7 @@ describe("FormulaireMonCompte", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Profil mis a jour/)).toBeInTheDocument();
+      expect(screen.getByText(/Profil mis à jour/)).toBeInTheDocument();
     });
   });
 

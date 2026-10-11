@@ -18,7 +18,7 @@ const COULEUR_PRESENCE: Record<string, string> = {
 
 const LABEL_PRESENCE: Record<string, string> = {
   NON_POINTE: "Non pointe",
-  PRESENT: "Present",
+  PRESENT: "Présent",
   ABSENT: "Absent",
 };
 
@@ -100,7 +100,7 @@ export function PointageEvenementClient({ evenementId, participationsInitiales }
                   <button
                     onClick={() => marquer(p.id, "PRESENT")}
                     disabled={isPending || p.presence === "PRESENT"}
-                    title="Marquer present"
+                    title="Marquer présent"
                     className="size-8 rounded-lg bg-success/10 text-success hover:bg-success/15 flex items-center justify-center disabled:opacity-40 transition-colors"
                   >
                     <Check className="size-4" />

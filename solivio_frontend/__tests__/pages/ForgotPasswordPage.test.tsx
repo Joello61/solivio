@@ -91,6 +91,6 @@ describe("ForgotPasswordPage", () => {
 
   it("affiche le lien de retour a la connexion", () => {
     render(<ForgotPasswordPage />);
-    expect(screen.getByText(/Retour a la connexion/)).toBeInTheDocument();
+    expect(screen.getByText(/Retour à la connexion/)).toBeInTheDocument();
   });
 });

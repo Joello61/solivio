@@ -157,7 +157,7 @@ export default async function DashboardPage() {
                 couleur="green"
               />
               <CarteStatistique
-                titre="Bénévoles mobilises"
+                titre="Bénévoles mobilisés"
                 valeur={statsMois.nbBenevolesDistincts}
                 description="bénévoles distincts"
                 icon={Users}

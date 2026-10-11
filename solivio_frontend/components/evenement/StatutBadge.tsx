@@ -6,7 +6,7 @@ const CONFIG: Record<StatutEvenement, { label: string; className: string }> = {
     className: "bg-muted text-muted-foreground border border-border",
   },
   PUBLIE: {
-    label: "Publie",
+    label: "Publié",
     className: "bg-primary/10 text-primary border border-primary/25",
   },
   EN_COURS: {
@@ -14,11 +14,11 @@ const CONFIG: Record<StatutEvenement, { label: string; className: string }> = {
     className: "bg-info/10 text-info border border-info/30",
   },
   TERMINE: {
-    label: "Termine",
+    label: "Terminé",
     className: "bg-success/10 text-success border border-success/30",
   },
   ANNULE: {
-    label: "Annule",
+    label: "Annulé",
     className: "bg-destructive/10 text-destructive border border-destructive/30",
   },
 };

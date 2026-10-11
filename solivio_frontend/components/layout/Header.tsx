@@ -169,7 +169,7 @@ export function Header({ user }: HeaderProps) {
                   ) : (
                     <LogOut className="h-4 w-4 shrink-0" />
                   )}
-                  <span>{pending ? "Deconnexion..." : "Se déconnecter"}</span>
+                  <span>{pending ? "Déconnexion..." : "Se déconnecter"}</span>
                 </button>
               </div>
           )}

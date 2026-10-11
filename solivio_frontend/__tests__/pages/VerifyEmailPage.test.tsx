@@ -59,7 +59,7 @@ describe("VerifyEmailPage", () => {
     renderPage("email=alice%40example.com&raison=non-verifie");
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(/pas encore verifiee/);
+      expect(screen.getByRole("status")).toHaveTextContent(/pas encore vérifiée/);
     });
     expect(authLib.resendVerification).toHaveBeenCalledTimes(1);
     expect(authLib.resendVerification).toHaveBeenCalledWith("alice@example.com");

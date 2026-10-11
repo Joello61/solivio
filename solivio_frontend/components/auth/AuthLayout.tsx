@@ -39,7 +39,7 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
           <div className="rounded-2xl bg-overlay/25 backdrop-blur-md border border-on-brand/10 p-6 space-y-6">
             <div className="space-y-2.5">
               <p className="text-3xl xl:text-4xl font-bold text-on-brand leading-tight font-display">
-                La solidarite,<br />organisee simplement.
+                La solidarité,<br />organisée simplement.
               </p>
               <p className="text-on-brand/75 text-sm leading-relaxed">
                 Tout ce qu&apos;il faut pour coordonner votre association,
@@ -88,7 +88,7 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
             <span className="text-xl font-bold text-on-brand font-display">Solivio</span>
           </div>
           <p className="text-2xl font-extrabold text-on-brand leading-tight font-display mb-2">
-            La solidarite,<br />organisee simplement.
+            La solidarité,<br />organisée simplement.
           </p>
           <p className="text-sm leading-relaxed text-on-brand/65">
             Inscriptions, distributions, répartition des denrées.

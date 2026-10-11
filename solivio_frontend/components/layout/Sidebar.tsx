@@ -238,7 +238,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             <LogOut className="h-4 w-4 shrink-0" />
           )}
           {!collapsed && (
-            <span>{pendingLogout ? "Deconnexion..." : "Se déconnecter"}</span>
+            <span>{pendingLogout ? "Déconnexion..." : "Se déconnecter"}</span>
           )}
         </button>
 

@@ -17,7 +17,7 @@ interface Props {
 
 const PRESENCE_LABELS: Record<string, string> = {
   NON_POINTE: "Non pointe",
-  PRESENT: "Present",
+  PRESENT: "Présent",
   ABSENT: "Absent",
 };
 
@@ -71,7 +71,7 @@ export function ListeInscritsReco({ sessionId, inscrits, statut, estCoordinateur
                   className="h-7 w-7 p-0"
                   disabled={!!pending}
                   onClick={() => pointer(i.personneId, "PRESENT")}
-                  title="Present"
+                  title="Présent"
                 >
                   <Check className="size-3.5" />
                 </Button>

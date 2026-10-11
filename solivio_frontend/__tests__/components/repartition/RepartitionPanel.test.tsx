@@ -147,7 +147,7 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText("Inscrits")).toBeInTheDocument();
-    expect(screen.getByText("Présents reels")).toBeInTheDocument();
+    expect(screen.getByText("Présents réels")).toBeInTheDocument();
   });
 
   it("appelle calculerDotation avec PRESENTS au clic sur la bascule", async () => {
@@ -167,7 +167,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Présents reels"));
+      fireEvent.click(screen.getByText("Présents réels"));
     });
 
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");

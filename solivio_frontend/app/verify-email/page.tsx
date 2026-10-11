@@ -45,7 +45,7 @@ function VerifyEmailForm() {
     setRenvoiEnCours(true);
     try {
       await resendVerification(email);
-      setInfo(`Un nouveau code a été envoyé a ${email}.`);
+      setInfo(`Un nouveau code a été envoyé à ${email}.`);
     } catch (err: unknown) {
       setError(messageErreur(err, "Impossible d'envoyer un nouveau code."));
     } finally {
@@ -60,7 +60,7 @@ function VerifyEmailForm() {
     resendVerification(emailInitial)
       .then(() =>
         setInfo(
-          `Votre adresse n'est pas encore verifiee. Un nouveau code a été envoyé a ${emailInitial}.`
+          `Votre adresse n'est pas encore vérifiée. Un nouveau code a été envoyé à ${emailInitial}.`
         )
       )
       .catch((err: unknown) => setError(messageErreur(err, "Impossible d'envoyer un nouveau code.")));
@@ -116,8 +116,8 @@ function VerifyEmailForm() {
       title="Vérifiez votre email"
       description={
         emailInitial
-          ? `Code a 6 chiffres envoyé a ${emailInitial}`
-          : "Entrez votre adresse et le code a 6 chiffres recu par email."
+          ? `Code à 6 chiffres envoyé à ${emailInitial}`
+          : "Entrez votre adresse et le code à 6 chiffres reçu par email."
       }
     >
       {info && (

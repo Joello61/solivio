@@ -36,7 +36,7 @@ function formatQte(valeur: number, unite: string): string {
     KILOGRAMME: "kg",
     LITRE: "L",
     PIECE: "piece(s)",
-    UNITE: "unite(s)",
+    UNITE: "unité(s)",
   };
   const suffix = suffixes[unite] ?? unite.toLowerCase();
   return `${valeur % 1 === 0 ? valeur.toFixed(0) : valeur.toFixed(2)} ${suffix}`;
@@ -188,7 +188,7 @@ export function RepartitionPanel({
                     : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
-                {b === "INSCRITS" ? "Inscrits" : "Présents reels"}
+                {b === "INSCRITS" ? "Inscrits" : "Présents réels"}
               </button>
             ))}
           </div>

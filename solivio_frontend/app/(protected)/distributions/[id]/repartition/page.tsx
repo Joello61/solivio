@@ -38,7 +38,7 @@ export default async function RepartitionPage({ params }: PageProps) {
         <Link
           href={`/distributions/${id}`}
           className={buttonVariants({ variant: "ghost", size: "icon" })}
-          aria-label="Retour a la distribution"
+          aria-label="Retour à la distribution"
         >
           <ArrowLeft className="size-4" />
         </Link>

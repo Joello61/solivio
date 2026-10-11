@@ -10,11 +10,11 @@ const CONFIG: Record<StatutMission, { label: string; className: string }> = {
     className: "bg-warning/10 text-warning border border-warning/30",
   },
   COLLECTE_EFFECTUEE: {
-    label: "Collecte effectuee",
+    label: "Collecte effectuée",
     className: "bg-info/10 text-info border border-info/30",
   },
   DEPOT_VALIDE: {
-    label: "Dépôt valide",
+    label: "Dépôt validé",
     className: "bg-success/10 text-success border border-success/30",
   },
   ANNULEE: {
