@@ -103,7 +103,7 @@ export function EvenementActions({
       {peutPointer && (
         <button
           onClick={() => router.push(`/evenements/${evenementId}/pointage`)}
-          className="w-full rounded-xl bg-info px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-info/90 transition-colors"
+          className="w-full rounded-xl bg-info px-4 py-2.5 text-sm font-medium text-info-foreground hover:bg-info/90 transition-colors"
         >
           Pointage
         </button>
@@ -113,7 +113,7 @@ export function EvenementActions({
         <button
           onClick={() => inscrire("STAFF")}
           disabled={pending !== null}
-          className="w-full rounded-xl bg-warning px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-warning transition-colors disabled:opacity-60"
+          className="w-full rounded-xl bg-warning px-4 py-2.5 text-sm font-medium text-warning-foreground hover:bg-warning/90 transition-colors disabled:opacity-60"
         >
           {pending === "inscrire-STAFF" ? "Inscription..." : "S'inscrire comme staff"}
         </button>

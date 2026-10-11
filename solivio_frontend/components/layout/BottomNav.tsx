@@ -21,7 +21,7 @@ export function BottomNav() {
       aria-label="Navigation mobile"
     >
       {/* Barre de navigation avec blur et bordure */}
-      <div className="border-t border-border/60 bg-primary-foreground/95 backdrop-blur-md shadow-lg">
+      <div className="border-t border-border/60 bg-background/95 backdrop-blur-md shadow-lg">
         <div className="flex items-stretch">
           {ITEMS.map((item) => {
             const active = isNavItemActive(item.href, pathname);

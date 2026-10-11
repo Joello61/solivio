@@ -31,6 +31,7 @@ Tokens définis en OKLCH dans `app/globals.css` (Tailwind CSS v4, `@theme inline
 | Information | `--info` | bleu, lisible en texte |
 | Corail en texte | `--accent-strong` | corail foncé (l'accent sert aux fonds) |
 | Voile | `--overlay` | noir, dans les deux modes (modales, images) |
+| Surfaces de marque | `--brand`, `--brand-deep`, `--on-brand` | turquoise et texte blanc identiques dans les deux modes : bandeaux, appels à l'action, texte posé sur une photo |
 
 Palettes primitives : `teal`, `coral`, `neutral` (50 à 950). Le mode sombre (classe `.dark`, `next-themes`) redéfinit les mêmes tokens. Les primitives ne servent qu'à définir les tokens : un composant n'utilise ni primitive ni couleur Tailwind par défaut (`bg-white`, `red-*`...), ni variante `dark:` de couleur, puisque les tokens s'adaptent au mode. Un test (`__tests__/design/couleurs.test.ts`) le vérifie.
 
