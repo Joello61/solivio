@@ -304,6 +304,15 @@
     font-family: var(--font-display), var(--font-sans);
   }
 
+  /*
+   * L'espace de Plus Jakarta Sans est tres etroite en gras aux petites tailles
+   * (2 px a 14 px) : "Mon inscription" se lisait "Moninscription". On la ramene
+   * a la largeur de celle de DM Sans.
+   */
+  h1, h2, h3, h4, .font-display {
+    word-spacing: 0.12em;
+  }
+
   /* Selection de texte avec la couleur primaire */
   ::selection {
     background-color: oklch(from var(--color-primary) l c h / 0.15);
