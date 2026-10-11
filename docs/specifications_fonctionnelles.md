@@ -97,7 +97,7 @@ Cette section décrivait à l'origine un socle multi-association (isolation de p
 **Ce qui reste exigé en V1 :**
 
 - L'association peut exporter l'intégralité de ses données (traduction concrète de la promesse de non-enfermement).
-- Toute donnée personnelle peut être supprimée à la demande de la personne concernée (RGPD).
+- Toute donnée personnelle peut être supprimée à la demande de la personne concernée (RGPD), y compris par elle-même depuis son compte. Le dernier responsable actif ne peut pas effacer son compte avant d'avoir désigné un successeur.
 - Une autre association qui voudrait utiliser Solivio déploie sa propre instance (code sous licence AGPL), sans partager de base.
 
 ### 4.3 Module Configuration de l'association

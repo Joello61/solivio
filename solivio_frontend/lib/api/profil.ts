@@ -70,3 +70,12 @@ export function changerSuperAdmin(id: string, superAdmin: boolean): Promise<Comp
 export function supprimerCompteAdmin(id: string): Promise<void> {
   return apiFetch<void>(`/api/admin/comptes/${id}`, { method: "DELETE" });
 }
+
+/** Droit a l'effacement : supprime le compte et anonymise la personne. */
+export function effacerMesDonnees(): Promise<void> {
+  return apiFetch<void>("/api/me", { method: "DELETE" });
+}
+
+export function effacerDonneesCompteAdmin(id: string): Promise<void> {
+  return apiFetch<void>(`/api/admin/comptes/${id}/effacement`, { method: "POST" });
+}
