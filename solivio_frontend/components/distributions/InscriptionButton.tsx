@@ -14,6 +14,10 @@ import {
 import { inscrire, desinscrire } from "@/lib/api/distributions";
 import type { InscriptionResponse, TypeInscription, CreneauResponse } from "@/types/distribution";
 
+function libelleCreneau(c: CreneauResponse): string {
+  return `${c.heureDebut.slice(0, 5)} - ${c.heureFin.slice(0, 5)} (${c.capacite} places)`;
+}
+
 interface Props {
   distributionId: string;
   creneaux: CreneauResponse[];
@@ -102,6 +106,7 @@ export function InscriptionButton({
                 Choisir un créneau
               </label>
               <Select
+                items={creneaux.map((c) => ({ value: c.id, label: libelleCreneau(c) }))}
                 value={creneauChoisi || undefined}
                 onValueChange={(v) => { if (v !== null) setCreneauChoisi(v); }}
               >
@@ -111,7 +116,7 @@ export function InscriptionButton({
                 <SelectContent>
                   {creneaux.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.heureDebut} - {c.heureFin} ({c.capacite} places)
+                      {libelleCreneau(c)}
                     </SelectItem>
                   ))}
                 </SelectContent>
