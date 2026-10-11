@@ -21,6 +21,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
   const emailVerifie = searchParams.get("verified") === "1";
+  const motDePasseModifie = searchParams.get("motDePasse") === "modifie";
 
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -64,6 +65,15 @@ function LoginForm() {
         <Alert role="status">
           <CheckCircle2 />
           <AlertDescription>Adresse email verifiee. Vous pouvez vous connecter.</AlertDescription>
+        </Alert>
+      )}
+
+      {motDePasseModifie && (
+        <Alert role="status">
+          <CheckCircle2 />
+          <AlertDescription>
+            Mot de passe modifié. Connectez-vous avec le nouveau mot de passe.
+          </AlertDescription>
         </Alert>
       )}
 
