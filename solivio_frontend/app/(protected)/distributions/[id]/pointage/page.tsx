@@ -34,7 +34,7 @@ export default async function PointagePage({ params }: PageProps) {
         <Link
           href={`/distributions/${id}`}
           className={buttonVariants({ variant: "ghost", size: "icon" })}
-          aria-label="Retour a la distribution"
+          aria-label="Retour à la distribution"
         >
           <ArrowLeft className="size-4" />
         </Link>
@@ -45,7 +45,7 @@ export default async function PointagePage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-bold text-foreground font-display">Pointage</h1>
             <p className="text-xs text-muted-foreground">
-              Recherchez un inscrit par nom ou prénom. Aucune donnée sensible n&apos;est affichée.
+              Touchez Présent ou Absent pour chaque inscrit. Aucune donnée sensible n&apos;est affichée.
             </p>
           </div>
         </div>

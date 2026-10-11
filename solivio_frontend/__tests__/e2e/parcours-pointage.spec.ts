@@ -54,9 +54,10 @@ test.describe("Parcours pointage", () => {
       await seConnecter(page, BENEVOLE);
       await page.goto(`/distributions/${id}`);
       await page.getByRole("link", { name: /Pointage/ }).click();
+      // La liste complete est chargee d'emblee : le filtre est local.
       await page.getByLabel("Rechercher un inscrit").fill(NOM_BENEFICIAIRE);
-      await page.getByRole("button", { name: "Rechercher" }).click();
-      await page.getByRole("button", { name: "Marquer present" }).click();
+      await page.getByRole("button", { name: `Marquer Linkee ${NOM_BENEFICIAIRE} présent` }).click();
+      await expect(page.getByRole("tab", { name: /Pointés/ })).toContainText("1");
       await contexteBenevole.close();
 
       await expect
