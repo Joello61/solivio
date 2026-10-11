@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  bottomNavItems,
   filterNavItems,
   isNavItemActive,
   NAV_SECTIONS,
@@ -91,6 +92,14 @@ describe("NAV_SECTIONS", () => {
     expect(pour("super_admin")).toContain("/statistiques");
     expect(pour("benevole")).not.toContain("/statistiques");
     expect(pour("beneficiaire")).not.toContain("/statistiques");
+  });
+
+  it("adapte la barre basse au role", () => {
+    const hrefs = (roles: string[]) => bottomNavItems(roles).map((i) => i.href);
+    expect(hrefs(["beneficiaire"])).toEqual(["/dashboard", "/distributions", "/mes-inscriptions", "/mon-compte"]);
+    expect(hrefs(["benevole"])).toEqual(["/dashboard", "/distributions", "/missions-collecte", "/mon-compte"]);
+    expect(hrefs(["coordinateur"])).toEqual(["/dashboard", "/distributions", "/statistiques", "/mon-compte"]);
+    expect(hrefs(["super_admin"])).toContain("/statistiques");
   });
 
   it("ne propose pas les missions de collecte au beneficiaire", () => {
