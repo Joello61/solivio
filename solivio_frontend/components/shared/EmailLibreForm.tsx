@@ -121,6 +121,7 @@ export function EmailLibreForm() {
         <div className="space-y-1.5">
           <Label htmlFor="cible">Destinataires</Label>
           <Select
+            items={CIBLES}
             onValueChange={(v) => {
               const c = v as CibleEmail;
               setValue("cible", c);

@@ -63,11 +63,16 @@ interface SelectFieldProps {
   placeholder?: string;
 }
 
+const EMPLOI = [
+  { value: "true", label: "Oui" },
+  { value: "false", label: "Non" },
+];
+
 function SelectField({ id, label, value, onChange, options, placeholder = "-- Choisir --" }: SelectFieldProps) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
+      <Select items={options} value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -232,13 +237,16 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <div className="space-y-1.5">
           <Label htmlFor="aEmploi">Emploi étudiant</Label>
-          <Select value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
+          <Select items={EMPLOI} value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
             <SelectTrigger id="aEmploi" className="w-full">
               <SelectValue placeholder="-- Choisir --" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">Oui</SelectItem>
-              <SelectItem value="false">Non</SelectItem>
+              {EMPLOI.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
