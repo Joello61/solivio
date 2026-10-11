@@ -1,5 +1,6 @@
 package com.solivio.api.evenement.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.domain.Evenement;
 import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.ParticipationEvenement;
@@ -38,6 +39,7 @@ class ParticipationEvenementServiceTest {
     @Mock private EvenementRepository evenementRepository;
     @Mock private ParticipationEvenementRepository participationRepository;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AuditService auditService;
 
     private ParticipationEvenementService service;
     private UUID evenementId;
@@ -47,7 +49,7 @@ class ParticipationEvenementServiceTest {
     @BeforeEach
     void setUp() {
         service = new ParticipationEvenementService(
-            evenementRepository, participationRepository, personneQueryPort);
+            evenementRepository, participationRepository, personneQueryPort, auditService);
         evenementId = UUID.randomUUID();
         personneId = UUID.randomUUID();
 

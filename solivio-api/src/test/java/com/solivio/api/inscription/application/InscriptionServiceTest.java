@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
 import com.solivio.api.inscription.domain.StatutPresence;
@@ -47,6 +48,7 @@ class InscriptionServiceTest {
     @Mock private AssociationQueryPort associationQueryPort;
     @Mock private InscriptionEventPublisher eventPublisher;
     @Mock private VerrouDistribution verrouDistribution;
+    @Mock private AuditService auditService;
 
     private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
 
@@ -67,7 +69,7 @@ class InscriptionServiceTest {
         service = new InscriptionService(
             inscriptionRepository, distributionQueryPort, personneQueryPort,
             associationQueryPort, eventPublisher, verrouDistribution,
-            new HorlogeAssociation(Clock.systemUTC(), associationQueryPort)
+            new HorlogeAssociation(Clock.systemUTC(), associationQueryPort), auditService
         );
         lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(PARIS);
         distributionId = UUID.randomUUID();
@@ -438,7 +440,7 @@ class InscriptionServiceTest {
         InscriptionService serviceAMinuit = new InscriptionService(
             inscriptionRepository, distributionQueryPort, personneQueryPort,
             associationQueryPort, eventPublisher, verrouDistribution,
-            new HorlogeAssociation(minuitTrenteAParis, associationQueryPort));
+            new HorlogeAssociation(minuitTrenteAParis, associationQueryPort), auditService);
         Inscription benevoleConfirme = inscriptionBenevole(personneId, StatutInscription.CONFIRMEE);
         benevoleConfirme.setId(inscriptionId);
         when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))

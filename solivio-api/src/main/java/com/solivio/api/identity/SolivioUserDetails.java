@@ -1,5 +1,6 @@
 package com.solivio.api.identity;
 
+import com.solivio.api.shared.identity.CompteAuthentifie;
 import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
  * module identity : les controleurs des autres modules l'injectent.
  * Porte l'identite (compteId, email) et les roles issus du JWT.
  */
-public class SolivioUserDetails implements UserDetails {
+public class SolivioUserDetails implements UserDetails, CompteAuthentifie {
 
     @Getter
     private final UUID compteId;

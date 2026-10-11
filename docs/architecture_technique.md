@@ -186,7 +186,7 @@ L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `i
 - **Traces** : OpenTelemetry (OTLP HTTP) vers Tempo dans le profil `prod` (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, par défaut `http://tempo:4318/v1/traces`), y compris les interactions entre modules publiées par Spring Modulith. Seule la propagation W3C est acceptée. L'attribut `deployment.environment.name` vient de `DEPLOYMENT_ENVIRONMENT` (`staging` ou `production`).
 - **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana) : tableau de bord "Solivio - Application" (variable d'environnement), six alertes de production (backend injoignable, réponses 5xx, latence, échecs de connexion, événements internes en échec, erreurs dans les journaux). La préproduction est collectée sur un réseau séparé (`observability-staging`), sans alerte.
 - **Disponibilité** : moniteurs Uptime Kuma sur PostgreSQL (nom complet du conteneur), sur l'URL publique de santé de chaque environnement et sur les sauvegardes (moniteur "push").
-- **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques.
+- **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques. Chaque service métier écrit sa trace (`AuditService.tracer`, propagation `MANDATORY`) dans la transaction de l'action, au nom du compte authentifié lu dans le contexte de sécurité : une action annulée ne laisse pas de trace, et une trace impossible à écrire annule l'action. L'export des données de l'association est tracé.
 
 ## 12. La sécurité
 

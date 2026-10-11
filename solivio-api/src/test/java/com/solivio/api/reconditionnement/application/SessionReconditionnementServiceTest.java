@@ -1,5 +1,6 @@
 package com.solivio.api.reconditionnement.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutSessionReconditionnement;
@@ -40,6 +41,7 @@ class SessionReconditionnementServiceTest {
     @Mock private InscriptionReconditionnementRepository inscriptionRepository;
     @Mock private ReconditionnementEventPublisher eventPublisher;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AuditService auditService;
 
     private SessionReconditionnementService service;
     private UUID sessionId;
@@ -49,7 +51,7 @@ class SessionReconditionnementServiceTest {
     @BeforeEach
     void setUp() {
         service = new SessionReconditionnementService(
-            sessionRepository, inscriptionRepository, eventPublisher, personneQueryPort
+            sessionRepository, inscriptionRepository, eventPublisher, personneQueryPort, auditService
         );
         sessionId = UUID.randomUUID();
         creeParId = UUID.randomUUID();

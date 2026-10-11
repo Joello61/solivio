@@ -1,5 +1,6 @@
 package com.solivio.api.identity.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.web.dto.MembreResponse;
@@ -24,10 +25,12 @@ public class MembreService {
 
     private final MembreAssociationRepository membreRepository;
     private final GardeMembres garde;
+    private final AuditService auditService;
 
-    public MembreService(MembreAssociationRepository membreRepository, GardeMembres garde) {
+    public MembreService(MembreAssociationRepository membreRepository, GardeMembres garde, AuditService auditService) {
         this.membreRepository = membreRepository;
         this.garde = garde;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -44,6 +47,8 @@ public class MembreService {
             garde.garderUnResponsable(compteId);
         }
         membre.setStatut(statut);
+        String action = SUSPENDU.equals(statut) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
+        auditService.tracer(acteurCompteId, action, "compte", compteId);
         return toResponse(membreRepository.save(membre));
     }
 
@@ -55,6 +60,7 @@ public class MembreService {
         }
         membre.setRole(request.role());
         membre.setCoordoType(request.coordoType());
+        auditService.tracer(acteurCompteId, "ROLE_MEMBRE_MODIFIE", "compte", compteId);
         return toResponse(membreRepository.save(membre));
     }
 

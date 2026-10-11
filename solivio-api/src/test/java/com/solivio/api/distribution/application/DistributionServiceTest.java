@@ -1,5 +1,6 @@
 package com.solivio.api.distribution.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
 import com.solivio.api.distribution.domain.StatutDistribution;
@@ -48,6 +49,7 @@ class DistributionServiceTest {
     @Mock private DistributionEventPublisher eventPublisher;
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private AssociationQueryPort associationQueryPort;
+    @Mock private AuditService auditService;
 
     private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
 
@@ -277,6 +279,6 @@ class DistributionServiceTest {
     private DistributionService serviceA(Clock clock) {
         lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(PARIS);
         return new DistributionService(distributionRepository, creneauRepository, eventPublisher,
-            personneQueryPort, new HorlogeAssociation(clock, associationQueryPort));
+            personneQueryPort, new HorlogeAssociation(clock, associationQueryPort), auditService);
     }
 }

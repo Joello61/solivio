@@ -1,5 +1,6 @@
 package com.solivio.api.collecte.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
 import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
@@ -34,15 +35,18 @@ public class MissionCollecteService {
     private final MissionCollecteRepository missionRepository;
     private final CollecteEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public MissionCollecteService(
         MissionCollecteRepository missionRepository,
         CollecteEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.missionRepository = missionRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     public MissionCollecteResponse creer(CreateMissionCollecteRequest request,
@@ -66,6 +70,7 @@ public class MissionCollecteService {
         );
         missionRepository.save(mission);
         eventPublisher.publierCreee(mission.getId(), mission.getDateHeure());
+        auditService.tracer("MISSION_COLLECTE_CREEE", "mission_collecte", mission.getId());
         return toResponse(mission, null, null);
     }
 
@@ -98,6 +103,7 @@ public class MissionCollecteService {
             mission.setLieuDepotLatitude(latitude(request.lieuDepot()));
             mission.setLieuDepotLongitude(longitude(request.lieuDepot()));
         }
+        auditService.tracer("MISSION_COLLECTE_MODIFIEE", "mission_collecte", missionId);
         return toResponse(missionRepository.save(mission), null, null);
     }
 
@@ -113,6 +119,7 @@ public class MissionCollecteService {
         mission.annuler(par.id(), raisonSaine);
         missionRepository.save(mission);
         eventPublisher.publierAnnulee(mission.getId(), mission.getDateHeure(), benevoleAssigneId);
+        auditService.tracer("MISSION_COLLECTE_ANNULEE", "mission_collecte", missionId);
         return toResponse(mission, null, par.id());
     }
 
@@ -129,6 +136,7 @@ public class MissionCollecteService {
         mission.prendreEnCharge(benevole.id());
         missionRepository.save(mission);
         PersonneContactInfo info = personneQueryPort.trouverPersonneParId(benevole.id());
+        auditService.tracer("MISSION_COLLECTE_PRISE", "mission_collecte", missionId);
         return toResponse(mission, info.nom() + " " + info.prenom(), benevole.id());
     }
 
@@ -143,6 +151,7 @@ public class MissionCollecteService {
         }
         mission.liberer();
         missionRepository.save(mission);
+        auditService.tracer("MISSION_COLLECTE_LIBEREE", "mission_collecte", missionId);
         return toResponse(mission, null, benevole.id());
     }
 
@@ -151,6 +160,7 @@ public class MissionCollecteService {
         mission.validerCollecte();
         missionRepository.save(mission);
         String benevoleNom = resolveBenevoleNom(mission.getBenevoleId());
+        auditService.tracer("MISSION_COLLECTE_VALIDEE", "mission_collecte", missionId);
         return toResponse(mission, benevoleNom, null);
     }
 
@@ -160,6 +170,7 @@ public class MissionCollecteService {
         mission.validerDepot(benevole.id());
         missionRepository.save(mission);
         PersonneContactInfo info = personneQueryPort.trouverPersonneParId(benevole.id());
+        auditService.tracer("MISSION_DEPOT_VALIDE", "mission_collecte", missionId);
         return toResponse(mission, info.nom() + " " + info.prenom(), benevole.id());
     }
 

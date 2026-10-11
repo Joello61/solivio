@@ -1,6 +1,5 @@
 package com.solivio.api.reconditionnement.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.reconditionnement.application.SessionReconditionnementService;
 import com.solivio.api.reconditionnement.infrastructure.web.dto.AnnulerSessionRequest;
@@ -30,14 +29,11 @@ import java.util.UUID;
 public class SessionReconditionnementController {
 
     private final SessionReconditionnementService sessionService;
-    private final AuditService auditService;
 
     public SessionReconditionnementController(
-        SessionReconditionnementService sessionService,
-        AuditService auditService
+        SessionReconditionnementService sessionService
     ) {
         this.sessionService = sessionService;
-        this.auditService = auditService;
     }
 
     @PostMapping
@@ -47,8 +43,6 @@ public class SessionReconditionnementController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         SessionReconditionnementResponse response = sessionService.creer(request, user.getUsername());
-        auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_CREEE",
-            "session_reconditionnement", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -79,36 +73,27 @@ public class SessionReconditionnementController {
     @PostMapping("/{id}/publier")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<SessionReconditionnementResponse> publier(
-        @PathVariable UUID id,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @PathVariable UUID id
     ) {
         SessionReconditionnementResponse response = sessionService.publier(id);
-        auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_PUBLIEE",
-            "session_reconditionnement", id);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/demarrer")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<SessionReconditionnementResponse> demarrer(
-        @PathVariable UUID id,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @PathVariable UUID id
     ) {
         SessionReconditionnementResponse response = sessionService.demarrer(id);
-        auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_DEMARREE",
-            "session_reconditionnement", id);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/terminer")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<SessionReconditionnementResponse> terminer(
-        @PathVariable UUID id,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @PathVariable UUID id
     ) {
         SessionReconditionnementResponse response = sessionService.terminer(id);
-        auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_TERMINEE",
-            "session_reconditionnement", id);
         return ResponseEntity.ok(response);
     }
 
@@ -116,13 +101,10 @@ public class SessionReconditionnementController {
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<SessionReconditionnementResponse> annuler(
         @PathVariable UUID id,
-        @Valid @RequestBody AnnulerSessionRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody AnnulerSessionRequest request
     ) {
         SessionReconditionnementResponse response =
             sessionService.annuler(id, request);
-        auditService.tracer(user.getCompteId(), "SESSION_RECONDITIONNEMENT_ANNULEE",
-            "session_reconditionnement", id);
         return ResponseEntity.ok(response);
     }
 
@@ -171,12 +153,9 @@ public class SessionReconditionnementController {
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<InscriptionReconditionnementResponse> pointer(
         @PathVariable UUID id,
-        @Valid @RequestBody PointageReconditionnementRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody PointageReconditionnementRequest request
     ) {
         InscriptionReconditionnementResponse response = sessionService.pointer(id, request);
-        auditService.tracer(user.getCompteId(), "POINTAGE_RECONDITIONNEMENT",
-            "inscription_reconditionnement", request.personneId());
         return ResponseEntity.ok(response);
     }
 }

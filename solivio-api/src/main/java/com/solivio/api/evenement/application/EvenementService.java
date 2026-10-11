@@ -1,5 +1,6 @@
 package com.solivio.api.evenement.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.domain.Evenement;
 import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.PublicCible;
@@ -31,17 +32,20 @@ public class EvenementService {
     private final ParticipationEvenementRepository participationRepository;
     private final EvenementEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public EvenementService(
         EvenementRepository evenementRepository,
         ParticipationEvenementRepository participationRepository,
         EvenementEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.evenementRepository = evenementRepository;
         this.participationRepository = participationRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     public EvenementResponse creer(CreateEvenementRequest request, String emailCreateur) {
@@ -67,6 +71,7 @@ public class EvenementService {
             request.capaciteParticipants(),
             createur.id()
         );
+        auditService.tracer("EVENEMENT_CREE", "evenement", evenement.getId());
         evenementRepository.save(evenement);
         return toResponse(evenement);
     }
@@ -128,6 +133,7 @@ public class EvenementService {
         if (debut != null && fin != null && !fin.isAfter(debut)) {
             throw new IllegalArgumentException("date_heure_fin doit etre apres date_heure_debut");
         }
+        auditService.tracer("EVENEMENT_MODIFIE", "evenement", evenementId);
         return toResponse(evenementRepository.save(evenement));
     }
 
@@ -135,6 +141,7 @@ public class EvenementService {
         Evenement evenement = trouverOuEchouer(evenementId);
         evenement.transitionnerVers(StatutEvenement.PUBLIE, null);
         evenementRepository.save(evenement);
+        auditService.tracer("EVENEMENT_PUBLIE", "evenement", evenementId);
         eventPublisher.publierPublie(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }
@@ -144,6 +151,7 @@ public class EvenementService {
         String raisonSaine = Assainissement.nettoyer(request.raison());
         evenement.transitionnerVers(StatutEvenement.ANNULE, raisonSaine);
         evenementRepository.save(evenement);
+        auditService.tracer("EVENEMENT_ANNULE", "evenement", evenementId);
         eventPublisher.publierAnnule(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }
