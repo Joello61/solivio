@@ -6,6 +6,9 @@ import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiquePeriodeResponse } from "@/types/association";
+import type { DistributionResponse } from "@/types/distribution";
+import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
+import { distributionsDuJour, jourAssociation, type InscriptionDuMembre } from "@/lib/distribution-du-jour";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -13,6 +16,7 @@ async function fetchDashboardData(): Promise<{
   me: MeResponse | null;
   statsMois: StatistiquePeriodeResponse | null;
   statsErreur: boolean;
+  duJour: DistributionResponse[];
 }> {
   const now = new Date();
   const debut = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
@@ -20,13 +24,19 @@ async function fetchDashboardData(): Promise<{
   const fin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(dernierJour).padStart(2, "0")}`;
 
   const me = await lireMoi();
-  if (!estGestionnaireDistribution(me?.roles ?? [])) {
-    return { me, statsMois: null, statsErreur: false };
-  }
-  const statsMois = await lireServeur<StatistiquePeriodeResponse>(
-    `/api/statistiques/periode?debut=${debut}&fin=${fin}`,
-  ).catch(() => null);
-  return { me, statsMois, statsErreur: statsMois === null };
+  const roles = me?.roles ?? [];
+  const gestionnaire = estGestionnaireDistribution(roles);
+  // Un beneficiaire ne pointe pas : pas de carte du jour pour lui.
+  const concerne = gestionnaire || roles.includes("benevole");
+  const [distributions, inscriptions, statsMois] = await Promise.all([
+    concerne ? lireServeur<DistributionResponse[]>("/api/distributions") : null,
+    concerne && !gestionnaire ? lireServeur<InscriptionDuMembre[]>("/api/inscriptions/mes") : null,
+    gestionnaire
+      ? lireServeur<StatistiquePeriodeResponse>(`/api/statistiques/periode?debut=${debut}&fin=${fin}`).catch(() => null)
+      : null,
+  ]);
+  const duJour = distributionsDuJour(distributions ?? [], jourAssociation(now), gestionnaire, inscriptions ?? []);
+  return { me, statsMois, statsErreur: gestionnaire && statsMois === null, duJour };
 }
 
 interface CarteStatistiqueProps {
@@ -88,7 +98,7 @@ function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
 }
 
 export default async function DashboardPage() {
-  const { me, statsMois, statsErreur } = await fetchDashboardData();
+  const { me, statsMois, statsErreur, duJour } = await fetchDashboardData();
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),
@@ -109,6 +119,8 @@ export default async function DashboardPage() {
           Bienvenue sur votre espace Linkee Toulouse.
         </p>
       </div>
+
+      <DistributionDuJour distributions={duJour} />
 
       {/* Statistiques du mois */}
       {estGestionnaire && (

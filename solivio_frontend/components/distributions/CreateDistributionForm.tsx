@@ -338,7 +338,7 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                         <Input
                           type="time"
                           {...register(`creneaux.${index}.heureDebut`)}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
                       <div className="flex-1 space-y-1">
@@ -348,7 +348,7 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                         <Input
                           type="time"
                           {...register(`creneaux.${index}.heureFin`)}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
                       <div className="w-24 space-y-1">
@@ -359,7 +359,7 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                           type="number"
                           min={1}
                           {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
                       {fields.length > 1 && (
@@ -367,7 +367,7 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          className="size-11 sm:size-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                           onClick={() => remove(index)}
                         >
                           <Trash2 className="size-4" />

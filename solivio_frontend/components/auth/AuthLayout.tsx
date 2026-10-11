@@ -10,7 +10,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children, title, description }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen lg:flex">
+    <div className="min-h-dvh lg:flex">
 
       {/* Panneau gauche - branding desktop uniquement */}
       <div className="hidden lg:flex lg:w-[540px] xl:w-[600px] shrink-0 flex-col justify-between p-12 xl:p-16 relative overflow-hidden bg-brand-deep">
@@ -72,7 +72,7 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
       </div>
 
       {/* Panneau droit */}
-      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0">
+      <div className="flex-1 flex flex-col min-h-dvh lg:min-h-0">
 
         {/* Hero mobile - meme pattern que l'app mobile native */}
         <div

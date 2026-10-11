@@ -236,7 +236,7 @@ export function RepartitionPanel({
                           size="sm"
                           onClick={() => ouvrirModification(denree)}
                           aria-label="Modifier"
-                          className="h-7 w-7 p-0"
+                          className="size-11 p-0 sm:size-8"
                         >
                           <Pencil className="size-3.5" />
                         </Button>
@@ -245,7 +245,7 @@ export function RepartitionPanel({
                           size="sm"
                           onClick={() => setSuppressionCible({ id: denree.id, libelle: denree.libelle })}
                           aria-label="Supprimer"
-                          className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="size-11 p-0 sm:size-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>

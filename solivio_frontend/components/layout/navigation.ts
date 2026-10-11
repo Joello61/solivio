@@ -13,6 +13,7 @@ import {
   Mail,
   Tags,
   BarChart3,
+  CircleUser,
 } from "lucide-react";
 
 export interface NavItem {
@@ -104,11 +105,23 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Accueil", icon: LayoutDashboard },
-  { href: "/distributions", label: "Distributions", icon: CalendarDays },
-  { href: "/mes-inscriptions", label: "Inscriptions", icon: ClipboardList },
-];
+const ACCUEIL: NavItem = { href: "/dashboard", label: "Accueil", icon: LayoutDashboard };
+const DISTRIBUTIONS: NavItem = { href: "/distributions", label: "Distributions", icon: CalendarDays };
+const COMPTE: NavItem = { href: "/mon-compte", label: "Compte", icon: CircleUser };
+
+/**
+ * Barre basse mobile : les quatre destinations les plus utiles au role. Un gestionnaire
+ * suit les chiffres, un benevole ses missions, un beneficiaire ses inscriptions.
+ */
+export function bottomNavItems(roles: string[]): NavItem[] {
+  const gestionnaire = roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r));
+  const troisieme: NavItem = gestionnaire
+    ? { href: "/statistiques", label: "Statistiques", icon: BarChart3 }
+    : roles.includes("benevole")
+      ? { href: "/missions-collecte", label: "Missions", icon: Truck }
+      : { href: "/mes-inscriptions", label: "Inscriptions", icon: ClipboardList };
+  return [ACCUEIL, DISTRIBUTIONS, troisieme, COMPTE];
+}
 
 export function filterNavItems(items: NavItem[], roles: string[]): NavItem[] {
   return items.filter(
