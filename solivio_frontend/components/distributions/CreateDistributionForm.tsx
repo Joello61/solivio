@@ -17,19 +17,19 @@ import type { LieuRequest } from "@/types/distribution";
 
 // Schéma
 const creneauSchema = z.object({
-  heureDebut: z.string().min(1, "Heure de debut requise"),
+  heureDebut: z.string().min(1, "Heure de début requise"),
   heureFin: z.string().min(1, "Heure de fin requise"),
-  capacite: z.number().int().positive("La capacite doit etre positive"),
+  capacite: z.number().int().positive("La capacite doit être positive"),
 });
 
 const schema = z.object({
   titre: z.string().min(1, "Le titre est requis").max(200),
   description: z.string().optional(),
   date: z.string().min(1, "La date est requise"),
-  capaciteBeneficiaires: z.number().int().positive("La capacite doit etre positive"),
+  capaciteBeneficiaires: z.number().int().positive("La capacite doit être positive"),
   capaciteBenevoles: z.number().int().positive().optional(),
   modeCreneau: z.enum(["CRENEAU_UNIQUE", "CRENEAUX_DECOUPES"]),
-  creneaux: z.array(creneauSchema).min(1, "Au moins un creneau est requis"),
+  creneaux: z.array(creneauSchema).min(1, "Au moins un créneau est requis"),
 });
 
 type FormValues = z.infer<typeof schema>;

@@ -54,17 +54,17 @@ function RegisterForm() {
 
   return (
     <AuthLayout
-      title={isInvitation ? "Rejoindre votre association" : "Creer un compte"}
+      title={isInvitation ? "Rejoindre votre association" : "Créer un compte"}
       description={
         isInvitation
-          ? "Completez votre profil pour accepter l'invitation."
-          : "Inscrivez-vous en tant que beneficiaire."
+          ? "Complétez votre profil pour accepter l'invitation."
+          : "Inscrivez-vous en tant que bénéficiaire."
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="prenom">Prenom</Label>
+            <Label htmlFor="prenom">Prénom</Label>
             <Input
               id="prenom"
               required
@@ -118,7 +118,7 @@ function RegisterForm() {
           {pending ? (
             <><Spinner size="sm" /> Inscription en cours...</>
           ) : (
-            "Creer mon compte"
+            "Créer mon compte"
           )}
         </Button>
       </form>
@@ -145,7 +145,7 @@ function RegisterForm() {
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Deja inscrit ?{" "}
+        Déjà inscrit ?{" "}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Se connecter
         </Link>

@@ -34,7 +34,7 @@ test.describe("Parcours repartition coordinateur", () => {
     await page.waitForLoadState("networkidle");
 
     // Le bouton Repartition n'est visible que pour les gestionnaires
-    const lienRepartition = page.getByRole("link", { name: /repartition/i });
+    const lienRepartition = page.getByRole("link", { name: /répartition/i });
     const repartitionVisible = await lienRepartition.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!repartitionVisible) {
@@ -44,7 +44,7 @@ test.describe("Parcours repartition coordinateur", () => {
 
     await lienRepartition.click();
     await expect(page).toHaveURL(/\/repartition/);
-    await expect(page.getByRole("heading", { name: /repartition des denrees/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /répartition des denrées/i })).toBeVisible();
   });
 
   test("le panneau de repartition affiche les denrees existantes", async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe("Parcours repartition coordinateur", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
-    const lienRepartition = page.getByRole("link", { name: /repartition/i });
+    const lienRepartition = page.getByRole("link", { name: /répartition/i });
     const repartitionVisible = await lienRepartition.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!repartitionVisible) {
@@ -83,7 +83,7 @@ test.describe("Parcours repartition coordinateur", () => {
     }
 
     // La page charge meme si la liste de denrees est vide
-    await expect(page.getByRole("heading", { name: /repartition des denrees/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /répartition des denrées/i })).toBeVisible();
   });
 
   test("ajout d'une denree via le formulaire client-side", async ({ page }) => {
@@ -105,7 +105,7 @@ test.describe("Parcours repartition coordinateur", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
-    const lienRepartition = page.getByRole("link", { name: /repartition/i });
+    const lienRepartition = page.getByRole("link", { name: /répartition/i });
     const repartitionVisible = await lienRepartition.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!repartitionVisible) {
@@ -122,7 +122,7 @@ test.describe("Parcours repartition coordinateur", () => {
     }
 
     // Le bouton "Ajouter une denree" declenche l'affichage du formulaire client-side
-    const boutonAjouter = page.getByRole("button", { name: /ajouter une denree/i });
+    const boutonAjouter = page.getByRole("button", { name: /ajouter une denrée/i });
     const boutonVisible = await boutonAjouter.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!boutonVisible) {
@@ -150,12 +150,12 @@ test.describe("Parcours repartition coordinateur", () => {
     await boutonAjouter.click();
 
     // Le formulaire FormulaireDenree s'affiche apres le clic
-    const champNom = page.getByLabel(/nom de la denree/i);
+    const champNom = page.getByLabel(/nom de la denrée/i);
     await expect(champNom).toBeVisible({ timeout: 2_000 });
 
     await champNom.fill("Riz basmati");
 
-    const champQuantite = page.getByLabel(/quantite/i);
+    const champQuantite = page.getByLabel(/quantité/i);
     await champQuantite.fill("50");
 
     const boutonSauvegarder = page.getByRole("button", { name: /ajouter|sauvegarder|valider/i }).last();

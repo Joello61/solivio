@@ -49,7 +49,7 @@ describe("DistributionCard", () => {
 
   it("affiche les capacites", () => {
     render(<DistributionCard distribution={distributionMock} />);
-    expect(screen.getByText(/50 beneficiaires/)).toBeInTheDocument();
+    expect(screen.getByText(/50 bénéficiaires/)).toBeInTheDocument();
   });
 
   it("cree un lien vers la page de detail", () => {
@@ -59,14 +59,14 @@ describe("DistributionCard", () => {
 
   it("affiche le badge de statut PUBLIEE", () => {
     render(<DistributionCard distribution={distributionMock} />);
-    expect(screen.getByText("Publiee")).toBeInTheDocument();
+    expect(screen.getByText("Publiée")).toBeInTheDocument();
   });
 
   // --- Vue gestionnaire ---
 
   it("affiche le bouton Demarrer pour une distribution PUBLIEE vue gestionnaire", () => {
     render(<DistributionCard distribution={distributionMock} estGestionnaire={true} />);
-    expect(screen.getByRole("button", { name: /demarrer/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /démarrer/i })).toBeInTheDocument();
   });
 
   it("affiche le bouton Annuler pour une distribution active vue gestionnaire", () => {

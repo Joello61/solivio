@@ -73,7 +73,7 @@ describe("VerifyEmailPage", () => {
     });
 
     expect(authLib.resendVerification).toHaveBeenCalledWith("alice@example.com");
-    expect(screen.getByRole("status")).toHaveTextContent(/nouveau code a ete envoye/);
+    expect(screen.getByRole("status")).toHaveTextContent(/nouveau code a été envoyé/);
   });
 
   it("affiche l'erreur du serveur quand le renvoi est refuse", async () => {

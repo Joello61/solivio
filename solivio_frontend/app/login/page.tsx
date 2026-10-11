@@ -59,7 +59,7 @@ function LoginForm() {
   }
 
   return (
-    <AuthLayout title="Connexion" description="Acces a votre espace association">
+    <AuthLayout title="Connexion" description="Accès a votre espace association">
       {emailVerifie && (
         <Alert role="status">
           <CheckCircle2 />
@@ -101,9 +101,9 @@ function LoginForm() {
           <Checkbox
             checked={rememberMe}
             onCheckedChange={(v) => setRememberMe(Boolean(v))}
-            aria-label="Rester connecte"
+            aria-label="Rester connecté"
           />
-          <span className="text-sm text-muted-foreground">Rester connecte</span>
+          <span className="text-sm text-muted-foreground">Rester connecté</span>
         </label>
 
         <FormError message={error} />
@@ -152,7 +152,7 @@ function LoginForm() {
       <p className="text-center text-sm text-muted-foreground">
         Pas encore de compte ?{" "}
         <Link href="/register" className="text-primary font-medium hover:underline">
-          Creer un compte
+          Créer un compte
         </Link>
       </p>
     </AuthLayout>

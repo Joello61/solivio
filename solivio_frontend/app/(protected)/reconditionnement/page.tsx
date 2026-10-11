@@ -50,7 +50,7 @@ export default async function ReconditionnementPage() {
           <h1 className="text-3xl font-bold text-foreground font-display">Reconditionnement</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez les sessions de reconditionnement de l'association."
+              ? "Gérez les sessions de reconditionnement de l'association."
               : "Consultez et inscrivez-vous aux sessions disponibles."}
           </p>
         </div>
@@ -69,12 +69,12 @@ export default async function ReconditionnementPage() {
             title="Aucune session"
             description={
               estGestionnaire
-                ? "Aucune session de reconditionnement n'a ete creee."
+                ? "Aucune session de reconditionnement n'a été créée."
                 : "Aucune session n'est disponible pour le moment."
             }
             action={
               me?.roles.some((r) => ["responsable", "super_admin"].includes(r))
-                ? { label: "Creer une session", href: "/reconditionnement/nouvelle" }
+                ? { label: "Créer une session", href: "/reconditionnement/nouvelle" }
                 : undefined
             }
           />

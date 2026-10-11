@@ -54,8 +54,8 @@ function CompleteGoogleRegistrationForm() {
       title="Finaliser votre inscription"
       description={
         isInvitation
-          ? "Verifiez vos informations pour accepter l'invitation."
-          : "Verifiez vos informations pour rejoindre Linkee Toulouse."
+          ? "Vérifiez vos informations pour accepter l'invitation."
+          : "Vérifiez vos informations pour rejoindre Linkee Toulouse."
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,7 +66,7 @@ function CompleteGoogleRegistrationForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="prenom">Prenom</Label>
+            <Label htmlFor="prenom">Prénom</Label>
             <Input
               id="prenom"
               required
@@ -102,7 +102,7 @@ function CompleteGoogleRegistrationForm() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Deja inscrit ?{" "}
+        Déjà inscrit ?{" "}
         <Link href="/login" className="text-primary font-medium hover:underline">
           Se connecter
         </Link>

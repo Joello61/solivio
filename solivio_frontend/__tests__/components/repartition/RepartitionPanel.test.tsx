@@ -103,7 +103,7 @@ describe("RepartitionPanel", () => {
 
     // Le chiffre et le libelle sont dans des <span> distincts
     expect(screen.getByText("10")).toBeInTheDocument();
-    expect(screen.getByText(/beneficiaire/)).toBeInTheDocument();
+    expect(screen.getByText(/bénéficiaire/)).toBeInTheDocument();
   });
 
   it("affiche le bouton d'ajout de denree si modifiable", () => {
@@ -116,7 +116,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /Ajouter une denree/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ajouter une denrée/ })).toBeInTheDocument();
   });
 
   it("affiche le formulaire d'ajout au clic", async () => {
@@ -130,7 +130,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Ajouter une denree/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Ajouter une denrée/ }));
     });
 
     expect(screen.getByLabelText("Libelle")).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText("Inscrits")).toBeInTheDocument();
-    expect(screen.getByText("Presents reels")).toBeInTheDocument();
+    expect(screen.getByText("Présents reels")).toBeInTheDocument();
   });
 
   it("appelle calculerDotation avec PRESENTS au clic sur la bascule", async () => {
@@ -167,7 +167,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Presents reels"));
+      fireEvent.click(screen.getByText("Présents reels"));
     });
 
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");
@@ -211,7 +211,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/Aucune denree saisie/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucune denrée saisie/)).toBeInTheDocument();
   });
 
   // --- Mode lecture seule (distribution terminee ou annulee) ---
@@ -226,7 +226,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/cloturee/i)).toBeInTheDocument();
+    expect(screen.getByText(/clôturée/i)).toBeInTheDocument();
   });
 
   it("masque le bouton d'ajout quand non modifiable", () => {
@@ -239,7 +239,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.queryByText(/Ajouter une denree/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ajouter une denrée/)).not.toBeInTheDocument();
   });
 
   it("masque les boutons modifier et supprimer quand non modifiable", () => {

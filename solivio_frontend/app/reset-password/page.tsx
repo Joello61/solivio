@@ -70,11 +70,11 @@ function ResetPasswordForm() {
   return (
     <AuthLayout
       title="Nouveau mot de passe"
-      description={email ? `Code envoye a ${email}` : "Entrez le code recu par email."}
+      description={email ? `Code envoyé a ${email}` : "Entrez le code recu par email."}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Code de verification</Label>
+          <Label>Code de vérification</Label>
           <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
             {digits.map((d, i) => (
               <input

@@ -35,7 +35,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
       setShowForm(false);
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Impossible d'ajouter le role.");
+      setErreur(err.detail ?? err.message ?? "Impossible d'ajouter le rôle.");
     } finally {
       setPending(false);
     }
@@ -49,7 +49,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Impossible de retirer le role.");
+      setErreur(err.detail ?? err.message ?? "Impossible de retirer le rôle.");
     } finally {
       setRetirantId(null);
     }
@@ -69,7 +69,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
               disabled={retirantId === role.id}
               onClick={() => handleRetirer(role.id)}
               className="text-primary/60 hover:text-primary disabled:opacity-40 transition-colors"
-              aria-label={`Retirer le role ${role.libelle}`}
+              aria-label={`Retirer le rôle ${role.libelle}`}
             >
               {retirantId === role.id ? (
                 <Spinner size="sm" className="h-2.5 w-2.5" />
@@ -84,10 +84,10 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
             type="button"
             onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary/80 transition-colors"
-            aria-label="Ajouter un role"
+            aria-label="Ajouter un rôle"
           >
             <Plus className="size-3" />
-            Ajouter un role
+            Ajouter un rôle
           </button>
         )}
       </div>

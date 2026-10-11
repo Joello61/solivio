@@ -25,7 +25,7 @@ export default function NouvelEvenementPage() {
         {/* Panneau info - masqué sur mobile */}
         <div className="hidden lg:block">
           <FormInfoPanel
-            imageSrc="/images/forms/evenement.jpg"
+            imageSrc="/images/forms/événement.jpg"
             imageAlt="Événement associatif"
             titre="Événement associatif"
             description="Un événement peut être un stand, une fête ou toute autre activité de l'association. Il peut accueillir du staff bénévole et/ou des participants."

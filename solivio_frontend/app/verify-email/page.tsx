@@ -45,7 +45,7 @@ function VerifyEmailForm() {
     setRenvoiEnCours(true);
     try {
       await resendVerification(email);
-      setInfo(`Un nouveau code a ete envoye a ${email}.`);
+      setInfo(`Un nouveau code a été envoyé a ${email}.`);
     } catch (err: unknown) {
       setError(messageErreur(err, "Impossible d'envoyer un nouveau code."));
     } finally {
@@ -60,7 +60,7 @@ function VerifyEmailForm() {
     resendVerification(emailInitial)
       .then(() =>
         setInfo(
-          `Votre adresse n'est pas encore verifiee. Un nouveau code a ete envoye a ${emailInitial}.`
+          `Votre adresse n'est pas encore verifiee. Un nouveau code a été envoyé a ${emailInitial}.`
         )
       )
       .catch((err: unknown) => setError(messageErreur(err, "Impossible d'envoyer un nouveau code.")));
@@ -113,10 +113,10 @@ function VerifyEmailForm() {
 
   return (
     <AuthLayout
-      title="Verifiez votre email"
+      title="Vérifiez votre email"
       description={
         emailInitial
-          ? `Code a 6 chiffres envoye a ${emailInitial}`
+          ? `Code a 6 chiffres envoyé a ${emailInitial}`
           : "Entrez votre adresse et le code a 6 chiffres recu par email."
       }
     >
@@ -144,7 +144,7 @@ function VerifyEmailForm() {
         )}
 
         <fieldset className="space-y-2">
-          <legend className="sr-only">Code de verification</legend>
+          <legend className="sr-only">Code de vérification</legend>
           <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
             {digits.map((d, i) => (
               <input
@@ -173,7 +173,7 @@ function VerifyEmailForm() {
         <FormError message={error} />
 
         <Button type="submit" className="w-full" disabled={pending || !codeComplet || !email}>
-          {pending ? <><Spinner size="sm" /> Verification...</> : "Valider le code"}
+          {pending ? <><Spinner size="sm" /> Vérification...</> : "Valider le code"}
         </Button>
       </form>
 

@@ -8,7 +8,7 @@ import type { EvenementResponse } from "@/types/evenement";
 const LABEL_TYPE: Record<string, string> = {
   STAND: "Stand",
   FETE: "Fete",
-  AUTRE: "Evenement",
+  AUTRE: "Événement",
 };
 
 interface Props {

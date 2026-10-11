@@ -44,7 +44,7 @@ function DataTable<T>({
   data,
   columns,
   pageSize = 10,
-  emptyTitle = "Aucun element",
+  emptyTitle = "Aucun élément",
   emptyDescription,
   className,
   getRowKey,
@@ -144,7 +144,7 @@ function DataTable<T>({
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-4 px-1">
           <p className="text-xs text-muted-foreground">
-            {sorted.length} element{sorted.length !== 1 ? "s" : ""} -{" "}
+            {sorted.length} élément{sorted.length !== 1 ? "s" : ""} -{" "}
             page {safePage} sur {totalPages}
           </p>
           <div className="flex items-center gap-1">
@@ -153,7 +153,7 @@ function DataTable<T>({
               size="icon-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage <= 1}
-              aria-label="Page precedente"
+              aria-label="Page précédente"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>

@@ -73,7 +73,7 @@ export function FormulaireConfiguration({ association }: Props) {
       router.refresh();
     } catch (err) {
       const e2 = err as { detail?: string; message?: string };
-      setErreur(e2.detail ?? e2.message ?? "Erreur lors de la mise a jour.");
+      setErreur(e2.detail ?? e2.message ?? "Erreur lors de la mise à jour.");
     } finally {
       setPending(false);
     }
@@ -89,7 +89,7 @@ export function FormulaireConfiguration({ association }: Props) {
       {succes && (
         <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Configuration mise a jour avec succes.</span>
+          <span className="text-sm">Configuration mise à jour avec succes.</span>
         </div>
       )}
 
@@ -196,7 +196,7 @@ export function FormulaireConfiguration({ association }: Props) {
 
         {/* Colonne droite : parametres */}
         <div className="space-y-6">
-          <p className="text-sm font-semibold text-foreground font-display">Parametres</p>
+          <p className="text-sm font-semibold text-foreground font-display">Paramètres</p>
 
           <div className="space-y-1.5">
             <Label htmlFor="fuseauHoraire">Fuseau horaire</Label>
@@ -210,7 +210,7 @@ export function FormulaireConfiguration({ association }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="frequenceMax">Frequence max par semaine</Label>
+            <Label htmlFor="frequenceMax">Fréquence max par semaine</Label>
             <Input
               id="frequenceMax"
               type="number"
@@ -235,7 +235,7 @@ export function FormulaireConfiguration({ association }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="contactTelephone">Telephone de contact</Label>
+            <Label htmlFor="contactTelephone">Téléphone de contact</Label>
             <Input
               id="contactTelephone"
               value={contactTelephone}

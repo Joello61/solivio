@@ -10,7 +10,7 @@ describe("DistributionStatutBadge", () => {
 
   it("affiche 'Publiee' pour le statut PUBLIEE", () => {
     render(<DistributionStatutBadge statut="PUBLIEE" />);
-    expect(screen.getByText("Publiee")).toBeInTheDocument();
+    expect(screen.getByText("Publiée")).toBeInTheDocument();
   });
 
   it("affiche 'En cours' pour le statut EN_COURS", () => {
@@ -20,11 +20,11 @@ describe("DistributionStatutBadge", () => {
 
   it("affiche 'Terminee' pour le statut TERMINEE", () => {
     render(<DistributionStatutBadge statut="TERMINEE" />);
-    expect(screen.getByText("Terminee")).toBeInTheDocument();
+    expect(screen.getByText("Terminée")).toBeInTheDocument();
   });
 
   it("affiche 'Annulee' pour le statut ANNULEE", () => {
     render(<DistributionStatutBadge statut="ANNULEE" />);
-    expect(screen.getByText("Annulee")).toBeInTheDocument();
+    expect(screen.getByText("Annulée")).toBeInTheDocument();
   });
 });

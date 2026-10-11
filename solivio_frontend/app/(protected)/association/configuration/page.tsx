@@ -46,7 +46,7 @@ export default async function ConfigurationPage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground font-display">Configuration</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Parametres de l&apos;association {association.nom}.
+          Paramètres de l&apos;association {association.nom}.
         </p>
       </div>
 

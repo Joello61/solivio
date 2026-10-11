@@ -29,7 +29,7 @@ const STATUTS_BOURSIER = [
 ];
 
 const CATEGORIES_NATIONALITE = [
-  { value: "francaise", label: "Francaise" },
+  { value: "francaise", label: "Française" },
   { value: "ressortissant_ue", label: "Ressortissant UE" },
   { value: "hors_ue", label: "Hors UE" },
 ];
@@ -127,7 +127,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise a jour.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise à jour.");
     } finally {
       setPending(false);
     }
@@ -144,7 +144,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
       {!profil.complet && (
         <Alert className="border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400 text-sm">
-          Completez votre dossier pour faciliter l&apos;inscription aux distributions.
+          Complétez votre dossier pour faciliter l&apos;inscription aux distributions.
         </Alert>
       )}
 
@@ -161,7 +161,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <SelectField
           id="categorieNationalite"
-          label="Nationalite"
+          label="Nationalité"
           value={categorieNationalite}
           onChange={setCategorieNationalite}
           options={CATEGORIES_NATIONALITE}
@@ -177,7 +177,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         {statutBoursier === "boursier" && (
           <div className="space-y-1.5">
-            <Label htmlFor="echelonBourse">Echelon de bourse</Label>
+            <Label htmlFor="echelonBourse">Échelon de bourse</Label>
             <Input
               id="echelonBourse"
               type="number"
@@ -205,14 +205,14 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <SelectField
           id="niveauAcademique"
-          label="Niveau academique"
+          label="Niveau académique"
           value={niveauAcademique}
           onChange={setNiveauAcademique}
           options={NIVEAUX_ACADEMIQUES}
         />
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="etablissement">Etablissement</Label>
+          <Label htmlFor="etablissement">Établissement</Label>
           <Input
             id="etablissement"
             value={etablissement}
@@ -231,7 +231,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
         />
 
         <div className="space-y-1.5">
-          <Label htmlFor="aEmploi">Emploi etudiant</Label>
+          <Label htmlFor="aEmploi">Emploi étudiant</Label>
           <Select value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
             <SelectTrigger id="aEmploi" className="w-full">
               <SelectValue placeholder="-- Choisir --" />

@@ -8,12 +8,12 @@ import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Detail evenement" };
+export const metadata: Metadata = { title: "Détail événement" };
 
 const LABEL_TYPE: Record<string, string> = {
   STAND: "Stand",
   FETE: "Fete",
-  AUTRE: "Evenement",
+  AUTRE: "Événement",
 };
 
 async function fetchData(id: string, cookieHeader: string) {
@@ -122,7 +122,7 @@ export default async function DetailEvenementPage({ params }: Props) {
             <UserCheck className="size-4 text-muted-foreground shrink-0" />
             <span>
               Staff : {evenement.nbStaff}
-              {evenement.capaciteStaff ? ` / ${evenement.capaciteStaff}` : ""} benevoles
+              {evenement.capaciteStaff ? ` / ${evenement.capaciteStaff}` : ""} bénévoles
             </span>
           </div>
         )}

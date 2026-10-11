@@ -23,8 +23,8 @@ import type { DenreeResponse } from "@/types/distribution";
 const schema = z.object({
   libelle: z.string().min(1, "Le libelle est requis").max(200),
   unite: z.enum(["UNITE", "KILOGRAMME", "LITRE", "PIECE"]),
-  nombreContenants: z.number().int().positive("Doit etre positif"),
-  quantiteParContenant: z.number().positive("Doit etre positif"),
+  nombreContenants: z.number().int().positive("Doit être positif"),
+  quantiteParContenant: z.number().positive("Doit être positif"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -120,7 +120,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="quantiteParContenant">Quantite par contenant</Label>
+          <Label htmlFor="quantiteParContenant">Quantité par contenant</Label>
           <Input
             id="quantiteParContenant"
             type="number"

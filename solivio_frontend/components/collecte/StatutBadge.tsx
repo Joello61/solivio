@@ -14,11 +14,11 @@ const CONFIG: Record<StatutMission, { label: string; className: string }> = {
     className: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   DEPOT_VALIDE: {
-    label: "Depot valide",
+    label: "Dépôt valide",
     className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   },
   ANNULEE: {
-    label: "Annulee",
+    label: "Annulée",
     className: "bg-red-50 text-red-700 border border-red-200",
   },
 };

@@ -15,8 +15,8 @@ const ONGLETS: { statut: StatutMission | null; label: string }[] = [
   { statut: "DISPONIBLE", label: "Disponibles" },
   { statut: "PRISE_EN_CHARGE", label: "En cours" },
   { statut: "COLLECTE_EFFECTUEE", label: "Collecte faite" },
-  { statut: "DEPOT_VALIDE", label: "Terminees" },
-  { statut: "ANNULEE", label: "Annulees" },
+  { statut: "DEPOT_VALIDE", label: "Terminées" },
+  { statut: "ANNULEE", label: "Annulées" },
 ];
 
 async function fetchData(cookieHeader: string, statut?: string): Promise<{
@@ -56,7 +56,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
           <h1 className="text-3xl font-bold text-foreground font-display">Missions collecte</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez les missions de collecte et de depot."
+              ? "Gérez les missions de collecte et de dépôt."
               : "Consultez et prenez en charge les missions disponibles."}
           </p>
         </div>
@@ -100,7 +100,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
             }
             action={
               estGestionnaire
-                ? { label: "Creer une mission", href: "/missions-collecte/nouvelle" }
+                ? { label: "Créer une mission", href: "/missions-collecte/nouvelle" }
                 : undefined
             }
           />

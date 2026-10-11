@@ -33,7 +33,7 @@ test.describe("Page login", () => {
   });
 
   test("affiche un lien vers la page d'inscription", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /creer un compte/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /créer un compte/i })).toBeVisible();
   });
 
   test("affiche un lien vers la reinitialisation du mot de passe", async ({ page }) => {

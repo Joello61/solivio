@@ -44,7 +44,7 @@ function statutLabel(statut: string, rang: number | null): string {
 }
 
 function typeLabel(type: string): string {
-  return type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole";
+  return type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole";
 }
 
 function presenceLabel(presence: string): string {
@@ -107,7 +107,7 @@ export default async function MesInscriptionsPage() {
           <EmptyState
             icon={CalendarSearch}
             title="Aucune inscription"
-            description="Vous n'etes inscrit(e) a aucune distribution pour le moment."
+            description="Vous n'êtes inscrit(e) a aucune distribution pour le moment."
             action={{ label: "Voir les distributions", href: "/distributions" }}
           />
         </div>
@@ -115,7 +115,7 @@ export default async function MesInscriptionsPage() {
         <>
           <section className="space-y-4">
             <div className="flex items-baseline gap-2">
-              <h2 className="text-base font-semibold text-foreground font-display">A venir</h2>
+              <h2 className="text-base font-semibold text-foreground font-display">À venir</h2>
               {avenir.length > 0 && (
                 <span className="text-sm text-muted-foreground">
                   {avenir.length} inscription{avenir.length > 1 ? "s" : ""}
@@ -124,7 +124,7 @@ export default async function MesInscriptionsPage() {
             </div>
             {avenir.length === 0 ? (
               <p className="text-sm text-muted-foreground italic px-1">
-                Aucune inscription a venir.
+                Aucune inscription à venir.
               </p>
             ) : (
               <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
@@ -217,7 +217,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
           )}
           {i.presence !== "NON_POINTE" && (
             <span className="text-xs text-muted-foreground">
-              Presence : {presenceLabel(i.presence)}
+              Présence : {presenceLabel(i.presence)}
             </span>
           )}
         </div>

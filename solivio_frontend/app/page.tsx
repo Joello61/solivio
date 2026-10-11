@@ -234,7 +234,7 @@ export default function LandingPage() {
     },
     {
       q: "Comment sont protégées les données des bénéficiaires ?",
-      a: "La confidentialité est intégrée dès la conception. Les bénévoles au pointage ne voient que le prénom et le créneau. Les statistiques de fin de distribution sont agrégées et pseudonymisées. Aucun hébergement hors Union européenne.",
+      a: "La confidentialité est intégrée dès la conception. Les bénévoles au pointage ne voient que le nom et le statut d'inscription, jamais le dossier social. Les statistiques de fin de distribution sont agrégées et pseudonymisées. Aucun hébergement hors Union européenne.",
     },
     {
       q: "Notre fonctionnement avec des créneaux horaires est-il compatible ?",
@@ -560,7 +560,7 @@ export default function LandingPage() {
                 <span className="text-teal-600 dark:text-teal-400">au panier près.</span>
               </h2>
               <p className="text-base text-muted-foreground leading-relaxed">
-                Entrez vos stocks. Solivio calcule instantanément la dotation par bénéficiaire inscrit en minimisant le gaspillage et les inégalités entre créneaux.
+                Entrez vos stocks. Solivio calculé instantanément la dotation par bénéficiaire inscrit en minimisant le gaspillage et les inégalités entre créneaux.
               </p>
               <ul className="space-y-3 pt-1">
                 {[

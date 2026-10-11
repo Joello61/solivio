@@ -46,7 +46,7 @@ describe("RoleBenevolePanel", () => {
         rolesInitiaux={[]}
       />,
     );
-    expect(screen.getByText("Ajouter un role")).toBeInTheDocument();
+    expect(screen.getByText("Ajouter un rôle")).toBeInTheDocument();
   });
 
   it("ouvre le formulaire au clic sur Ajouter un role", () => {
@@ -57,7 +57,7 @@ describe("RoleBenevolePanel", () => {
         rolesInitiaux={[]}
       />,
     );
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     expect(screen.getByPlaceholderText(/distribution des carottes/i)).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe("RoleBenevolePanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     fireEvent.change(screen.getByPlaceholderText(/distribution des carottes/i), {
       target: { value: "Logistique" },
     });
@@ -101,7 +101,7 @@ describe("RoleBenevolePanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     const input = screen.getByPlaceholderText(/distribution des carottes/i);
     fireEvent.change(input, { target: { value: "Caisse" } });
 
@@ -122,14 +122,14 @@ describe("RoleBenevolePanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     const input = screen.getByPlaceholderText(/distribution des carottes/i);
     fireEvent.change(input, { target: { value: "Valeur a annuler" } });
     fireEvent.keyDown(input, { key: "Escape" });
 
     expect(api.assignerRole).not.toHaveBeenCalled();
     expect(screen.queryByPlaceholderText(/distribution des carottes/i)).not.toBeInTheDocument();
-    expect(screen.getByText("Ajouter un role")).toBeInTheDocument();
+    expect(screen.getByText("Ajouter un rôle")).toBeInTheDocument();
   });
 
   it("appelle retirerRole et retire le role de la liste", async () => {
@@ -144,7 +144,7 @@ describe("RoleBenevolePanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByLabelText("Retirer le role Distribution des carottes"));
+      fireEvent.click(screen.getByLabelText("Retirer le rôle Distribution des carottes"));
     });
 
     expect(api.retirerRole).toHaveBeenCalledWith("dist-1", "insc-1", "role-1");
@@ -162,7 +162,7 @@ describe("RoleBenevolePanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     fireEvent.change(screen.getByPlaceholderText(/distribution des carottes/i), {
       target: { value: "Role problematique" },
     });
@@ -182,7 +182,7 @@ describe("RoleBenevolePanel", () => {
         rolesInitiaux={[]}
       />,
     );
-    fireEvent.click(screen.getByText("Ajouter un role"));
+    fireEvent.click(screen.getByText("Ajouter un rôle"));
     expect(screen.getByText("OK")).toBeDisabled();
   });
 });

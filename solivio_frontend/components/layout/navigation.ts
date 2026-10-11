@@ -43,8 +43,8 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Truck,
         roles: ["benevole", "coordinateur", "responsable"],
       },
-      { href: "/evenements", label: "Evenements", icon: PartyPopper },
-      { href: "/mes-evenements", label: "Mes evenements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
+      { href: "/evenements", label: "Événements", icon: PartyPopper },
+      { href: "/mes-evenements", label: "Mes événements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
@@ -65,7 +65,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         href: "/association/catalogue-denrees",
-        label: "Catalogue denrees",
+        label: "Catalogue denrées",
         icon: Package,
         roles: ["responsable", "super_admin"],
       },
@@ -91,7 +91,7 @@ export const NAV_SECTIONS: NavSection[] = [
 ];
 
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Accueil", icon: LayoutDashboard },
   { href: "/distributions", label: "Distributions", icon: CalendarDays },
   { href: "/mes-inscriptions", label: "Inscriptions", icon: ClipboardList },
 ];

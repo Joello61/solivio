@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { RepartitionPanel } from "@/components/repartition/RepartitionPanel";
 import type { DistributionResponse, DenreeResponse, DotationResponse } from "@/types/distribution";
 
-export const metadata: Metadata = { title: "Repartition des denrees" };
+export const metadata: Metadata = { title: "Répartition des denrées" };
 
 async function fetchData(id: string, cookieHeader: string) {
   const base = process.env.API_URL ?? "http://localhost:8080";
@@ -61,7 +61,7 @@ export default async function RepartitionPage({ params }: PageProps) {
             <Package className="size-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground font-display">Repartition des denrees</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">Répartition des denrées</h1>
             <p className="text-xs text-muted-foreground">
               {data.distribution.titre}
             </p>

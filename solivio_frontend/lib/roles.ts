@@ -2,8 +2,8 @@ export const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super admin",
   responsable: "Responsable",
   coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
+  benevole: "Bénévole",
+  beneficiaire: "Bénéficiaire",
 };
 
 export function libelleRole(role: string, statutMembre?: string | null): string {

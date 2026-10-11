@@ -41,12 +41,12 @@ describe("PointageListe", () => {
 
   it("affiche le champ de recherche", () => {
     render(<PointageListe distributionId="dist-1" />);
-    expect(screen.getByPlaceholderText(/Rechercher par nom ou prenom/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Rechercher par nom ou prénom/)).toBeInTheDocument();
   });
 
   it("ne recherche pas si champ vide", async () => {
     render(<PointageListe distributionId="dist-1" />);
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "" },
     });
     await avancerDebounce(400);
@@ -57,7 +57,7 @@ describe("PointageListe", () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
     render(<PointageListe distributionId="dist-1" />);
 
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "Ma" },
     });
 
@@ -73,7 +73,7 @@ describe("PointageListe", () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
     render(<PointageListe distributionId="dist-1" />);
 
-    const input = screen.getByPlaceholderText(/Rechercher par nom ou prenom/);
+    const input = screen.getByPlaceholderText(/Rechercher par nom ou prénom/);
     fireEvent.change(input, { target: { value: "Ma" } });
     act(() => { vi.advanceTimersByTime(200); }); // pas encore 300ms
 
@@ -89,7 +89,7 @@ describe("PointageListe", () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
     render(<PointageListe distributionId="dist-1" />);
 
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "Marie" },
     });
 
@@ -105,7 +105,7 @@ describe("PointageListe", () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
     render(<PointageListe distributionId="dist-1" />);
 
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "Du" },
     });
     await avancerDebounce();
@@ -120,7 +120,7 @@ describe("PointageListe", () => {
     );
 
     render(<PointageListe distributionId="dist-1" />);
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "Du" },
     });
     await avancerDebounce();
@@ -137,19 +137,19 @@ describe("PointageListe", () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([]);
     render(<PointageListe distributionId="dist-1" />);
 
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prenom/), {
+    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
       target: { value: "Inconnu" },
     });
     await avancerDebounce();
 
-    expect(screen.getByText(/Aucun inscrit trouve/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun inscrit trouvé/)).toBeInTheDocument();
   });
 
   it("efface les resultats quand le champ est vide", async () => {
     vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
     render(<PointageListe distributionId="dist-1" />);
 
-    const input = screen.getByPlaceholderText(/Rechercher par nom ou prenom/);
+    const input = screen.getByPlaceholderText(/Rechercher par nom ou prénom/);
     fireEvent.change(input, { target: { value: "Du" } });
     await avancerDebounce();
     expect(screen.getByText("Dupont Marie")).toBeInTheDocument();

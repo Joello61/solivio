@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import type { ProfilBeneficiaireResponse } from "@/types/profil";
 import { FormulaireProfilBeneficiaire } from "@/components/account/FormulaireProfilBeneficiaire";
 
-export const metadata: Metadata = { title: "Mon dossier beneficiaire" };
+export const metadata: Metadata = { title: "Mon dossier bénéficiaire" };
 
 async function fetchProfil(
   cookieHeader: string
@@ -42,7 +42,7 @@ export default async function ProfilBeneficiairePage() {
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">Dossier beneficiaire</h1>
+        <h1 className="text-3xl font-bold text-foreground font-display">Dossier bénéficiaire</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Ces informations sont confidentielles et ne sont pas visibles lors du pointage.
         </p>

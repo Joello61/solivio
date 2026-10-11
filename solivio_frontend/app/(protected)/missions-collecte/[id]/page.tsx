@@ -8,7 +8,7 @@ import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { MissionCollecteResponse } from "@/types/collecte";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Detail mission collecte" };
+export const metadata: Metadata = { title: "Détail mission collecte" };
 
 async function fetchData(id: string, cookieHeader: string): Promise<{
   me: MeResponse | null;
@@ -91,7 +91,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         {mission.lieuDepot?.adresseFormatee && (
           <div className="flex items-center gap-3 text-sm">
             <Truck className="size-4 text-muted-foreground shrink-0" />
-            <span>Depot : {mission.lieuDepot.adresseFormatee}</span>
+            <span>Dépôt : {mission.lieuDepot.adresseFormatee}</span>
           </div>
         )}
         {mission.lieuDepot?.latitude != null && mission.lieuDepot?.longitude != null && (
@@ -107,7 +107,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
 
         <div className="flex items-center gap-3 text-sm">
           <Users className="size-4 text-muted-foreground shrink-0" />
-          <span>{mission.capacitePersonnes} benevole{mission.capacitePersonnes > 1 ? "s" : ""} max.</span>
+          <span>{mission.capacitePersonnes} bénévole{mission.capacitePersonnes > 1 ? "s" : ""} max.</span>
         </div>
 
         {mission.benevoleNomComplet && (
@@ -134,7 +134,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
             <li>Collecte effectuee : {new Date(mission.dateCollecteEffectuee).toLocaleString("fr-FR")}</li>
           )}
           {mission.dateDepotValide && (
-            <li>Depot valide : {new Date(mission.dateDepotValide).toLocaleString("fr-FR")}</li>
+            <li>Dépôt valide : {new Date(mission.dateDepotValide).toLocaleString("fr-FR")}</li>
           )}
         </ol>
       </div>

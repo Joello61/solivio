@@ -36,7 +36,7 @@ function labelRole(role: string): string {
     case "super_admin": return "Super admin";
     case "responsable": return "Responsable";
     case "coordinateur": return "Coordinateur";
-    default: return "Benevole";
+    default: return "Bénévole";
   }
 }
 
@@ -89,7 +89,7 @@ function CarteMembre({
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de role.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
       setRole(membre.role);
     } finally {
       setPending(false);
@@ -192,7 +192,7 @@ function CarteMembre({
                     }
                   >
                     {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                     ) : (
                       <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
                     )}
@@ -223,18 +223,18 @@ function CarteMembre({
               {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {estSuspendu ? "Reactiver le membre" : "Suspendre le membre"}
+              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activites de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activites de l'association.`}
+                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activités de l'association.`
+                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Reactiver" : "Suspendre"}
+              {estSuspendu ? "Réactiver" : "Suspendre"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -251,14 +251,14 @@ function CarteMembre({
             </AlertDialogMedia>
             <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
             <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire definitivement de l&apos;association.
-              Cette action est irreversible.
+              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer definitivement
+              Retirer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -297,7 +297,7 @@ function LigneMembreRow({
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de role.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
       setRole(membre.role);
     } finally {
       setPending(false);
@@ -396,7 +396,7 @@ function LigneMembreRow({
                     }
                   >
                     {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                     ) : (
                       <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
                     )}
@@ -427,18 +427,18 @@ function LigneMembreRow({
               {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {estSuspendu ? "Reactiver le membre" : "Suspendre le membre"}
+              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activites de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activites de l'association.`}
+                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activités de l'association.`
+                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Reactiver" : "Suspendre"}
+              {estSuspendu ? "Réactiver" : "Suspendre"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -455,14 +455,14 @@ function LigneMembreRow({
             </AlertDialogMedia>
             <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
             <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire definitivement de l&apos;association.
-              Cette action est irreversible.
+              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer definitivement
+              Retirer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -523,14 +523,14 @@ export function GestionMembres({ membres, currentUserId }: Props) {
               </Select>
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Role</span>
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Rôle</span>
               <Select value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="benevole">Benevole</SelectItem>
+                  <SelectItem value="benevole">Bénévole</SelectItem>
                   <SelectItem value="coordinateur">Coordinateur</SelectItem>
                   <SelectItem value="responsable">Responsable</SelectItem>
                 </SelectContent>
@@ -566,7 +566,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
                 <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Membre</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Role</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rôle</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>

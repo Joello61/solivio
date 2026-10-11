@@ -17,21 +17,21 @@ const LABELS: Record<string, string> = {
   nouvelle: "Nouvelle distribution",
   "mes-inscriptions": "Mes inscriptions",
   "mon-compte": "Mon compte",
-  "profil-beneficiaire": "Profil beneficiaire",
+  "profil-beneficiaire": "Profil bénéficiaire",
   association: "Association",
   configuration: "Configuration",
   membres: "Membres",
   admin: "Administration",
   utilisateurs: "Utilisateurs",
   pointage: "Pointage",
-  repartition: "Repartition",
+  repartition: "Répartition",
 };
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function labelFor(segment: string): string {
-  if (UUID_RE.test(segment)) return "Detail";
+  if (UUID_RE.test(segment)) return "Détail";
   return LABELS[segment] ?? segment;
 }
 
