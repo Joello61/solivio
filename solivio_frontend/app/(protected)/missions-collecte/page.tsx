@@ -81,7 +81,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
       </div>
 
       {missions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={Truck}
             title="Aucune mission"

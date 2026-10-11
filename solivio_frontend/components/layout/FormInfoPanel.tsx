@@ -30,9 +30,9 @@ export function FormInfoPanel({
           priority={false}
         />
         {/* Overlay gradient subtil pour lisibilité du titre */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-overlay/40 via-overlay/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
-          <h2 className="font-display text-base font-semibold text-white leading-snug drop-shadow">
+          <h2 className="font-display text-base font-semibold text-primary-foreground leading-snug drop-shadow">
             {titre}
           </h2>
         </div>

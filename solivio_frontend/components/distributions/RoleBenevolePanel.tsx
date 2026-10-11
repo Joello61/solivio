@@ -61,7 +61,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
         {roles.map((role) => (
           <span
             key={role.id}
-            className="inline-flex items-center gap-1 rounded-full bg-teal-50 border border-teal-200 dark:bg-teal-950/30 dark:border-teal-800/40 px-2.5 py-0.5 text-xs font-medium text-primary"
+            className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/25 px-2.5 py-0.5 text-xs font-medium text-primary"
           >
             {role.libelle}
             <button

@@ -53,7 +53,7 @@ export function Header({ user }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-white/90 backdrop-blur-md shadow-xs dark:bg-neutral-950/90">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-primary-foreground/90 backdrop-blur-md shadow-xs">
       <div className="flex h-14 items-center gap-3 px-4">
         {/* Logo cliquable (mobile uniquement, la sidebar s'en charge sur desktop) */}
         <Link
@@ -116,7 +116,7 @@ export function Header({ user }: HeaderProps) {
           </button>
 
           {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-border/60 bg-white p-1.5 shadow-xl dark:bg-neutral-900">
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-border/60 bg-card p-1.5 shadow-xl">
                 {/* Infos utilisateur */}
                 <div className="px-3 py-2.5 space-y-1">
                   <p className="text-sm font-medium text-popover-foreground truncate">

@@ -177,7 +177,7 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
 
       {/* Etat vide apres recherche */}
       {!recherchePending && aRecherche && resultats.length === 0 && recherche && (
-        <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-8 text-center">
+        <div className="rounded-2xl border border-border/60 bg-muted px-6 py-8 text-center">
           <p className="text-sm text-muted-foreground">
             Aucun inscrit trouvé pour &quot;{recherche}&quot;.
           </p>
@@ -186,14 +186,14 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
 
       {/* Resultats inscrits */}
       {resultats.length > 0 && (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm divide-y divide-border/60 overflow-hidden">
           {resultats.map((r) => (
             <div
               key={r.inscriptionId}
-              className="flex items-center justify-between px-4 py-3.5 hover:bg-teal-50/30 dark:hover:bg-teal-950/20 transition-colors"
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-primary/5 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
                   {(r.prenom?.[0] ?? "").toUpperCase()}{(r.nom?.[0] ?? "").toUpperCase()}
                 </div>
                 <div className="min-w-0 space-y-1">
@@ -247,14 +247,14 @@ export function PointageListe({ distributionId, peutAjouter = false }: Props) {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Visiteurs ponctuels ({visiteurs.length})
           </p>
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm divide-y divide-border/60 overflow-hidden">
+          <div className="rounded-2xl border border-border/60 bg-card shadow-sm divide-y divide-border/60 overflow-hidden">
             {visiteurs.map((v) => (
               <div
                 key={v.id}
                 className="flex items-center justify-between px-4 py-3.5"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[11px] font-semibold dark:bg-amber-950/30 dark:border-amber-800/40">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning/10 border border-warning/20 text-warning text-[11px] font-semibold">
                     {(v.prenom?.[0] ?? "").toUpperCase()}{(v.nom?.[0] ?? "").toUpperCase()}
                   </div>
                   <div className="min-w-0 space-y-1">

@@ -3,23 +3,23 @@ import type { StatutEvenement } from "@/types/evenement";
 const CONFIG: Record<StatutEvenement, { label: string; className: string }> = {
   BROUILLON: {
     label: "Brouillon",
-    className: "bg-slate-50 text-slate-600 border border-slate-200",
+    className: "bg-muted text-muted-foreground border border-border",
   },
   PUBLIE: {
     label: "Publie",
-    className: "bg-teal-50 text-teal-700 border border-teal-200",
+    className: "bg-primary/10 text-primary border border-primary/25",
   },
   EN_COURS: {
     label: "En cours",
-    className: "bg-blue-50 text-blue-700 border border-blue-200",
+    className: "bg-info/10 text-info border border-info/30",
   },
   TERMINE: {
     label: "Termine",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    className: "bg-success/10 text-success border border-success/30",
   },
   ANNULE: {
     label: "Annule",
-    className: "bg-red-50 text-red-700 border border-red-200",
+    className: "bg-destructive/10 text-destructive border border-destructive/30",
   },
 };
 

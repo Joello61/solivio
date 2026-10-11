@@ -38,8 +38,8 @@ function EmptyState({
         <div
           className={cn(
             "flex items-center justify-center rounded-2xl mb-5",
-            "bg-teal-50 border border-teal-100",
-            "dark:bg-teal-950/30 dark:border-teal-900/50",
+            "bg-primary/10 border border-primary/20",
+            "",
             size === "default" ? "h-16 w-16" : "h-12 w-12",
           )}
         >

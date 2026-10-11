@@ -57,11 +57,11 @@ export default async function DistributionsPage() {
       {estGestionnaire && distributions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {[
-            { statut: "BROUILLON", label: "Brouillon", cls: "bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
+            { statut: "BROUILLON", label: "Brouillon", cls: "bg-muted text-muted-foreground border-border" },
             { statut: "PUBLIEE",   label: "Publiée",   cls: "bg-primary text-primary-foreground border-transparent" },
-            { statut: "EN_COURS",  label: "En cours",  cls: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-800/40" },
-            { statut: "TERMINEE",  label: "Terminée",  cls: "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
-            { statut: "ANNULEE",   label: "Annulée",   cls: "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40" },
+            { statut: "EN_COURS",  label: "En cours",  cls: "bg-primary/10 text-primary border-primary/25" },
+            { statut: "TERMINEE",  label: "Terminée",  cls: "bg-muted text-muted-foreground border-border" },
+            { statut: "ANNULEE",   label: "Annulée",   cls: "bg-destructive/10 text-destructive border-destructive/30" },
           ]
             .filter((s) => (nbParStatut[s.statut] ?? 0) > 0)
             .map((s) => (
@@ -78,7 +78,7 @@ export default async function DistributionsPage() {
 
       {/* Contenu */}
       {distributions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={CalendarX}
             title="Aucune distribution"

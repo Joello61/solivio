@@ -143,7 +143,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       </div>
 
       {!profil.complet && (
-        <Alert className="border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400 text-sm">
+        <Alert className="border-warning/50 bg-warning/10 text-warning text-sm">
           Complétez votre dossier pour faciliter l&apos;inscription aux distributions.
         </Alert>
       )}
@@ -245,7 +245,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       </div>
 
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
+        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
           <CheckCircle className="h-4 w-4 shrink-0" />
           <span className="text-sm">Dossier mis a jour avec succes.</span>
         </div>

@@ -34,7 +34,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--foreground)",
           "--normal-border": "color-mix(in oklch, var(--border) 60%, transparent)",
           "--border-radius": "0.75rem",
-          "--toast-shadow": "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
+          "--toast-shadow": "var(--shadow-md)",
         } as React.CSSProperties
       }
       toastOptions={{

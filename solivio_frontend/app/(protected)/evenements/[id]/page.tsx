@@ -60,7 +60,7 @@ export default async function DetailEvenementPage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-3 text-sm">
           <Calendar className="size-4 text-muted-foreground shrink-0" />
           <span>

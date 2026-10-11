@@ -38,7 +38,7 @@ export default async function CatalogueDenreesPage() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6">
         <CatalogueGestionPanel initialDenrees={denrees} />
       </div>
     </div>

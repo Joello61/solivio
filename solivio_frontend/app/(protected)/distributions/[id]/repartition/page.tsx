@@ -43,7 +43,7 @@ export default async function RepartitionPage({ params }: PageProps) {
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
             <Package className="size-5 text-primary" />
           </div>
           <div>
@@ -55,7 +55,7 @@ export default async function RepartitionPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
         <RepartitionPanel
           distributionId={id}
           denreesInitiales={data.denrees}

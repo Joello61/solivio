@@ -68,6 +68,14 @@
   --color-border:               var(--border);
   --color-input:                var(--input);
   --color-ring:                 var(--ring);
+  --color-success:              var(--success);
+  --color-success-foreground:   var(--success-foreground);
+  --color-warning:              var(--warning);
+  --color-warning-foreground:   var(--warning-foreground);
+  --color-info:                 var(--info);
+  --color-info-foreground:      var(--info-foreground);
+  --color-accent-strong:        var(--accent-strong);
+  --color-overlay:              var(--overlay);
 
   /* RAYONS - Systeme coherent */
   --radius-xs:   0.25rem;   /* 4px */
@@ -152,6 +160,19 @@
   --input:  oklch(0.924 0.006 264);
   --ring:   oklch(0.532 0.118 185);
 
+  /* Etats : la valeur sert au texte et aux icones (contraste AA sur fond clair),
+     les fonds legers s'obtiennent par transparence (bg-success/10). */
+  --success:            oklch(0.508 0.118 165.6);
+  --success-foreground: oklch(1 0 0);
+  --warning:            oklch(0.555 0.163 49);
+  --warning-foreground: oklch(1 0 0);
+  --info:               oklch(0.488 0.243 264.4);
+  --info-foreground:    oklch(1 0 0);
+  /* Corail lisible en texte, l'accent etant reserve aux fonds */
+  --accent-strong:      oklch(0.518 0.165 42);
+  /* Voile des modales et des images, noir dans les deux modes */
+  --overlay:            oklch(0 0 0);
+
   /* Rayon de base shadcn */
   --radius: 0.75rem;
 }
@@ -188,6 +209,15 @@
   --border: oklch(1 0 0 / 10%);
   --input:  oklch(1 0 0 / 14%);
   --ring:   oklch(0.620 0.128 186);
+
+  --success:            oklch(0.765 0.177 163.2);
+  --success-foreground: oklch(0.148 0.008 264);
+  --warning:            oklch(0.828 0.189 84.4);
+  --warning-foreground: oklch(0.148 0.008 264);
+  --info:               oklch(0.707 0.165 254.6);
+  --info-foreground:    oklch(0.148 0.008 264);
+  --accent-strong:      oklch(0.850 0.138 45);
+  --overlay:            oklch(0 0 0);
 }
 
 /* ANIMATIONS */

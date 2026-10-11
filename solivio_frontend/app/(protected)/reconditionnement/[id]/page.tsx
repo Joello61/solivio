@@ -71,7 +71,7 @@ export default async function SessionDetailPage({
       )}
 
       {/* Informations */}
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
         <div className="flex items-center gap-2 text-sm">
           <Calendar className="size-4 shrink-0 text-muted-foreground" />
           <span>

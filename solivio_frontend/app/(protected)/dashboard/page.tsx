@@ -38,14 +38,14 @@ interface CarteStatistiqueProps {
 }
 
 const COULEURS = {
-  blue:   "bg-teal-50 text-primary border border-teal-100 dark:bg-teal-950/40 dark:border-teal-800/50",
-  green:  "bg-orange-50 text-orange-500 border border-orange-100 dark:bg-orange-950/30 dark:text-orange-400",
-  purple: "bg-teal-100/80 text-teal-700 border border-teal-200 dark:bg-teal-900/40 dark:text-teal-300",
+  blue:   "bg-primary/10 text-primary border border-primary/20",
+  green:  "bg-warning/10 text-warning border border-warning/20",
+  purple: "bg-primary/12 text-primary border border-primary/25",
 };
 
 function CarteStatistique({ titre, valeur, description, icon: Icon, couleur }: CarteStatistiqueProps) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition-shadow duration-200 p-6 flex flex-col gap-4">
+    <div className="rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-6 flex flex-col gap-4">
       <div className="flex items-start justify-between">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.12em]">{titre}</p>
         <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", COULEURS[couleur])}>
@@ -71,12 +71,12 @@ function AccesRapide({ href, icon: Icon, label }: AccesRapideProps) {
     <Link
       href={href}
       className={cn(
-        "group flex items-center gap-3 rounded-xl border border-border/60 bg-white dark:bg-neutral-900",
+        "group flex items-center gap-3 rounded-xl border border-border/60 bg-card",
         "px-4 py-3.5 shadow-sm",
         "hover:border-primary/40 hover:shadow-md transition-all duration-150",
       )}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 dark:bg-neutral-800 group-hover:bg-teal-50 dark:group-hover:bg-teal-950/40 transition-colors duration-150">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted group-hover:bg-primary/10 transition-colors duration-150">
         <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-150" />
       </div>
       <span className="flex-1 text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-150">
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
             <span className="text-sm text-muted-foreground capitalize">{moisCourant}</span>
           </div>
           {statsErreur ? (
-            <div className="rounded-xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-5 py-4 text-sm text-muted-foreground">
+            <div className="rounded-xl border border-border/60 bg-muted px-5 py-4 text-sm text-muted-foreground">
               Statistiques indisponibles. Vérifiez que le service est accessible.
             </div>
           ) : statsMois ? (

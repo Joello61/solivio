@@ -76,7 +76,7 @@ export default async function EvenementsPage({ searchParams }: Props) {
       </div>
 
       {evenements.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={CalendarDays}
             title="Aucun événement"

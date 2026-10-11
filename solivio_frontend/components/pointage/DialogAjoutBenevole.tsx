@@ -146,7 +146,7 @@ function OngletMembreExistant({
       {suggestions.length > 0 && (
         <div className="rounded-xl border border-border/60 overflow-hidden divide-y divide-border/60">
           {suggestions.map((m) => (
-            <div key={m.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-teal-50/30">
+            <div key={m.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-primary/5">
               <div>
                 <p className="text-sm font-medium">{m.nom} {m.prenom}</p>
                 <p className="text-xs text-muted-foreground">{m.email}</p>

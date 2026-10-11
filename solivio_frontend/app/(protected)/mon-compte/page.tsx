@@ -46,9 +46,9 @@ export default async function MonComptePage() {
       {estBeneficiaire && (
         <Link
           href="/mon-compte/profil-beneficiaire"
-          className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 p-4 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-150"
+          className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-150"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 transition-colors duration-150">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors duration-150">
             <FolderOpen className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
@@ -65,9 +65,9 @@ export default async function MonComptePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Carte metadata */}
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-5">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-5">
           <div className="flex items-center gap-2.5 pb-4 border-b border-border/60">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
               <BadgeCheck className="h-4 w-4 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground">Statut du compte</p>
@@ -101,16 +101,16 @@ export default async function MonComptePage() {
               {/* Email verifie */}
               <div className="flex items-start gap-3">
                 {user.emailVerifie ? (
-                  <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-teal-500" />
+                  <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
                 ) : (
-                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
                 )}
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Email</p>
                   <p
                     className={[
                       "text-sm font-medium",
-                      user.emailVerifie ? "text-teal-600 dark:text-teal-400" : "text-amber-600 dark:text-amber-400",
+                      user.emailVerifie ? "text-primary" : "text-warning",
                     ].join(" ")}
                   >
                     {user.emailVerifie ? "Vérifié" : "Non vérifié"}
@@ -164,7 +164,7 @@ export default async function MonComptePage() {
         </div>
 
         {/* Formulaire */}
-        <div className="lg:col-span-2 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
+        <div className="lg:col-span-2 rounded-2xl border border-border/60 bg-card shadow-sm p-6">
           <FormulaireMonCompte user={user} />
         </div>
       </div>

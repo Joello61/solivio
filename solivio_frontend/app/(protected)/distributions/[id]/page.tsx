@@ -114,7 +114,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
         <div className="space-y-6 lg:col-span-2">
 
           {/* Informations generales */}
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+          <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
             <p className="text-sm font-semibold text-foreground font-display">
               Informations
             </p>
@@ -149,13 +149,13 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Remplissage (gestionnaire uniquement) */}
           {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Remplissage
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
                     <Users className="size-5 text-primary" />
                   </div>
                   <div>
@@ -170,7 +170,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 </div>
                 {distribution.capaciteBenevoles != null && (
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
                       <Users className="size-5 text-primary" />
                     </div>
                     <div>
@@ -190,7 +190,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Liste des inscrits (gestionnaire) */}
           {estGestionnaire && inscritsVisibles.length > 0 && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
                 <p className="text-sm font-semibold text-foreground font-display">
                   Inscrits
@@ -245,7 +245,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Outils de la distribution (gestionnaire) */}
           {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Outils
               </p>
@@ -253,9 +253,9 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 {distribution.statut === "EN_COURS" && (
                   <Link
                     href={`/distributions/${id}/pointage`}
-                    className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-teal-50 hover:border-primary/40 dark:hover:bg-teal-950/20 transition-all"
+                    className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-primary/10 hover:border-primary/40 transition-all"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 group-hover:bg-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 transition-colors">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors">
                       <ClipboardList className="size-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -267,9 +267,9 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 )}
                 <Link
                   href={`/distributions/${id}/repartition`}
-                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-teal-50 hover:border-primary/40 dark:hover:bg-teal-950/20 transition-all"
+                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-primary/10 hover:border-primary/40 transition-all"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 group-hover:bg-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 transition-colors">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors">
                     <Package className="size-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -284,7 +284,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Actions gestionnaire */}
           {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
               <p className="text-sm font-semibold text-foreground font-display">
                 Actions
               </p>
@@ -298,35 +298,35 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Bilan final (terminee) */}
           {estGestionnaire && distribution.statut === "TERMINEE" && stats && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
               <p className="text-sm font-semibold text-foreground font-display">
                 Bilan de la distribution
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-1">
+                <div className="rounded-xl bg-muted p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Users className="size-3.5 text-muted-foreground" />
                     <p className="text-xs text-muted-foreground">Inscrits</p>
                   </div>
                   <p className="text-2xl font-bold">{stats.nbInscritsBeneficiaires}</p>
                 </div>
-                <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 space-y-1">
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-teal-600 dark:text-teal-400" />
+                    <CheckCircle className="size-3.5 text-primary" />
                     <p className="text-xs text-muted-foreground">Présents</p>
                   </div>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">
+                  <p className="text-2xl font-bold text-primary">
                     {stats.nbPresentsBeneficiaires}
                   </p>
                 </div>
-                <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-800/40 p-3 space-y-1">
+                <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <XCircle className="size-3.5 text-destructive" />
                     <p className="text-xs text-muted-foreground">Absents</p>
                   </div>
                   <p className="text-2xl font-bold text-destructive">{stats.nbAbsentsBeneficiaires}</p>
                 </div>
-                <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-1">
+                <div className="rounded-xl bg-muted p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Clock className="size-3.5 text-muted-foreground" />
                     <p className="text-xs text-muted-foreground">Non pointes</p>
@@ -334,7 +334,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                   <p className="text-2xl font-bold">{stats.nbNonPointes}</p>
                 </div>
               </div>
-              <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 flex items-center justify-between">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Percent className="size-4 text-primary" />
                   <p className="text-sm font-medium text-primary">Taux de présence</p>
@@ -371,7 +371,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Mon inscription : ouverte a tout membre qui peut s'inscrire (spec 4.5) */}
           {typeInscription && distribution.statut === "PUBLIEE" && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Mon inscription
               </p>
@@ -398,7 +398,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Message sur une distribution non publiee */}
           {!estGestionnaire && distribution.statut !== "PUBLIEE" && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
               <p className="text-sm text-muted-foreground">
                 {distribution.statut === "BROUILLON" &&
                   "Cette distribution n'est pas encore ouverte aux inscriptions."}

@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout title="Email envoyé">
         <div className="flex flex-col items-center gap-5 py-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/50">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
             <CheckCircle className="h-8 w-8 text-primary" />
           </div>
           <div className="text-center space-y-2">
