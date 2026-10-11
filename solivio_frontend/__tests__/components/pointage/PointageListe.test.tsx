@@ -1,164 +1,138 @@
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PointageListe } from "@/components/pointage/PointageListe";
-import * as distributionsApi from "@/lib/api/distributions";
-import type { PointageInfoResponse } from "@/types/distribution";
+import * as api from "@/lib/api/distributions";
+import type { InscriptionResponse, PointageInfoResponse } from "@/types/distribution";
 
 vi.mock("@/lib/api/distributions", () => ({
   rechercherPointage: vi.fn(),
   pointer: vi.fn(),
+  listerVisiteursAdHoc: vi.fn().mockResolvedValue([]),
+  envoyerInvitationVisiteur: vi.fn(),
 }));
+vi.mock("@/components/pointage/DialogAjoutBenevole", () => ({ DialogAjoutBenevole: () => null }));
 
-const resultMock: PointageInfoResponse = {
-  inscriptionId: "insc-1",
-  nom: "Dupont",
-  prenom: "Marie",
+const inscrit = (inscriptionId: string, nom: string, prenom: string, presence: PointageInfoResponse["presence"] = "NON_POINTE"): PointageInfoResponse => ({
+  inscriptionId,
+  nom,
+  prenom,
   type: "BENEFICIAIRE",
   statut: "CONFIRMEE",
-  presence: "NON_POINTE",
+  presence,
   heureCreneauDebut: null,
   heureCreneauFin: null,
-};
+});
 
-// Avance le debounce et vide la file de microtasks/promesses pending.
-async function avancerDebounce(ms = 350) {
-  await act(async () => {
-    vi.advanceTimersByTime(ms);
-  });
-  // Vide les promesses resolues par le mock.
-  await act(async () => {});
+const inscrits = [inscrit("i1", "Dupont", "Marie"), inscrit("i2", "Bernard", "Léa"), inscrit("i3", "Martin", "Hugo", "PRESENT")];
+
+function reponse(id: string, presence: InscriptionResponse["presence"]): InscriptionResponse {
+  return { id, presence } as InscriptionResponse;
 }
+
+function afficher() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <PointageListe distributionId="d1" />
+    </QueryClientProvider>,
+  );
+}
+
+const ligne = (nom: RegExp) => screen.getByText(nom).closest("li") as HTMLElement;
 
 describe("PointageListe", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.useFakeTimers();
+    vi.mocked(api.rechercherPointage).mockReset().mockResolvedValue(inscrits);
+    vi.mocked(api.pointer).mockReset();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    onlineManager.setOnline(true);
   });
 
-  it("affiche le champ de recherche", () => {
-    render(<PointageListe distributionId="dist-1" />);
-    expect(screen.getByPlaceholderText(/Rechercher par nom ou prénom/)).toBeInTheDocument();
+  it("charge toute la liste, triee, avec les compteurs et les onglets", async () => {
+    afficher();
+    expect(await screen.findByText("Bernard Léa")).toBeInTheDocument();
+    expect(api.rechercherPointage).toHaveBeenCalledWith("d1", "");
+    const noms = screen.getAllByRole("listitem").map((li) => li.querySelector("p")?.textContent);
+    expect(noms).toEqual(["Bernard Léa", "Dupont Marie"]);
+    expect(screen.getByText(/présent/).closest("p")).toHaveTextContent("1 présent sur 3 inscrits");
+
+    await userEvent.click(screen.getByRole("tab", { name: /Pointés/ }));
+    expect(screen.getByText("Martin Hugo")).toBeInTheDocument();
   });
 
-  it("ne recherche pas si champ vide", async () => {
-    render(<PointageListe distributionId="dist-1" />);
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "" },
-    });
-    await avancerDebounce(400);
-    expect(distributionsApi.rechercherPointage).not.toHaveBeenCalled();
-  });
-
-  it("recherche automatiquement apres debounce avec 2+ caracteres", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "Ma" },
-    });
-
-    // Avant le debounce : pas encore appele
-    expect(distributionsApi.rechercherPointage).not.toHaveBeenCalled();
-
-    await avancerDebounce();
-
-    expect(distributionsApi.rechercherPointage).toHaveBeenCalledWith("dist-1", "Ma");
-  });
-
-  it("annule le debounce precedent si l'utilisateur continue de taper", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    const input = screen.getByPlaceholderText(/Rechercher par nom ou prénom/);
-    fireEvent.change(input, { target: { value: "Ma" } });
-    act(() => { vi.advanceTimersByTime(200); }); // pas encore 300ms
-
-    fireEvent.change(input, { target: { value: "Mar" } });
-    await avancerDebounce();
-
-    // Une seule requete, avec "Mar" et non "Ma"
-    expect(distributionsApi.rechercherPointage).toHaveBeenCalledTimes(1);
-    expect(distributionsApi.rechercherPointage).toHaveBeenCalledWith("dist-1", "Mar");
-  });
-
-  it("recherche immediatement au clic sur Rechercher", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "Marie" },
-    });
-
-    await act(async () => {
-      fireEvent.click(screen.getByText("Rechercher"));
-    });
-    await act(async () => {});
-
-    expect(distributionsApi.rechercherPointage).toHaveBeenCalledWith("dist-1", "Marie");
-  });
-
-  it("affiche le nom de l'inscrit apres recherche", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "Du" },
-    });
-    await avancerDebounce();
-
-    expect(screen.getByText("Dupont Marie")).toBeInTheDocument();
-  });
-
-  it("appelle pointer avec PRESENT au clic sur le bouton de presence", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    vi.mocked(distributionsApi.pointer).mockResolvedValue(
-      { ...resultMock, presence: "PRESENT" } as never,
-    );
-
-    render(<PointageListe distributionId="dist-1" />);
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "Du" },
-    });
-    await avancerDebounce();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Marquer present" }));
-    });
-    await act(async () => {});
-
-    expect(distributionsApi.pointer).toHaveBeenCalledWith("dist-1", "insc-1", "PRESENT");
-  });
-
-  it("affiche un message si aucun resultat", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    fireEvent.change(screen.getByPlaceholderText(/Rechercher par nom ou prénom/), {
-      target: { value: "Inconnu" },
-    });
-    await avancerDebounce();
-
-    expect(screen.getByText(/Aucun inscrit trouvé/)).toBeInTheDocument();
-  });
-
-  it("efface les resultats quand le champ est vide", async () => {
-    vi.mocked(distributionsApi.rechercherPointage).mockResolvedValue([resultMock]);
-    render(<PointageListe distributionId="dist-1" />);
-
-    const input = screen.getByPlaceholderText(/Rechercher par nom ou prénom/);
-    fireEvent.change(input, { target: { value: "Du" } });
-    await avancerDebounce();
-    expect(screen.getByText("Dupont Marie")).toBeInTheDocument();
-
-    // Vide le champ : le delai est 0ms mais passe quand meme par setTimeout.
-    fireEvent.change(input, { target: { value: "" } });
-    await act(async () => { vi.advanceTimersByTime(10); });
-    await act(async () => {});
-
+  it("filtre cote client sans tenir compte des accents", async () => {
+    afficher();
+    await screen.findByText("Bernard Léa");
+    await userEvent.type(screen.getByLabelText("Rechercher un inscrit"), "lea");
+    expect(screen.getByText("Bernard Léa")).toBeInTheDocument();
     expect(screen.queryByText("Dupont Marie")).not.toBeInTheDocument();
+  });
+
+  it("affiche le pointage tout de suite, avant la reponse du serveur", async () => {
+    let confirmer: (r: InscriptionResponse) => void = () => {};
+    vi.mocked(api.pointer).mockImplementation(() => new Promise((ok) => (confirmer = ok)));
+    afficher();
+    await screen.findByText("Dupont Marie");
+
+    await userEvent.click(screen.getByRole("button", { name: "Marquer Marie Dupont présent" }));
+
+    expect(screen.getByText(/présent/).closest("p")).toHaveTextContent("2 présents sur 3 inscrits");
+    await userEvent.click(screen.getByRole("tab", { name: /Pointés/ }));
+    expect(within(ligne(/Dupont Marie/)).getByText("Envoi")).toBeInTheDocument();
+
+    confirmer(reponse("i1", "PRESENT"));
+    await waitFor(() => expect(within(ligne(/Dupont Marie/)).queryByText("Envoi")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Marquer Marie Dupont présent" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("revient a l'etat du serveur sur un refus definitif et propose de reessayer", async () => {
+    vi.mocked(api.pointer).mockRejectedValueOnce(Object.assign(new Error("Distribution terminee"), { status: 409 }));
+    afficher();
+    await screen.findByText("Dupont Marie");
+
+    await userEvent.click(screen.getByRole("button", { name: "Marquer Marie Dupont présent" }));
+
+    const reessayer = await screen.findByRole("button", { name: /Échec, réessayer/ });
+    expect(api.pointer).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/présent/).closest("p")).toHaveTextContent("1 présent sur 3 inscrits");
+
+    vi.mocked(api.pointer).mockResolvedValueOnce(reponse("i1", "PRESENT"));
+    await userEvent.click(reessayer);
+    await waitFor(() => expect(api.pointer).toHaveBeenCalledTimes(2));
+    expect(api.pointer).toHaveBeenLastCalledWith("d1", "i1", "PRESENT");
+  });
+
+  it("reessaie apres une coupure reseau", async () => {
+    vi.mocked(api.pointer)
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(reponse("i1", "ABSENT"));
+    afficher();
+    await screen.findByText("Dupont Marie");
+
+    await userEvent.click(screen.getByRole("button", { name: "Marquer Marie Dupont absent" }));
+
+    await waitFor(() => expect(api.pointer).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    expect(screen.queryByRole("button", { name: /Échec/ })).not.toBeInTheDocument();
+  });
+
+  it("garde le pointage en attente hors ligne puis l'envoie au retour du reseau", async () => {
+    vi.mocked(api.pointer).mockResolvedValue(reponse("i2", "PRESENT"));
+    afficher();
+    await screen.findByText("Bernard Léa");
+    onlineManager.setOnline(false);
+
+    await userEvent.click(screen.getByRole("button", { name: "Marquer Léa Bernard présent" }));
+    await userEvent.click(screen.getByRole("tab", { name: /Pointés/ }));
+
+    expect(await within(ligne(/Bernard Léa/)).findByText("En attente d'envoi")).toBeInTheDocument();
+    expect(screen.getByText(/en attente d'envoi/, { selector: "p" })).toBeInTheDocument();
+    expect(api.pointer).not.toHaveBeenCalled();
+
+    onlineManager.setOnline(true);
+    await waitFor(() => expect(api.pointer).toHaveBeenCalledWith("d1", "i2", "PRESENT"));
   });
 });
