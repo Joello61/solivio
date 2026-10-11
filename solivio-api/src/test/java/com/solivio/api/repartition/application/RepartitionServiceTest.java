@@ -240,11 +240,13 @@ class RepartitionServiceTest {
     }
 
     @Test
-    void calculerDotation_zeroBeneficiaire_signalePenurie() {
+    void calculerDotation_zeroBeneficiaire_nEstPasUnePenurie() {
+        // Personne a servir : signaler un stock insuffisant ("0 personne sur 0") n'a pas de sens.
         DenreeDistribution d = denree("Conserves", UniteConditionnement.UNITE, 10, 1.0);
         DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 0);
 
-        assertThat(dto.penurie()).isTrue();
+        assertThat(dto.penurie()).isFalse();
+        assertThat(dto.reste()).isCloseTo(10.0, within(0.001));
         assertThat(dto.dotation()).isCloseTo(0.0, within(0.001));
         assertThat(dto.nbPeutRecevoir()).isEqualTo(0);
     }

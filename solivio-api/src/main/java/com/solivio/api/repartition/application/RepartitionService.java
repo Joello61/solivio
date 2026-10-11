@@ -119,6 +119,7 @@ public class RepartitionService {
     static DotationDenreeDto calculerDotationDenree(DenreeDistribution denree, int nbBeneficiaires) {
         double total = denree.quantiteTotale();
 
+        // Personne a servir (aucun inscrit ou aucun present) : pas de penurie, tout reste.
         if (nbBeneficiaires <= 0) {
             return new DotationDenreeDto(
                 denree.getId(),
@@ -129,7 +130,7 @@ public class RepartitionService {
                 total,
                 0,
                 total,
-                true,
+                false,
                 0
             );
         }

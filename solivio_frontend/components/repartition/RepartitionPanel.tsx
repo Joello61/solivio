@@ -255,7 +255,13 @@ export function RepartitionPanel({
 
                   {d && (
                     <div className="pt-3 border-t border-border">
-                      {d.penurie ? (
+                      {dotation.nbBeneficiaires === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          {base === "PRESENTS"
+                            ? "Aucun présent pointé : la dotation sera calculée dès les premiers pointages."
+                            : "Aucun bénéficiaire inscrit : la dotation sera calculée dès les premières inscriptions."}
+                        </p>
+                      ) : d.penurie ? (
                         <div className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm">
                           <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
                           <span className="text-warning">

@@ -91,6 +91,25 @@ describe("RepartitionPanel", () => {
     expect(screen.getByText(/3 personne/)).toBeInTheDocument();
   });
 
+  it("sans beneficiaire, attend les inscriptions au lieu d'annoncer une penurie", () => {
+    const sansInscrit: DotationResponse = {
+      ...dotationNormale,
+      nbBeneficiaires: 0,
+      denrees: [{ ...dotationNormale.denrees[0], dotation: 0, reste: 50, penurie: false, nbPeutRecevoir: 0 }],
+    };
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={sansInscrit}
+        modifiable={true}
+      />,
+    );
+
+    expect(screen.getByText(/Aucun bénéficiaire inscrit/)).toBeInTheDocument();
+    expect(screen.queryByText(/Stock insuffisant/)).not.toBeInTheDocument();
+  });
+
   it("affiche le nombre de beneficiaires dans la base de calcul", () => {
     render(
       <RepartitionPanel
