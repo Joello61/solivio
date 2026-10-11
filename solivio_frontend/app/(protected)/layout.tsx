@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { lireMoi } from "@/lib/api/serveur";
 import { AppShell } from "@/components/layout/AppShell";
+import { RequeteProvider } from "@/components/providers/RequeteProvider";
 
 /**
  * Layout des pages protegees.
@@ -17,5 +18,9 @@ export default async function ProtectedLayout({
 
   if (!user) redirect("/login");
 
-  return <AppShell user={user}>{children}</AppShell>;
+  return (
+    <RequeteProvider>
+      <AppShell user={user}>{children}</AppShell>
+    </RequeteProvider>
+  );
 }
