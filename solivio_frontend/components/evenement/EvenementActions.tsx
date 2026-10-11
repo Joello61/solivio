@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   publierEvenement,
@@ -17,6 +19,7 @@ interface Props {
   ouvertParticipants: boolean;
   modeInscription: ModeInscription;
   estGestionnaire: boolean;
+  estResponsable: boolean;
   estBenevole: boolean;
   estBeneficiaire: boolean;
   dejaInscrit: boolean;
@@ -29,6 +32,7 @@ export function EvenementActions({
   ouvertParticipants,
   modeInscription,
   estGestionnaire,
+  estResponsable,
   estBenevole,
   estBeneficiaire,
   dejaInscrit,
@@ -52,9 +56,11 @@ export function EvenementActions({
     }
   }
 
-  const peutPublier = estGestionnaire && statut === "BROUILLON";
+  // Publier, modifier et annuler sont reserves aux responsables ; le pointage reste aux gestionnaires.
+  const peutPublier = estResponsable && statut === "BROUILLON";
+  const peutModifier = peutPublier;
   const peutAnnuler =
-    estGestionnaire && (statut === "BROUILLON" || statut === "PUBLIE" || statut === "EN_COURS");
+    estResponsable && (statut === "BROUILLON" || statut === "PUBLIE" || statut === "EN_COURS");
   const peutInscrireStaff =
     !dejaInscrit && estBenevole && aBesoiNStaff && (statut === "PUBLIE" || statut === "EN_COURS");
   const peutInscrireParticipant =
@@ -100,6 +106,16 @@ export function EvenementActions({
         </button>
       )}
 
+      {peutModifier && (
+        <Link
+          href={`/evenements/${evenementId}/modifier`}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <Pencil className="size-4" />
+          Modifier
+        </Link>
+      )}
+
       {peutPointer && (
         <button
           onClick={() => router.push(`/evenements/${evenementId}/pointage`)}
@@ -135,7 +151,7 @@ export function EvenementActions({
           disabled={pending !== null}
           className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-60"
         >
-          {pending === "desinscrire" ? "Desinscription..." : "Se désinscrire"}
+          {pending === "desinscrire" ? "Désinscription..." : "Se désinscrire"}
         </button>
       )}
 

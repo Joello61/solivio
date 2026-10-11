@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
 import { Plus, CalendarDays } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -40,6 +41,9 @@ export default async function EvenementsPage({ searchParams }: Props) {
     me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
     false;
 
+  // La creation est reservee aux responsables (backend).
+  const peutCreer = estResponsable(me?.roles ?? []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -48,10 +52,10 @@ export default async function EvenementsPage({ searchParams }: Props) {
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
               ? "Gérez et suivez tous les événements de l'association."
-              : "Consultez et inscrivez-vous aux evenements disponibles."}
+              : "Consultez et inscrivez-vous aux événements disponibles."}
           </p>
         </div>
-        {estGestionnaire && (
+        {peutCreer && (
           <Link href="/evenements/nouveau" className={buttonVariants({ size: "sm" })}>
             <Plus className="mr-2 size-4" />
             Nouvel événement
@@ -86,7 +90,7 @@ export default async function EvenementsPage({ searchParams }: Props) {
                 : "Aucun événement n'est disponible pour le moment."
             }
             action={
-              estGestionnaire
+              peutCreer
                 ? { label: "Créer un événement", href: "/evenements/nouveau" }
                 : undefined
             }
