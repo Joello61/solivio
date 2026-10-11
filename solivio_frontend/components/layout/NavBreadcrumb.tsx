@@ -27,6 +27,7 @@ const LABELS: Record<string, string> = {
   repartition: "Répartition",
   evenements: "Événements",
   nouveau: "Nouveau",
+  modifier: "Modifier",
   "mes-evenements": "Mes événements",
   "missions-collecte": "Missions collecte",
   "mes-missions-collecte": "Mes missions",

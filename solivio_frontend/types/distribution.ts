@@ -150,6 +150,10 @@ export interface CreateDistributionPayload {
   creneaux: { heureDebut: string; heureFin: string; capacite: number }[];
 }
 
+export interface UpdateDistributionPayload extends Omit<CreateDistributionPayload, "creneaux"> {
+  creneaux: { id?: string; heureDebut: string; heureFin: string; capacite: number }[];
+}
+
 export interface CatalogueDenreeResponse {
   id: string;
   libelle: string;

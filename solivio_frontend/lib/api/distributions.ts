@@ -12,10 +12,20 @@ import type {
   CatalogueDenreeResponse,
   MembreSuggestion,
   PointageAdHocResponse,
+  UpdateDistributionPayload,
 } from "@/types/distribution";
 
 export function creerDistribution(payload: CreateDistributionPayload): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>("/api/distributions", payload);
+}
+
+export function modifierDistribution(id: string, payload: UpdateDistributionPayload): Promise<DistributionResponse> {
+  return apiFetch<DistributionResponse>(`/api/distributions/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+/** Brouillon uniquement : une distribution publiee s'annule. */
+export function supprimerDistribution(id: string): Promise<void> {
+  return apiFetch<void>(`/api/distributions/${id}`, { method: "DELETE" });
 }
 
 export function publierDistribution(id: string): Promise<DistributionResponse> {

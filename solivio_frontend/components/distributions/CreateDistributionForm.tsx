@@ -12,12 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { creerDistribution } from "@/lib/api/distributions";
+import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
-import type { LieuRequest } from "@/types/distribution";
+import type { DistributionResponse, LieuRequest, LieuResponse } from "@/types/distribution";
 
 // Schéma
 const creneauSchema = z.object({
+  // Identifiant d'un creneau existant (modification) ; absent pour un nouveau creneau.
+  id: z.string().optional(),
   heureDebut: z.string().min(1, "Heure de début requise"),
   heureFin: z.string().min(1, "Heure de fin requise"),
   capacite: z.number().int().positive("La capacite doit être positive"),
@@ -83,12 +85,27 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
+function versLieuRequest(lieu: LieuResponse | null): LieuRequest | undefined {
+  if (!lieu?.adresseFormatee) return undefined;
+  return Object.fromEntries(Object.entries(lieu).filter(([, v]) => v !== null)) as LieuRequest;
+}
+
+// Le backend n'accepte qu'un creneau en mode unique : le mode suit le nombre de creneaux.
+function modePour(creneaux: unknown[]): "CRENEAU_UNIQUE" | "CRENEAUX_DECOUPES" {
+  return creneaux.length > 1 ? "CRENEAUX_DECOUPES" : "CRENEAU_UNIQUE";
+}
+
+interface Props {
+  /** Distribution a modifier ; absente pour une creation. */
+  distribution?: DistributionResponse;
+}
+
 // Composant principal
-export function CreateDistributionForm() {
+export function CreateDistributionForm({ distribution }: Props = {}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [lieu, setLieu] = useState<LieuRequest | undefined>(undefined);
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(versLieuRequest(distribution?.lieu ?? null));
   const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
@@ -106,10 +123,25 @@ export function CreateDistributionForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      modeCreneau: "CRENEAU_UNIQUE",
-      creneaux: [{ heureDebut: "10:00", heureFin: "12:00", capacite: 50 }],
-    },
+    defaultValues: distribution
+      ? {
+          titre: distribution.titre,
+          description: distribution.description ?? "",
+          date: distribution.date,
+          capaciteBeneficiaires: distribution.capaciteBeneficiaires,
+          capaciteBenevoles: distribution.capaciteBenevoles ?? undefined,
+          modeCreneau: distribution.modeCreneau,
+          creneaux: distribution.creneaux.map((c) => ({
+            id: c.id,
+            heureDebut: c.heureDebut.slice(0, 5),
+            heureFin: c.heureFin.slice(0, 5),
+            capacite: c.capacite,
+          })),
+        }
+      : {
+          modeCreneau: "CRENEAU_UNIQUE",
+          creneaux: [{ heureDebut: "10:00", heureFin: "12:00", capacite: 50 }],
+        },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "creneaux" });
@@ -122,18 +154,27 @@ export function CreateDistributionForm() {
 
   async function onSubmit(values: FormValues) {
     setErreur(null);
+    const commun = {
+      titre: values.titre,
+      description: values.description || undefined,
+      lieu: lieu || undefined,
+      date: values.date,
+      capaciteBeneficiaires: values.capaciteBeneficiaires,
+      capaciteBenevoles: values.capaciteBenevoles,
+      modeCreneau: modePour(values.creneaux),
+    };
     try {
-      const distribution = await creerDistribution({
-        titre: values.titre,
-        description: values.description || undefined,
-        lieu: lieu || undefined,
-        date: values.date,
-        capaciteBeneficiaires: values.capaciteBeneficiaires,
-        capaciteBenevoles: values.capaciteBenevoles,
-        modeCreneau: values.modeCreneau,
-        creneaux: values.creneaux,
-      });
-      router.push(`/distributions/${distribution.id}`);
+      if (distribution) {
+        await modifierDistribution(distribution.id, { ...commun, creneaux: values.creneaux });
+        router.push(`/distributions/${distribution.id}`);
+        router.refresh();
+      } else {
+        const creee = await creerDistribution({
+          ...commun,
+          creneaux: values.creneaux.map(({ heureDebut, heureFin, capacite }) => ({ heureDebut, heureFin, capacite })),
+        });
+        router.push(`/distributions/${creee.id}`);
+      }
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
       setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
@@ -244,7 +285,10 @@ export function CreateDistributionForm() {
                       type="number"
                       min={1}
                       placeholder="Illimité"
-                      {...register("capaciteBenevoles", { valueAsNumber: true })}
+                      {...register("capaciteBenevoles", {
+                        // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
+                        setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
+                      })}
                     />
                   </div>
                 </div>
@@ -353,8 +397,11 @@ export function CreateDistributionForm() {
                 <Button type="submit" disabled={isSubmitting} className="flex-1">
                   {isSubmitting ? (
                     <>
-                      <Spinner size="sm" className="mr-2" /> Création en cours...
+                      <Spinner size="sm" className="mr-2" />
+                      {distribution ? "Enregistrement..." : "Création en cours..."}
                     </>
+                  ) : distribution ? (
+                    "Enregistrer les modifications"
                   ) : (
                     "Créer la distribution"
                   )}
