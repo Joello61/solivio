@@ -84,6 +84,15 @@ describe("NAV_SECTIONS", () => {
     expect(pour("benevole")).not.toContain("/association/roles-benevoles");
   });
 
+  it("propose les statistiques aux gestionnaires seulement", () => {
+    const pour = (role: string) =>
+      NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, [role])).map((i) => i.href);
+    expect(pour("coordinateur")).toContain("/statistiques");
+    expect(pour("super_admin")).toContain("/statistiques");
+    expect(pour("benevole")).not.toContain("/statistiques");
+    expect(pour("beneficiaire")).not.toContain("/statistiques");
+  });
+
   it("ne propose pas les missions de collecte au beneficiaire", () => {
     const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["beneficiaire"])).map((i) => i.href);
     expect(hrefs).not.toContain("/missions-collecte");

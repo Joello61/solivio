@@ -12,6 +12,7 @@ import {
   PartyPopper,
   Mail,
   Tags,
+  BarChart3,
 } from "lucide-react";
 
 export interface NavItem {
@@ -45,6 +46,12 @@ export const NAV_SECTIONS: NavSection[] = [
         roles: ["benevole", "coordinateur", "responsable"],
       },
       { href: "/evenements", label: "Événements", icon: PartyPopper },
+      {
+        href: "/statistiques",
+        label: "Statistiques",
+        icon: BarChart3,
+        roles: ["coordinateur", "responsable", "super_admin"],
+      },
       { href: "/mes-evenements", label: "Mes événements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
