@@ -32,7 +32,7 @@ export function AppShell({ user, children }: AppShellProps) {
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden bg-muted/50">
+      <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar
           user={user}
           collapsed={sidebarCollapsed}

@@ -807,12 +807,12 @@ export default function LandingPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="py-24 scroll-mt-14 bg-primary">
+      <section className="py-24 scroll-mt-14 bg-brand-deep">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-7">
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-primary-foreground leading-[1.1]">
+          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-on-brand leading-[1.1]">
             Prêt à structurer vos prochaines distributions ?
           </h2>
-          <p className="text-primary-foreground/70 text-base leading-relaxed max-w-xl mx-auto">
+          <p className="text-on-brand/70 text-base leading-relaxed max-w-xl mx-auto">
             Déployez Solivio gratuitement pour votre association. Aucune carte bancaire, aucune condition cachée.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
@@ -826,7 +826,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto text-sm font-semibold text-primary-foreground border-primary-foreground/30 bg-transparent hover:bg-primary-foreground/10 hover:border-primary-foreground/50"
+                className="w-full sm:w-auto text-sm font-semibold text-on-brand border-on-brand/30 bg-transparent hover:bg-on-brand/10 hover:border-on-brand/50"
               >
                 Se connecter
               </Button>

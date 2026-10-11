@@ -82,7 +82,7 @@ export function FormulaireMonCompte({ user }: Props) {
             {/* Overlay pendant l'upload */}
             {uploadPending && (
               <div className="absolute inset-0 flex items-center justify-center bg-overlay/40 rounded-full">
-                <Spinner size="default" className="text-primary-foreground" />
+                <Spinner size="default" className="text-on-brand" />
               </div>
             )}
           </div>

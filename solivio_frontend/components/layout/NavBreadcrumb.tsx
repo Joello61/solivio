@@ -14,7 +14,7 @@ import {
 const LABELS: Record<string, string> = {
   dashboard: "Tableau de bord",
   distributions: "Distributions",
-  nouvelle: "Nouvelle distribution",
+  nouvelle: "Nouvelle",
   "mes-inscriptions": "Mes inscriptions",
   "mon-compte": "Mon compte",
   "profil-beneficiaire": "Profil bénéficiaire",
@@ -25,6 +25,15 @@ const LABELS: Record<string, string> = {
   utilisateurs: "Utilisateurs",
   pointage: "Pointage",
   repartition: "Répartition",
+  evenements: "Événements",
+  nouveau: "Nouveau",
+  "mes-evenements": "Mes événements",
+  "missions-collecte": "Missions collecte",
+  "mes-missions-collecte": "Mes missions",
+  reconditionnement: "Reconditionnement",
+  notifications: "Notifications",
+  "email-libre": "Email aux membres",
+  "catalogue-denrees": "Catalogue des denrées",
 };
 
 const UUID_RE =

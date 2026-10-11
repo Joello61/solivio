@@ -76,6 +76,9 @@
   --color-info-foreground:      var(--info-foreground);
   --color-accent-strong:        var(--accent-strong);
   --color-overlay:              var(--overlay);
+  --color-brand:                var(--brand);
+  --color-brand-deep:           var(--brand-deep);
+  --color-on-brand:             var(--on-brand);
 
   /* RAYONS - Systeme coherent */
   --radius-xs:   0.25rem;   /* 4px */
@@ -172,6 +175,11 @@
   --accent-strong:      oklch(0.518 0.165 42);
   /* Voile des modales et des images, noir dans les deux modes */
   --overlay:            oklch(0 0 0);
+  /* Surfaces de marque (bandeaux, appels a l'action, texte sur photo) :
+     identiques dans les deux modes, texte toujours blanc. */
+  --brand:              oklch(0.532 0.118 185);
+  --brand-deep:         oklch(0.447 0.098 185);
+  --on-brand:           oklch(1 0 0);
 
   /* Rayon de base shadcn */
   --radius: 0.75rem;
@@ -218,6 +226,9 @@
   --info-foreground:    oklch(0.148 0.008 264);
   --accent-strong:      oklch(0.850 0.138 45);
   --overlay:            oklch(0 0 0);
+  --brand:              oklch(0.532 0.118 185);
+  --brand-deep:         oklch(0.447 0.098 185);
+  --on-brand:           oklch(1 0 0);
 }
 
 /* ANIMATIONS */

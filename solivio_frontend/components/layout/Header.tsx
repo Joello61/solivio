@@ -53,7 +53,7 @@ export function Header({ user }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-primary-foreground/90 backdrop-blur-md shadow-xs">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur-md shadow-xs">
       <div className="flex h-14 items-center gap-3 px-4">
         {/* Logo cliquable (mobile uniquement, la sidebar s'en charge sur desktop) */}
         <Link
