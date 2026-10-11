@@ -7,6 +7,7 @@ import com.solivio.api.inscription.infrastructure.persistence.InscriptionReposit
 import com.solivio.api.inscription.infrastructure.persistence.RoleBenevoleInscriptionRepository;
 import com.solivio.api.inscription.infrastructure.persistence.TypeRoleRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.RoleBenevoleResponse;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +55,10 @@ public class RoleBenevoleService {
         if (typeRoleId != null) {
             typeRole = typeRoleRepository.findById(typeRoleId)
                 .orElseThrow(() -> new NotFoundException("Type de role introuvable : " + typeRoleId));
+            // Un role archive reste dans l'historique mais ne s'attribue plus.
+            if (!typeRole.isActif()) {
+                throw new ConflictException("Ce role est archive et ne peut plus etre attribue.");
+            }
         }
 
         RoleBenevoleInscription role = new RoleBenevoleInscription(

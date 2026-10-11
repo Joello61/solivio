@@ -8,6 +8,7 @@ import com.solivio.api.inscription.infrastructure.persistence.InscriptionReposit
 import com.solivio.api.inscription.infrastructure.persistence.RoleBenevoleInscriptionRepository;
 import com.solivio.api.inscription.infrastructure.persistence.TypeRoleRepository;
 import com.solivio.api.inscription.infrastructure.web.dto.RoleBenevoleResponse;
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -99,6 +101,21 @@ class RoleBenevoleServiceTest {
         assertThatThrownBy(() -> service.assigner(inscriptionId, typeRoleId, null))
             .isInstanceOf(NotFoundException.class)
             .hasMessageContaining("Type de role introuvable");
+    }
+
+    @Test
+    void assigner_refuseUnRoleArchive() {
+        UUID typeRoleId = UUID.randomUUID();
+        TypeRole archive = new TypeRole(null, "Ancien role");
+        archive.setId(typeRoleId);
+        archive.setActif(false);
+        when(inscriptionRepository.findById(inscriptionId)).thenReturn(Optional.of(inscription));
+        when(typeRoleRepository.findById(typeRoleId)).thenReturn(Optional.of(archive));
+
+        assertThatThrownBy(() -> service.assigner(inscriptionId, typeRoleId, null))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("archive");
+        verify(roleRepository, never()).save(any());
     }
 
     @Test
