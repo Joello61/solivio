@@ -255,7 +255,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
+    <div className="flex flex-col min-h-dvh bg-background text-foreground antialiased">
 
       {/* NAV */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-md">
