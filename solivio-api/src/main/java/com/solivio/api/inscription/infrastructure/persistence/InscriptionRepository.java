@@ -137,4 +137,10 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
     @Query("UPDATE Inscription i SET i.nom = :nom, i.prenom = :prenom WHERE i.personneId = :personneId")
     int remplacerNomPrenom(@Param("personneId") UUID personneId, @Param("nom") String nom,
                            @Param("prenom") String prenom);
+
+    // [creneauId, beneficiaires confirmes, toutes inscriptions] par creneau d'une distribution
+    @Query("SELECT i.creneauId, "
+        + "SUM(CASE WHEN i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' THEN 1 ELSE 0 END), COUNT(i) "
+        + "FROM Inscription i WHERE i.distributionId = :distId AND i.creneauId IS NOT NULL GROUP BY i.creneauId")
+    List<Object[]> compterParCreneau(@Param("distId") UUID distributionId);
 }

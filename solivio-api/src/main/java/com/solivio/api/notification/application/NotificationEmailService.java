@@ -12,6 +12,8 @@ public interface NotificationEmailService {
 
     void envoyerAnnulationDistribution(String email, ContexteEmail contexte);
 
+    void envoyerModificationDistribution(String email, ContexteEmail contexte);
+
     void envoyerRappelVeille(String email, ContexteEmail contexte);
 
     void envoyerDesistementTardifBenevole(String emailCoordinateur, String prenomCoordinateur,

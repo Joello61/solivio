@@ -107,6 +107,7 @@ Pour les notifications, chaque envoi porte une **clé d'idempotence** (`notifica
 ### 4.3 Usages
 
 - Notifications : confirmation d'inscription, promotion depuis la liste d'attente, désistement tardif d'un bénévole, annulation de distribution, d'événement, de mission de collecte ou de session de reconditionnement, rappel de la veille.
+- Modification d'une distribution publiée : `distribution` publie `DistributionModifiee` (changement pratique, capacité augmentée, identifiant d'occurrence) ; `inscription` promeut la liste d'attente sous le verrou partagé `shared.verrou.VerrouDistribution` (le même que la modification), `notification` prévient les inscrits actifs avec la clé `MODIFICATION_DISTRIBUTION:{occurrence}`.
 - Annulation d'une distribution (RG6) : `inscription` écoute `DistributionAnnulee`, annule toutes les inscriptions confirmées et en liste d'attente, puis publie `InscriptionsAnnuleesParDistribution` ; `notification` écoute ce second événement pour prévenir chaque personne. L'enchaînement évite que `notification` lise les inscrits pendant leur annulation.
 - Statistiques : calcul et enregistrement des statistiques à la clôture d'une distribution.
 

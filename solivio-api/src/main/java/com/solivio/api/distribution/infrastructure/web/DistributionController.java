@@ -1,18 +1,22 @@
 package com.solivio.api.distribution.infrastructure.web;
 
 import com.solivio.api.distribution.application.DistributionService;
+import com.solivio.api.distribution.application.ModificationDistributionService;
 import com.solivio.api.distribution.infrastructure.web.dto.AnnulerDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
+import com.solivio.api.distribution.infrastructure.web.dto.UpdateDistributionRequest;
 import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,9 +29,12 @@ import java.util.UUID;
 public class DistributionController {
 
     private final DistributionService distributionService;
+    private final ModificationDistributionService modificationService;
 
-    public DistributionController(DistributionService distributionService) {
+    public DistributionController(DistributionService distributionService,
+                                  ModificationDistributionService modificationService) {
         this.distributionService = distributionService;
+        this.modificationService = modificationService;
     }
 
     @PostMapping
@@ -58,6 +65,23 @@ public class DistributionController {
         return ResponseEntity.ok(distributionService.detail(id, estGestionnaire(user)));
     }
 
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<DistributionResponse> modifier(
+        @PathVariable UUID id,
+        @Valid @RequestBody UpdateDistributionRequest request
+    ) {
+        return ResponseEntity.ok(modificationService.modifier(id, request));
+    }
+
+    // Brouillon uniquement : une distribution publiee s'annule (RG6).
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<Void> supprimer(@PathVariable UUID id) {
+        modificationService.supprimer(id);
+        return ResponseEntity.noContent().build();
+    }
 
     @PostMapping("/{id}/publier")
     @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")

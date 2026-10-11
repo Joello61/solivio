@@ -2,4 +2,7 @@
 |===
 |Base package
 |`com.solivio.api.shared`
+|Spring components
+|* `c.s.a.s.temps.HorlogeAssociation`
+* `c.s.a.s.verrou.VerrouDistribution`
 |===

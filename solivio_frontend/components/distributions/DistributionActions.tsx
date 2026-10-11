@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,7 @@ import {
   demarrerDistribution,
   terminerDistribution,
   annulerDistribution,
+  supprimerDistribution,
 } from "@/lib/api/distributions";
 import type { StatutDistribution } from "@/types/distribution";
 
@@ -33,6 +36,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
   const [erreur, setErreur] = useState<string | null>(null);
   const [annulationOpen, setAnnulationOpen] = useState(false);
   const [motif, setMotif] = useState("");
+  const [suppressionOpen, setSuppressionOpen] = useState(false);
 
   const aujourd = new Date();
   aujourd.setHours(0, 0, 0, 0);
@@ -82,6 +86,21 @@ export function DistributionActions({ distributionId, statut, distributionDate }
     }
   }
 
+  async function confirmerSuppression() {
+    setPending("supprimer");
+    setErreur(null);
+    try {
+      await supprimerDistribution(distributionId);
+      setSuppressionOpen(false);
+      router.push("/distributions");
+      router.refresh();
+    } catch (e: unknown) {
+      const err = e as { detail?: string; message?: string };
+      setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
+      setPending(null);
+    }
+  }
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -109,6 +128,20 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           </Button>
         )}
 
+        {(statut === "BROUILLON" || statut === "PUBLIEE") && (
+          <Link href={`/distributions/${distributionId}/modifier`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+            <Pencil className="size-3.5 mr-1" />
+            Modifier
+          </Link>
+        )}
+
+        {statut === "BROUILLON" && (
+          <Button size="sm" variant="outline" onClick={() => setSuppressionOpen(true)} disabled={pending !== null}>
+            <Trash2 className="size-3.5 mr-1" />
+            Supprimer le brouillon
+          </Button>
+        )}
+
         {(statut === "BROUILLON" || statut === "PUBLIEE" || statut === "EN_COURS") && (
           <Button
             size="sm"
@@ -131,6 +164,26 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           </p>
         )}
       </div>
+
+      {/* Suppression d'un brouillon : jamais publie, donc sans inscrit */}
+      <Dialog open={suppressionOpen} onOpenChange={setSuppressionOpen}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Supprimer le brouillon</DialogTitle>
+            <DialogDescription>
+              Ce brouillon et ses créneaux seront supprimés définitivement. Personne n&apos;y est inscrit.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuppressionOpen(false)}>
+              Retour
+            </Button>
+            <Button variant="destructive" onClick={confirmerSuppression} disabled={pending === "supprimer"}>
+              {pending === "supprimer" ? <><Spinner size="sm" /> Suppression...</> : "Supprimer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de confirmation d'annulation avec motif */}
       <Dialog open={annulationOpen} onOpenChange={setAnnulationOpen}>

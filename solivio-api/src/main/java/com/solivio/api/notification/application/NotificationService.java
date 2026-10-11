@@ -119,6 +119,25 @@ public class NotificationService {
         exigerSucces(echecs, type, distributionId);
     }
 
+    // Changement de date, de lieu ou d'horaires : confirmes et liste d'attente sont
+    // prevenus, avec les informations a jour (comme pour une annulation, RG6).
+    @Transactional
+    public void notifierModificationDistribution(UUID distributionId, UUID occurrenceId) {
+        DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
+        String sujet = "Distribution modifiee - " + distribution.titre();
+        TypeEvenementNotification type = TypeEvenementNotification.MODIFICATION_DISTRIBUTION;
+        int echecs = 0;
+        for (DestinataireMail dest : inscriptionQueryPort.trouverInscritsActifs(distributionId)) {
+            ContexteEmail contexte = construireContexte(
+                dest.prenom(), dest.typeInscription(), dest.creneauId(), distributionId, distribution);
+            if (!envoyer(cle(type, occurrenceId), dest.personneId(), distributionId, type, sujet,
+                () -> emailService.envoyerModificationDistribution(dest.email(), contexte))) {
+                echecs++;
+            }
+        }
+        exigerSucces(echecs, type, distributionId);
+    }
+
     @Transactional
     public void notifierDesistementTardifBenevole(UUID personneBenevoleId, UUID distributionId, UUID occurrenceId) {
         PersonneContactInfo benevole = personneQueryPort.trouverPersonneParId(personneBenevoleId);
