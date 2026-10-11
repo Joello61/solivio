@@ -35,6 +35,7 @@ const LABELS: Record<string, string> = {
   notifications: "Notifications",
   "email-libre": "Email aux membres",
   "catalogue-denrees": "Catalogue des denrées",
+  "roles-benevoles": "Rôles bénévoles",
 };
 
 const UUID_RE =

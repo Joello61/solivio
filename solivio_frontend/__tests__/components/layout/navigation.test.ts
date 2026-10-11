@@ -76,6 +76,14 @@ describe("NAV_SECTIONS", () => {
     expect(hrefs).not.toContain("/association/configuration");
   });
 
+  it("propose les roles benevoles au coordinateur et au responsable seulement", () => {
+    const pour = (role: string) =>
+      NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, [role])).map((i) => i.href);
+    expect(pour("coordinateur")).toContain("/association/roles-benevoles");
+    expect(pour("responsable")).toContain("/association/roles-benevoles");
+    expect(pour("benevole")).not.toContain("/association/roles-benevoles");
+  });
+
   it("ne propose pas les missions de collecte au beneficiaire", () => {
     const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["beneficiaire"])).map((i) => i.href);
     expect(hrefs).not.toContain("/missions-collecte");
