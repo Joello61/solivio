@@ -25,11 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class DistributionService {
+
+    private static final List<StatutDistribution> STATUTS_OUVERTS =
+        List.of(StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS);
 
     private final DistributionRepository distributionRepository;
     private final CreneauRepository creneauRepository;
@@ -126,15 +131,26 @@ public class DistributionService {
 
     @Transactional(readOnly = true)
     public List<DistributionResponse> lister() {
-        return distributionRepository.findAllByOrderByDateDesc().stream()
-            .map(d -> toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(d.getId())))
-            .toList();
+        return avecCreneaux(distributionRepository.findAllByOrderByDateDesc());
     }
 
     @Transactional(readOnly = true)
+    // Vue des membres qui ne gerent pas : distributions a venir ou du jour, en cours
+    // comprises, de la plus proche a la plus lointaine. L'historique passe par
+    // "Mes inscriptions".
     public List<DistributionResponse> listerPubliees() {
-        return distributionRepository.findByStatutOrderByDateDesc(StatutDistribution.PUBLIEE).stream()
-            .map(d -> toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(d.getId())))
+        return avecCreneaux(distributionRepository.findByStatutInAndDateGreaterThanEqualOrderByDateAsc(
+            STATUTS_OUVERTS, horloge.aujourdhui()));
+    }
+
+    // Une requete pour les creneaux de toute la liste, au lieu d'une par distribution.
+    private List<DistributionResponse> avecCreneaux(List<Distribution> distributions) {
+        Map<UUID, List<Creneau>> creneauxParDistribution = creneauRepository
+            .findByDistributionIdInOrderByHeureDebut(distributions.stream().map(Distribution::getId).toList())
+            .stream()
+            .collect(Collectors.groupingBy(Creneau::getDistributionId));
+        return distributions.stream()
+            .map(d -> toResponse(d, creneauxParDistribution.getOrDefault(d.getId(), List.of())))
             .toList();
     }
 

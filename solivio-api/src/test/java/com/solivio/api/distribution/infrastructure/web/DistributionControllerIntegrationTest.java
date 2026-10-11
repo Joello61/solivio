@@ -3,6 +3,7 @@ package com.solivio.api.distribution.infrastructure.web;
 import com.solivio.api.association.domain.Association;
 import com.solivio.api.association.infrastructure.persistence.AssociationRepository;
 import com.solivio.api.identity.infrastructure.security.JwtService;
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import com.solivio.api.support.SolivioIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -165,16 +167,42 @@ class DistributionControllerIntegrationTest {
             .andExpect(jsonPath("$.statut").value("PUBLIEE"));
     }
 
+    // I11 : a venir et du jour seulement, en cours comprises, de la plus proche a la plus lointaine.
+    @Test
+    void lister_pourUnBeneficiaire_distributionsAVenirTrieesParDate() throws Exception {
+        UUID passee = insererDistribution("PUBLIEE", -3);
+        UUID dans10Jours = insererDistribution("PUBLIEE", 10);
+        UUID enCours = insererDistribution("EN_COURS", 0);
+        UUID dans2Jours = insererDistribution("PUBLIEE", 2);
+        insererDistribution("BROUILLON", 4);
+
+        String corps = mockMvc.perform(get("/api/distributions")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        List<String> ids = com.jayway.jsonpath.JsonPath.read(corps, "$[*].id");
+        org.assertj.core.api.Assertions.assertThat(ids)
+            .containsExactly(enCours.toString(), dans2Jours.toString(), dans10Jours.toString())
+            .doesNotContain(passee.toString());
+    }
+
     private UUID insererDistribution(String statut) {
+        return insererDistribution(statut, 7);
+    }
+
+    // Dates dans le fuseau de l'association, comme le service : CURRENT_DATE (UTC
+    // en CI) donnait la veille entre minuit et 2h a Paris.
+    private UUID insererDistribution(String statut, int dansJours) {
         UUID createur = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Coord', 'Test', ?)",
             createur, createur + "@test.com");
         UUID id = UUID.randomUUID();
         jdbcTemplate.update(
             "INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
-                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE + 7, ?, 10, "
+                + "base_repartition, cree_par_id) VALUES (?, 'Distribution', ?, ?, 10, "
                 + "'CRENEAU_UNIQUE', 'INSCRITS', ?)",
-            id, statut, createur);
+            id, LocalDate.now(HorlogeAssociation.ZONE_PAR_DEFAUT).plusDays(dansJours), statut, createur);
         return id;
     }
 }
