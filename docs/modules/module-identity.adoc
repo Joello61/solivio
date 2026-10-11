@@ -3,6 +3,6 @@
 |Base package
 |`com.solivio.api.identity`
 |Bean references
-|* `c.s.a.s.association.AssociationQueryPort` (in shared)
-* `c.s.a.a.application.AuditService` (in audit)
+|* `c.s.a.a.application.AuditService` (in audit)
+* `c.s.a.s.association.AssociationQueryPort` (in shared)
 |===

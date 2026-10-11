@@ -256,7 +256,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | personne | référence | Le destinataire |
-| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, promotion_liste_attente |
+| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, modification_distribution, promotion_liste_attente, et les notifications des événements, missions et sessions |
 | canal | énumération | email (V1) ; sms, push réservés pour la V2 |
 | sujet | texte | Objet du message |
 | statut | énumération | envoye, echec |

@@ -64,7 +64,7 @@ public class DistributionService {
             throw new IllegalArgumentException("La date de la distribution est deja passee.");
         }
         ModeCreneauDistribution mode = parseModeCreneauDistribution(request.modeCreneau());
-        validerCreneaux(request, mode);
+        validerCreneaux(request.creneaux(), mode);
         PersonneQueryPort.PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
 
         Distribution distribution = new Distribution(
@@ -170,14 +170,14 @@ public class DistributionService {
             .orElseThrow(() -> new NotFoundException("Distribution introuvable : " + distributionId));
     }
 
-    private void validerCreneaux(CreateDistributionRequest request, ModeCreneauDistribution mode) {
-        if (request.creneaux() == null || request.creneaux().isEmpty()) {
+    static void validerCreneaux(List<AjouterCreneauRequest> creneaux, ModeCreneauDistribution mode) {
+        if (creneaux == null || creneaux.isEmpty()) {
             throw new IllegalArgumentException("Au moins un creneau est requis.");
         }
-        if (mode == ModeCreneauDistribution.CRENEAU_UNIQUE && request.creneaux().size() > 1) {
+        if (mode == ModeCreneauDistribution.CRENEAU_UNIQUE && creneaux.size() > 1) {
             throw new IllegalArgumentException("Une distribution en creneau unique n'a qu'un seul creneau.");
         }
-        for (AjouterCreneauRequest c : request.creneaux()) {
+        for (AjouterCreneauRequest c : creneaux) {
             LocalTime debut = c.heureDebut();
             LocalTime fin = c.heureFin();
             if (debut == null || fin == null || !fin.isAfter(debut)) {
@@ -188,7 +188,7 @@ public class DistributionService {
         }
     }
 
-    private ModeCreneauDistribution parseModeCreneauDistribution(String modeCreneau) {
+    static ModeCreneauDistribution parseModeCreneauDistribution(String modeCreneau) {
         if (modeCreneau == null || modeCreneau.isBlank()) {
             return ModeCreneauDistribution.CRENEAU_UNIQUE;
         }
@@ -220,7 +220,7 @@ public class DistributionService {
         );
     }
 
-    private static Lieu toLieu(LieuRequest r) {
+    static Lieu toLieu(LieuRequest r) {
         if (r == null) {
             return null;
         }

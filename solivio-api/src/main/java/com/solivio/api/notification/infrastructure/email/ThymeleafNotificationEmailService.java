@@ -54,6 +54,12 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
     }
 
     @Override
+    public void envoyerModificationDistribution(String email, ContexteEmail contexte) {
+        envoyer(email, "Distribution modifiee - " + contexte.distribution().titre(),
+            "modification-distribution", contexteThymeleaf(contexte));
+    }
+
+    @Override
     public void envoyerRappelVeille(String email, ContexteEmail contexte) {
         envoyer(email, "Rappel : distribution demain - " + contexte.distribution().titre(),
             "rappel-veille", contexteThymeleaf(contexte));

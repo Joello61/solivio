@@ -6,6 +6,12 @@
 |* `c.s.a.s.identity.PersonneQueryPort` (in shared)
 * `c.s.a.s.distribution.DistributionQueryPort` (in shared)
 * `c.s.a.s.association.AssociationQueryPort` (in shared)
-* `c.s.a.s.identity.InvitationPort` (in shared)
+* `c.s.a.s.verrou.VerrouDistribution` (in shared)
+* `c.s.a.s.temps.HorlogeAssociation` (in shared)
 * `c.s.a.a.application.AuditService` (in audit)
+* `c.s.a.s.identity.InvitationPort` (in shared)
+|Events listened to
+|* `c.s.a.d.events.DistributionAnnulee` (async) 
+* `c.s.a.d.events.DistributionModifiee` (async) 
+* `c.s.a.i.events.PersonneEffacee` (async) 
 |===

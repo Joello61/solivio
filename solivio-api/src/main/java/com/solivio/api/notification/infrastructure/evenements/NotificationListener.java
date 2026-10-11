@@ -2,6 +2,7 @@ package com.solivio.api.notification.infrastructure.evenements;
 
 import com.solivio.api.collecte.events.MissionCollecteAnnulee;
 import com.solivio.api.collecte.events.MissionCollecteCreee;
+import com.solivio.api.distribution.events.DistributionModifiee;
 import com.solivio.api.evenement.events.EvenementAnnule;
 import com.solivio.api.evenement.events.EvenementPublie;
 import com.solivio.api.inscription.events.DesistementTardifBenevole;
@@ -54,6 +55,13 @@ public class NotificationListener {
     @ApplicationModuleListener
     void on(InscriptionsAnnuleesParDistribution event) {
         notificationService.notifierAnnulationDistribution(event.distributionId(), event.inscriptions());
+    }
+
+    @ApplicationModuleListener
+    void on(DistributionModifiee event) {
+        if (event.changementPratique()) {
+            notificationService.notifierModificationDistribution(event.distributionId(), event.occurrenceId());
+        }
     }
 
     @ApplicationModuleListener
