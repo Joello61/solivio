@@ -3,6 +3,7 @@ package com.solivio.api.distribution.infrastructure.web;
 import com.solivio.api.distribution.application.DistributionService;
 import com.solivio.api.distribution.application.ModificationDistributionService;
 import com.solivio.api.distribution.infrastructure.web.dto.AnnulerDistributionRequest;
+import com.solivio.api.distribution.infrastructure.web.dto.ChangerBaseRepartitionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.UpdateDistributionRequest;
@@ -90,6 +91,15 @@ public class DistributionController {
     ) {
         DistributionResponse response = distributionService.publier(id);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/base-repartition")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<DistributionResponse> changerBaseRepartition(
+        @PathVariable UUID id,
+        @Valid @RequestBody ChangerBaseRepartitionRequest request
+    ) {
+        return ResponseEntity.ok(distributionService.changerBaseRepartition(id, request.base()));
     }
 
     @PostMapping("/{id}/demarrer")

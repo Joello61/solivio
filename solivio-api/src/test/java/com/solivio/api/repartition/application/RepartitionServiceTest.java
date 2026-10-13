@@ -181,27 +181,38 @@ class RepartitionServiceTest {
     }
 
     @Test
-    void calculerDotation_penurieExacte() {
-        // 5 kg pour 10 beneficiaires : penurie, seulement 5 personnes servies
-        DenreeDistribution d = denree("Oranges", UniteConditionnement.KILOGRAMME, 1, 5.0);
-        DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 10);
+    void calculerDotation_kgAuDemiKilo_quandChacunPeutRecevoirUnPalier() {
+        // 15 kg pour 20 beneficiaires : 0,75 kg arrondi a 0,5 kg, tout le monde servi, reste 5 kg
+        DenreeDistribution d = denree("Pommes de terre", UniteConditionnement.KILOGRAMME, 3, 5.0);
+        DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 20);
+
+        assertThat(dto.penurie()).isFalse();
+        assertThat(dto.dotation()).isCloseTo(0.5, within(0.001));
+        assertThat(dto.nbPeutRecevoir()).isEqualTo(20);
+        assertThat(dto.reste()).isCloseTo(5.0, within(0.001));
+    }
+
+    @Test
+    void calculerDotation_penurieAuPoids_chaqueServiRecoitUnPalier() {
+        // 8 kg pour 20 beneficiaires : 0,4 kg < 0,5 kg, penurie, 16 personnes recoivent 0,5 kg
+        DenreeDistribution d = denree("Bananes", UniteConditionnement.KILOGRAMME, 1, 8.0);
+        DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 20);
 
         assertThat(dto.penurie()).isTrue();
-        assertThat(dto.dotation()).isCloseTo(1.0, within(0.001));
-        assertThat(dto.nbPeutRecevoir()).isEqualTo(5);
+        assertThat(dto.dotation()).isCloseTo(0.5, within(0.001));
+        assertThat(dto.nbPeutRecevoir()).isEqualTo(16);
         assertThat(dto.reste()).isCloseTo(0.0, within(0.001));
     }
 
     @Test
-    void calculerDotation_penurieAvecFraction() {
-        // 5.5 kg pour 10 beneficiaires : penurie, 5 personnes recoivent 1 kg, reste 0.5
-        DenreeDistribution d = denree("Bananes", UniteConditionnement.KILOGRAMME, 1, 5.5);
+    void calculerDotation_arrondiAuDemiKiloInferieur() {
+        // 27 kg pour 10 beneficiaires : 2,7 kg arrondi a 2,5 kg, reste 2 kg
+        DenreeDistribution d = denree("Carottes", UniteConditionnement.KILOGRAMME, 1, 27.0);
         DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 10);
 
-        assertThat(dto.penurie()).isTrue();
-        assertThat(dto.dotation()).isCloseTo(1.0, within(0.001));
-        assertThat(dto.nbPeutRecevoir()).isEqualTo(5);
-        assertThat(dto.reste()).isCloseTo(0.5, within(0.001));
+        assertThat(dto.penurie()).isFalse();
+        assertThat(dto.dotation()).isCloseTo(2.5, within(0.001));
+        assertThat(dto.reste()).isCloseTo(2.0, within(0.001));
     }
 
     @Test
@@ -253,14 +264,24 @@ class RepartitionServiceTest {
 
     @Test
     void calculerDotation_plusieursCaisses() {
-        // 3 caisses de 20 litres pour 9 beneficiaires : floor(60/9)=6, reste 6
+        // 3 caisses de 20 litres pour 9 beneficiaires : 6,67 L arrondi a 6,5 L, reste 1,5 L
         DenreeDistribution d = denree("Lait", UniteConditionnement.LITRE, 3, 20.0);
         DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 9);
 
         assertThat(dto.quantiteTotale()).isCloseTo(60.0, within(0.001));
-        assertThat(dto.dotation()).isCloseTo(6.0, within(0.001));
-        assertThat(dto.reste()).isCloseTo(6.0, within(0.001));
+        assertThat(dto.dotation()).isCloseTo(6.5, within(0.001));
+        assertThat(dto.reste()).isCloseTo(1.5, within(0.001));
         assertThat(dto.penurie()).isFalse();
+    }
+
+    @Test
+    void calculerDotation_alUniteLePalierResteUn() {
+        // 25 yaourts pour 10 beneficiaires : 2,5 arrondi a 2 (palier 1), reste 5
+        DenreeDistribution d = denree("Yaourts", UniteConditionnement.UNITE, 1, 25.0);
+        DotationDenreeDto dto = RepartitionService.calculerDotationDenree(d, 10);
+
+        assertThat(dto.dotation()).isCloseTo(2.0, within(0.001));
+        assertThat(dto.reste()).isCloseTo(5.0, within(0.001));
     }
 
     // === Tests du service calculerDotation avec base ===

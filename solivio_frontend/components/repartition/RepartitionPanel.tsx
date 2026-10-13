@@ -28,6 +28,7 @@ import {
   modifierDenree,
   supprimerDenree,
   calculerDotation,
+  changerBaseRepartition,
 } from "@/lib/api/distributions";
 import type { DenreeResponse, DotationResponse, SaisirDenreePayload } from "@/types/distribution";
 
@@ -35,11 +36,11 @@ function formatQte(valeur: number, unite: string): string {
   const suffixes: Record<string, string> = {
     KILOGRAMME: "kg",
     LITRE: "L",
-    PIECE: "piece(s)",
+    PIECE: "pièce(s)",
     UNITE: "unité(s)",
   };
   const suffix = suffixes[unite] ?? unite.toLowerCase();
-  return `${valeur % 1 === 0 ? valeur.toFixed(0) : valeur.toFixed(2)} ${suffix}`;
+  return `${valeur.toLocaleString("fr-FR", { maximumFractionDigits: 3 })} ${suffix}`;
 }
 
 interface Props {
@@ -127,7 +128,17 @@ export function RepartitionPanel({
   }
 
   async function handleBasculeBase(nouvelleBase: "INSCRITS" | "PRESENTS") {
+    const precedente = base;
     setBase(nouvelleBase);
+    setErreur(null);
+    try {
+      // Le choix est enregistre sur la distribution : il est repris au prochain affichage.
+      await changerBaseRepartition(distributionId, nouvelleBase);
+    } catch {
+      setBase(precedente);
+      setErreur("Le choix de la base n'a pas pu être enregistré.");
+      return;
+    }
     await rafraichirDotation(nouvelleBase);
   }
 
@@ -268,7 +279,7 @@ export function RepartitionPanel({
                             Stock insuffisant : {d.nbPeutRecevoir} personne
                             {d.nbPeutRecevoir > 1 ? "s" : ""} sur{" "}
                             {dotation.nbBeneficiaires} peuvent recevoir{" "}
-                            <span className="font-semibold">1 {d.unite.toLowerCase()}</span>
+                            <span className="font-semibold">{formatQte(d.dotation, d.unite)}</span>
                             {d.reste > 0 && (
                               <span> (reste {formatQte(d.reste, d.unite)})</span>
                             )}

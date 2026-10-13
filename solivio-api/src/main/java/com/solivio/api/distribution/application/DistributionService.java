@@ -1,6 +1,7 @@
 package com.solivio.api.distribution.application;
 
 import com.solivio.api.audit.application.AuditService;
+import com.solivio.api.distribution.domain.BaseRepartition;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
@@ -106,6 +107,18 @@ public class DistributionService {
         }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
         auditService.tracer("DISTRIBUTION_DEMARREE", "distribution", distributionId);
+        return toResponse(distributionRepository.save(d),
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+    }
+
+    /** RG8 : nombre de beneficiaires retenu pour la repartition, choisi par le coordinateur. */
+    public DistributionResponse changerBaseRepartition(UUID distributionId, String base) {
+        Distribution d = trouverOuEchouer(distributionId);
+        if (d.getStatut() == StatutDistribution.ANNULEE) {
+            throw new ConflictException("La repartition d'une distribution annulee ne se modifie plus.");
+        }
+        d.setBaseRepartition(BaseRepartition.valueOf(base));
+        auditService.tracer("DISTRIBUTION_BASE_REPARTITION", "distribution", distributionId);
         return toResponse(distributionRepository.save(d),
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
