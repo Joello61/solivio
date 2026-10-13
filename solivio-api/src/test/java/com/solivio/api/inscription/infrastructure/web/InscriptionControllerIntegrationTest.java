@@ -97,6 +97,23 @@ class InscriptionControllerIntegrationTest {
     }
 
     @Test
+    void mesInscriptions_indiqueLeStatutDeLaDistribution() throws Exception {
+        UUID personne = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Benef', 'Test', 'benef@test.com')",
+            personne);
+        UUID distribution = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
+            + "base_repartition, cree_par_id) VALUES (?, 'Distribution', CURRENT_DATE, 'TERMINEE', 10, "
+            + "'CRENEAU_UNIQUE', 'INSCRITS', ?)", distribution, personne);
+        jdbcTemplate.update("INSERT INTO inscription (id, distribution_id, personne_id, nom, prenom, type, statut) "
+            + "VALUES (?, ?, ?, 'Benef', 'Test', 'BENEFICIAIRE', 'CONFIRMEE')", UUID.randomUUID(), distribution, personne);
+
+        mockMvc.perform(get("/api/inscriptions/mes").cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].distributionStatut").value("TERMINEE"));
+    }
+
+    @Test
     void pointage_necessiteRoleCoordinateurOuBenevole() throws Exception {
         mockMvc.perform(get("/api/distributions/00000000-0000-0000-0000-000000000000/pointage")
                 .cookie(new Cookie("access_token", tokenBeneficiaire)))

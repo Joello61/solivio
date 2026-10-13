@@ -316,6 +316,7 @@ public class InscriptionService {
                         dist != null ? dist.titre() : null,
                         dist != null ? dist.date() : null,
                         dist != null ? dist.lieu() : null,
+                        dist != null ? dist.statut() : null,
                         i.getType().name(),
                         i.getStatut().name(),
                         i.getRangListeAttente(),

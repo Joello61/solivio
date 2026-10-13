@@ -39,6 +39,7 @@ public interface DistributionQueryPort {
         String titre,
         LocalDate date,
         String lieu,
-        String motifAnnulation
+        String motifAnnulation,
+        String statut
     ) {}
 }
