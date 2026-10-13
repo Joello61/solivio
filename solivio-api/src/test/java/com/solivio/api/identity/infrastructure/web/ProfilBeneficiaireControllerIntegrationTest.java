@@ -23,6 +23,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -121,6 +122,47 @@ class ProfilBeneficiaireControllerIntegrationTest {
         mockMvc.perform(get("/api/me/profil-beneficiaire")
                 .cookie(new Cookie("access_token", tokenBenevole)))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void dossier_lisibleParLeResponsableSeulEtTrace() throws Exception {
+        mockMvc.perform(put("/api/me/profil-beneficiaire")
+                .cookie(new Cookie("access_token", tokenBeneficiaire))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"statutBoursier\":\"boursier\",\"echelonBourse\":4}"))
+            .andExpect(status().isOk());
+        String url = "/api/association/membres/" + compte.getId() + "/profil-beneficiaire";
+
+        mockMvc.perform(get(url).cookie(new Cookie("access_token", jeton("responsable", false))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statutBoursier").value("boursier"))
+            .andExpect(jsonPath("$.echelonBourse").value(4));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM journal_audit "
+            + "WHERE action = 'PROFIL_BENEFICIAIRE_CONSULTE' AND entite_id = ?", Integer.class, compte.getId()))
+            .isEqualTo(1);
+
+        mockMvc.perform(get(url).cookie(new Cookie("access_token", jeton("coordinateur", false))))
+            .andExpect(status().isForbidden());
+        mockMvc.perform(get(url).cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+        mockMvc.perform(get(url).cookie(new Cookie("access_token", jeton(null, true))))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void dossier_introuvablePourUnCompteQuiNEstPasBeneficiaire() throws Exception {
+        membreRepo.findByCompteId(compte.getId()).ifPresent(m -> {
+            m.setRole("benevole");
+            membreRepo.save(m);
+        });
+        mockMvc.perform(get("/api/association/membres/" + compte.getId() + "/profil-beneficiaire")
+                .cookie(new Cookie("access_token", jeton("responsable", false))))
+            .andExpect(status().isNotFound());
+    }
+
+    private String jeton(String role, boolean superAdmin) {
+        return jwtService.genererAccessToken(UUID.randomUUID(), "acteur@example.com", "Acteur", "Test",
+            role == null ? List.of() : List.of(role), null, superAdmin);
     }
 
     @Test

@@ -18,41 +18,16 @@ import {
 } from "@/components/ui/select";
 import { mettreAJourProfilBeneficiaire } from "@/lib/api/profil";
 import type { ProfilBeneficiaireResponse } from "@/types/profil";
+import {
+  CATEGORIES_NATIONALITE,
+  NIVEAUX_ACADEMIQUES,
+  SITUATIONS_LOGEMENT,
+  STATUTS_BOURSIER,
+} from "@/lib/profil-beneficiaire";
 
 interface Props {
   profil: ProfilBeneficiaireResponse;
 }
-
-const STATUTS_BOURSIER = [
-  { value: "boursier", label: "Boursier" },
-  { value: "non_boursier", label: "Non boursier" },
-];
-
-const CATEGORIES_NATIONALITE = [
-  { value: "francaise", label: "Française" },
-  { value: "ressortissant_ue", label: "Ressortissant UE" },
-  { value: "hors_ue", label: "Hors UE" },
-];
-
-const NIVEAUX_ACADEMIQUES = [
-  { value: "L1", label: "Licence 1" },
-  { value: "L2", label: "Licence 2" },
-  { value: "L3", label: "Licence 3" },
-  { value: "M1", label: "Master 1" },
-  { value: "M2", label: "Master 2" },
-  { value: "doctorat", label: "Doctorat" },
-  { value: "BTS", label: "BTS" },
-  { value: "autre", label: "Autre" },
-];
-
-const SITUATIONS_LOGEMENT = [
-  { value: "seul", label: "Seul(e)" },
-  { value: "colocation", label: "Colocation" },
-  { value: "chez_parents", label: "Chez les parents" },
-  { value: "residence", label: "Residence universitaire" },
-  { value: "sans_domicile_stable", label: "Sans domicile stable" },
-  { value: "autre", label: "Autre" },
-];
 
 interface SelectFieldProps {
   id: string;
