@@ -1,5 +1,5 @@
-import { API_URL, apiGet, apiPost } from "./api";
-import type { MeResponse, TokenResponse } from "@/types/auth";
+import { API_URL, apiPost } from "./api";
+import type { TokenResponse } from "@/types/auth";
 
 // Point d'entree de la connexion Google, servi par le backend.
 export const AUTH_LOGIN_URL = `${API_URL}/oauth2/authorization/google`;
@@ -14,10 +14,6 @@ export async function logout(): Promise<void> {
 
 export async function changerMotDePasse(motDePasseActuel: string, nouveauMotDePasse: string): Promise<void> {
   return apiPost<void>("/api/auth/change-password", { motDePasseActuel, nouveauMotDePasse });
-}
-
-export async function getMe(): Promise<MeResponse> {
-  return apiGet<MeResponse>("/api/auth/me");
 }
 
 export async function register(payload: {
