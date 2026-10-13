@@ -136,6 +136,28 @@ class ModificationDistributionIntegrationTest {
             brouillon)).isZero();
     }
 
+    @Test
+    void changerBaseRepartition_enregistreLeChoixDuGestionnaire() throws Exception {
+        UUID distribution = distribution("EN_COURS", 10);
+        String presents = "{\"base\": \"PRESENTS\"}";
+
+        mockMvc.perform(put("/api/distributions/" + distribution + "/base-repartition").cookie(jeton("benevole"))
+            .contentType(MediaType.APPLICATION_JSON).content(presents)).andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/distributions/" + distribution + "/base-repartition").cookie(jeton("coordinateur"))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"base\": \"TOUS\"}"))
+            .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/distributions/" + distribution + "/base-repartition").cookie(jeton("coordinateur"))
+            .contentType(MediaType.APPLICATION_JSON).content(presents))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.baseRepartition").value("PRESENTS"));
+        assertThat(jdbcTemplate.queryForObject("SELECT base_repartition FROM distribution WHERE id = ?",
+            String.class, distribution)).isEqualTo("PRESENTS");
+
+        UUID annulee = distribution("ANNULEE", 10);
+        mockMvc.perform(put("/api/distributions/" + annulee + "/base-repartition").cookie(jeton("coordinateur"))
+            .contentType(MediaType.APPLICATION_JSON).content(presents)).andExpect(status().isConflict());
+    }
+
     private ResultActions modifier(UUID distribution, String corps, String role) throws Exception {
         return mockMvc.perform(put("/api/distributions/" + distribution)
             .cookie(jeton(role))

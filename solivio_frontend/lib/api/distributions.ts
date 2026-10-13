@@ -115,6 +115,16 @@ export function supprimerDenree(distributionId: string, denreeId: string): Promi
   });
 }
 
+export function changerBaseRepartition(
+  distributionId: string,
+  base: "INSCRITS" | "PRESENTS",
+): Promise<DistributionResponse> {
+  return apiFetch<DistributionResponse>(`/api/distributions/${distributionId}/base-repartition`, {
+    method: "PUT",
+    body: JSON.stringify({ base }),
+  });
+}
+
 export function calculerDotation(
   distributionId: string,
   base?: "INSCRITS" | "PRESENTS",
