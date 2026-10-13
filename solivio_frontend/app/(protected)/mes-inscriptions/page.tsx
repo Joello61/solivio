@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { MapPin, CalendarSearch, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import { BoutonDesinscription } from "@/components/inscriptions/BoutonDesinscription";
 
 export const metadata: Metadata = { title: "Mes inscriptions" };
 
@@ -109,7 +110,12 @@ export default async function MesInscriptionsPage() {
             ) : (
               <div className="rounded-2xl border border-border/60 bg-card shadow-sm divide-y divide-border/60 overflow-hidden">
                 {avenir.map((i) => (
-                  <CarteInscription key={i.id} inscription={i} />
+                  <CarteInscription
+                    key={i.id}
+                    inscription={i}
+                    // Le backend refuse une desinscription apres pointage ou une fois la distribution terminee.
+                    desinscriptionPossible={i.presence === "NON_POINTE"}
+                  />
                 ))}
               </div>
             )}
@@ -136,7 +142,13 @@ export default async function MesInscriptionsPage() {
   );
 }
 
-function CarteInscription({ inscription: i }: { inscription: InscriptionPersonnelle }) {
+function CarteInscription({
+  inscription: i,
+  desinscriptionPossible = false,
+}: {
+  inscription: InscriptionPersonnelle;
+  desinscriptionPossible?: boolean;
+}) {
   const date = i.distributionDate ? new Date(i.distributionDate + "T00:00:00") : null;
   const jour = date?.getDate();
   const mois = date?.toLocaleString("fr-FR", { month: "short" });
@@ -144,66 +156,74 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
   const accentClass = STATUT_ACCENT[i.statut] ?? "border-l-border/60";
 
   return (
-    <Link
-      href={`/distributions/${i.distributionId}`}
-      className={cn(
-        "group flex items-center gap-4 pl-4 pr-5 py-4",
-        "border-l-[3px]",
-        accentClass,
-        "hover:bg-primary/5 transition-colors",
-      )}
-    >
-      {/* Bloc date */}
-      {date ? (
-        <div className="flex-shrink-0 w-10 text-center">
-          <p className="text-xl font-bold text-foreground leading-none tabular-nums">{jour}</p>
-          <p className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider mt-0.5 capitalize">{mois}</p>
-        </div>
-      ) : (
-        <div className="flex-shrink-0 w-10" />
-      )}
+    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 pr-4", "border-l-[3px]", accentClass)}>
+      <Link
+        href={`/distributions/${i.distributionId}`}
+        className="group flex min-w-0 flex-1 items-center gap-4 py-4 pl-4 hover:bg-primary/5 transition-colors"
+      >
+        {/* Bloc date */}
+        {date ? (
+          <div className="flex-shrink-0 w-10 text-center">
+            <p className="text-xl font-bold text-foreground leading-none tabular-nums">{jour}</p>
+            <p className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider mt-0.5 capitalize">{mois}</p>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 w-10" />
+        )}
 
-      <div className="flex-1 min-w-0 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-            {i.distributionTitre ?? "Distribution"}
-          </span>
-          <div className="flex gap-1.5">
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                TYPE_PILL[i.type] ?? "bg-muted text-muted-foreground border-border",
-              )}
-            >
-              {typeLabel(i.type)}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+              {i.distributionTitre ?? "Distribution"}
             </span>
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                STATUT_PILL[i.statut] ?? "bg-muted text-muted-foreground border-border",
-              )}
-            >
-              {statutLabel(i.statut, i.rangListeAttente)}
-            </span>
+            <div className="flex gap-1.5">
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+                  TYPE_PILL[i.type] ?? "bg-muted text-muted-foreground border-border",
+                )}
+              >
+                {typeLabel(i.type)}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+                  STATUT_PILL[i.statut] ?? "bg-muted text-muted-foreground border-border",
+                )}
+              >
+                {statutLabel(i.statut, i.rangListeAttente)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {i.distributionLieu && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="size-3.5 shrink-0" />
+                <span>{i.distributionLieu}</span>
+              </div>
+            )}
+            {i.presence !== "NON_POINTE" && (
+              <span className="text-xs text-muted-foreground">
+                Présence : {presenceLabel(i.presence, i.absenceDeduite)}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          {i.distributionLieu && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0" />
-              <span>{i.distributionLieu}</span>
-            </div>
-          )}
-          {i.presence !== "NON_POINTE" && (
-            <span className="text-xs text-muted-foreground">
-              Présence : {presenceLabel(i.presence, i.absenceDeduite)}
-            </span>
-          )}
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+      </Link>
+      {desinscriptionPossible && (
+        <div className="flex w-full justify-end pb-3 sm:w-auto sm:pb-0">
+          <BoutonDesinscription
+            distributionId={i.distributionId}
+            inscriptionId={i.id}
+            titre={i.distributionTitre ?? "cette distribution"}
+            benevole={i.type === "BENEVOLE"}
+            enAttente={i.statut === "LISTE_ATTENTE"}
+          />
         </div>
-      </div>
-
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-    </Link>
+      )}
+    </div>
   );
 }
