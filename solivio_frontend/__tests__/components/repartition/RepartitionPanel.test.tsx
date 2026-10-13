@@ -10,6 +10,7 @@ vi.mock("@/lib/api/distributions", () => ({
   modifierDenree: vi.fn(),
   supprimerDenree: vi.fn(),
   calculerDotation: vi.fn(),
+  changerBaseRepartition: vi.fn().mockResolvedValue({}),
 }));
 
 const denreeMock: DenreeResponse = {
@@ -189,8 +190,45 @@ describe("RepartitionPanel", () => {
       fireEvent.click(screen.getByText("Présents réels"));
     });
 
+    expect(distributionsApi.changerBaseRepartition).toHaveBeenCalledWith("dist-1", "PRESENTS");
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");
     expect(await screen.findByText("7")).toBeInTheDocument();
+  });
+
+  it("garde la base precedente si son enregistrement echoue", async () => {
+    vi.mocked(distributionsApi.changerBaseRepartition).mockRejectedValueOnce(new Error("refus"));
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[]}
+        dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Présents réels"));
+    });
+
+    expect(screen.getByText(/n'a pas pu être enregistré/)).toBeInTheDocument();
+    expect(distributionsApi.calculerDotation).not.toHaveBeenCalled();
+  });
+
+  it("affiche une dotation au demi-kilo avec une virgule", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={{
+          ...dotationNormale,
+          nbBeneficiaires: 20,
+          denrees: [{ ...dotationNormale.denrees[0], quantiteTotale: 15, dotation: 0.5, reste: 5, nbPeutRecevoir: 20 }],
+        }}
+        modifiable={true}
+      />,
+    );
+
+    expect(screen.getByText("0,5 kg")).toBeInTheDocument();
   });
 
   it("affiche le reste si non nul", () => {
