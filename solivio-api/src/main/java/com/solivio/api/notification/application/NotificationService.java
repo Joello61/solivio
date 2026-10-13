@@ -1,6 +1,7 @@
 package com.solivio.api.notification.application;
 
 import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution.InscriptionAnnulee;
+import com.solivio.api.inscription.events.InscriptionsRetabliesParDistribution.InscriptionConcernee;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
@@ -102,7 +103,8 @@ public class NotificationService {
     }
 
     @Transactional
-    public void notifierAnnulationDistribution(UUID distributionId, List<InscriptionAnnulee> inscriptions) {
+    public void notifierAnnulationDistribution(UUID distributionId, List<InscriptionAnnulee> inscriptions,
+                                               UUID occurrenceId) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
         String sujet = "Distribution annulee - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.ANNULATION_DISTRIBUTION;
@@ -111,9 +113,36 @@ public class NotificationService {
             PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(inscription.personneId());
             ContexteEmail contexte = construireContexte(personne.prenom(), inscription.typeInscription(),
                 inscription.creneauId(), distributionId, distribution);
-            if (!envoyer(cle(type, distributionId), personne.id(), distributionId, type, sujet,
+            // Cle par occurrence : apres une reactivation, une nouvelle annulation previent a nouveau.
+            // Les evenements publies avant l'ajout de l'occurrence gardent la cle par distribution.
+            UUID discriminant = occurrenceId != null ? occurrenceId : distributionId;
+            if (!envoyer(cle(type, discriminant), personne.id(), distributionId, type, sujet,
                 () -> emailService.envoyerAnnulationDistribution(personne.email(), contexte))) {
                 echecs++;
+            }
+        }
+        exigerSucces(echecs, type, distributionId);
+    }
+
+    // Distribution reactivee : chacun apprend si son inscription est retablie ou s'il doit
+    // se reinscrire (inscrit ailleurs la meme semaine entre-temps, RG1).
+    @Transactional
+    public void notifierReactivationDistribution(UUID distributionId, List<InscriptionConcernee> retablies,
+                                                 List<InscriptionConcernee> nonRetablies, UUID occurrenceId) {
+        DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
+        String sujet = "Distribution retablie - " + distribution.titre();
+        TypeEvenementNotification type = TypeEvenementNotification.REACTIVATION_DISTRIBUTION;
+        int echecs = 0;
+        for (List<InscriptionConcernee> groupe : List.of(retablies, nonRetablies)) {
+            boolean retablie = groupe == retablies;
+            for (InscriptionConcernee inscription : groupe) {
+                PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(inscription.personneId());
+                ContexteEmail contexte = construireContexte(personne.prenom(), inscription.typeInscription(),
+                    inscription.creneauId(), distributionId, distribution);
+                if (!envoyer(cle(type, occurrenceId), personne.id(), distributionId, type, sujet,
+                    () -> emailService.envoyerReactivationDistribution(personne.email(), contexte, retablie))) {
+                    echecs++;
+                }
             }
         }
         exigerSucces(echecs, type, distributionId);

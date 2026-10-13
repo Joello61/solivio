@@ -130,6 +130,18 @@ public class DistributionController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/annuler-demarrage")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<DistributionResponse> annulerDemarrage(@PathVariable UUID id) {
+        return ResponseEntity.ok(modificationService.annulerDemarrage(id));
+    }
+
+    @PostMapping("/{id}/reactiver")
+    @PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','SUPER_ADMIN')")
+    public ResponseEntity<DistributionResponse> reactiver(@PathVariable UUID id) {
+        return ResponseEntity.ok(modificationService.reactiver(id));
+    }
+
     private static boolean estGestionnaire(SolivioUserDetails user) {
         return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }

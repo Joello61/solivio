@@ -22,6 +22,10 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
 
     List<Inscription> findByDistributionIdAndStatutIn(UUID distributionId, Collection<StatutInscription> statuts);
 
+    List<Inscription> findByDistributionIdAndStatutAvantAnnulationIsNotNull(UUID distributionId);
+
+    long countByDistributionIdAndPresenceNot(UUID distributionId, StatutPresence presence);
+
     List<Inscription> findByDistributionIdAndTypeAndStatutAndPresence(
         UUID distributionId, TypeInscription type, StatutInscription statut, StatutPresence presence);
 

@@ -60,6 +60,13 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
     }
 
     @Override
+    public void envoyerReactivationDistribution(String email, ContexteEmail contexte, boolean inscriptionRetablie) {
+        Context ctx = contexteThymeleaf(contexte);
+        ctx.setVariable("inscriptionRetablie", inscriptionRetablie);
+        envoyer(email, "Distribution retablie - " + contexte.distribution().titre(), "reactivation-distribution", ctx);
+    }
+
+    @Override
     public void envoyerRappelVeille(String email, ContexteEmail contexte) {
         envoyer(email, "Rappel : distribution demain - " + contexte.distribution().titre(),
             "rappel-veille", contexteThymeleaf(contexte));

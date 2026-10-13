@@ -32,6 +32,14 @@ export function publierDistribution(id: string): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>(`/api/distributions/${id}/publier`, {});
 }
 
+export function annulerDemarrageDistribution(id: string): Promise<DistributionResponse> {
+  return apiPost<DistributionResponse>(`/api/distributions/${id}/annuler-demarrage`, {});
+}
+
+export function reactiverDistribution(id: string): Promise<DistributionResponse> {
+  return apiPost<DistributionResponse>(`/api/distributions/${id}/reactiver`, {});
+}
+
 export function demarrerDistribution(id: string): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>(`/api/distributions/${id}/demarrer`, {});
 }

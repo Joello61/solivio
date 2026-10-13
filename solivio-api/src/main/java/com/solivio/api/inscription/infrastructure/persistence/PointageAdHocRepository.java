@@ -8,5 +8,7 @@ import java.util.UUID;
 
 public interface PointageAdHocRepository extends JpaRepository<PointageAdHoc, UUID> {
 
+    long countByDistributionId(UUID distributionId);
+
     List<PointageAdHoc> findByDistributionIdOrderByNomAscPrenomAsc(UUID distributionId);
 }

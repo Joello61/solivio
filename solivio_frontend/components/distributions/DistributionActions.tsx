@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,8 @@ import {
   terminerDistribution,
   annulerDistribution,
   supprimerDistribution,
+  annulerDemarrageDistribution,
+  reactiverDistribution,
 } from "@/lib/api/distributions";
 import type { StatutDistribution } from "@/types/distribution";
 
@@ -37,11 +39,13 @@ export function DistributionActions({ distributionId, statut, distributionDate }
   const [annulationOpen, setAnnulationOpen] = useState(false);
   const [motif, setMotif] = useState("");
   const [suppressionOpen, setSuppressionOpen] = useState(false);
+  const [reactivationOpen, setReactivationOpen] = useState(false);
 
   const aujourd = new Date();
   aujourd.setHours(0, 0, 0, 0);
   const dateDistrib = new Date(distributionDate + "T00:00:00");
   const estDateFuture = dateDistrib > aujourd;
+  const estDatePassee = dateDistrib < aujourd;
 
   async function executer(action: string) {
     setPending(action);
@@ -56,6 +60,13 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           break;
         case "terminer":
           await terminerDistribution(distributionId);
+          break;
+        case "annuler-demarrage":
+          await annulerDemarrageDistribution(distributionId);
+          break;
+        case "reactiver":
+          await reactiverDistribution(distributionId);
+          setReactivationOpen(false);
           break;
         default:
           break;
@@ -128,6 +139,21 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           </Button>
         )}
 
+        {/* Demarrage accidentel : le backend refuse si une presence a deja ete pointee. */}
+        {statut === "EN_COURS" && (
+          <Button size="sm" variant="outline" onClick={() => executer("annuler-demarrage")} disabled={pending !== null}>
+            <Undo2 className="size-3.5 mr-1" />
+            {pending === "annuler-demarrage" ? "Retour..." : "Revenir à publiée"}
+          </Button>
+        )}
+
+        {statut === "ANNULEE" && !estDatePassee && (
+          <Button size="sm" variant="outline" onClick={() => setReactivationOpen(true)} disabled={pending !== null}>
+            <RotateCcw className="size-3.5 mr-1" />
+            Réactiver
+          </Button>
+        )}
+
         {(statut === "BROUILLON" || statut === "PUBLIEE") && (
           <Link href={`/distributions/${distributionId}/modifier`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
             <Pencil className="size-3.5 mr-1" />
@@ -164,6 +190,30 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           </p>
         )}
       </div>
+
+      {/* Reactivation apres une annulation par erreur : les inscriptions sont retablies (backend). */}
+      <Dialog open={reactivationOpen} onOpenChange={setReactivationOpen}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Réactiver la distribution</DialogTitle>
+            <DialogDescription>
+              Elle retrouve son état d&apos;avant l&apos;annulation. Les inscriptions supprimées par
+              l&apos;annulation sont rétablies, sauf pour les personnes inscrites entre-temps à une autre
+              distribution de la semaine. Chacun est prévenu par email.
+            </DialogDescription>
+          </DialogHeader>
+          {erreur && <p className="text-sm text-destructive">{erreur}</p>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReactivationOpen(false)}>
+              Retour
+            </Button>
+            <Button onClick={() => executer("reactiver")} disabled={pending !== null}>
+              {pending === "reactiver" && <Spinner size="sm" className="mr-2" />}
+              Réactiver
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Suppression d'un brouillon : jamais publie, donc sans inscrit */}
       <Dialog open={suppressionOpen} onOpenChange={setSuppressionOpen}>

@@ -3,8 +3,10 @@ package com.solivio.api.inscription.application;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
+import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import com.solivio.api.inscription.infrastructure.persistence.InscriptionRepository;
+import com.solivio.api.inscription.infrastructure.persistence.PointageAdHocRepository;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +22,22 @@ public class InscriptionQueryAdapter implements InscriptionQueryPort {
 
     private final InscriptionRepository inscriptionRepository;
     private final PersonneQueryPort personneQueryPort;
+    private final PointageAdHocRepository pointageAdHocRepository;
 
     public InscriptionQueryAdapter(
         InscriptionRepository inscriptionRepository,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        PointageAdHocRepository pointageAdHocRepository
     ) {
         this.inscriptionRepository = inscriptionRepository;
         this.personneQueryPort = personneQueryPort;
+        this.pointageAdHocRepository = pointageAdHocRepository;
+    }
+
+    @Override
+    public long compterPointages(UUID distributionId) {
+        return inscriptionRepository.countByDistributionIdAndPresenceNot(distributionId, StatutPresence.NON_POINTE)
+            + pointageAdHocRepository.countByDistributionId(distributionId);
     }
 
     @Override

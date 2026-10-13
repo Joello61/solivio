@@ -54,6 +54,11 @@ public class Inscription {
     @Column(nullable = false, length = 20)
     private StatutInscription statut = StatutInscription.CONFIRMEE;
 
+    // Statut avant une annulation de la distribution, pour la retablir si elle est reactivee.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_avant_annulation", length = 20)
+    private StatutInscription statutAvantAnnulation;
+
     @Column(name = "rang_liste_attente")
     private Integer rangListeAttente;
 
@@ -105,6 +110,8 @@ public class Inscription {
 
     public void annuler() {
         this.statut = StatutInscription.ANNULEE;
+        // Une desinscription personnelle n'est pas retablie par une reactivation.
+        this.statutAvantAnnulation = null;
     }
 
     // Reinscription apres annulation : remet la ligne a son etat initial.
@@ -117,6 +124,7 @@ public class Inscription {
         this.rangListeAttente = null;
         this.presence = StatutPresence.NON_POINTE;
         this.absenceDeduite = false;
+        this.statutAvantAnnulation = null;
         this.datePointage = null;
         this.pointeParId = null;
         this.dateInscription = Instant.now();
@@ -134,6 +142,23 @@ public class Inscription {
     public void enregistrerAbsenceDeduite() {
         this.presence = StatutPresence.ABSENT;
         this.absenceDeduite = true;
+    }
+
+    /** Annulation par la distribution : le statut est garde pour une eventuelle reactivation. */
+    public void annulerParDistribution() {
+        this.statutAvantAnnulation = statut;
+        this.statut = StatutInscription.ANNULEE;
+    }
+
+    /** Distribution reactivee : l'inscription retrouve son statut et son rang. */
+    public void retablir() {
+        this.statut = statutAvantAnnulation;
+        this.statutAvantAnnulation = null;
+    }
+
+    /** Pas de retablissement possible (RG1) : l'inscription reste annulee. */
+    public void renoncerAuRetablissement() {
+        this.statutAvantAnnulation = null;
     }
 
     public boolean estActive() {
