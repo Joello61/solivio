@@ -14,6 +14,8 @@ public record InscriptionPersonnelleResponse(
     String distributionTitre,
     LocalDate distributionDate,
     String distributionLieu,
+    // Une distribution terminee ou annulee le jour meme n'est plus "a venir".
+    String distributionStatut,
     String type,
     String statut,
     Integer rangListeAttente,

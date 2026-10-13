@@ -81,7 +81,7 @@ class NotificationServiceTest {
         distributionId = UUID.randomUUID();
         personne = new PersonneContactInfo(personneId, "marie@example.com", "Marie", "Dupont");
         distribution = new DistributionDetailInfo(
-            distributionId, "Distribution mai", LocalDate.of(2025, 5, 15), "Salle A", null);
+            distributionId, "Distribution mai", LocalDate.of(2025, 5, 15), "Salle A", null, "PUBLIEE");
     }
 
     @Test

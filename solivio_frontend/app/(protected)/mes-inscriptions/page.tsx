@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { MapPin, CalendarSearch, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import { jourAssociation } from "@/lib/distribution-du-jour";
+import { estAVenir } from "@/lib/mes-inscriptions";
 import { BoutonDesinscription } from "@/components/inscriptions/BoutonDesinscription";
 
 export const metadata: Metadata = { title: "Mes inscriptions" };
@@ -14,6 +16,7 @@ interface InscriptionPersonnelle {
   distributionTitre: string | null;
   distributionDate: string | null;
   distributionLieu: string | null;
+  distributionStatut: string | null;
   type: string;
   statut: string;
   rangListeAttente: number | null;
@@ -60,19 +63,9 @@ const TYPE_PILL: Record<string, string> = {
 export default async function MesInscriptionsPage() {
   const inscriptions = (await lireServeur<InscriptionPersonnelle[]>("/api/inscriptions/mes")) ?? [];
 
-  const aujourdhui = new Date().toISOString().split("T")[0];
-  const avenir = inscriptions.filter(
-    (i) =>
-      i.statut !== "ANNULEE" &&
-      i.distributionDate &&
-      i.distributionDate >= aujourdhui,
-  );
-  const passees = inscriptions.filter(
-    (i) =>
-      i.statut === "ANNULEE" ||
-      !i.distributionDate ||
-      i.distributionDate < aujourdhui,
-  );
+  const aujourdhui = jourAssociation(new Date());
+  const avenir = inscriptions.filter((i) => estAVenir(i, aujourdhui));
+  const passees = inscriptions.filter((i) => !estAVenir(i, aujourdhui));
 
   return (
     <div className="space-y-10">
