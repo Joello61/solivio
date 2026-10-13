@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
+import { GenerateurCreneaux } from "@/components/distributions/GenerateurCreneaux";
 import type { DistributionResponse, LieuRequest, LieuResponse } from "@/types/distribution";
 
 // Schéma
@@ -144,7 +145,9 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
         },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "creneaux" });
+  const { fields, append, remove, replace } = useFieldArray({ control, name: "creneaux" });
+  // Generer remplace la liste : jamais sur une distribution publiee, dont les creneaux ont pu recevoir des inscrits.
+  const peutGenerer = !distribution?.creneaux.length || distribution.statut === "BROUILLON";
 
   /* Validation de l'étape 1 avant de passer à l'étape 2 */
   async function allerEtape2() {
@@ -325,38 +328,46 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                   </Button>
                 </div>
 
+                {peutGenerer && (
+                  <GenerateurCreneaux nbExistants={fields.length} onGenerer={(creneaux) => replace(creneaux)} />
+                )}
+
                 <div className="space-y-3">
                   {fields.map((field, index) => (
                     <div
                       key={field.id}
-                      className="flex items-end gap-2 rounded-xl border border-border/60 bg-muted/40 p-3"
+                      className="grid grid-cols-2 items-end gap-2 rounded-xl border border-border/60 bg-muted/40 p-3 sm:flex"
                     >
-                      <div className="flex-1 space-y-1">
+                      <div className="space-y-1 sm:flex-1">
                         <Label htmlFor={`creneaux.${index}.heureDebut`} className="text-xs">
                           Début
                         </Label>
                         <Input
+                          id={`creneaux.${index}.heureDebut`}
                           type="time"
                           {...register(`creneaux.${index}.heureDebut`)}
                           className="h-11 sm:h-8 text-sm"
                         />
                       </div>
-                      <div className="flex-1 space-y-1">
+                      <div className="space-y-1 sm:flex-1">
                         <Label htmlFor={`creneaux.${index}.heureFin`} className="text-xs">
                           Fin
                         </Label>
                         <Input
+                          id={`creneaux.${index}.heureFin`}
                           type="time"
                           {...register(`creneaux.${index}.heureFin`)}
                           className="h-11 sm:h-8 text-sm"
                         />
                       </div>
-                      <div className="w-24 space-y-1">
+                      <div className="space-y-1 sm:w-24">
                         <Label htmlFor={`creneaux.${index}.capacite`} className="text-xs">
                           Places
                         </Label>
                         <Input
+                          id={`creneaux.${index}.capacite`}
                           type="number"
+                          inputMode="numeric"
                           min={1}
                           {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
                           className="h-11 sm:h-8 text-sm"
@@ -367,8 +378,9 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="size-11 sm:size-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          className="size-11 sm:size-8 p-0 justify-self-end text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                           onClick={() => remove(index)}
+                          aria-label="Supprimer le créneau"
                         >
                           <Trash2 className="size-4" />
                         </Button>
