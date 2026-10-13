@@ -24,6 +24,7 @@ import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel"
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
 import { rolesAttribuables } from "@/lib/roles-benevoles";
+import { jourAssociation } from "@/lib/distribution-du-jour";
 import {
   estGestionnaireDistribution,
   peutPointer,
@@ -105,6 +106,9 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   const typeInscription = typeInscriptionPossible(me?.roles ?? []);
   const pointageBenevole =
     !estGestionnaire && peutPointer(me?.roles ?? [], distribution.statut, mesInscriptions);
+  const actionsPossibles =
+    distribution.statut !== "TERMINEE" &&
+    !(distribution.statut === "ANNULEE" && distribution.date < jourAssociation(new Date()));
   const action = actionPrincipale({
     statut: distribution.statut,
     estGestionnaire,
@@ -318,8 +322,8 @@ export default async function DistributionDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Actions gestionnaire */}
-          {estGestionnaire && (
+          {/* Actions gestionnaire : aucune sur une distribution terminee, ni annulee et passee. */}
+          {estGestionnaire && actionsPossibles && (
             <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
               <p className="text-sm font-semibold text-foreground font-display">
                 Actions
