@@ -15,6 +15,8 @@ public record InscriptionResponse(
     Integer rangListeAttente,
     List<RoleBenevoleResponse> roles,
     String presence,
+    // RG4 : absence enregistree a la cloture faute de pointage.
+    boolean absenceDeduite,
     Instant dateInscription,
     // RG4 : nombre d'absences passees, visible du coordinateur. 0 pour les benevoles.
     long nombreAbsencesPassees

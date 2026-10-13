@@ -1,6 +1,7 @@
 package com.solivio.api.inscription.infrastructure.evenements;
 
 import com.solivio.api.inscription.domain.Inscription;
+import com.solivio.api.inscription.events.AbsencesEnregistrees;
 import com.solivio.api.inscription.events.DesistementTardifBenevole;
 import com.solivio.api.inscription.events.InscriptionConfirmee;
 import com.solivio.api.inscription.events.InscriptionPromue;
@@ -8,6 +9,7 @@ import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +44,10 @@ public class InscriptionEventPublisher {
             .map(i -> new InscriptionsAnnuleesParDistribution.InscriptionAnnulee(
                 i.getId(), i.getPersonneId(), i.getType().name(), i.getCreneauId()))
             .toList()));
+    }
+
+    public void publierAbsencesEnregistrees(UUID distributionId, LocalDate date) {
+        events.publishEvent(new AbsencesEnregistrees(distributionId, date));
     }
 
     public void publierDesistementTardifBenevole(Inscription inscription) {

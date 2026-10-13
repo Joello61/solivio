@@ -24,6 +24,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -608,6 +609,34 @@ class InscriptionServiceTest {
             distributionId, personneId, TypeInscription.BENEFICIAIRE)).thenReturn(Optional.empty());
         when(associationQueryPort.frequenceMaxParSemaine()).thenReturn(limite);
         lenient().when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    // --- RG4 : absences a la cloture ---
+
+    @Test
+    void enregistrerAbsences_marqueLesNonPointesEtPublieLEvenement() {
+        Inscription nonPointe = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        when(inscriptionRepository.findByDistributionIdAndTypeAndStatutAndPresence(distributionId,
+            TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE, StatutPresence.NON_POINTE))
+            .thenReturn(List.of(nonPointe));
+        LocalDate date = LocalDate.now();
+
+        service.enregistrerAbsences(distributionId, date);
+
+        assertThat(nonPointe.getPresence()).isEqualTo(StatutPresence.ABSENT);
+        assertThat(nonPointe.isAbsenceDeduite()).isTrue();
+        verify(verrouDistribution).verrouiller(distributionId);
+        verify(eventPublisher).publierAbsencesEnregistrees(distributionId, date);
+    }
+
+    @Test
+    void pointerApresCoup_effaceLAbsenceDeduite() {
+        Inscription inscription = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        inscription.enregistrerAbsenceDeduite();
+
+        inscription.pointer(StatutPresence.PRESENT, UUID.randomUUID());
+
+        assertThat(inscription.isAbsenceDeduite()).isFalse();
     }
 
     // --- C5 : annulation d'une distribution ---

@@ -223,6 +223,19 @@ public class InscriptionService {
         eventPublisher.publierAnnuleesParDistribution(distributionId, actives);
     }
 
+    /**
+     * RG4 : a la cloture, les beneficiaires confirmes non pointes sont enregistres absents.
+     * Rejouable : un second passage ne trouve plus personne a marquer.
+     */
+    public void enregistrerAbsences(UUID distributionId, LocalDate date) {
+        verrouDistribution.verrouiller(distributionId);
+        List<Inscription> nonPointes = inscriptionRepository.findByDistributionIdAndTypeAndStatutAndPresence(
+            distributionId, TypeInscription.BENEFICIAIRE, StatutInscription.CONFIRMEE, StatutPresence.NON_POINTE);
+        nonPointes.forEach(Inscription::enregistrerAbsenceDeduite);
+        inscriptionRepository.saveAll(nonPointes);
+        eventPublisher.publierAbsencesEnregistrees(distributionId, date);
+    }
+
     public InscriptionResponse pointer(
         UUID distributionId,
         UUID inscriptionId,
@@ -307,6 +320,7 @@ public class InscriptionService {
                         i.getStatut().name(),
                         i.getRangListeAttente(),
                         i.getPresence().name(),
+                        i.isAbsenceDeduite(),
                         i.getDateInscription()
                     );
                 })
@@ -508,6 +522,7 @@ public class InscriptionService {
             i.getRangListeAttente(),
             roles,
             i.getPresence().name(),
+            i.isAbsenceDeduite(),
             i.getDateInscription(),
             nombreAbsencesPassees
         );

@@ -200,6 +200,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | statut | énumération | confirmee, liste_attente, annulee |
 | rang_liste_attente | entier | Position en liste d'attente (si applicable) |
 | presence | énumération | non_pointe (défaut), present, absent |
+| absence_deduite | booléen | Vrai si l'absence a été enregistrée à la clôture faute de pointage (RG4), faux pour une absence pointée |
 | date_pointage | date-heure | Quand la présence a été pointée |
 | pointe_par | référence | Qui a pointé |
 | date_inscription | date-heure | Quand la personne s'est inscrite |

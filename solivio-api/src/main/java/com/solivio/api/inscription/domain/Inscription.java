@@ -64,6 +64,10 @@ public class Inscription {
     @Column(nullable = false, length = 15)
     private StatutPresence presence = StatutPresence.NON_POINTE;
 
+    // RG4 : absence enregistree a la cloture faute de pointage, et non pointee.
+    @Column(name = "absence_deduite", nullable = false)
+    private boolean absenceDeduite;
+
     @Column(name = "date_pointage")
     private Instant datePointage;
 
@@ -112,6 +116,7 @@ public class Inscription {
         this.statut = StatutInscription.CONFIRMEE;
         this.rangListeAttente = null;
         this.presence = StatutPresence.NON_POINTE;
+        this.absenceDeduite = false;
         this.datePointage = null;
         this.pointeParId = null;
         this.dateInscription = Instant.now();
@@ -120,8 +125,15 @@ public class Inscription {
 
     public void pointer(StatutPresence statutPresence, UUID pointeParId) {
         this.presence = statutPresence;
+        this.absenceDeduite = false;
         this.datePointage = Instant.now();
         this.pointeParId = pointeParId;
+    }
+
+    /** RG4 : beneficiaire confirme reste non pointe a la cloture. */
+    public void enregistrerAbsenceDeduite() {
+        this.presence = StatutPresence.ABSENT;
+        this.absenceDeduite = true;
     }
 
     public boolean estActive() {

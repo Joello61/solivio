@@ -280,7 +280,7 @@ Ces règles métier transverses conditionnent le comportement du produit. Elles 
 
 **RG3 - Liste d'attente.** Quand la capacité est atteinte, les nouvelles inscriptions vont en liste d'attente et sont promues automatiquement, dans l'ordre, dès qu'une place se libère.
 
-**RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
+**RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur : à la clôture d'une distribution, un bénéficiaire confirmé resté non pointé est enregistré absent (absence déduite, distinguée d'une absence pointée) ; un pointage fait après coup par un gestionnaire la corrige. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
 
 **RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
 

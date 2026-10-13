@@ -2,6 +2,7 @@ package com.solivio.api.inscription.infrastructure.persistence;
 
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
+import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,6 +21,9 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
     Optional<Inscription> findByIdAndDistributionId(UUID id, UUID distributionId);
 
     List<Inscription> findByDistributionIdAndStatutIn(UUID distributionId, Collection<StatutInscription> statuts);
+
+    List<Inscription> findByDistributionIdAndTypeAndStatutAndPresence(
+        UUID distributionId, TypeInscription type, StatutInscription statut, StatutPresence presence);
 
     boolean existsByDistributionIdAndPersonneIdAndTypeAndStatut(
         UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut
@@ -109,16 +113,20 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
     long compterInscritsBenevoles(@Param("distId") UUID distributionId);
 
-    // Statistiques : absents confirmes par distribution
+    // Statistiques : absents pointes par distribution (les absences deduites sont comptees
+    // avec les non pointes, pour que presents + absents + non pointes = inscrits).
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.distributionId = :distId "
-        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'ABSENT'")
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'ABSENT' "
+        + "AND i.absenceDeduite = false")
     long compterAbsentsBeneficiaires(@Param("distId") UUID distributionId);
 
-    // Statistiques : non pointes confirmes par distribution
+    // Statistiques : non pointes confirmes par distribution. Depuis RG4 ils sont enregistres
+    // absents a la cloture (absence deduite) ; les distributions closes avant restent NON_POINTE.
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.distributionId = :distId "
-        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'NON_POINTE'")
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' "
+        + "AND (i.presence = 'NON_POINTE' OR i.absenceDeduite = true)")
     long compterNonPointesBeneficiaires(@Param("distId") UUID distributionId);
 
     // Statistiques periode : beneficiaires distincts PRESENT sur plusieurs distributions
