@@ -1,4 +1,4 @@
-import { apiGet, apiFetch, apiFetchRaw, apiPost, apiTelecharger } from "@/lib/api";
+import { apiFetch, apiFetchRaw, apiPost, apiTelecharger } from "@/lib/api";
 import type {
   AssociationResponse,
   UpdateAssociationPayload,
@@ -6,7 +6,6 @@ import type {
   UpdateRoleMembrePayload,
   InviterMembrePayload,
   StatistiqueDistributionResponse,
-  StatistiquePeriodeResponse,
 } from "@/types/association";
 
 export function mettreAJourAssociation(
@@ -51,30 +50,6 @@ export function changerStatutMembre(
     method: "PATCH",
     body: JSON.stringify({ statut }),
   });
-}
-
-export function statsDistribution(
-  id: string
-): Promise<StatistiqueDistributionResponse> {
-  return apiGet<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${id}`);
-}
-
-export function listeStatsDistributions(
-  debut: string,
-  fin: string
-): Promise<StatistiqueDistributionResponse[]> {
-  return apiGet<StatistiqueDistributionResponse[]>(
-    `/api/statistiques/distributions?debut=${debut}&fin=${fin}`
-  );
-}
-
-export function statsPeriode(
-  debut: string,
-  fin: string
-): Promise<StatistiquePeriodeResponse> {
-  return apiGet<StatistiquePeriodeResponse>(
-    `/api/statistiques/periode?debut=${debut}&fin=${fin}`
-  );
 }
 
 export function inviterMembre(payload: InviterMembrePayload): Promise<void> {

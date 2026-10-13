@@ -8,7 +8,6 @@ import * as authLib from "@/lib/auth";
 vi.mock("@/lib/auth", () => ({
   login: vi.fn(),
   logout: vi.fn(),
-  getMe: vi.fn(),
 }));
 
 const navigation = vi.hoisted(() => ({ push: vi.fn(), params: new URLSearchParams() }));

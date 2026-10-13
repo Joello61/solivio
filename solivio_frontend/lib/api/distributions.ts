@@ -44,10 +44,6 @@ export function annulerDistribution(id: string, motif: string): Promise<Distribu
   return apiPost<DistributionResponse>(`/api/distributions/${id}/annuler`, { motif });
 }
 
-export function listerInscrits(distributionId: string): Promise<InscriptionResponse[]> {
-  return apiGet<InscriptionResponse[]>(`/api/distributions/${distributionId}/inscriptions`);
-}
-
 export function mesInscriptions(distributionId: string): Promise<InscriptionResponse[]> {
   return apiGet<InscriptionResponse[]>(`/api/distributions/${distributionId}/inscriptions/mes`);
 }
@@ -156,15 +152,6 @@ export function archiverTypeRole(id: string): Promise<void> {
 
 // --- Roles assignes par le coordinateur sur une inscription ---
 
-export function listerRoles(
-  distributionId: string,
-  inscriptionId: string,
-): Promise<RoleBenevoleResponse[]> {
-  return apiGet<RoleBenevoleResponse[]>(
-    `/api/distributions/${distributionId}/inscriptions/${inscriptionId}/roles`,
-  );
-}
-
 export function assignerRole(
   distributionId: string,
   inscriptionId: string,
@@ -239,10 +226,6 @@ export function envoyerInvitationVisiteur(
 
 export function rechercherCatalogueDenrees(q: string): Promise<CatalogueDenreeResponse[]> {
   return apiGet<CatalogueDenreeResponse[]>(`/api/denrees/catalogue?q=${encodeURIComponent(q)}`);
-}
-
-export function listerCatalogueDenrees(): Promise<CatalogueDenreeResponse[]> {
-  return apiGet<CatalogueDenreeResponse[]>("/api/denrees/catalogue");
 }
 
 export function creerCatalogueDenree(libelle: string): Promise<CatalogueDenreeResponse> {

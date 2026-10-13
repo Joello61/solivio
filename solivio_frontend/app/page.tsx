@@ -16,7 +16,6 @@ import {
   X,
   CheckCircle2,
   XCircle,
-  Clock,
   LayoutDashboard,
   ClipboardCheck,
   UserCheck,
@@ -29,15 +28,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
+// Comme l'ecran de pointage reel : le nom, le type d'inscrit et le statut, rien d'autre.
 const MOCK_BENEFICIARIES = [
-  { prenom: "Amara", creneau: "10h00", statut: "present" },
-  { prenom: "Lucas", creneau: "10h00", statut: "present" },
-  { prenom: "Inès", creneau: "10h15", statut: "present" },
-  { prenom: "Théo", creneau: "10h15", statut: "absent" },
-  { prenom: "Fatou", creneau: "10h30", statut: "present" },
-  { prenom: "Mathieu", creneau: "10h30", statut: "present" },
-  { prenom: "Yasmine", creneau: "10h45", statut: "en attente" },
-  { prenom: "Romain", creneau: "10h45", statut: "en attente" },
+  { nom: "Amara Diallo", type: "Bénéf.", statut: "present" },
+  { nom: "Lucas Martin", type: "Bénévole", statut: "present" },
+  { nom: "Inès Benali", type: "Bénéf.", statut: "present" },
+  { nom: "Théo Garcia", type: "Bénéf.", statut: "absent" },
+  { nom: "Fatou Camara", type: "Bénéf.", statut: "present" },
+  { nom: "Mathieu Roux", type: "Bénéf.", statut: "present" },
+  { nom: "Yasmine Haddad", type: "Bénéf.", statut: "en attente" },
+  { nom: "Romain Petit", type: "Bénévole", statut: "en attente" },
 ];
 
 function CheckinWidget() {
@@ -76,8 +76,8 @@ function CheckinWidget() {
         </div>
 
         <div className="grid grid-cols-[1fr_80px_90px] gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 border-b border-border/40">
-          <span>Prénom</span>
-          <span className="text-center">Créneau</span>
+          <span>Nom</span>
+          <span className="text-center">Type</span>
           <span className="text-center">Statut</span>
         </div>
 
@@ -93,11 +93,10 @@ function CheckinWidget() {
                 }`}
               >
                 <span className={`font-semibold transition-colors duration-300 ${isActive ? "text-primary" : "text-foreground"}`}>
-                  {b.prenom}
+                  {b.nom}
                 </span>
-                <span className="flex items-center justify-center gap-1 text-[11px] font-mono text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {b.creneau}
+                <span className="flex items-center justify-center text-[11px] text-muted-foreground">
+                  {b.type}
                 </span>
                 <span className="flex justify-center">
                   {b.statut === "present" && isPast ? (
@@ -437,7 +436,7 @@ export default function LandingPage() {
               {
                 sujet: "Pointage le jour J",
                 tableur: "Les bénévoles consultent les dossiers complets avec les coordonnées.",
-                solivio: "Interface restreinte : prénom et créneau uniquement. Rien d'autre.",
+                solivio: "Interface restreinte : nom et statut uniquement. Rien d'autre.",
                 icon: <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />,
               },
               {
@@ -503,15 +502,15 @@ export default function LandingPage() {
                 icon: <ClipboardCheck className="h-5 w-5 text-accent-strong" />,
                 color: "coral",
                 title: "Pointer en confiance",
-                desc: "Interface tablette avec seulement le prénom. Aucun document social visible. Le pointage prend 2 secondes par personne.",
-                footer: "Pointage sur tablette",
+                desc: "Sur téléphone, seulement le nom et le statut. Aucun document social visible. Le pointage prend 2 secondes par personne.",
+                footer: "Pointage sur téléphone",
               },
               {
                 badge: "Bénéficiaires",
                 icon: <UserCheck className="h-5 w-5 text-primary" />,
                 color: "teal",
                 title: "S'inscrire discrètement",
-                desc: "Inscription rapide au créneau souhaité, sans créer de compte ni de mot de passe. Confirmation par e-mail automatique.",
+                desc: "Inscription rapide au créneau souhaité, depuis son téléphone, avec son compte email ou Google. Confirmation par e-mail automatique.",
                 footer: "Discrétion et autonomie",
               },
             ].map((card, i) => (

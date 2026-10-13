@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { apiPost } from "@/lib/api";
-import type { TokenResponse } from "@/types/auth";
+import { completerInscriptionGoogle } from "@/lib/auth";
 
 function CompleteGoogleRegistrationForm() {
   const router = useRouter();
@@ -30,7 +29,7 @@ function CompleteGoogleRegistrationForm() {
     setError(null);
     setPending(true);
     try {
-      await apiPost<TokenResponse>("/api/auth/google/complete-registration", {
+      await completerInscriptionGoogle({
         email,
         nom,
         prenom,

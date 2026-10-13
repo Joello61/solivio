@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiFetch } from "@/lib/api";
+import { apiPost, apiFetch } from "@/lib/api";
 import type {
   SessionReconditionnementResponse,
   InscriptionReconditionnementResponse,
@@ -47,12 +47,6 @@ export function desinscrireSession(id: string): Promise<void> {
   return apiFetch(`/api/sessions-reconditionnement/${id}/desinscrire`, {
     method: "DELETE",
   }).then(() => undefined);
-}
-
-export function listerInscrits(id: string): Promise<InscriptionReconditionnementResponse[]> {
-  return apiGet<InscriptionReconditionnementResponse[]>(
-    `/api/sessions-reconditionnement/${id}/inscrits`
-  );
 }
 
 export function pointerParticipant(
