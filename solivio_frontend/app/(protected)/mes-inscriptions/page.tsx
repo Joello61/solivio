@@ -25,8 +25,8 @@ interface InscriptionPersonnelle {
 
 function statutLabel(statut: string, rang: number | null): string {
   if (statut === "LISTE_ATTENTE") return `Liste d'attente (rang ${rang ?? "?"})`;
-  if (statut === "CONFIRMEE") return "Confirme(e)";
-  if (statut === "ANNULEE") return "Annule(e)";
+  if (statut === "CONFIRMEE") return "Confirmé(e)";
+  if (statut === "ANNULEE") return "Annulé(e)";
   return statut;
 }
 
@@ -79,7 +79,7 @@ export default async function MesInscriptionsPage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground font-display">Mes inscriptions</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Vos inscriptions en cours et passees.
+          Vos inscriptions en cours et passées.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default async function MesInscriptionsPage() {
           <EmptyState
             icon={CalendarSearch}
             title="Aucune inscription"
-            description="Vous n'êtes inscrit(e) a aucune distribution pour le moment."
+            description="Vous n'êtes inscrit(e) à aucune distribution pour le moment."
             action={{ label: "Voir les distributions", href: "/distributions" }}
           />
         </div>
