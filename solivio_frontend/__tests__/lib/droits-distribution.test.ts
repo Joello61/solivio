@@ -5,7 +5,8 @@ import type { InscriptionResponse } from "@/types/distribution";
 function inscription(type: "BENEVOLE" | "BENEFICIAIRE", statut: "CONFIRMEE" | "LISTE_ATTENTE"): InscriptionResponse {
   return {
     id: "i1", distributionId: "d1", creneauId: null, nom: "Dupont", prenom: "Marie", type, statut,
-    rangListeAttente: null, roles: [], presence: "NON_POINTE", dateInscription: "2026-10-01T10:00:00Z",
+    rangListeAttente: null, roles: [], presence: "NON_POINTE",
+    absenceDeduite: false, dateInscription: "2026-10-01T10:00:00Z",
     nombreAbsencesPassees: 0,
   } as InscriptionResponse;
 }

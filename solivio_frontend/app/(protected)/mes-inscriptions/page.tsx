@@ -17,6 +17,7 @@ interface InscriptionPersonnelle {
   statut: string;
   rangListeAttente: number | null;
   presence: string;
+  absenceDeduite: boolean;
   dateInscription: string;
 }
 
@@ -32,10 +33,10 @@ function typeLabel(type: string): string {
   return type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole";
 }
 
-function presenceLabel(presence: string): string {
+function presenceLabel(presence: string, absenceDeduite: boolean): string {
   if (presence === "PRESENT") return "Présent(e)";
-  if (presence === "ABSENT") return "Absent(e)";
-  return "Non pointe(e)";
+  if (presence === "ABSENT") return absenceDeduite ? "Absent(e), non pointé(e)" : "Absent(e)";
+  return "Non pointé(e)";
 }
 
 const STATUT_PILL: Record<string, string> = {
@@ -196,7 +197,7 @@ function CarteInscription({ inscription: i }: { inscription: InscriptionPersonne
           )}
           {i.presence !== "NON_POINTE" && (
             <span className="text-xs text-muted-foreground">
-              Présence : {presenceLabel(i.presence)}
+              Présence : {presenceLabel(i.presence, i.absenceDeduite)}
             </span>
           )}
         </div>
