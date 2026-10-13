@@ -6,6 +6,7 @@ import com.solivio.api.inscription.events.DesistementTardifBenevole;
 import com.solivio.api.inscription.events.InscriptionConfirmee;
 import com.solivio.api.inscription.events.InscriptionPromue;
 import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution;
+import com.solivio.api.inscription.events.InscriptionsRetabliesParDistribution;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,21 @@ public class InscriptionEventPublisher {
         events.publishEvent(new InscriptionsAnnuleesParDistribution(distributionId, inscriptions.stream()
             .map(i -> new InscriptionsAnnuleesParDistribution.InscriptionAnnulee(
                 i.getId(), i.getPersonneId(), i.getType().name(), i.getCreneauId()))
-            .toList()));
+            .toList(), UUID.randomUUID()));
+    }
+
+    public void publierRetabliesParDistribution(UUID distributionId, List<Inscription> retablies,
+                                                List<Inscription> nonRetablies) {
+        events.publishEvent(new InscriptionsRetabliesParDistribution(distributionId,
+            concernees(retablies), concernees(nonRetablies), UUID.randomUUID()));
+    }
+
+    private static List<InscriptionsRetabliesParDistribution.InscriptionConcernee> concernees(
+        List<Inscription> inscriptions) {
+        return inscriptions.stream()
+            .map(i -> new InscriptionsRetabliesParDistribution.InscriptionConcernee(
+                i.getId(), i.getPersonneId(), i.getType().name(), i.getCreneauId()))
+            .toList();
     }
 
     public void publierAbsencesEnregistrees(UUID distributionId, LocalDate date) {

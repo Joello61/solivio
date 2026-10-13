@@ -158,6 +158,7 @@ L'ancien découpage entre un registre global et des données par association est
 | mode_creneau | énumération | creneau_unique ou creneaux_decoupes (voir ci-dessous) - choisi par l'association |
 | base_repartition | énumération | inscrits (défaut) ou presents - base du calcul de dotation |
 | motif_annulation | texte | Rempli en cas d'annulation |
+| statut_avant_annulation | énumération | Statut au moment de l'annulation, pour une réactivation |
 | cree_par | référence | La personne qui a créé la distribution |
 | unite_organisationnelle | référence | **Vide en V1**, réservé pour l'antenne |
 | date_creation | date-heure | Création |
@@ -198,6 +199,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | personne | référence | La personne inscrite |
 | type | énumération | beneficiaire ou benevole |
 | statut | énumération | confirmee, liste_attente, annulee |
+| statut_avant_annulation | énumération | Statut avant une annulation de la distribution (confirmee ou liste_attente) ; vide après une désinscription personnelle |
 | rang_liste_attente | entier | Position en liste d'attente (si applicable) |
 | presence | énumération | non_pointe (défaut), present, absent |
 | absence_deduite | booléen | Vrai si l'absence a été enregistrée à la clôture faute de pointage (RG4), faux pour une absence pointée |
@@ -257,7 +259,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | personne | référence | Le destinataire |
-| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, modification_distribution, promotion_liste_attente, et les notifications des événements, missions et sessions |
+| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, modification_distribution, reactivation_distribution, promotion_liste_attente, et les notifications des événements, missions et sessions |
 | canal | énumération | email (V1) ; sms, push réservés pour la V2 |
 | sujet | texte | Objet du message |
 | statut | énumération | envoye, echec |

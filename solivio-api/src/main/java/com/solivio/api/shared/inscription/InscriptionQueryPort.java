@@ -28,6 +28,9 @@ public interface InscriptionQueryPort {
      */
     Map<UUID, ComptesCreneau> compterParCreneau(UUID distributionId);
 
+    /** Presences deja pointees, inscrits et visiteurs ponctuels confondus. */
+    long compterPointages(UUID distributionId);
+
     record ComptesCreneau(int confirmes, int total) {}
 
     record DestinataireMail(UUID personneId, String email, String prenom,

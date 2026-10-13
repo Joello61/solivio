@@ -132,6 +132,47 @@ public class ModificationDistributionService {
         auditService.tracer("DISTRIBUTION_SUPPRIMEE", "distribution", distributionId);
     }
 
+    /** Demarrage accidentel : retour a publiee tant que personne n'a ete pointe. */
+    public DistributionResponse annulerDemarrage(UUID distributionId) {
+        verrou.verrouiller(distributionId);
+        Distribution distribution = trouverOuEchouer(distributionId);
+        if (distribution.getStatut() != StatutDistribution.EN_COURS) {
+            throw new ConflictException("Seule une distribution en cours peut revenir a l'etat publiee.");
+        }
+        if (inscriptionQueryPort.compterPointages(distributionId) > 0) {
+            throw new ConflictException(
+                "Des presences ont deja ete pointees : la distribution ne peut plus revenir a l'etat publiee.");
+        }
+        distribution.annulerDemarrage();
+        distributionRepository.save(distribution);
+        auditService.tracer("DISTRIBUTION_DEMARRAGE_ANNULE", "distribution", distributionId);
+        return DistributionService.toResponse(distribution,
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+    }
+
+    /**
+     * Annulation par erreur : la distribution retrouve son statut d'avant et, si elle
+     * etait publiee, ses inscriptions sont retablies (module inscription).
+     */
+    public DistributionResponse reactiver(UUID distributionId) {
+        verrou.verrouiller(distributionId);
+        Distribution distribution = trouverOuEchouer(distributionId);
+        if (distribution.getStatut() != StatutDistribution.ANNULEE) {
+            throw new ConflictException("Seule une distribution annulee peut etre reactivee.");
+        }
+        if (distribution.getDate().isBefore(horloge.aujourdhui())) {
+            throw new ConflictException("La date de cette distribution est passee : elle ne peut plus etre reactivee.");
+        }
+        StatutDistribution retrouve = distribution.reactiver();
+        distributionRepository.save(distribution);
+        if (retrouve == StatutDistribution.PUBLIEE) {
+            eventPublisher.publierReactivee(distributionId);
+        }
+        auditService.tracer("DISTRIBUTION_REACTIVEE", "distribution", distributionId);
+        return DistributionService.toResponse(distribution,
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+    }
+
     private void verifierCapacites(UUID distributionId, UpdateDistributionRequest request) {
         int beneficiaires = inscriptionQueryPort.compterConfirmes(distributionId, BENEFICIAIRE);
         if (request.capaciteBeneficiaires() < beneficiaires) {

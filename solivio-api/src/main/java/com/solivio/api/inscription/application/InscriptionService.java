@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -218,9 +219,39 @@ public class InscriptionService {
         if (actives.isEmpty()) {
             return;
         }
-        actives.forEach(Inscription::annuler);
+        actives.forEach(Inscription::annulerParDistribution);
         inscriptionRepository.saveAll(actives);
         eventPublisher.publierAnnuleesParDistribution(distributionId, actives);
+    }
+
+    /**
+     * Distribution reactivee : les inscriptions supprimees par l'annulation retrouvent leur
+     * statut et leur rang, sauf celles d'une personne inscrite ailleurs la meme semaine
+     * depuis (RG1). Les places laissees libres font avancer la liste d'attente.
+     */
+    public void retablirPourDistribution(UUID distributionId) {
+        verrouDistribution.verrouiller(distributionId);
+        List<Inscription> annulees = inscriptionRepository
+            .findByDistributionIdAndStatutAvantAnnulationIsNotNull(distributionId);
+        if (annulees.isEmpty()) {
+            return;
+        }
+        DistributionQueryPort.DistributionInfo distrib = distributionQueryPort.trouverDistribution(distributionId);
+        List<Inscription> retablies = new ArrayList<>();
+        List<Inscription> nonRetablies = new ArrayList<>();
+        for (Inscription inscription : annulees) {
+            if (inscription.getType() == TypeInscription.BENEFICIAIRE
+                && frequenceDepassee(inscription.getPersonneId(), distrib)) {
+                inscription.renoncerAuRetablissement();
+                nonRetablies.add(inscription);
+            } else {
+                inscription.retablir();
+                retablies.add(inscription);
+            }
+        }
+        inscriptionRepository.saveAll(annulees);
+        promouvoirSelonPlaces(distributionId);
+        eventPublisher.publierRetabliesParDistribution(distributionId, retablies, nonRetablies);
     }
 
     /**
@@ -373,24 +404,30 @@ public class InscriptionService {
     // distribution visee. Les inscriptions en attente comptent : on ne peut pas
     // attendre partout puis etre promu partout. Les distributions annulees non.
     private void verifierFrequence(UUID personneId, DistributionQueryPort.DistributionInfo distrib) {
-        Integer configMax = associationQueryPort.frequenceMaxParSemaine();
-        int maxParSemaine = (configMax != null && configMax > 0) ? configMax : FREQUENCE_PAR_DEFAUT;
-        LocalDate lundi = distrib.date().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        List<UUID> autresDistributions = distributionQueryPort
-            .trouverIdsNonAnnuleesEntre(lundi, lundi.plusDays(6)).stream()
-            .filter(id -> !id.equals(distrib.id()))
-            .toList();
-        if (autresDistributions.isEmpty()) {
-            return;
-        }
-        long inscriptions = inscriptionRepository.compterInscriptionsBeneficiaireActives(
-            personneId, autresDistributions);
-        if (inscriptions >= maxParSemaine) {
+        if (frequenceDepassee(personneId, distrib)) {
+            int maxParSemaine = frequenceMaxParSemaine();
             throw new ConflictException(maxParSemaine == 1
                 ? "Vous etes deja inscrit(e) a une distribution cette semaine."
                 : "Vous etes deja inscrit(e) a " + maxParSemaine + " distributions cette semaine, "
                     + "la limite fixee par l'association.");
         }
+    }
+
+    private boolean frequenceDepassee(UUID personneId, DistributionQueryPort.DistributionInfo distrib) {
+        int maxParSemaine = frequenceMaxParSemaine();
+        LocalDate lundi = distrib.date().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        List<UUID> autresDistributions = distributionQueryPort
+            .trouverIdsNonAnnuleesEntre(lundi, lundi.plusDays(6)).stream()
+            .filter(id -> !id.equals(distrib.id()))
+            .toList();
+        return !autresDistributions.isEmpty()
+            && inscriptionRepository.compterInscriptionsBeneficiaireActives(personneId, autresDistributions)
+                >= maxParSemaine;
+    }
+
+    private int frequenceMaxParSemaine() {
+        Integer configMax = associationQueryPort.frequenceMaxParSemaine();
+        return (configMax != null && configMax > 0) ? configMax : FREQUENCE_PAR_DEFAUT;
     }
 
     // RG3 : un beneficiaire a besoin d'une place dans son creneau (mode decoupe)
