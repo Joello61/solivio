@@ -231,6 +231,20 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                         <Badge variant="outline" className="shrink-0">
                           {inscrit.type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole"}
                         </Badge>
+                        {distribution.statut === "TERMINEE" && inscrit.statut === "CONFIRMEE" && (
+                          <Badge
+                            variant={inscrit.presence === "PRESENT" ? "default" : "secondary"}
+                            className="shrink-0"
+                          >
+                            {inscrit.presence === "PRESENT"
+                              ? "Présent"
+                              : inscrit.presence === "ABSENT"
+                                ? inscrit.absenceDeduite
+                                  ? "Absent (non pointé)"
+                                  : "Absent"
+                                : "Non pointé"}
+                          </Badge>
+                        )}
                         {inscrit.statut === "LISTE_ATTENTE" && (
                           <Badge variant="secondary" className="shrink-0">
                             Attente #{inscrit.rangListeAttente}
@@ -351,7 +365,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <div className="rounded-xl bg-muted p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Clock className="size-3.5 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground">Non pointes</p>
+                    <p className="text-xs text-muted-foreground">Non pointés</p>
                   </div>
                   <p className="text-2xl font-bold">{stats.nbNonPointes}</p>
                 </div>

@@ -110,7 +110,7 @@ Pour les notifications, chaque envoi porte une **clé d'idempotence** (`notifica
 - Modification d'une distribution publiée : `distribution` publie `DistributionModifiee` (changement pratique, capacité augmentée, identifiant d'occurrence) ; `inscription` promeut la liste d'attente sous le verrou partagé `shared.verrou.VerrouDistribution` (le même que la modification), `notification` prévient les inscrits actifs avec la clé `MODIFICATION_DISTRIBUTION:{occurrence}`.
 - Inscription à une session de reconditionnement : `reconditionnement` publie `InscriptionReconditionnementConfirmee` (session, personne, identifiant d'occurrence) ; `notification` envoie la confirmation avec la clé `CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT:{occurrence}`, si bien qu'une réinscription après désistement est confirmée à nouveau.
 - Annulation d'une distribution (RG6) : `inscription` écoute `DistributionAnnulee`, annule toutes les inscriptions confirmées et en liste d'attente, puis publie `InscriptionsAnnuleesParDistribution` ; `notification` écoute ce second événement pour prévenir chaque personne. L'enchaînement évite que `notification` lise les inscrits pendant leur annulation.
-- Statistiques : calcul et enregistrement des statistiques à la clôture d'une distribution.
+- Clôture d'une distribution : `inscription` écoute `DistributionTerminee`, enregistre les absences des bénéficiaires non pointés (RG4), puis publie `AbsencesEnregistrees` ; `statistique` écoute ce second événement pour calculer les statistiques sur l'état final.
 
 ## 5. L'authentification
 

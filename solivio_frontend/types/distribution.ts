@@ -77,6 +77,8 @@ export interface InscriptionResponse {
   rangListeAttente: number | null;
   roles: RoleBenevoleResponse[];
   presence: StatutPresence;
+  // RG4 : absence enregistree a la cloture faute de pointage.
+  absenceDeduite: boolean;
   dateInscription: string;
   nombreAbsencesPassees: number;
 }

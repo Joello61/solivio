@@ -18,5 +18,6 @@ public record InscriptionPersonnelleResponse(
     String statut,
     Integer rangListeAttente,
     String presence,
+    boolean absenceDeduite,
     Instant dateInscription
 ) {}
