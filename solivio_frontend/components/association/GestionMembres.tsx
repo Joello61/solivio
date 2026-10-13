@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { UserX, UserCheck, UserMinus, AlertTriangle, Search } from "lucide-react";
+import Link from "next/link";
+import { UserX, UserCheck, UserMinus, AlertTriangle, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +38,7 @@ const FILTRES_STATUT = { tous: "Tous", actif: "Actif", suspendu: "Suspendu", inv
 const FILTRES_ROLE = { tous: "Tous", benevole: "Bénévole", coordinateur: "Coordinateur", responsable: "Responsable" };
 
 function labelRole(role: string): string {
-  switch (role) {
-    case "super_admin": return "Super admin";
-    case "responsable": return "Responsable";
-    case "coordinateur": return "Coordinateur";
-    default: return "Bénévole";
-  }
+  return ROLE_LABELS[role] ?? role;
 }
 
 function labelStatut(statut: string): string {
@@ -69,9 +65,11 @@ type DialogType = "statut" | "retirer" | null;
 function CarteMembre({
   membre,
   currentUserId,
+  peutVoirDossier = false,
 }: {
   membre: MembreResponse;
   currentUserId: string;
+  peutVoirDossier?: boolean;
 }) {
   const router = useRouter();
   const [role, setRole] = useState(membre.role);
@@ -152,6 +150,15 @@ function CarteMembre({
               )}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{membre.email}</p>
+            {peutVoirDossier && membre.role === "beneficiaire" && (
+              <Link
+                href={`/association/membres/${membre.compteId}/dossier`}
+                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <FileText className="size-3.5" />
+                Voir le dossier
+              </Link>
+            )}
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               <Badge variant={variantStatut(statut)} className="text-[11px]">
                 {labelStatut(statut)}
@@ -278,9 +285,11 @@ function CarteMembre({
 function LigneMembreRow({
   membre,
   currentUserId,
+  peutVoirDossier = false,
 }: {
   membre: MembreResponse;
   currentUserId: string;
+  peutVoirDossier?: boolean;
 }) {
   const router = useRouter();
   const [role, setRole] = useState(membre.role);
@@ -355,6 +364,15 @@ function LigneMembreRow({
                 {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
               </p>
               <p className="text-xs text-muted-foreground truncate">{membre.email}</p>
+              {peutVoirDossier && membre.role === "beneficiaire" && (
+                <Link
+                  href={`/association/membres/${membre.compteId}/dossier`}
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <FileText className="size-3.5" />
+                  Voir le dossier
+                </Link>
+              )}
             </div>
           </div>
           {erreur && <p className="text-xs text-destructive mt-1.5 ml-11">{erreur}</p>}
@@ -483,9 +501,11 @@ function LigneMembreRow({
 interface Props {
   membres: MembreResponse[];
   currentUserId: string;
+  // RG5 : le dossier social n'est lisible que par le responsable.
+  peutVoirDossiers?: boolean;
 }
 
-export function GestionMembres({ membres, currentUserId }: Props) {
+export function GestionMembres({ membres, currentUserId, peutVoirDossiers = false }: Props) {
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState("tous");
   const [filtreRole, setFiltreRole] = useState("tous");
@@ -562,7 +582,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           {/* Vue mobile : cartes */}
           <div className="space-y-3 lg:hidden">
             {filtres.map((m) => (
-              <CarteMembre key={m.compteId} membre={m} currentUserId={currentUserId} />
+              <CarteMembre key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
             ))}
           </div>
 
@@ -579,7 +599,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
               </thead>
               <tbody>
                 {filtres.map((m) => (
-                  <LigneMembreRow key={m.compteId} membre={m} currentUserId={currentUserId} />
+                  <LigneMembreRow key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
                 ))}
               </tbody>
             </table>

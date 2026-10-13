@@ -20,8 +20,8 @@ async function fetchMembresEtMe(): Promise<{
 
 export default async function MembresPage() {
   const { membres, me } = await fetchMembresEtMe();
-  // Le backend reserve l'invitation au role responsable.
-  const peutInviter = me?.roles.includes("responsable") ?? false;
+  // Le backend reserve l'invitation et la lecture des dossiers au role responsable.
+  const estResponsable = me?.roles.includes("responsable") ?? false;
 
   return (
     <div className="space-y-8">
@@ -32,10 +32,10 @@ export default async function MembresPage() {
             {membres.length} membre{membres.length !== 1 ? "s" : ""} dans l&apos;association.
           </p>
         </div>
-        {peutInviter && <InviterMembre />}
+        {estResponsable && <InviterMembre />}
       </div>
 
-      <GestionMembres membres={membres} currentUserId={me?.id ?? ""} />
+      <GestionMembres membres={membres} currentUserId={me?.id ?? ""} peutVoirDossiers={estResponsable} />
     </div>
   );
 }

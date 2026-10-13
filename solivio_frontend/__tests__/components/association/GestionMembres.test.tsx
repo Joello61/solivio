@@ -60,6 +60,22 @@ describe("GestionMembres", () => {
     expect(screen.queryByText("tous")).not.toBeInTheDocument();
   });
 
+  it("propose le dossier des beneficiaires au responsable seulement", () => {
+    const avecBeneficiaire: MembreResponse[] = [
+      ...membres,
+      { ...membres[0], compteId: "user-3", prenom: "Chloe", nom: "Petit", email: "chloe@example.com", role: "beneficiaire" },
+    ];
+    const { rerender } = render(
+      <GestionMembres membres={avecBeneficiaire} currentUserId="other" peutVoirDossiers />,
+    );
+    const liens = screen.getAllByRole("link", { name: /Voir le dossier/ });
+    expect(liens.every((l) => l.getAttribute("href") === "/association/membres/user-3/dossier")).toBe(true);
+
+    expect(screen.getAllByText("Bénéficiaire").length).toBeGreaterThan(0);
+    rerender(<GestionMembres membres={avecBeneficiaire} currentUserId="other" />);
+    expect(screen.queryByRole("link", { name: /Voir le dossier/ })).not.toBeInTheDocument();
+  });
+
   it("affiche les emails", () => {
     render(<GestionMembres membres={membres} currentUserId="other" />);
     expect(screen.getAllByText("alice@example.com")[0]).toBeInTheDocument();

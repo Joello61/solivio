@@ -28,6 +28,7 @@ const LABELS: Record<string, string> = {
   evenements: "Événements",
   nouveau: "Nouveau",
   modifier: "Modifier",
+  dossier: "Dossier",
   statistiques: "Statistiques",
   "mes-evenements": "Mes événements",
   "missions-collecte": "Missions collecte",
