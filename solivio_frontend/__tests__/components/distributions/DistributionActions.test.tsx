@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
+import * as api from "@/lib/api/distributions";
 
 const mockRefresh = vi.fn();
 const mockPush = vi.fn();
@@ -15,6 +16,8 @@ vi.mock("@/lib/api/distributions", () => ({
   terminerDistribution: vi.fn().mockResolvedValue({}),
   annulerDistribution: vi.fn().mockResolvedValue({}),
   supprimerDistribution: vi.fn().mockResolvedValue(undefined),
+  annulerDemarrageDistribution: vi.fn().mockResolvedValue({}),
+  reactiverDistribution: vi.fn().mockResolvedValue({}),
 }));
 
 // Date clairement dans le futur (2099) et dans le passe (2020)
@@ -144,5 +147,31 @@ describe("DistributionActions - modification et suppression", () => {
 
     expect(supprimerDistribution).toHaveBeenCalledWith("id-1");
     expect(mockPush).toHaveBeenCalledWith("/distributions");
+  });
+});
+
+describe("DistributionActions - cycle de vie", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("propose de revenir a publiee pendant la distribution", async () => {
+    render(<DistributionActions distributionId="id-1" statut="EN_COURS" distributionDate={DATE_AUJOURD_HUI} />);
+    await userEvent.click(screen.getByRole("button", { name: /Revenir à publiée/ }));
+    expect(api.annulerDemarrageDistribution).toHaveBeenCalledWith("id-1");
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("reactive une distribution annulee a venir apres confirmation", async () => {
+    render(<DistributionActions distributionId="id-1" statut="ANNULEE" distributionDate={DATE_FUTURE} />);
+    await userEvent.click(screen.getByRole("button", { name: "Réactiver" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(/inscriptions supprimées par/);
+    await userEvent.click(screen.getAllByRole("button", { name: "Réactiver" }).at(-1)!);
+    expect(api.reactiverDistribution).toHaveBeenCalledWith("id-1");
+  });
+
+  it("ne propose pas de reactiver une distribution passee", () => {
+    render(<DistributionActions distributionId="id-1" statut="ANNULEE" distributionDate={DATE_PASSEE} />);
+    expect(screen.queryByRole("button", { name: "Réactiver" })).not.toBeInTheDocument();
   });
 });
