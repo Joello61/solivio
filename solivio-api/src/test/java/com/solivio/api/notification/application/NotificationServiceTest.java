@@ -1,6 +1,7 @@
 package com.solivio.api.notification.application;
 
 import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution.InscriptionAnnulee;
+import com.solivio.api.inscription.events.InscriptionsRetabliesParDistribution.InscriptionConcernee;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteCollecteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEmail;
 import com.solivio.api.notification.application.NotificationEmailService.ContexteEvenementEmail;
@@ -158,7 +159,7 @@ class NotificationServiceTest {
 
         service.notifierAnnulationDistribution(distributionId, List.of(
             new InscriptionAnnulee(UUID.randomUUID(), aliceId, "BENEFICIAIRE", null),
-            new InscriptionAnnulee(UUID.randomUUID(), bobId, "BENEVOLE", null)));
+            new InscriptionAnnulee(UUID.randomUUID(), bobId, "BENEVOLE", null)), UUID.randomUUID());
 
         verify(emailService).envoyerAnnulationDistribution(eq("a@ex.com"), any(ContexteEmail.class));
         verify(emailService).envoyerAnnulationDistribution(eq("b@ex.com"), any(ContexteEmail.class));
@@ -169,10 +170,35 @@ class NotificationServiceTest {
     void notifierAnnulationDistribution_aucuneInscription_nEnvoiePasDemail() {
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
 
-        service.notifierAnnulationDistribution(distributionId, List.of());
+        service.notifierAnnulationDistribution(distributionId, List.of(), UUID.randomUUID());
 
         verify(emailService, never()).envoyerAnnulationDistribution(anyString(), any());
         verify(traceur, never()).tracer(any());
+    }
+
+    @Test
+    void notifierReactivationDistribution_distingueInscriptionsRetabliesEtNonRetablies() {
+        UUID aliceId = UUID.randomUUID();
+        UUID bobId = UUID.randomUUID();
+        UUID occurrenceId = UUID.randomUUID();
+        when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
+        when(personneQueryPort.trouverPersonneParId(aliceId))
+            .thenReturn(new PersonneContactInfo(aliceId, "a@ex.com", "Alice", "A"));
+        when(personneQueryPort.trouverPersonneParId(bobId))
+            .thenReturn(new PersonneContactInfo(bobId, "b@ex.com", "Bob", "B"));
+
+        service.notifierReactivationDistribution(distributionId,
+            List.of(new InscriptionConcernee(UUID.randomUUID(), aliceId, "BENEFICIAIRE", null)),
+            List.of(new InscriptionConcernee(UUID.randomUUID(), bobId, "BENEFICIAIRE", null)), occurrenceId);
+
+        verify(emailService).envoyerReactivationDistribution(eq("a@ex.com"), any(ContexteEmail.class), eq(true));
+        verify(emailService).envoyerReactivationDistribution(eq("b@ex.com"), any(ContexteEmail.class), eq(false));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(traceur, times(2)).tracer(captor.capture());
+        assertThat(captor.getAllValues()).allSatisfy(n -> {
+            assertThat(n.getTypeEvenement()).isEqualTo(TypeEvenementNotification.REACTIVATION_DISTRIBUTION);
+            assertThat(n.getCleIdempotence()).isEqualTo("REACTIVATION_DISTRIBUTION:" + occurrenceId);
+        });
     }
 
     @Test

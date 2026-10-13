@@ -9,6 +9,7 @@ import com.solivio.api.inscription.events.DesistementTardifBenevole;
 import com.solivio.api.inscription.events.InscriptionConfirmee;
 import com.solivio.api.inscription.events.InscriptionPromue;
 import com.solivio.api.inscription.events.InscriptionsAnnuleesParDistribution;
+import com.solivio.api.inscription.events.InscriptionsRetabliesParDistribution;
 import com.solivio.api.notification.application.NotificationService;
 import com.solivio.api.reconditionnement.events.InscriptionReconditionnementConfirmee;
 import com.solivio.api.reconditionnement.events.SessionReconditionnementAnnulee;
@@ -55,7 +56,14 @@ public class NotificationListener {
     // inscrits en parallele du module inscription pourrait arriver apres leur annulation.
     @ApplicationModuleListener
     void on(InscriptionsAnnuleesParDistribution event) {
-        notificationService.notifierAnnulationDistribution(event.distributionId(), event.inscriptions());
+        notificationService.notifierAnnulationDistribution(event.distributionId(), event.inscriptions(),
+            event.occurrenceId());
+    }
+
+    @ApplicationModuleListener
+    void on(InscriptionsRetabliesParDistribution event) {
+        notificationService.notifierReactivationDistribution(event.distributionId(), event.retablies(),
+            event.nonRetablies(), event.occurrenceId());
     }
 
     @ApplicationModuleListener

@@ -14,6 +14,9 @@ public interface NotificationEmailService {
 
     void envoyerModificationDistribution(String email, ContexteEmail contexte);
 
+    /** Distribution reactivee : inscription retablie, ou invitation a se reinscrire. */
+    void envoyerReactivationDistribution(String email, ContexteEmail contexte, boolean inscriptionRetablie);
+
     void envoyerRappelVeille(String email, ContexteEmail contexte);
 
     void envoyerDesistementTardifBenevole(String emailCoordinateur, String prenomCoordinateur,
