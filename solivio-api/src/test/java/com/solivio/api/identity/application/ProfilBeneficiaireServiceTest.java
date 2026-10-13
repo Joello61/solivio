@@ -3,7 +3,9 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.domain.ProfilBeneficiaire;
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
+import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
 import com.solivio.api.identity.infrastructure.persistence.ProfilBeneficiaireRepository;
 import com.solivio.api.identity.infrastructure.web.dto.ProfilBeneficiaireResponse;
@@ -32,6 +34,8 @@ class ProfilBeneficiaireServiceTest {
     @Mock private CompteRepository compteRepository;
     @Mock private PersonneRepository personneRepository;
     @Mock private ProfilBeneficiaireRepository profilRepository;
+    @Mock private MembreAssociationRepository membreRepository;
+    @Mock private AuditService auditService;
 
     private ProfilBeneficiaireService service;
     private UUID compteId;
@@ -40,7 +44,8 @@ class ProfilBeneficiaireServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProfilBeneficiaireService(compteRepository, personneRepository, profilRepository);
+        service = new ProfilBeneficiaireService(compteRepository, personneRepository, profilRepository,
+            membreRepository, auditService);
         compteId = UUID.randomUUID();
         compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         personne = new Personne("Dupont", "Alice", "alice@example.com");

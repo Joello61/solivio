@@ -282,7 +282,7 @@ Ces règles métier transverses conditionnent le comportement du produit. Elles 
 
 **RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
 
-**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
+**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles : le bénéficiaire lui-même et le responsable, dont chaque consultation est tracée dans le journal d'audit ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
 
 **RG6 - Annulation et information.** Toute annulation de distribution déclenche une notification automatique de tous les inscrits. Aucun inscrit ne doit se déplacer pour rien faute d'information.
 
