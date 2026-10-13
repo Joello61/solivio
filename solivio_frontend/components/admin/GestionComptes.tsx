@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, AlertTriangle, UserCheck, UserX, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, Eraser, UserCheck, UserX, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,17 +25,24 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { changerStatutCompte, changerSuperAdmin, supprimerCompteAdmin } from "@/lib/api/profil";
+import {
+  changerStatutCompte,
+  changerSuperAdmin,
+  effacerDonneesCompteAdmin,
+  supprimerCompteAdmin,
+} from "@/lib/api/profil";
+import { DialogEffacementCompte } from "@/components/admin/DialogEffacementCompte";
 import { libelleRole } from "@/lib/roles";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 
 interface Props {
   page: PageResponse<CompteAdminResponse>;
+  currentUserId: string;
   recherche: string;
   currentPage: number;
 }
 
-type DialogType = "actif" | "admin" | "supprimer" | null;
+type DialogType = "actif" | "admin" | "supprimer" | "effacer" | null;
 
 function getInitiales(prenom: string, nom: string): string {
   return `${prenom[0] ?? ""}${nom[0] ?? ""}`.toUpperCase();
@@ -43,7 +50,7 @@ function getInitiales(prenom: string, nom: string): string {
 
 // --- Carte mobile ---
 
-function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
+function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -70,17 +77,18 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
     <>
       <div
         className={[
-          "rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3 transition-opacity",
+          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
           !compte.actif ? "opacity-50" : "",
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
               {compte.prenom} {compte.nom}
+              {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{compte.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -91,8 +99,8 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
                 <Badge variant="secondary" className="text-[11px]">Super admin</Badge>
               )}
               {!compte.emailVerifie && (
-                <Badge variant="outline" className="text-[11px] text-amber-600 border-amber-300">
-                  Email non verifie
+                <Badge variant="outline" className="text-[11px] text-warning border-warning/30">
+                  Email non vérifié
                 </Badge>
               )}
             </div>
@@ -107,7 +115,9 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
         {erreur && <p className="text-xs text-destructive">{erreur}</p>}
 
         <div className="pt-3 border-t border-border/60 flex flex-wrap gap-1">
-          {pending ? (
+          {estSoi ? (
+            <p className="text-xs text-muted-foreground">Votre compte : aucune action possible ici.</p>
+          ) : pending ? (
             <Spinner size="sm" />
           ) : (
             <>
@@ -116,14 +126,14 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
                 size="sm"
                 onClick={() => setDialogOuvert("actif")}
                 className={compte.actif
-                  ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                  : "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
+                  ? "text-warning hover:text-warning hover:bg-warning/10"
+                  : "text-primary hover:text-primary hover:bg-primary/10"
                 }
               >
                 {compte.actif ? (
-                  <><UserX className="h-3.5 w-3.5 mr-1" />Desactiver</>
+                  <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
                 ) : (
-                  <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                  <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                 )}
               </Button>
               <Button
@@ -147,6 +157,15 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 Supprimer
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDialogOuvert("effacer")}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Eraser className="h-3.5 w-3.5 mr-1" />
+                Effacer les données
+              </Button>
             </>
           )}
         </div>
@@ -158,16 +177,16 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-amber-100 dark:bg-amber-950/30">
-              <AlertTriangle className="text-amber-600" />
+            <AlertDialogMedia className="bg-warning/15">
+              <AlertTriangle className="text-warning" />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {compte.actif ? "Desactiver le compte" : "Reactiver le compte"}
+              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera desactive. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera reactive. L'utilisateur pourra a nouveau se connecter.`}
+                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -176,7 +195,7 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
               variant={compte.actif ? "outline" : "default"}
               onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
             >
-              {compte.actif ? "Desactiver" : "Reactiver"}
+              {compte.actif ? "Désactiver" : "Réactiver"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -188,9 +207,9 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-amber-100 dark:bg-amber-950/30" : "bg-teal-50 dark:bg-teal-950/30"}>
+            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
               {compte.superAdmin
-                ? <ShieldOff className="text-amber-600" />
+                ? <ShieldOff className="text-warning" />
                 : <ShieldCheck className="text-primary" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
@@ -198,8 +217,8 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -224,8 +243,8 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
             </AlertDialogMedia>
             <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
             <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprime
-              definitivement. Cette action est irreversible.
+              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
+              définitivement. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -234,18 +253,25 @@ function CarteCompte({ compte }: { compte: CompteAdminResponse }) {
               variant="destructive"
               onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
             >
-              Supprimer definitivement
+              Supprimer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogEffacementCompte
+        compte={compte}
+        open={dialogOuvert === "effacer"}
+        onFermer={() => setDialogOuvert(null)}
+        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
+      />
     </>
   );
 }
 
 // --- Ligne desktop ---
 
-function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
+function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -273,7 +299,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${!compte.actif ? "opacity-50" : ""}`}>
         <td className="py-3.5 pr-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">
@@ -291,8 +317,8 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
             </Badge>
             {compte.superAdmin && <Badge variant="secondary">Super admin</Badge>}
             {!compte.emailVerifie && (
-              <Badge variant="outline" className="text-amber-600 border-amber-300">
-                Email non verifie
+              <Badge variant="outline" className="text-warning border-warning/30">
+                Email non vérifié
               </Badge>
             )}
           </div>
@@ -306,7 +332,9 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
 
         <td className="py-3.5">
           <div className="flex items-center gap-1">
-            {pending ? (
+            {estSoi ? (
+              <span className="text-xs text-muted-foreground px-2">Votre compte</span>
+            ) : pending ? (
               <Spinner size="sm" className="mx-2" />
             ) : (
               <>
@@ -315,14 +343,14 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
                   size="sm"
                   onClick={() => setDialogOuvert("actif")}
                   className={compte.actif
-                    ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                    : "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
+                    ? "text-warning hover:text-warning hover:bg-warning/10"
+                    : "text-primary hover:text-primary hover:bg-primary/10"
                   }
                 >
                   {compte.actif ? (
-                    <><UserX className="h-3.5 w-3.5 mr-1" />Desactiver</>
+                    <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
                   ) : (
-                    <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                    <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                   )}
                 </Button>
                 <Button
@@ -346,6 +374,15 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
                   <Trash2 className="h-3.5 w-3.5 mr-1" />
                   Supprimer
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDialogOuvert("effacer")}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Eraser className="h-3.5 w-3.5 mr-1" />
+                  Effacer les données
+                </Button>
               </>
             )}
           </div>
@@ -358,16 +395,16 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-amber-100 dark:bg-amber-950/30">
-              <AlertTriangle className="text-amber-600" />
+            <AlertDialogMedia className="bg-warning/15">
+              <AlertTriangle className="text-warning" />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {compte.actif ? "Desactiver le compte" : "Reactiver le compte"}
+              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera desactive. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera reactive. L'utilisateur pourra a nouveau se connecter.`}
+                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
+                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -376,7 +413,7 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
               variant={compte.actif ? "outline" : "default"}
               onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
             >
-              {compte.actif ? "Desactiver" : "Reactiver"}
+              {compte.actif ? "Désactiver" : "Réactiver"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -388,9 +425,9 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-amber-100 dark:bg-amber-950/30" : "bg-teal-50 dark:bg-teal-950/30"}>
+            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
               {compte.superAdmin
-                ? <ShieldOff className="text-amber-600" />
+                ? <ShieldOff className="text-warning" />
                 : <ShieldCheck className="text-primary" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
@@ -398,8 +435,8 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'acces a l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura acces a l'administration globale de Solivio.`}
+                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
+                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -424,8 +461,8 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
             </AlertDialogMedia>
             <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
             <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprime
-              definitivement. Cette action est irreversible.
+              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
+              définitivement. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -434,18 +471,25 @@ function LigneCompte({ compte }: { compte: CompteAdminResponse }) {
               variant="destructive"
               onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
             >
-              Supprimer definitivement
+              Supprimer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogEffacementCompte
+        compte={compte}
+        open={dialogOuvert === "effacer"}
+        onFermer={() => setDialogOuvert(null)}
+        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
+      />
     </>
   );
 }
 
 // --- Composant principal ---
 
-export function GestionComptes({ page, recherche: rechercheInitiale, currentPage }: Props) {
+export function GestionComptes({ page, currentUserId, recherche: rechercheInitiale, currentPage }: Props) {
   const router = useRouter();
   const [recherche, setRecherche] = useState(rechercheInitiale);
   const [filtreStatut, setFiltreStatut] = useState("tous");
@@ -479,7 +523,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
   return (
     <div className="space-y-4">
       {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <form onSubmit={handleSearch} className="flex gap-2 w-full sm:max-w-sm">
             <div className="relative flex-1">
@@ -487,7 +531,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
               <Input
                 value={recherche}
                 onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Nom, prenom ou email..."
+                placeholder="Nom, prénom ou email..."
                 className="pl-8"
               />
             </div>
@@ -496,7 +540,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
+              <Select items={{ tous: "Tous", actif: "Actif", inactif: "Inactif" }} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -509,7 +553,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Type</span>
-              <Select value={filtreAdmin} onValueChange={(v) => { if (v) setFiltreAdmin(v); }}>
+              <Select items={{ tous: "Tous", admin: "Super admin", "non-admin": "Non admin" }} value={filtreAdmin} onValueChange={(v) => { if (v) setFiltreAdmin(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -531,23 +575,23 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
       </div>
 
       {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50 dark:bg-neutral-900/50 px-6 py-12 text-center">
-          <p className="text-sm text-muted-foreground">Aucun compte trouve.</p>
+        <div className="rounded-2xl border border-dashed border-border/60 bg-muted px-6 py-12 text-center">
+          <p className="text-sm text-muted-foreground">Aucun compte trouvé.</p>
         </div>
       ) : (
         <>
           {/* Vue mobile : cartes */}
           <div className="space-y-3 lg:hidden">
             {filtres.map((c) => (
-              <CarteCompte key={c.id} compte={c} />
+              <CarteCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
             ))}
           </div>
 
           {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
+                <tr className="border-b border-border/60 bg-muted/80">
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Utilisateur</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Associations</th>
@@ -556,7 +600,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
               </thead>
               <tbody>
                 {filtres.map((c) => (
-                  <LigneCompte key={c.id} compte={c} />
+                  <LigneCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
                 ))}
               </tbody>
             </table>
@@ -573,7 +617,7 @@ export function GestionComptes({ page, recherche: rechercheInitiale, currentPage
             onClick={() => naviguerPage(currentPage - 1)}
             disabled={currentPage === 0}
           >
-            Precedent
+            Précédent
           </Button>
           <span className="text-sm text-muted-foreground">
             Page {currentPage + 1} / {page.totalPages}

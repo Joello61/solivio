@@ -1,7 +1,9 @@
 package com.solivio.api.distribution.infrastructure.web.dto;
 
+import com.solivio.api.shared.web.Assainissement;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public record AnnulerDistributionRequest(
-    @NotBlank String motif
+    @NotBlank @Size(max = Assainissement.MOTIF_MAX) String motif
 ) {}

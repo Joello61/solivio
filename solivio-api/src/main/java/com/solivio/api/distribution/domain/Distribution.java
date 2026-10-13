@@ -62,6 +62,11 @@ public class Distribution {
     @Column(name = "motif_annulation", columnDefinition = "TEXT")
     private String motifAnnulation;
 
+    // Statut au moment de l'annulation, pour une reactivation (brouillon ou publiee).
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_avant_annulation", length = 20)
+    private StatutDistribution statutAvantAnnulation;
+
     @Column(name = "cree_par_id", nullable = false)
     private UUID creeParId;
 
@@ -99,7 +104,32 @@ public class Distribution {
         }
         if (cible == StatutDistribution.ANNULEE) {
             this.motifAnnulation = motif;
+            this.statutAvantAnnulation = statut;
         }
         this.statut = cible;
+    }
+
+    /** Demarrage accidentel : retour a publiee (le service verifie qu'aucun pointage n'a eu lieu). */
+    public void annulerDemarrage() {
+        if (statut != StatutDistribution.EN_COURS) {
+            throw new IllegalStateException("Seule une distribution en cours peut revenir a publiee");
+        }
+        this.statut = StatutDistribution.PUBLIEE;
+    }
+
+    /**
+     * Annulation par erreur : un brouillon redevient brouillon, une distribution publiee
+     * ou demarree redevient publiee. Renvoie le statut retrouve.
+     */
+    public StatutDistribution reactiver() {
+        if (statut != StatutDistribution.ANNULEE) {
+            throw new IllegalStateException("Seule une distribution annulee peut etre reactivee");
+        }
+        this.statut = statutAvantAnnulation == StatutDistribution.BROUILLON
+            ? StatutDistribution.BROUILLON
+            : StatutDistribution.PUBLIEE;
+        this.motifAnnulation = null;
+        this.statutAvantAnnulation = null;
+        return statut;
     }
 }

@@ -2,12 +2,14 @@ package com.solivio.api.inscription.infrastructure.persistence;
 
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.StatutInscription;
+import com.solivio.api.inscription.domain.StatutPresence;
 import com.solivio.api.inscription.domain.TypeInscription;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +17,21 @@ import java.util.UUID;
 public interface InscriptionRepository extends JpaRepository<Inscription, UUID> {
 
     List<Inscription> findByDistributionIdOrderByNomAscPrenomAsc(UUID distributionId);
+
+    Optional<Inscription> findByIdAndDistributionId(UUID id, UUID distributionId);
+
+    List<Inscription> findByDistributionIdAndStatutIn(UUID distributionId, Collection<StatutInscription> statuts);
+
+    List<Inscription> findByDistributionIdAndStatutAvantAnnulationIsNotNull(UUID distributionId);
+
+    long countByDistributionIdAndPresenceNot(UUID distributionId, StatutPresence presence);
+
+    List<Inscription> findByDistributionIdAndTypeAndStatutAndPresence(
+        UUID distributionId, TypeInscription type, StatutInscription statut, StatutPresence presence);
+
+    boolean existsByDistributionIdAndPersonneIdAndTypeAndStatut(
+        UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut
+    );
 
     List<Inscription> findByDistributionIdAndStatutOrderByNomAscPrenomAsc(
         UUID distributionId, StatutInscription statut
@@ -33,14 +50,9 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         UUID distributionId, UUID creneauId, TypeInscription type, StatutInscription statut
     );
 
-    // Prochain en liste d'attente (rang le plus bas)
-    Optional<Inscription> findFirstByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
+    // Liste d'attente dans l'ordre de promotion (RG3)
+    List<Inscription> findByDistributionIdAndTypeAndStatutOrderByRangListeAttenteAsc(
         UUID distributionId, TypeInscription type, StatutInscription statut
-    );
-
-    // Prochain en liste d'attente pour un creneau specifique
-    Optional<Inscription> findFirstByDistributionIdAndCreneauIdAndTypeAndStatutOrderByRangListeAttenteAsc(
-        UUID distributionId, UUID creneauId, TypeInscription type, StatutInscription statut
     );
 
     // Rang max en liste d'attente pour calculer le rang du nouvel inscrit
@@ -50,15 +62,15 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         @Param("distId") UUID distributionId, @Param("type") TypeInscription type
     );
 
-    // RG1 : frequence - inscriptions CONFIRMEE d'un beneficiaire sur une periode
+    // RG1 : inscriptions beneficiaire actives (confirmees ou en attente) d'une
+    // personne sur un ensemble de distributions
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.personneId = :personneId AND i.type = 'BENEFICIAIRE' "
-        + "AND i.statut = 'CONFIRMEE' "
-        + "AND i.dateInscription BETWEEN :debut AND :fin")
-    long compterInscriptionsConfirmeesPeriode(
+        + "AND i.statut IN ('CONFIRMEE', 'LISTE_ATTENTE') "
+        + "AND i.distributionId IN :distributionIds")
+    long compterInscriptionsBeneficiaireActives(
         @Param("personneId") UUID personneId,
-        @Param("debut") Instant debut,
-        @Param("fin") Instant fin
+        @Param("distributionIds") Collection<UUID> distributionIds
     );
 
     // Pointage : recherche par nom ou prenom (insensible a la casse)
@@ -105,16 +117,20 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
     long compterInscritsBenevoles(@Param("distId") UUID distributionId);
 
-    // Statistiques : absents confirmes par distribution
+    // Statistiques : absents pointes par distribution (les absences deduites sont comptees
+    // avec les non pointes, pour que presents + absents + non pointes = inscrits).
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.distributionId = :distId "
-        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'ABSENT'")
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'ABSENT' "
+        + "AND i.absenceDeduite = false")
     long compterAbsentsBeneficiaires(@Param("distId") UUID distributionId);
 
-    // Statistiques : non pointes confirmes par distribution
+    // Statistiques : non pointes confirmes par distribution. Depuis RG4 ils sont enregistres
+    // absents a la cloture (absence deduite) ; les distributions closes avant restent NON_POINTE.
     @Query("SELECT COUNT(i) FROM Inscription i "
         + "WHERE i.distributionId = :distId "
-        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' AND i.presence = 'NON_POINTE'")
+        + "AND i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' "
+        + "AND (i.presence = 'NON_POINTE' OR i.absenceDeduite = true)")
     long compterNonPointesBeneficiaires(@Param("distId") UUID distributionId);
 
     // Statistiques periode : beneficiaires distincts PRESENT sur plusieurs distributions
@@ -128,4 +144,15 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "WHERE i.distributionId IN :distributionIds "
         + "AND i.type = 'BENEVOLE' AND i.statut = 'CONFIRMEE'")
     long compterBenevolesDistincts(@Param("distributionIds") List<UUID> distributionIds);
+
+    @Modifying
+    @Query("UPDATE Inscription i SET i.nom = :nom, i.prenom = :prenom WHERE i.personneId = :personneId")
+    int remplacerNomPrenom(@Param("personneId") UUID personneId, @Param("nom") String nom,
+                           @Param("prenom") String prenom);
+
+    // [creneauId, beneficiaires confirmes, toutes inscriptions] par creneau d'une distribution
+    @Query("SELECT i.creneauId, "
+        + "SUM(CASE WHEN i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' THEN 1 ELSE 0 END), COUNT(i) "
+        + "FROM Inscription i WHERE i.distributionId = :distId AND i.creneauId IS NOT NULL GROUP BY i.creneauId")
+    List<Object[]> compterParCreneau(@Param("distId") UUID distributionId);
 }

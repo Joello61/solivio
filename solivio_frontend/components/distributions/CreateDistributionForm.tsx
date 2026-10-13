@@ -1,5 +1,6 @@
 "use client";
 
+import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -11,25 +12,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { creerDistribution } from "@/lib/api/distributions";
+import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
-import type { LieuRequest } from "@/types/distribution";
+import { GenerateurCreneaux } from "@/components/distributions/GenerateurCreneaux";
+import type { DistributionResponse, LieuRequest, LieuResponse } from "@/types/distribution";
 
 // Schéma
 const creneauSchema = z.object({
-  heureDebut: z.string().min(1, "Heure de debut requise"),
+  // Identifiant d'un creneau existant (modification) ; absent pour un nouveau creneau.
+  id: z.string().optional(),
+  heureDebut: z.string().min(1, "Heure de début requise"),
   heureFin: z.string().min(1, "Heure de fin requise"),
-  capacite: z.number().int().positive("La capacite doit etre positive"),
+  capacite: z.number().int().positive("La capacite doit être positive"),
 });
 
 const schema = z.object({
   titre: z.string().min(1, "Le titre est requis").max(200),
   description: z.string().optional(),
   date: z.string().min(1, "La date est requise"),
-  capaciteBeneficiaires: z.number().int().positive("La capacite doit etre positive"),
+  capaciteBeneficiaires: z.number().int().positive("La capacite doit être positive"),
   capaciteBenevoles: z.number().int().positive().optional(),
   modeCreneau: z.enum(["CRENEAU_UNIQUE", "CRENEAUX_DECOUPES"]),
-  creneaux: z.array(creneauSchema).min(1, "Au moins un creneau est requis"),
+  creneaux: z.array(creneauSchema).min(1, "Au moins un créneau est requis"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -82,22 +86,34 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
+function versLieuRequest(lieu: LieuResponse | null): LieuRequest | undefined {
+  if (!lieu?.adresseFormatee) return undefined;
+  return Object.fromEntries(Object.entries(lieu).filter(([, v]) => v !== null)) as LieuRequest;
+}
+
+// Le backend n'accepte qu'un creneau en mode unique : le mode suit le nombre de creneaux.
+function modePour(creneaux: unknown[]): "CRENEAU_UNIQUE" | "CRENEAUX_DECOUPES" {
+  return creneaux.length > 1 ? "CRENEAUX_DECOUPES" : "CRENEAU_UNIQUE";
+}
+
+interface Props {
+  /** Distribution a modifier ; absente pour une creation. */
+  distribution?: DistributionResponse;
+}
+
 // Composant principal
-export function CreateDistributionForm() {
+export function CreateDistributionForm({ distribution }: Props = {}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [lieu, setLieu] = useState<LieuRequest | undefined>(undefined);
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(versLieuRequest(distribution?.lieu ?? null));
   const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/public/config")
-      .then((r) => r.json())
-      .then((d) => setMapsApiKey(d.googleMapsApiKey ?? ""))
-      .catch(() => setMapsApiKey(""));
+    lireCleGoogleMaps().then(setMapsApiKey);
   }, []);
 
   const {
@@ -108,13 +124,30 @@ export function CreateDistributionForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      modeCreneau: "CRENEAU_UNIQUE",
-      creneaux: [{ heureDebut: "10:00", heureFin: "12:00", capacite: 50 }],
-    },
+    defaultValues: distribution
+      ? {
+          titre: distribution.titre,
+          description: distribution.description ?? "",
+          date: distribution.date,
+          capaciteBeneficiaires: distribution.capaciteBeneficiaires,
+          capaciteBenevoles: distribution.capaciteBenevoles ?? undefined,
+          modeCreneau: distribution.modeCreneau,
+          creneaux: distribution.creneaux.map((c) => ({
+            id: c.id,
+            heureDebut: c.heureDebut.slice(0, 5),
+            heureFin: c.heureFin.slice(0, 5),
+            capacite: c.capacite,
+          })),
+        }
+      : {
+          modeCreneau: "CRENEAU_UNIQUE",
+          creneaux: [{ heureDebut: "10:00", heureFin: "12:00", capacite: 50 }],
+        },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "creneaux" });
+  const { fields, append, remove, replace } = useFieldArray({ control, name: "creneaux" });
+  // Generer remplace la liste : jamais sur une distribution publiee, dont les creneaux ont pu recevoir des inscrits.
+  const peutGenerer = !distribution?.creneaux.length || distribution.statut === "BROUILLON";
 
   /* Validation de l'étape 1 avant de passer à l'étape 2 */
   async function allerEtape2() {
@@ -124,18 +157,27 @@ export function CreateDistributionForm() {
 
   async function onSubmit(values: FormValues) {
     setErreur(null);
+    const commun = {
+      titre: values.titre,
+      description: values.description || undefined,
+      lieu: lieu || undefined,
+      date: values.date,
+      capaciteBeneficiaires: values.capaciteBeneficiaires,
+      capaciteBenevoles: values.capaciteBenevoles,
+      modeCreneau: modePour(values.creneaux),
+    };
     try {
-      const distribution = await creerDistribution({
-        titre: values.titre,
-        description: values.description || undefined,
-        lieu: lieu || undefined,
-        date: values.date,
-        capaciteBeneficiaires: values.capaciteBeneficiaires,
-        capaciteBenevoles: values.capaciteBenevoles,
-        modeCreneau: values.modeCreneau,
-        creneaux: values.creneaux,
-      });
-      router.push(`/distributions/${distribution.id}`);
+      if (distribution) {
+        await modifierDistribution(distribution.id, { ...commun, creneaux: values.creneaux });
+        router.push(`/distributions/${distribution.id}`);
+        router.refresh();
+      } else {
+        const creee = await creerDistribution({
+          ...commun,
+          creneaux: values.creneaux.map(({ heureDebut, heureFin, capacite }) => ({ heureDebut, heureFin, capacite })),
+        });
+        router.push(`/distributions/${creee.id}`);
+      }
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
       setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
@@ -210,7 +252,7 @@ export function CreateDistributionForm() {
                   <Input
                     id="description"
                     {...register("description")}
-                    placeholder="Informations complementaires..."
+                    placeholder="Informations complémentaires..."
                   />
                 </div>
               </div>
@@ -246,7 +288,10 @@ export function CreateDistributionForm() {
                       type="number"
                       min={1}
                       placeholder="Illimité"
-                      {...register("capaciteBenevoles", { valueAsNumber: true })}
+                      {...register("capaciteBenevoles", {
+                        // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
+                        setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
+                      })}
                     />
                   </div>
                 </div>
@@ -283,41 +328,49 @@ export function CreateDistributionForm() {
                   </Button>
                 </div>
 
+                {peutGenerer && (
+                  <GenerateurCreneaux nbExistants={fields.length} onGenerer={(creneaux) => replace(creneaux)} />
+                )}
+
                 <div className="space-y-3">
                   {fields.map((field, index) => (
                     <div
                       key={field.id}
-                      className="flex items-end gap-2 rounded-xl border border-border/60 bg-muted/40 p-3"
+                      className="grid grid-cols-2 items-end gap-2 rounded-xl border border-border/60 bg-muted/40 p-3 sm:flex"
                     >
-                      <div className="flex-1 space-y-1">
+                      <div className="space-y-1 sm:flex-1">
                         <Label htmlFor={`creneaux.${index}.heureDebut`} className="text-xs">
                           Début
                         </Label>
                         <Input
+                          id={`creneaux.${index}.heureDebut`}
                           type="time"
                           {...register(`creneaux.${index}.heureDebut`)}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
-                      <div className="flex-1 space-y-1">
+                      <div className="space-y-1 sm:flex-1">
                         <Label htmlFor={`creneaux.${index}.heureFin`} className="text-xs">
                           Fin
                         </Label>
                         <Input
+                          id={`creneaux.${index}.heureFin`}
                           type="time"
                           {...register(`creneaux.${index}.heureFin`)}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
-                      <div className="w-24 space-y-1">
+                      <div className="space-y-1 sm:w-24">
                         <Label htmlFor={`creneaux.${index}.capacite`} className="text-xs">
                           Places
                         </Label>
                         <Input
+                          id={`creneaux.${index}.capacite`}
                           type="number"
+                          inputMode="numeric"
                           min={1}
                           {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
-                          className="h-8 text-sm"
+                          className="h-11 sm:h-8 text-sm"
                         />
                       </div>
                       {fields.length > 1 && (
@@ -325,8 +378,9 @@ export function CreateDistributionForm() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          className="size-11 sm:size-8 p-0 justify-self-end text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                           onClick={() => remove(index)}
+                          aria-label="Supprimer le créneau"
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -355,8 +409,11 @@ export function CreateDistributionForm() {
                 <Button type="submit" disabled={isSubmitting} className="flex-1">
                   {isSubmitting ? (
                     <>
-                      <Spinner size="sm" className="mr-2" /> Création en cours...
+                      <Spinner size="sm" className="mr-2" />
+                      {distribution ? "Enregistrement..." : "Création en cours..."}
                     </>
+                  ) : distribution ? (
+                    "Enregistrer les modifications"
                   ) : (
                     "Créer la distribution"
                   )}

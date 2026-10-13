@@ -43,10 +43,10 @@ describe("ForgotPasswordPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Email envoye/)).toBeInTheDocument();
+      expect(screen.getByText(/Email envoyé/)).toBeInTheDocument();
     });
     expect(screen.getByText(/alice@example.com/)).toBeInTheDocument();
-    expect(screen.getByText("Saisir le code de verification")).toBeInTheDocument();
+    expect(screen.getByText("Saisir le code de vérification")).toBeInTheDocument();
   });
 
   it("affiche une erreur en cas d'echec", async () => {
@@ -91,6 +91,6 @@ describe("ForgotPasswordPage", () => {
 
   it("affiche le lien de retour a la connexion", () => {
     render(<ForgotPasswordPage />);
-    expect(screen.getByText(/Retour a la connexion/)).toBeInTheDocument();
+    expect(screen.getByText(/Retour à la connexion/)).toBeInTheDocument();
   });
 });

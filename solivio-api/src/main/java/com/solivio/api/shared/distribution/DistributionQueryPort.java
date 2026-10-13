@@ -19,6 +19,9 @@ public interface DistributionQueryPort {
 
     List<UUID> trouverIdsTermineesEntre(LocalDate debut, LocalDate fin);
 
+    /** Distributions ouvertes ou passees (publiee, en cours, terminee) entre deux dates incluses. */
+    List<UUID> trouverIdsNonAnnuleesEntre(LocalDate debut, LocalDate fin);
+
     record DistributionInfo(
         UUID id,
         String statut,
@@ -36,6 +39,7 @@ public interface DistributionQueryPort {
         String titre,
         LocalDate date,
         String lieu,
-        String motifAnnulation
+        String motifAnnulation,
+        String statut
     ) {}
 }

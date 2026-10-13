@@ -1,6 +1,5 @@
 package com.solivio.api.inscription.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.inscription.application.PointageAdHocService;
 import com.solivio.api.inscription.infrastructure.web.dto.AjouterBenevoleExistantRequest;
@@ -30,11 +29,9 @@ import java.util.UUID;
 public class PointageAdHocController {
 
     private final PointageAdHocService service;
-    private final AuditService auditService;
 
-    public PointageAdHocController(PointageAdHocService service, AuditService auditService) {
+    public PointageAdHocController(PointageAdHocService service) {
         this.service = service;
-        this.auditService = auditService;
     }
 
     // Recherche de membres existants pour la suggestion dans le dialog.
@@ -55,20 +52,17 @@ public class PointageAdHocController {
         PointageInfoResponse response = service.ajouterCompteExistant(
             distributionId, request.personneId(), user.getUsername()
         );
-        auditService.tracer(user.getCompteId(), "AJOUT_BENEVOLE_AD_HOC", "distribution", distributionId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/visiteur")
     public ResponseEntity<PointageAdHocResponse> ajouterVisiteur(
         @PathVariable UUID distributionId,
-        @Valid @RequestBody AjouterVisiteurRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody AjouterVisiteurRequest request
     ) {
         PointageAdHocResponse response = service.ajouterVisiteur(
             distributionId, request.nom(), request.prenom(), request.email(), request.role()
         );
-        auditService.tracer(user.getCompteId(), "AJOUT_VISITEUR_AD_HOC", "distribution", distributionId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -86,7 +80,6 @@ public class PointageAdHocController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         service.envoyerInvitation(adHocId, user.getCompteId());
-        auditService.tracer(user.getCompteId(), "INVITATION_VISITEUR_AD_HOC", "pointage_ad_hoc", adHocId);
         return ResponseEntity.ok().build();
     }
 }

@@ -1,5 +1,6 @@
 package com.solivio.api.inscription.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.inscription.domain.Inscription;
 import com.solivio.api.inscription.domain.PointageAdHoc;
 import com.solivio.api.inscription.domain.StatutInscription;
@@ -41,6 +42,7 @@ class PointageAdHocServiceTest {
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private DistributionQueryPort distributionQueryPort;
     @Mock private InvitationPort invitationPort;
+    @Mock private AuditService auditService;
 
     @InjectMocks
     private PointageAdHocService service;

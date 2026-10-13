@@ -11,7 +11,7 @@ export function MissionCollecteCard({ mission }: Props) {
   return (
     <Link
       href={`/missions-collecte/${mission.id}`}
-      className="block rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-150 overflow-hidden"
+      className="block rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-150 overflow-hidden"
     >
       <div className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">
@@ -44,7 +44,7 @@ export function MissionCollecteCard({ mission }: Props) {
           {mission.lieuDepot?.adresseFormatee && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Truck className="size-3.5 shrink-0" />
-              <span className="truncate">Depot : {mission.lieuDepot.adresseFormatee}</span>
+              <span className="truncate">Dépôt : {mission.lieuDepot.adresseFormatee}</span>
             </div>
           )}
 

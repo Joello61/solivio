@@ -17,7 +17,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -192,6 +194,71 @@ class SessionReconditionnementControllerIntegrationTest {
         mockMvc.perform(delete("/api/sessions-reconditionnement/" + id + "/desinscrire")
                 .cookie(new Cookie("access_token", tokenBenevole)))
             .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void inscription_confirmeeParEmail_etReinscriptionConfirmeeANouveau() throws Exception {
+        String corps = "{\"titre\":\"Session confirmation\","
+            + "\"dateHeureDebut\":\"2026-12-16T09:00:00Z\","
+            + "\"dateHeureFin\":\"2026-12-16T12:00:00Z\"}";
+        String id = com.jayway.jsonpath.JsonPath.read(mockMvc.perform(post("/api/sessions-reconditionnement")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corps))
+            .andReturn().getResponse().getContentAsString(), "$.id");
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/publier")
+            .cookie(new Cookie("access_token", tokenResponsable))).andExpect(status().isOk());
+        UUID benevolePersonneId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            benevolePersonneId, "Benev", "Test", "benev@reco.com");
+
+        Cookie benevole = new Cookie("access_token", tokenBenevole);
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/inscrire").cookie(benevole))
+            .andExpect(status().isCreated());
+        await().atMost(15, TimeUnit.SECONDS).until(() -> confirmationsEnvoyees(benevolePersonneId) == 1);
+
+        mockMvc.perform(delete("/api/sessions-reconditionnement/" + id + "/desinscrire").cookie(benevole))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/inscrire").cookie(benevole))
+            .andExpect(status().isCreated());
+        await().atMost(15, TimeUnit.SECONDS).until(() -> confirmationsEnvoyees(benevolePersonneId) == 2);
+    }
+
+    @Test
+    void annulerUneSession_previentLesInscrits() throws Exception {
+        String corps = "{\"titre\":\"Session annulee\","
+            + "\"dateHeureDebut\":\"2026-12-17T09:00:00Z\","
+            + "\"dateHeureFin\":\"2026-12-17T12:00:00Z\"}";
+        String id = com.jayway.jsonpath.JsonPath.read(mockMvc.perform(post("/api/sessions-reconditionnement")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corps))
+            .andReturn().getResponse().getContentAsString(), "$.id");
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/publier")
+            .cookie(new Cookie("access_token", tokenResponsable))).andExpect(status().isOk());
+        UUID benevolePersonneId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, ?, ?, ?)",
+            benevolePersonneId, "Benev", "Test", "benev@reco.com");
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/inscrire")
+            .cookie(new Cookie("access_token", tokenBenevole))).andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/annuler")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"motif\":\"Entrepot indisponible\"}"))
+            .andExpect(status().isOk());
+
+        // Type de 36 caracteres : la trace echouait avant l'elargissement de la colonne (V13).
+        await().atMost(15, TimeUnit.SECONDS).until(() -> jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM notification WHERE personne_id = ? "
+                + "AND type_evenement = 'ANNULATION_SESSION_RECONDITIONNEMENT' AND statut = 'ENVOYE'",
+            Integer.class, benevolePersonneId) == 1);
+    }
+
+    private int confirmationsEnvoyees(UUID personne) {
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM notification WHERE personne_id = ? "
+            + "AND type_evenement = 'CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT' AND statut = 'ENVOYE'",
+            Integer.class, personne);
     }
 
     @Test

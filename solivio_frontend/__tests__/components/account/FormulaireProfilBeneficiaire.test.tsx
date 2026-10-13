@@ -54,7 +54,7 @@ describe("FormulaireProfilBeneficiaire", () => {
 
   it("affiche l'alerte d'invitation a completer quand profil incomplet", () => {
     render(<FormulaireProfilBeneficiaire profil={profilVide} />);
-    expect(screen.getByText(/Completez votre dossier/)).toBeInTheDocument();
+    expect(screen.getByText(/Complétez votre dossier/)).toBeInTheDocument();
   });
 
   it("pre-remplit les champs depuis le profil existant", () => {
@@ -65,12 +65,12 @@ describe("FormulaireProfilBeneficiaire", () => {
 
   it("affiche le champ echelon uniquement si boursier", () => {
     render(<FormulaireProfilBeneficiaire profil={profilVide} />);
-    expect(screen.queryByLabelText(/Echelon/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Échelon/)).not.toBeInTheDocument();
   });
 
   it("affiche l'echelon si statut boursier = boursier", () => {
     render(<FormulaireProfilBeneficiaire profil={{ ...profilVide, statutBoursier: "boursier" }} />);
-    expect(screen.getByLabelText(/Echelon/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Échelon/)).toBeInTheDocument();
   });
 
   it("appelle mettreAJourProfilBeneficiaire a la soumission", async () => {
@@ -101,7 +101,7 @@ describe("FormulaireProfilBeneficiaire", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Dossier mis a jour/)).toBeInTheDocument();
+      expect(screen.getByText(/Dossier mis à jour/)).toBeInTheDocument();
     });
   });
 

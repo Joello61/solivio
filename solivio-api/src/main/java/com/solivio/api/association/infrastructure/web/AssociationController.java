@@ -1,18 +1,15 @@
 package com.solivio.api.association.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.association.application.AssociationConfigService;
 import com.solivio.api.association.application.AssociationExportService;
 import com.solivio.api.association.application.AssociationLogoService;
 import com.solivio.api.association.infrastructure.web.dto.AssociationResponse;
 import com.solivio.api.association.infrastructure.web.dto.UpdateAssociationRequest;
-import com.solivio.api.identity.SolivioUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,54 +27,46 @@ public class AssociationController {
     private final AssociationConfigService configService;
     private final AssociationExportService exportService;
     private final AssociationLogoService logoService;
-    private final AuditService auditService;
 
     public AssociationController(
         AssociationConfigService configService,
         AssociationExportService exportService,
-        AssociationLogoService logoService,
-        AuditService auditService
+        AssociationLogoService logoService
     ) {
         this.configService = configService;
         this.exportService = exportService;
         this.logoService = logoService;
-        this.auditService = auditService;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE','COORDINATEUR','SUPER_ADMIN')")
-    public ResponseEntity<AssociationResponse> lire(@AuthenticationPrincipal SolivioUserDetails user) {
+    public ResponseEntity<AssociationResponse> lire() {
         return ResponseEntity.ok(configService.lire());
     }
 
     @PatchMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<AssociationResponse> mettreAJour(
-        @Valid @RequestBody UpdateAssociationRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody UpdateAssociationRequest request
     ) {
         AssociationResponse response = configService.mettreAJour(request);
-        auditService.tracer(user.getCompteId(), "ASSOCIATION_MODIFIEE", "association", response.id());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<AssociationResponse> uploadLogo(
-        @RequestParam("file") MultipartFile file,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @RequestParam("file") MultipartFile file
     ) {
         AssociationResponse response = logoService.sauvegarderLogo(file);
-        auditService.tracer(user.getCompteId(), "LOGO_MODIFIE", "association", response.id());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/export")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<byte[]> exporter(@AuthenticationPrincipal SolivioUserDetails user) {
+    public ResponseEntity<byte[]> exporter() {
         byte[] zip = exportService.exporterEnZip();
         String filename = "export-solivio.zip";
-        auditService.tracer(user.getCompteId(), "EXPORT_DONNEES", "association", null);
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)

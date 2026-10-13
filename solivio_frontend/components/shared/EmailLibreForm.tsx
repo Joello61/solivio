@@ -75,7 +75,7 @@ export function EmailLibreForm() {
   if (succes) {
     return (
       <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
-        <p className="text-sm text-green-700 dark:text-green-400">
+        <p className="text-sm text-success">
           Message envoyé avec succès.
         </p>
         <Button variant="outline" onClick={() => setSucces(false)}>
@@ -121,6 +121,7 @@ export function EmailLibreForm() {
         <div className="space-y-1.5">
           <Label htmlFor="cible">Destinataires</Label>
           <Select
+            items={CIBLES}
             onValueChange={(v) => {
               const c = v as CibleEmail;
               setValue("cible", c);

@@ -1,9 +1,10 @@
 package com.solivio.api.identity.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.SolivioUserDetails;
 import com.solivio.api.identity.application.MembreService;
+import com.solivio.api.identity.application.ProfilBeneficiaireService;
 import com.solivio.api.identity.infrastructure.web.dto.MembreResponse;
+import com.solivio.api.identity.infrastructure.web.dto.ProfilBeneficiaireResponse;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateRoleMembreRequest;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateStatutMembreRequest;
 import jakarta.validation.Valid;
@@ -30,19 +31,24 @@ import java.util.UUID;
 public class MembreController {
 
     private final MembreService membreService;
-    private final AuditService auditService;
+    private final ProfilBeneficiaireService profilBeneficiaireService;
 
-    public MembreController(MembreService membreService, AuditService auditService) {
+    public MembreController(MembreService membreService, ProfilBeneficiaireService profilBeneficiaireService) {
         this.membreService = membreService;
-        this.auditService = auditService;
+        this.profilBeneficiaireService = profilBeneficiaireService;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<List<MembreResponse>> listerMembres(
-        @AuthenticationPrincipal SolivioUserDetails user
-    ) {
+    public ResponseEntity<List<MembreResponse>> listerMembres() {
         return ResponseEntity.ok(membreService.lister());
+    }
+
+    // RG5 : le dossier social n'est lisible que par le beneficiaire lui-meme et le responsable.
+    @GetMapping("/{compteId}/profil-beneficiaire")
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public ResponseEntity<ProfilBeneficiaireResponse> lireDossier(@PathVariable UUID compteId) {
+        return ResponseEntity.ok(profilBeneficiaireService.lirePourResponsable(compteId));
     }
 
     @PatchMapping("/{compteId}/role")
@@ -53,8 +59,7 @@ public class MembreController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         MembreResponse response =
-            membreService.mettreAJourRole(compteId, request);
-        auditService.tracer(user.getCompteId(), "ROLE_MEMBRE_MODIFIE", "compte", compteId);
+            membreService.mettreAJourRole(compteId, request, user.getCompteId());
         return ResponseEntity.ok(response);
     }
 
@@ -65,9 +70,7 @@ public class MembreController {
         @Valid @RequestBody UpdateStatutMembreRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MembreResponse response = membreService.changerStatut(compteId, request.statut());
-        String action = "suspendu".equals(request.statut()) ? "MEMBRE_SUSPENDU" : "MEMBRE_REACTIVE";
-        auditService.tracer(user.getCompteId(), action, "compte", compteId);
+        MembreResponse response = membreService.changerStatut(compteId, request.statut(), user.getCompteId());
         return ResponseEntity.ok(response);
     }
 
@@ -77,8 +80,7 @@ public class MembreController {
         @PathVariable UUID compteId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        membreService.suspendre(compteId);
-        auditService.tracer(user.getCompteId(), "MEMBRE_SUSPENDU", "compte", compteId);
+        membreService.suspendre(compteId, user.getCompteId());
         return ResponseEntity.noContent().build();
     }
 }

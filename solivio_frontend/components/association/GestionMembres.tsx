@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { UserX, UserCheck, UserMinus, AlertTriangle, Search } from "lucide-react";
+import Link from "next/link";
+import { UserX, UserCheck, UserMinus, AlertTriangle, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,17 +28,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { mettreAJourRoleMembre, supprimerMembre, changerStatutMembre } from "@/lib/api/association";
 import type { MembreResponse } from "@/types/association";
+import { ROLE_LABELS } from "@/lib/roles";
 
 const ROLES = ["benevole", "coordinateur", "responsable", "super_admin"] as const;
 type RoleValue = (typeof ROLES)[number];
 
+// Base UI n'affiche le libelle de la valeur choisie que si la racine recoit les items.
+const FILTRES_STATUT = { tous: "Tous", actif: "Actif", suspendu: "Suspendu", invite_en_attente: "En attente" };
+const FILTRES_ROLE = { tous: "Tous", benevole: "Bénévole", coordinateur: "Coordinateur", responsable: "Responsable" };
+
 function labelRole(role: string): string {
-  switch (role) {
-    case "super_admin": return "Super admin";
-    case "responsable": return "Responsable";
-    case "coordinateur": return "Coordinateur";
-    default: return "Benevole";
-  }
+  return ROLE_LABELS[role] ?? role;
 }
 
 function labelStatut(statut: string): string {
@@ -64,9 +65,11 @@ type DialogType = "statut" | "retirer" | null;
 function CarteMembre({
   membre,
   currentUserId,
+  peutVoirDossier = false,
 }: {
   membre: MembreResponse;
   currentUserId: string;
+  peutVoirDossier?: boolean;
 }) {
   const router = useRouter();
   const [role, setRole] = useState(membre.role);
@@ -89,7 +92,7 @@ function CarteMembre({
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de role.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
       setRole(membre.role);
     } finally {
       setPending(false);
@@ -131,12 +134,12 @@ function CarteMembre({
     <>
       <div
         className={[
-          "rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3 transition-opacity",
+          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
           estSuspendu ? "opacity-50" : "",
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
@@ -147,6 +150,15 @@ function CarteMembre({
               )}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{membre.email}</p>
+            {peutVoirDossier && membre.role === "beneficiaire" && (
+              <Link
+                href={`/association/membres/${membre.compteId}/dossier`}
+                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <FileText className="size-3.5" />
+                Voir le dossier
+              </Link>
+            )}
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               <Badge variant={variantStatut(statut)} className="text-[11px]">
                 {labelStatut(statut)}
@@ -163,6 +175,7 @@ function CarteMembre({
         {!estSoi && (
           <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
             <Select
+              items={ROLE_LABELS}
               value={role as RoleValue}
               onValueChange={(v) => { if (v) changerRole(v); }}
               disabled={pending || estSuspendu}
@@ -187,12 +200,12 @@ function CarteMembre({
                     size="sm"
                     onClick={() => setDialogOuvert("statut")}
                     className={estSuspendu
-                      ? "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
-                      : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                      ? "text-primary hover:text-primary hover:bg-primary/10"
+                      : "text-warning hover:text-warning hover:bg-warning/10"
                     }
                   >
                     {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                     ) : (
                       <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
                     )}
@@ -219,22 +232,22 @@ function CarteMembre({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-teal-50 dark:bg-teal-950/30" : "bg-amber-100 dark:bg-amber-950/30"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
+            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
+              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {estSuspendu ? "Reactiver le membre" : "Suspendre le membre"}
+              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activites de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activites de l'association.`}
+                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
+                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Reactiver" : "Suspendre"}
+              {estSuspendu ? "Réactiver" : "Suspendre"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -251,14 +264,14 @@ function CarteMembre({
             </AlertDialogMedia>
             <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
             <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire definitivement de l&apos;association.
-              Cette action est irreversible.
+              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer definitivement
+              Retirer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -272,9 +285,11 @@ function CarteMembre({
 function LigneMembreRow({
   membre,
   currentUserId,
+  peutVoirDossier = false,
 }: {
   membre: MembreResponse;
   currentUserId: string;
+  peutVoirDossier?: boolean;
 }) {
   const router = useRouter();
   const [role, setRole] = useState(membre.role);
@@ -297,7 +312,7 @@ function LigneMembreRow({
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de role.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
       setRole(membre.role);
     } finally {
       setPending(false);
@@ -340,7 +355,7 @@ function LigneMembreRow({
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${estSuspendu ? "opacity-50" : ""}`}>
         <td className="py-3.5 px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 border border-teal-100 text-primary text-[11px] font-semibold dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">
@@ -349,6 +364,15 @@ function LigneMembreRow({
                 {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
               </p>
               <p className="text-xs text-muted-foreground truncate">{membre.email}</p>
+              {peutVoirDossier && membre.role === "beneficiaire" && (
+                <Link
+                  href={`/association/membres/${membre.compteId}/dossier`}
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <FileText className="size-3.5" />
+                  Voir le dossier
+                </Link>
+              )}
             </div>
           </div>
           {erreur && <p className="text-xs text-destructive mt-1.5 ml-11">{erreur}</p>}
@@ -363,6 +387,7 @@ function LigneMembreRow({
             <span className="text-sm text-muted-foreground">{labelRole(role)}</span>
           ) : (
             <Select
+              items={ROLE_LABELS}
               value={role as RoleValue}
               onValueChange={(v) => { if (v) changerRole(v); }}
               disabled={pending || estSuspendu}
@@ -391,12 +416,12 @@ function LigneMembreRow({
                     size="sm"
                     onClick={() => setDialogOuvert("statut")}
                     className={estSuspendu
-                      ? "text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/20"
-                      : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                      ? "text-primary hover:text-primary hover:bg-primary/10"
+                      : "text-warning hover:text-warning hover:bg-warning/10"
                     }
                   >
                     {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Reactiver</>
+                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
                     ) : (
                       <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
                     )}
@@ -423,22 +448,22 @@ function LigneMembreRow({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-teal-50 dark:bg-teal-950/30" : "bg-amber-100 dark:bg-amber-950/30"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-amber-600" />}
+            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
+              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {estSuspendu ? "Reactiver le membre" : "Suspendre le membre"}
+              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra a nouveau participer aux activites de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activites de l'association.`}
+                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
+                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Reactiver" : "Suspendre"}
+              {estSuspendu ? "Réactiver" : "Suspendre"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -455,14 +480,14 @@ function LigneMembreRow({
             </AlertDialogMedia>
             <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
             <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire definitivement de l&apos;association.
-              Cette action est irreversible.
+              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer definitivement
+              Retirer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -476,9 +501,11 @@ function LigneMembreRow({
 interface Props {
   membres: MembreResponse[];
   currentUserId: string;
+  // RG5 : le dossier social n'est lisible que par le responsable.
+  peutVoirDossiers?: boolean;
 }
 
-export function GestionMembres({ membres, currentUserId }: Props) {
+export function GestionMembres({ membres, currentUserId, peutVoirDossiers = false }: Props) {
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState("tous");
   const [filtreRole, setFiltreRole] = useState("tous");
@@ -496,7 +523,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
   return (
     <div className="space-y-4">
       {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-4 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -510,7 +537,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
+              <Select items={FILTRES_STATUT} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -523,14 +550,14 @@ export function GestionMembres({ membres, currentUserId }: Props) {
               </Select>
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Role</span>
-              <Select value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Rôle</span>
+              <Select items={FILTRES_ROLE} value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
                 <SelectTrigger className="flex-1 sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="benevole">Benevole</SelectItem>
+                  <SelectItem value="benevole">Bénévole</SelectItem>
                   <SelectItem value="coordinateur">Coordinateur</SelectItem>
                   <SelectItem value="responsable">Responsable</SelectItem>
                 </SelectContent>
@@ -545,7 +572,7 @@ export function GestionMembres({ membres, currentUserId }: Props) {
       </div>
 
       {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-neutral-50/80 dark:bg-neutral-900/50 px-6 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-border/60 bg-muted/80 px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">
             {membres.length === 0 ? "Aucun membre dans cette association." : "Aucun membre ne correspond aux filtres."}
           </p>
@@ -555,24 +582,24 @@ export function GestionMembres({ membres, currentUserId }: Props) {
           {/* Vue mobile : cartes */}
           <div className="space-y-3 lg:hidden">
             {filtres.map((m) => (
-              <CarteMembre key={m.compteId} membre={m} currentUserId={currentUserId} />
+              <CarteMembre key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
             ))}
           </div>
 
           {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-neutral-50/80 dark:bg-neutral-800/60">
+                <tr className="border-b border-border/60 bg-muted/80">
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Membre</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Role</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rôle</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtres.map((m) => (
-                  <LigneMembreRow key={m.compteId} membre={m} currentUserId={currentUserId} />
+                  <LigneMembreRow key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
                 ))}
               </tbody>
             </table>

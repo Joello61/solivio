@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   publierEvenement,
@@ -17,6 +19,7 @@ interface Props {
   ouvertParticipants: boolean;
   modeInscription: ModeInscription;
   estGestionnaire: boolean;
+  estResponsable: boolean;
   estBenevole: boolean;
   estBeneficiaire: boolean;
   dejaInscrit: boolean;
@@ -29,6 +32,7 @@ export function EvenementActions({
   ouvertParticipants,
   modeInscription,
   estGestionnaire,
+  estResponsable,
   estBenevole,
   estBeneficiaire,
   dejaInscrit,
@@ -52,9 +56,11 @@ export function EvenementActions({
     }
   }
 
-  const peutPublier = estGestionnaire && statut === "BROUILLON";
+  // Publier, modifier et annuler sont reserves aux responsables ; le pointage reste aux gestionnaires.
+  const peutPublier = estResponsable && statut === "BROUILLON";
+  const peutModifier = peutPublier;
   const peutAnnuler =
-    estGestionnaire && (statut === "BROUILLON" || statut === "PUBLIE" || statut === "EN_COURS");
+    estResponsable && (statut === "BROUILLON" || statut === "PUBLIE" || statut === "EN_COURS");
   const peutInscrireStaff =
     !dejaInscrit && estBenevole && aBesoiNStaff && (statut === "PUBLIE" || statut === "EN_COURS");
   const peutInscrireParticipant =
@@ -81,7 +87,7 @@ export function EvenementActions({
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-3">
+    <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
       <h2 className="text-sm font-semibold text-foreground">Actions</h2>
 
       {erreur && (
@@ -100,10 +106,20 @@ export function EvenementActions({
         </button>
       )}
 
+      {peutModifier && (
+        <Link
+          href={`/evenements/${evenementId}/modifier`}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <Pencil className="size-4" />
+          Modifier
+        </Link>
+      )}
+
       {peutPointer && (
         <button
           onClick={() => router.push(`/evenements/${evenementId}/pointage`)}
-          className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="w-full rounded-xl bg-info px-4 py-2.5 text-sm font-medium text-info-foreground hover:bg-info/90 transition-colors"
         >
           Pointage
         </button>
@@ -113,7 +129,7 @@ export function EvenementActions({
         <button
           onClick={() => inscrire("STAFF")}
           disabled={pending !== null}
-          className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-600 transition-colors disabled:opacity-60"
+          className="w-full rounded-xl bg-warning px-4 py-2.5 text-sm font-medium text-warning-foreground hover:bg-warning/90 transition-colors disabled:opacity-60"
         >
           {pending === "inscrire-STAFF" ? "Inscription..." : "S'inscrire comme staff"}
         </button>
@@ -123,7 +139,7 @@ export function EvenementActions({
         <button
           onClick={() => inscrire("PARTICIPANT")}
           disabled={pending !== null}
-          className="w-full rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:opacity-60"
+          className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {pending === "inscrire-PARTICIPANT" ? "Inscription..." : "S'inscrire comme participant"}
         </button>
@@ -135,7 +151,7 @@ export function EvenementActions({
           disabled={pending !== null}
           className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-60"
         >
-          {pending === "desinscrire" ? "Desinscription..." : "Se desinscrire"}
+          {pending === "desinscrire" ? "Désinscription..." : "Se désinscrire"}
         </button>
       )}
 
@@ -144,7 +160,7 @@ export function EvenementActions({
           onClick={() => setShowAnnuler(true)}
           className="w-full rounded-xl border border-destructive/30 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
         >
-          Annuler l&apos;evenement
+          Annuler l&apos;événement
         </button>
       )}
 

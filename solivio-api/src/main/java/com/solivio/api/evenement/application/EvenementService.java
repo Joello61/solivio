@@ -1,5 +1,6 @@
 package com.solivio.api.evenement.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.domain.Evenement;
 import com.solivio.api.evenement.domain.ModeInscription;
 import com.solivio.api.evenement.domain.PublicCible;
@@ -13,10 +14,9 @@ import com.solivio.api.evenement.infrastructure.web.dto.CreateEvenementRequest;
 import com.solivio.api.evenement.infrastructure.web.dto.EvenementResponse;
 import com.solivio.api.evenement.infrastructure.web.dto.UpdateEvenementRequest;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +32,20 @@ public class EvenementService {
     private final ParticipationEvenementRepository participationRepository;
     private final EvenementEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public EvenementService(
         EvenementRepository evenementRepository,
         ParticipationEvenementRepository participationRepository,
         EvenementEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.evenementRepository = evenementRepository;
         this.participationRepository = participationRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     public EvenementResponse creer(CreateEvenementRequest request, String emailCreateur) {
@@ -51,8 +54,8 @@ public class EvenementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         Evenement evenement = new Evenement(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             parseType(request.type()),
             request.lieuPlaceId(),
             request.lieuAdresseFormatee(),
@@ -68,6 +71,7 @@ public class EvenementService {
             request.capaciteParticipants(),
             createur.id()
         );
+        auditService.tracer("EVENEMENT_CREE", "evenement", evenement.getId());
         evenementRepository.save(evenement);
         return toResponse(evenement);
     }
@@ -79,10 +83,10 @@ public class EvenementService {
                 "Modification impossible : seul un evenement en BROUILLON peut etre modifie");
         }
         if (request.titre() != null) {
-            evenement.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
+            evenement.setTitre(Assainissement.nettoyer(request.titre()));
         }
         if (request.description() != null) {
-            evenement.setDescription(Jsoup.clean(request.description(), Safelist.none()));
+            evenement.setDescription(Assainissement.nettoyer(request.description()));
         }
         if (request.type() != null) {
             evenement.setType(parseType(request.type()));
@@ -129,6 +133,7 @@ public class EvenementService {
         if (debut != null && fin != null && !fin.isAfter(debut)) {
             throw new IllegalArgumentException("date_heure_fin doit etre apres date_heure_debut");
         }
+        auditService.tracer("EVENEMENT_MODIFIE", "evenement", evenementId);
         return toResponse(evenementRepository.save(evenement));
     }
 
@@ -136,15 +141,17 @@ public class EvenementService {
         Evenement evenement = trouverOuEchouer(evenementId);
         evenement.transitionnerVers(StatutEvenement.PUBLIE, null);
         evenementRepository.save(evenement);
+        auditService.tracer("EVENEMENT_PUBLIE", "evenement", evenementId);
         eventPublisher.publierPublie(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }
 
     public EvenementResponse annuler(UUID evenementId, AnnulerEvenementRequest request) {
         Evenement evenement = trouverOuEchouer(evenementId);
-        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        String raisonSaine = Assainissement.nettoyer(request.raison());
         evenement.transitionnerVers(StatutEvenement.ANNULE, raisonSaine);
         evenementRepository.save(evenement);
+        auditService.tracer("EVENEMENT_ANNULE", "evenement", evenementId);
         eventPublisher.publierAnnule(evenementId, evenement.getDateHeureDebut());
         return toResponse(evenement);
     }

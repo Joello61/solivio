@@ -97,7 +97,7 @@ export function CreatableCombobox({ value: valueProp, onChange, placeholder, id 
       />
 
       {showDropdown && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border/60 bg-white dark:bg-neutral-900 shadow-md overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border/60 bg-card shadow-md overflow-hidden">
           {suggestions.map((s) => {
             const isSelected = s.libelle.toLowerCase() === value.toLowerCase();
             return (

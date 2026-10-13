@@ -14,24 +14,37 @@ import {
 const LABELS: Record<string, string> = {
   dashboard: "Tableau de bord",
   distributions: "Distributions",
-  nouvelle: "Nouvelle distribution",
+  nouvelle: "Nouvelle",
   "mes-inscriptions": "Mes inscriptions",
   "mon-compte": "Mon compte",
-  "profil-beneficiaire": "Profil beneficiaire",
+  "profil-beneficiaire": "Profil bénéficiaire",
   association: "Association",
   configuration: "Configuration",
   membres: "Membres",
   admin: "Administration",
   utilisateurs: "Utilisateurs",
   pointage: "Pointage",
-  repartition: "Repartition",
+  repartition: "Répartition",
+  evenements: "Événements",
+  nouveau: "Nouveau",
+  modifier: "Modifier",
+  dossier: "Dossier",
+  statistiques: "Statistiques",
+  "mes-evenements": "Mes événements",
+  "missions-collecte": "Missions collecte",
+  "mes-missions-collecte": "Mes missions",
+  reconditionnement: "Reconditionnement",
+  notifications: "Notifications",
+  "email-libre": "Email aux membres",
+  "catalogue-denrees": "Catalogue des denrées",
+  "roles-benevoles": "Rôles bénévoles",
 };
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function labelFor(segment: string): string {
-  if (UUID_RE.test(segment)) return "Detail";
+  if (UUID_RE.test(segment)) return "Détail";
   return LABELS[segment] ?? segment;
 }
 

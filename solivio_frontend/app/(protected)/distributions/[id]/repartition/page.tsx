@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireServeur } from "@/lib/api/serveur";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, Package } from "lucide-react";
@@ -7,24 +7,15 @@ import { buttonVariants } from "@/components/ui/button";
 import { RepartitionPanel } from "@/components/repartition/RepartitionPanel";
 import type { DistributionResponse, DenreeResponse, DotationResponse } from "@/types/distribution";
 
-export const metadata: Metadata = { title: "Repartition des denrees" };
+export const metadata: Metadata = { title: "Répartition des denrées" };
 
-async function fetchData(id: string, cookieHeader: string) {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const h = { Cookie: cookieHeader };
-
-  const [distribRes, denreesRes, dotationRes] = await Promise.all([
-    fetch(`${base}/api/distributions/${id}`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/distributions/${id}/denrees`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/distributions/${id}/repartition`, { headers: h, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [distribution, denrees, dotation] = await Promise.all([
+    lireServeur<DistributionResponse>(`/api/distributions/${id}`),
+    lireServeur<DenreeResponse[]>(`/api/distributions/${id}/denrees`),
+    lireServeur<DotationResponse>(`/api/distributions/${id}/repartition`),
   ]);
-
-  if (!distribRes.ok || !denreesRes.ok || !dotationRes.ok) return null;
-
-  const distribution = (await distribRes.json()) as DistributionResponse;
-  const denrees = (await denreesRes.json()) as DenreeResponse[];
-  const dotation = (await dotationRes.json()) as DotationResponse;
-
+  if (!distribution || !denrees || !dotation) return null;
   return { distribution, denrees, dotation };
 }
 
@@ -34,13 +25,8 @@ interface PageProps {
 
 export default async function RepartitionPage({ params }: PageProps) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
 
-  const data = await fetchData(id, cookieHeader);
+  const data = await fetchData(id);
   if (!data) notFound();
 
   const modifiable =
@@ -52,16 +38,16 @@ export default async function RepartitionPage({ params }: PageProps) {
         <Link
           href={`/distributions/${id}`}
           className={buttonVariants({ variant: "ghost", size: "icon" })}
-          aria-label="Retour a la distribution"
+          aria-label="Retour à la distribution"
         >
           <ArrowLeft className="size-4" />
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
             <Package className="size-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground font-display">Repartition des denrees</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">Répartition des denrées</h1>
             <p className="text-xs text-muted-foreground">
               {data.distribution.titre}
             </p>
@@ -69,7 +55,7 @@ export default async function RepartitionPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
         <RepartitionPanel
           distributionId={id}
           denreesInitiales={data.denrees}

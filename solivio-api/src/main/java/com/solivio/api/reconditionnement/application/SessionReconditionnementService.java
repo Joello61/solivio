@@ -1,8 +1,6 @@
 package com.solivio.api.reconditionnement.application;
 
-import com.solivio.api.shared.lieu.LieuResponse;
-import com.solivio.api.shared.lieu.LieuRequest;
-import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.reconditionnement.domain.InscriptionReconditionnement;
 import com.solivio.api.reconditionnement.domain.SessionReconditionnement;
 import com.solivio.api.reconditionnement.domain.StatutPresenceReconditionnement;
@@ -17,11 +15,13 @@ import com.solivio.api.reconditionnement.infrastructure.web.dto.PointageRecondit
 import com.solivio.api.reconditionnement.infrastructure.web.dto.SessionReconditionnementResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,17 +36,20 @@ public class SessionReconditionnementService {
     private final InscriptionReconditionnementRepository inscriptionRepository;
     private final ReconditionnementEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public SessionReconditionnementService(
         SessionReconditionnementRepository sessionRepository,
         InscriptionReconditionnementRepository inscriptionRepository,
         ReconditionnementEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.sessionRepository = sessionRepository;
         this.inscriptionRepository = inscriptionRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     public SessionReconditionnementResponse creer(
@@ -59,8 +62,8 @@ public class SessionReconditionnementService {
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         SessionReconditionnement session = new SessionReconditionnement(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             toLieu(request.lieu()),
             request.dateHeureDebut(),
             request.dateHeureFin(),
@@ -68,12 +71,14 @@ public class SessionReconditionnementService {
             createur.id()
         );
         sessionRepository.save(session);
+        auditService.tracer("SESSION_RECONDITIONNEMENT_CREEE", "session_reconditionnement", session.getId());
         return toResponse(session, 0);
     }
 
     public SessionReconditionnementResponse publier(UUID sessionId) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.PUBLIEE, null);
+        auditService.tracer("SESSION_RECONDITIONNEMENT_PUBLIEE", "session_reconditionnement", sessionId);
         sessionRepository.save(session);
         return toResponse(session, compterInscrits(sessionId));
     }
@@ -81,12 +86,14 @@ public class SessionReconditionnementService {
     public SessionReconditionnementResponse demarrer(UUID sessionId) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.EN_COURS, null);
+        auditService.tracer("SESSION_RECONDITIONNEMENT_DEMARREE", "session_reconditionnement", sessionId);
         return toResponse(sessionRepository.save(session), compterInscrits(sessionId));
     }
 
     public SessionReconditionnementResponse terminer(UUID sessionId) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         session.transitionnerVers(StatutSessionReconditionnement.TERMINEE, null);
+        auditService.tracer("SESSION_RECONDITIONNEMENT_TERMINEE", "session_reconditionnement", sessionId);
         return toResponse(sessionRepository.save(session), compterInscrits(sessionId));
     }
 
@@ -94,10 +101,11 @@ public class SessionReconditionnementService {
         UUID sessionId, AnnulerSessionRequest request
     ) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
-        String motifSain = request.motif() != null ? Jsoup.clean(request.motif(), Safelist.none()) : null;
+        String motifSain = Assainissement.nettoyer(request.motif());
         session.transitionnerVers(StatutSessionReconditionnement.ANNULEE, motifSain);
         sessionRepository.save(session);
         eventPublisher.publierAnnulee(sessionId, session.getDateHeureDebut());
+        auditService.tracer("SESSION_RECONDITIONNEMENT_ANNULEE", "session_reconditionnement", sessionId);
         return toResponse(session, compterInscrits(sessionId));
     }
 
@@ -146,6 +154,7 @@ public class SessionReconditionnementService {
             })
             .orElse(new InscriptionReconditionnement(sessionId, personne.id()));
         inscriptionRepository.save(inscription);
+        eventPublisher.publierInscriptionConfirmee(sessionId, personne.id());
         return toInscriptionResponse(inscription, session, personne.nom() + " " + personne.prenom());
     }
 
@@ -196,6 +205,7 @@ public class SessionReconditionnementService {
                 "Inscription introuvable pour cette personne dans cette session"));
         inscription.pointer(presence);
         inscriptionRepository.save(inscription);
+        auditService.tracer("POINTAGE_RECONDITIONNEMENT", "inscription_reconditionnement", request.personneId());
         PersonneContactInfo personne = personneQueryPort.trouverPersonneParId(request.personneId());
         return toInscriptionResponse(inscription, session, personne.nom() + " " + personne.prenom());
     }

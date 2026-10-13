@@ -1,5 +1,6 @@
 package com.solivio.api.identity.domain;
 
+import com.solivio.api.identity.events.PersonneEffacee;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -62,5 +63,20 @@ public class Personne {
 
     public boolean estSupprimee() {
         return dateSuppression != null;
+    }
+
+    /**
+     * Anonymisation irreversible (RGPD) : la ligne reste pour l'historique des
+     * inscriptions et les compteurs, sans plus aucune donnee personnelle. L'email
+     * derive de l'identifiant respecte l'unicite sans designer personne.
+     */
+    public void anonymiser(Instant maintenant) {
+        this.nom = PersonneEffacee.NOM_ANONYME;
+        this.prenom = PersonneEffacee.PRENOM_ANONYME;
+        this.email = "efface-" + id + "@solivio.invalid";
+        this.compteEmail = null;
+        this.telephone = null;
+        this.photoUrl = null;
+        this.dateSuppression = maintenant;
     }
 }

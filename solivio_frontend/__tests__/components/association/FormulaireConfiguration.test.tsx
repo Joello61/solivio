@@ -50,7 +50,7 @@ describe("FormulaireConfiguration", () => {
     render(<FormulaireConfiguration association={associationMock} />);
     fireEvent.submit(screen.getByRole("button", { name: /enregistrer/i }).closest("form")!);
     await waitFor(() => {
-      expect(screen.getByText(/configuration mise a jour/i)).toBeInTheDocument();
+      expect(screen.getByText(/configuration mise à jour/i)).toBeInTheDocument();
     });
   });
 

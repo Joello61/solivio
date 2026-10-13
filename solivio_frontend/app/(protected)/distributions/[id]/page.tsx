@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -19,56 +19,55 @@ import { Badge } from "@/components/ui/badge";
 import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
+import { ActionPrincipaleMobile, actionPrincipale } from "@/components/distributions/ActionPrincipaleMobile";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
-import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
+import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
+import { rolesAttribuables } from "@/lib/roles-benevoles";
+import { jourAssociation } from "@/lib/distribution-du-jour";
+import {
+  estGestionnaireDistribution,
+  peutPointer,
+  typeInscriptionPossible,
+} from "@/lib/droits-distribution";
 import type { MeResponse } from "@/types/auth";
 import type { StatistiqueDistributionResponse } from "@/types/association";
 
-export const metadata: Metadata = { title: "Detail distribution" };
+export const metadata: Metadata = { title: "Détail distribution" };
 
-async function fetchData(
-  id: string,
-  cookieHeader: string,
-): Promise<{
+async function fetchData(id: string): Promise<{
   distribution: DistributionResponse | null;
   me: MeResponse | null;
   inscrits: InscriptionResponse[];
   mesInscriptions: InscriptionResponse[];
   stats: StatistiqueDistributionResponse | null;
+  typesRoles: TypeRoleResponse[];
 }> {
-  const base = process.env.API_URL ?? "http://localhost:8080";
-  const h = { Cookie: cookieHeader };
-
-  const [distRes, meRes] = await Promise.all([
-    fetch(`${base}/api/distributions/${id}`, { headers: h, cache: "no-store" }),
-    fetch(`${base}/api/auth/me`, { headers: h, cache: "no-store" }),
+  const [distribution, me] = await Promise.all([
+    lireServeur<DistributionResponse>(`/api/distributions/${id}`),
+    lireMoi(),
   ]);
+  if (!distribution) {
+    return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null, typesRoles: [] };
+  }
 
-  if (!distRes.ok) return { distribution: null, me: null, inscrits: [], mesInscriptions: [], stats: null };
-
-  const distribution = (await distRes.json()) as DistributionResponse;
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
-
-  const [inscritsRes, mesRes, statsRes] = await Promise.all([
-    estGestionnaire
-      ? fetch(`${base}/api/distributions/${id}/inscriptions`, { headers: h, cache: "no-store" })
-      : Promise.resolve(null),
-    fetch(`${base}/api/distributions/${id}/inscriptions/mes`, { headers: h, cache: "no-store" }),
+  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
+  const [inscrits, mesInscriptions, stats, typesRoles] = await Promise.all([
+    estGestionnaire ? lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions`) : null,
+    lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions/mes`),
     estGestionnaire && distribution.statut === "TERMINEE"
-      ? fetch(`${base}/api/statistiques/distributions/${id}`, { headers: h, cache: "no-store" })
-      : Promise.resolve(null),
+      ? lireServeur<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${id}`)
+      : null,
+    estGestionnaire ? lireServeur<TypeRoleResponse[]>("/api/types-roles") : null,
   ]);
-
-  const inscrits = inscritsRes?.ok ? ((await inscritsRes.json()) as InscriptionResponse[]) : [];
-  const mesInscriptions = mesRes?.ok ? ((await mesRes.json()) as InscriptionResponse[]) : [];
-  const stats = statsRes?.ok ? ((await statsRes.json()) as StatistiqueDistributionResponse) : null;
-
-  return { distribution, me, inscrits, mesInscriptions, stats };
+  return {
+    distribution,
+    me,
+    inscrits: inscrits ?? [],
+    mesInscriptions: mesInscriptions ?? [],
+    stats,
+    typesRoles: typesRoles ?? [],
+  };
 }
 
 interface PageProps {
@@ -77,19 +76,13 @@ interface PageProps {
 
 export default async function DistributionDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
 
-  const { distribution, me, inscrits, mesInscriptions, stats } = await fetchData(id, cookieHeader);
+  const { distribution, me, inscrits, mesInscriptions, stats, typesRoles } = await fetchData(id);
+  const catalogueRoles = rolesAttribuables(typesRoles);
 
   if (!distribution) notFound();
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
 
   const dateFormatee = new Date(distribution.date + "T00:00:00").toLocaleDateString("fr-FR", {
     weekday: "long",
@@ -110,6 +103,19 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   );
 
   const inscritsVisibles = inscrits.filter((i) => i.statut !== "ANNULEE");
+  const typeInscription = typeInscriptionPossible(me?.roles ?? []);
+  const pointageBenevole =
+    !estGestionnaire && peutPointer(me?.roles ?? [], distribution.statut, mesInscriptions);
+  const actionsPossibles =
+    distribution.statut !== "TERMINEE" &&
+    !(distribution.statut === "ANNULEE" && distribution.date < jourAssociation(new Date()));
+  const action = actionPrincipale({
+    statut: distribution.statut,
+    estGestionnaire,
+    pointageBenevole,
+    peutSInscrire: typeInscription !== null,
+    dejaInscrit: monInscription !== undefined,
+  });
 
   return (
     <div className="space-y-8">
@@ -133,7 +139,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
         <div className="space-y-6 lg:col-span-2">
 
           {/* Informations generales */}
-          <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+          <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
             <p className="text-sm font-semibold text-foreground font-display">
               Informations
             </p>
@@ -168,13 +174,13 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Remplissage (gestionnaire uniquement) */}
           {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Remplissage
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
                     <Users className="size-5 text-primary" />
                   </div>
                   <div>
@@ -184,12 +190,12 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                         {" "}/ {distribution.capaciteBeneficiaires}
                       </span>
                     </p>
-                    <p className="text-xs text-muted-foreground">beneficiaires confirmes</p>
+                    <p className="text-xs text-muted-foreground">bénéficiaires confirmés</p>
                   </div>
                 </div>
                 {distribution.capaciteBenevoles != null && (
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
                       <Users className="size-5 text-primary" />
                     </div>
                     <div>
@@ -199,7 +205,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                           {" "}/ {distribution.capaciteBenevoles}
                         </span>
                       </p>
-                      <p className="text-xs text-muted-foreground">benevoles confirmes</p>
+                      <p className="text-xs text-muted-foreground">bénévoles confirmés</p>
                     </div>
                   </div>
                 )}
@@ -209,7 +215,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Liste des inscrits (gestionnaire) */}
           {estGestionnaire && inscritsVisibles.length > 0 && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
                 <p className="text-sm font-semibold text-foreground font-display">
                   Inscrits
@@ -227,8 +233,22 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                       </span>
                       <div className="flex flex-wrap gap-1.5 justify-end">
                         <Badge variant="outline" className="shrink-0">
-                          {inscrit.type === "BENEFICIAIRE" ? "Beneficiaire" : "Benevole"}
+                          {inscrit.type === "BENEFICIAIRE" ? "Bénéficiaire" : "Bénévole"}
                         </Badge>
+                        {distribution.statut === "TERMINEE" && inscrit.statut === "CONFIRMEE" && (
+                          <Badge
+                            variant={inscrit.presence === "PRESENT" ? "default" : "secondary"}
+                            className="shrink-0"
+                          >
+                            {inscrit.presence === "PRESENT"
+                              ? "Présent"
+                              : inscrit.presence === "ABSENT"
+                                ? inscrit.absenceDeduite
+                                  ? "Absent (non pointé)"
+                                  : "Absent"
+                                : "Non pointé"}
+                          </Badge>
+                        )}
                         {inscrit.statut === "LISTE_ATTENTE" && (
                           <Badge variant="secondary" className="shrink-0">
                             Attente #{inscrit.rangListeAttente}
@@ -249,6 +269,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                           distributionId={id}
                           inscriptionId={inscrit.id}
                           rolesInitiaux={inscrit.roles}
+                          catalogue={catalogueRoles}
                         />
                       </div>
                     )}
@@ -264,7 +285,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Outils de la distribution (gestionnaire) */}
           {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Outils
               </p>
@@ -272,27 +293,27 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 {distribution.statut === "EN_COURS" && (
                   <Link
                     href={`/distributions/${id}/pointage`}
-                    className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-teal-50 hover:border-primary/40 dark:hover:bg-teal-950/20 transition-all"
+                    className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-primary/10 hover:border-primary/40 transition-all"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 group-hover:bg-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 transition-colors">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors">
                       <ClipboardList className="size-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">Pointage</p>
-                      <p className="text-xs text-muted-foreground">Pointer les presences en temps reel</p>
+                      <p className="text-xs text-muted-foreground">Pointer les présences en temps réel</p>
                     </div>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                   </Link>
                 )}
                 <Link
                   href={`/distributions/${id}/repartition`}
-                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-teal-50 hover:border-primary/40 dark:hover:bg-teal-950/20 transition-all"
+                  className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 hover:bg-primary/10 hover:border-primary/40 transition-all"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 group-hover:bg-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 transition-colors">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors">
                     <Package className="size-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Repartition des denrees</p>
+                    <p className="text-sm font-medium text-foreground">Répartition des denrées</p>
                     <p className="text-xs text-muted-foreground">Calculer et ajuster les dotations</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
@@ -301,9 +322,9 @@ export default async function DistributionDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Actions gestionnaire */}
-          {estGestionnaire && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+          {/* Actions gestionnaire : aucune sur une distribution terminee, ni annulee et passee. */}
+          {estGestionnaire && actionsPossibles && (
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
               <p className="text-sm font-semibold text-foreground font-display">
                 Actions
               </p>
@@ -317,46 +338,46 @@ export default async function DistributionDetailPage({ params }: PageProps) {
 
           {/* Bilan final (terminee) */}
           {estGestionnaire && distribution.statut === "TERMINEE" && stats && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-4">
               <p className="text-sm font-semibold text-foreground font-display">
                 Bilan de la distribution
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-1">
+                <div className="rounded-xl bg-muted p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Users className="size-3.5 text-muted-foreground" />
                     <p className="text-xs text-muted-foreground">Inscrits</p>
                   </div>
                   <p className="text-2xl font-bold">{stats.nbInscritsBeneficiaires}</p>
                 </div>
-                <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 space-y-1">
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-teal-600 dark:text-teal-400" />
-                    <p className="text-xs text-muted-foreground">Presents</p>
+                    <CheckCircle className="size-3.5 text-primary" />
+                    <p className="text-xs text-muted-foreground">Présents</p>
                   </div>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">
+                  <p className="text-2xl font-bold text-primary">
                     {stats.nbPresentsBeneficiaires}
                   </p>
                 </div>
-                <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-800/40 p-3 space-y-1">
+                <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <XCircle className="size-3.5 text-destructive" />
                     <p className="text-xs text-muted-foreground">Absents</p>
                   </div>
                   <p className="text-2xl font-bold text-destructive">{stats.nbAbsentsBeneficiaires}</p>
                 </div>
-                <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-1">
+                <div className="rounded-xl bg-muted p-3 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Clock className="size-3.5 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground">Non pointes</p>
+                    <p className="text-xs text-muted-foreground">Non pointés</p>
                   </div>
                   <p className="text-2xl font-bold">{stats.nbNonPointes}</p>
                 </div>
               </div>
-              <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 p-3 flex items-center justify-between">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Percent className="size-4 text-primary" />
-                  <p className="text-sm font-medium text-primary">Taux de presence</p>
+                  <p className="text-sm font-medium text-primary">Taux de présence</p>
                 </div>
                 <p className="text-2xl font-bold text-primary leading-none">
                   {Number(stats.tauxPresence).toFixed(1)} %
@@ -366,16 +387,31 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-3 text-sm border-t border-border pt-3">
                   <Users className="size-4 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    <strong className="text-foreground">{stats.nbInscritsBenevoles}</strong> benevoles presents
+                    <strong className="text-foreground">{stats.nbInscritsBenevoles}</strong> bénévoles présents
                   </span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Mon inscription (beneficiaire) */}
-          {!estGestionnaire && distribution.statut === "PUBLIEE" && me && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-3">
+          {/* Pointage pour un benevole inscrit (le backend le lui ouvre) */}
+          {pointageBenevole && (
+            <Link
+              href={`/distributions/${id}/pointage`}
+              className="group flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm hover:border-primary/40 transition-all"
+            >
+              <ClipboardList className="size-5 shrink-0 text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Pointage</p>
+                <p className="text-xs text-muted-foreground">Pointer les arrivées des bénéficiaires</p>
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+            </Link>
+          )}
+
+          {/* Mon inscription : ouverte a tout membre qui peut s'inscrire (spec 4.5) */}
+          {typeInscription && distribution.statut === "PUBLIEE" && (
+            <div id="mon-inscription" className="scroll-mt-6 rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
               <p className="text-sm font-semibold text-foreground font-display">
                 Mon inscription
               </p>
@@ -383,29 +419,38 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                 distributionId={id}
                 creneaux={distribution.creneaux}
                 inscriptionExistante={monInscription ?? null}
-                typeParDefaut={
-                  (me.roles.includes("benevole") && !me.roles.includes("beneficiaire")
-                    ? "BENEVOLE"
-                    : "BENEFICIAIRE") as TypeInscription
-                }
+                typeParDefaut={typeInscription}
               />
             </div>
           )}
 
-          {/* Message pour les beneficiaires sur une distrib non publiee */}
+          {/* Inscription en lecture seule une fois la distribution demarree */}
+          {monInscription && (distribution.statut === "EN_COURS" || distribution.statut === "TERMINEE") && (
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-1">
+              <p className="text-sm font-semibold text-foreground font-display">Mon inscription</p>
+              <p className="text-sm text-muted-foreground">
+                {monInscription.statut === "CONFIRMEE"
+                  ? `Inscription confirmée (${monInscription.type === "BENEVOLE" ? "bénévole" : "bénéficiaire"}).`
+                  : "Vous étiez sur liste d'attente."}
+              </p>
+            </div>
+          )}
+
+          {/* Message sur une distribution non publiee */}
           {!estGestionnaire && distribution.statut !== "PUBLIEE" && (
-            <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
               <p className="text-sm text-muted-foreground">
                 {distribution.statut === "BROUILLON" &&
                   "Cette distribution n'est pas encore ouverte aux inscriptions."}
                 {distribution.statut === "EN_COURS" && "Cette distribution est en cours."}
-                {distribution.statut === "TERMINEE" && "Cette distribution est terminee."}
-                {distribution.statut === "ANNULEE" && "Cette distribution a ete annulee."}
+                {distribution.statut === "TERMINEE" && "Cette distribution est terminée."}
+                {distribution.statut === "ANNULEE" && "Cette distribution a été annulée."}
               </p>
             </div>
           )}
         </div>
       </div>
+      <ActionPrincipaleMobile action={action} distributionId={id} />
     </div>
   );
 }

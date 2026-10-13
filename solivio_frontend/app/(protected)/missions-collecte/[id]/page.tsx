@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, MapPin, Truck, User, Users } from "lucide-react";
 import { StatutBadge } from "@/components/collecte/StatutBadge";
@@ -8,22 +8,16 @@ import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { MissionCollecteResponse } from "@/types/collecte";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Detail mission collecte" };
+export const metadata: Metadata = { title: "Détail mission collecte" };
 
-async function fetchData(id: string, cookieHeader: string): Promise<{
+async function fetchData(id: string): Promise<{
   me: MeResponse | null;
   mission: MissionCollecteResponse | null;
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [meRes, missionRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/missions-collecte/${id}`, { headers, cache: "no-store" }),
+  const [me, mission] = await Promise.all([
+    lireMoi(),
+    lireServeur<MissionCollecteResponse>(`/api/missions-collecte/${id}`),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const mission = missionRes.ok ? ((await missionRes.json()) as MissionCollecteResponse) : null;
   return { me, mission };
 }
 
@@ -33,17 +27,14 @@ interface Props {
 
 export default async function DetailMissionCollectePage({ params }: Props) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { me, mission } = await fetchData(id, cookieHeader);
+  const { me, mission } = await fetchData(id);
 
   if (!mission) notFound();
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["admin", "coordinateur", "responsable", "super_admin"].includes(r),
-  ) ?? false;
-  const estBenevole = me?.roles.includes("benevole") ?? false;
-  const meId = me?.id ?? null;
+  // Les missions sont gerees par les responsables ; coordinateurs et responsables
+  // agissent aussi comme benevoles (hierarchie des roles, ADR-011).
+  const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r)) ?? false;
+  const estBenevole = me?.roles.some((r) => ["benevole", "coordinateur", "responsable"].includes(r)) ?? false;
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -57,7 +48,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-3 text-sm">
           <Calendar className="size-4 text-muted-foreground shrink-0" />
           <span>
@@ -92,7 +83,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         {mission.lieuDepot?.adresseFormatee && (
           <div className="flex items-center gap-3 text-sm">
             <Truck className="size-4 text-muted-foreground shrink-0" />
-            <span>Depot : {mission.lieuDepot.adresseFormatee}</span>
+            <span>Dépôt : {mission.lieuDepot.adresseFormatee}</span>
           </div>
         )}
         {mission.lieuDepot?.latitude != null && mission.lieuDepot?.longitude != null && (
@@ -108,7 +99,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
 
         <div className="flex items-center gap-3 text-sm">
           <Users className="size-4 text-muted-foreground shrink-0" />
-          <span>{mission.capacitePersonnes} benevole{mission.capacitePersonnes > 1 ? "s" : ""} max.</span>
+          <span>{mission.capacitePersonnes} bénévole{mission.capacitePersonnes > 1 ? "s" : ""} max.</span>
         </div>
 
         {mission.benevoleNomComplet && (
@@ -125,7 +116,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-3">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Historique</h2>
         <ol className="space-y-2 text-sm text-muted-foreground">
           {mission.datePriseEnCharge && (
@@ -135,7 +126,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
             <li>Collecte effectuee : {new Date(mission.dateCollecteEffectuee).toLocaleString("fr-FR")}</li>
           )}
           {mission.dateDepotValide && (
-            <li>Depot valide : {new Date(mission.dateDepotValide).toLocaleString("fr-FR")}</li>
+            <li>Dépôt valide : {new Date(mission.dateDepotValide).toLocaleString("fr-FR")}</li>
           )}
         </ol>
       </div>
@@ -143,8 +134,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
       <MissionActions
         missionId={mission.id}
         statut={mission.statut}
-        benevoleId={mission.benevoleId}
-        meId={meId}
+        assigneAuLecteur={mission.assigneAuLecteur}
         estGestionnaire={estGestionnaire}
         estBenevole={estBenevole}
       />

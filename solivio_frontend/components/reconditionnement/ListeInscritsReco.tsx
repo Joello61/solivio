@@ -17,13 +17,13 @@ interface Props {
 
 const PRESENCE_LABELS: Record<string, string> = {
   NON_POINTE: "Non pointe",
-  PRESENT: "Present",
+  PRESENT: "Présent",
   ABSENT: "Absent",
 };
 
 const PRESENCE_CLASS: Record<string, string> = {
   NON_POINTE: "text-muted-foreground",
-  PRESENT: "text-teal-600 dark:text-teal-400 font-medium",
+  PRESENT: "text-primary font-medium",
   ABSENT: "text-destructive font-medium",
 };
 
@@ -47,7 +47,7 @@ export function ListeInscritsReco({ sessionId, inscrits, statut, estCoordinateur
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
       <div className="flex items-center gap-2 px-6 py-4 border-b border-border/40">
         <ScanLine className="size-4 text-muted-foreground" />
         <h2 className="font-semibold text-foreground text-sm">
@@ -71,7 +71,7 @@ export function ListeInscritsReco({ sessionId, inscrits, statut, estCoordinateur
                   className="h-7 w-7 p-0"
                   disabled={!!pending}
                   onClick={() => pointer(i.personneId, "PRESENT")}
-                  title="Present"
+                  title="Présent"
                 >
                   <Check className="size-3.5" />
                 </Button>

@@ -68,6 +68,17 @@
   --color-border:               var(--border);
   --color-input:                var(--input);
   --color-ring:                 var(--ring);
+  --color-success:              var(--success);
+  --color-success-foreground:   var(--success-foreground);
+  --color-warning:              var(--warning);
+  --color-warning-foreground:   var(--warning-foreground);
+  --color-info:                 var(--info);
+  --color-info-foreground:      var(--info-foreground);
+  --color-accent-strong:        var(--accent-strong);
+  --color-overlay:              var(--overlay);
+  --color-brand:                var(--brand);
+  --color-brand-deep:           var(--brand-deep);
+  --color-on-brand:             var(--on-brand);
 
   /* RAYONS - Systeme coherent */
   --radius-xs:   0.25rem;   /* 4px */
@@ -152,6 +163,24 @@
   --input:  oklch(0.924 0.006 264);
   --ring:   oklch(0.532 0.118 185);
 
+  /* Etats : la valeur sert au texte et aux icones (contraste AA sur fond clair),
+     les fonds legers s'obtiennent par transparence (bg-success/10). */
+  --success:            oklch(0.508 0.118 165.6);
+  --success-foreground: oklch(1 0 0);
+  --warning:            oklch(0.555 0.163 49);
+  --warning-foreground: oklch(1 0 0);
+  --info:               oklch(0.488 0.243 264.4);
+  --info-foreground:    oklch(1 0 0);
+  /* Corail lisible en texte, l'accent etant reserve aux fonds */
+  --accent-strong:      oklch(0.518 0.165 42);
+  /* Voile des modales et des images, noir dans les deux modes */
+  --overlay:            oklch(0 0 0);
+  /* Surfaces de marque (bandeaux, appels a l'action, texte sur photo) :
+     identiques dans les deux modes, texte toujours blanc. */
+  --brand:              oklch(0.532 0.118 185);
+  --brand-deep:         oklch(0.447 0.098 185);
+  --on-brand:           oklch(1 0 0);
+
   /* Rayon de base shadcn */
   --radius: 0.75rem;
 }
@@ -160,6 +189,8 @@
    Fond quasi-noir avec une legere teinte neutre (pas de couleur marque)
    pour maximiser la lisibilite et la professionnalisme */
 .dark {
+  /* Controles natifs (selecteur de date, barres de defilement) en sombre */
+  color-scheme: dark;
   --background:    oklch(0.148 0.008 264);
   --foreground:    oklch(0.960 0.004 264);
 
@@ -188,6 +219,18 @@
   --border: oklch(1 0 0 / 10%);
   --input:  oklch(1 0 0 / 14%);
   --ring:   oklch(0.620 0.128 186);
+
+  --success:            oklch(0.765 0.177 163.2);
+  --success-foreground: oklch(0.148 0.008 264);
+  --warning:            oklch(0.828 0.189 84.4);
+  --warning-foreground: oklch(0.148 0.008 264);
+  --info:               oklch(0.707 0.165 254.6);
+  --info-foreground:    oklch(0.148 0.008 264);
+  --accent-strong:      oklch(0.850 0.138 45);
+  --overlay:            oklch(0 0 0);
+  --brand:              oklch(0.532 0.118 185);
+  --brand-deep:         oklch(0.447 0.098 185);
+  --on-brand:           oklch(1 0 0);
 }
 
 /* ANIMATIONS */
@@ -259,6 +302,15 @@
   /* Headings : police display pour plus de personnalite */
   h1, h2, h3, h4 {
     font-family: var(--font-display), var(--font-sans);
+  }
+
+  /*
+   * L'espace de Plus Jakarta Sans est tres etroite en gras aux petites tailles
+   * (2 px a 14 px) : "Mon inscription" se lisait "Moninscription". On la ramene
+   * a la largeur de celle de DM Sans.
+   */
+  h1, h2, h3, h4, .font-display {
+    word-spacing: 0.12em;
   }
 
   /* Selection de texte avec la couleur primaire */
@@ -347,5 +399,18 @@
     );
     background-size: 200% 100%;
     animation: var(--animate-shimmer);
+  }
+}
+
+/*
+ * Sur telephone, iOS zoome sur tout champ dont le texte fait moins de 16 px.
+ * Regle hors couche, donc prioritaire sur les utilitaires text-sm des champs.
+ */
+@media (max-width: 639px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea,
+  select,
+  [data-slot="select-trigger"] {
+    font-size: 16px;
   }
 }

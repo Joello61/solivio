@@ -53,7 +53,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
       {/* Fond semi-transparent */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden",
+          "fixed inset-0 z-40 bg-overlay/50 backdrop-blur-sm lg:hidden",
           "transition-opacity duration-200",
           open ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
@@ -64,7 +64,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
       {/* Panneau du drawer */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl dark:bg-neutral-900",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-card shadow-xl",
           "flex flex-col lg:hidden",
           "transition-transform duration-200 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full",

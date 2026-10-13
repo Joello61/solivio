@@ -1,14 +1,14 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
 import { Plus, CalendarDays } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EvenementCard } from "@/components/evenement/EvenementCard";
 import type { EvenementResponse } from "@/types/evenement";
-import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Evenements" };
+export const metadata: Metadata = { title: "Événements" };
 
 const FILTRES = [
   { label: "Tous", statut: "" },
@@ -18,20 +18,15 @@ const FILTRES = [
   { label: "Brouillons", statut: "BROUILLON" },
 ] as const;
 
-async function fetchData(cookieHeader: string, statut: string, type: string) {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
+async function fetchData(statut: string, type: string) {
   const qs = new URLSearchParams();
   if (statut) qs.set("statut", statut);
   if (type) qs.set("type", type);
-
-  const [evRes, meRes] = await Promise.all([
-    fetch(`${baseUrl}/api/evenements?${qs}`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
+  const [evenements, me] = await Promise.all([
+    lireServeur<EvenementResponse[]>(`/api/evenements?${qs}`),
+    lireMoi(),
   ]);
-  const evenements = evRes.ok ? ((await evRes.json()) as EvenementResponse[]) : [];
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  return { evenements, me };
+  return { evenements: evenements ?? [], me };
 }
 
 interface Props {
@@ -40,29 +35,30 @@ interface Props {
 
 export default async function EvenementsPage({ searchParams }: Props) {
   const { statut = "", type = "" } = await searchParams;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { evenements, me } = await fetchData(cookieHeader, statut, type);
+  const { evenements, me } = await fetchData(statut, type);
 
   const estGestionnaire =
-    me?.roles.some((r) => ["admin", "coordinateur", "responsable", "super_admin"].includes(r)) ??
+    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
     false;
+
+  // La creation est reservee aux responsables (backend).
+  const peutCreer = estResponsable(me?.roles ?? []);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground font-display">Evenements</h1>
+          <h1 className="text-3xl font-bold text-foreground font-display">Événements</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez et suivez tous les evenements de l'association."
-              : "Consultez et inscrivez-vous aux evenements disponibles."}
+              ? "Gérez et suivez tous les événements de l'association."
+              : "Consultez et inscrivez-vous aux événements disponibles."}
           </p>
         </div>
-        {estGestionnaire && (
+        {peutCreer && (
           <Link href="/evenements/nouveau" className={buttonVariants({ size: "sm" })}>
             <Plus className="mr-2 size-4" />
-            Nouvel evenement
+            Nouvel événement
           </Link>
         )}
       </div>
@@ -84,18 +80,18 @@ export default async function EvenementsPage({ searchParams }: Props) {
       </div>
 
       {evenements.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={CalendarDays}
-            title="Aucun evenement"
+            title="Aucun événement"
             description={
               estGestionnaire
-                ? "Aucun evenement n'a ete cree. Commencez par en creer un."
-                : "Aucun evenement n'est disponible pour le moment."
+                ? "Aucun événement n'a été créé. Commencez par en créer un."
+                : "Aucun événement n'est disponible pour le moment."
             }
             action={
-              estGestionnaire
-                ? { label: "Creer un evenement", href: "/evenements/nouveau" }
+              peutCreer
+                ? { label: "Créer un événement", href: "/evenements/nouveau" }
                 : undefined
             }
           />

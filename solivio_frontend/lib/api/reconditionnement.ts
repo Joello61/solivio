@@ -1,17 +1,9 @@
-import { apiGet, apiPost, apiFetch } from "@/lib/api";
+import { apiPost, apiFetch } from "@/lib/api";
 import type {
   SessionReconditionnementResponse,
   InscriptionReconditionnementResponse,
   CreateSessionReconditionnementPayload,
 } from "@/types/reconditionnement";
-
-export function listerSessions(): Promise<SessionReconditionnementResponse[]> {
-  return apiGet<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement");
-}
-
-export function detailSession(id: string): Promise<SessionReconditionnementResponse> {
-  return apiGet<SessionReconditionnementResponse>(`/api/sessions-reconditionnement/${id}`);
-}
 
 export function creerSession(
   payload: CreateSessionReconditionnementPayload
@@ -55,12 +47,6 @@ export function desinscrireSession(id: string): Promise<void> {
   return apiFetch(`/api/sessions-reconditionnement/${id}/desinscrire`, {
     method: "DELETE",
   }).then(() => undefined);
-}
-
-export function listerInscrits(id: string): Promise<InscriptionReconditionnementResponse[]> {
-  return apiGet<InscriptionReconditionnementResponse[]>(
-    `/api/sessions-reconditionnement/${id}/inscrits`
-  );
 }
 
 export function pointerParticipant(

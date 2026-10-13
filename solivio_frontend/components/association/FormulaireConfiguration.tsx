@@ -73,7 +73,7 @@ export function FormulaireConfiguration({ association }: Props) {
       router.refresh();
     } catch (err) {
       const e2 = err as { detail?: string; message?: string };
-      setErreur(e2.detail ?? e2.message ?? "Erreur lors de la mise a jour.");
+      setErreur(e2.detail ?? e2.message ?? "Erreur lors de la mise à jour.");
     } finally {
       setPending(false);
     }
@@ -82,21 +82,21 @@ export function FormulaireConfiguration({ association }: Props) {
   return (
     <form onSubmit={soumettre} className="space-y-6">
       {erreur && (
-        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {erreur}
         </div>
       )}
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
+        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Configuration mise a jour avec succes.</span>
+          <span className="text-sm">Configuration mise à jour avec succès.</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 items-start">
         {/* Colonne gauche : identite visuelle */}
         <div className="space-y-6">
-          <p className="text-sm font-semibold text-foreground font-display">Identite visuelle</p>
+          <p className="text-sm font-semibold text-foreground font-display">Identité visuelle</p>
 
           <div className="space-y-1.5">
             <Label htmlFor="nom">Nom de l&apos;association</Label>
@@ -113,7 +113,7 @@ export function FormulaireConfiguration({ association }: Props) {
             <Label>Logo</Label>
             {logoUrl && (
               <div className="mb-2 flex items-center gap-3">
-                <div className="rounded-lg border border-border/60 bg-neutral-50 dark:bg-neutral-900 p-1.5">
+                <div className="rounded-lg border border-border/60 bg-muted p-1.5">
                   <Image
                     src={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}${logoUrl}`}
                     alt="Logo actuel"
@@ -196,7 +196,7 @@ export function FormulaireConfiguration({ association }: Props) {
 
         {/* Colonne droite : parametres */}
         <div className="space-y-6">
-          <p className="text-sm font-semibold text-foreground font-display">Parametres</p>
+          <p className="text-sm font-semibold text-foreground font-display">Paramètres</p>
 
           <div className="space-y-1.5">
             <Label htmlFor="fuseauHoraire">Fuseau horaire</Label>
@@ -210,7 +210,7 @@ export function FormulaireConfiguration({ association }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="frequenceMax">Frequence max par semaine</Label>
+            <Label htmlFor="frequenceMax">Fréquence max par semaine</Label>
             <Input
               id="frequenceMax"
               type="number"
@@ -218,7 +218,7 @@ export function FormulaireConfiguration({ association }: Props) {
               max="7"
               value={frequenceMax}
               onChange={(e) => setFrequenceMax(e.target.value)}
-              placeholder="Illimitee"
+              placeholder="Illimitée"
             />
             <p className="text-xs text-muted-foreground">Laisser vide pour ne pas limiter.</p>
           </div>
@@ -235,7 +235,7 @@ export function FormulaireConfiguration({ association }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="contactTelephone">Telephone de contact</Label>
+            <Label htmlFor="contactTelephone">Téléphone de contact</Label>
             <Input
               id="contactTelephone"
               value={contactTelephone}

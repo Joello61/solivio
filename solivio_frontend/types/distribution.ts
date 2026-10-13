@@ -77,6 +77,8 @@ export interface InscriptionResponse {
   rangListeAttente: number | null;
   roles: RoleBenevoleResponse[];
   presence: StatutPresence;
+  // RG4 : absence enregistree a la cloture faute de pointage.
+  absenceDeduite: boolean;
   dateInscription: string;
   nombreAbsencesPassees: number;
 }
@@ -148,6 +150,10 @@ export interface CreateDistributionPayload {
   capaciteBenevoles?: number;
   modeCreneau?: string;
   creneaux: { heureDebut: string; heureFin: string; capacite: number }[];
+}
+
+export interface UpdateDistributionPayload extends Omit<CreateDistributionPayload, "creneaux"> {
+  creneaux: { id?: string; heureDebut: string; heureFin: string; capacite: number }[];
 }
 
 export interface CatalogueDenreeResponse {

@@ -30,7 +30,7 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
     @Override
     public PersonneInfo trouverPersonne(String email) {
         Personne p = personneRepository.findByEmail(email)
-            .orElseThrow(() -> new NotFoundException("Personne introuvable : " + email));
+            .orElseThrow(() -> new NotFoundException("Personne introuvable."));
         return new PersonneInfo(p.getId(), p.getNom(), p.getPrenom());
     }
 

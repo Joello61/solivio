@@ -62,7 +62,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             d.getTitre(),
             d.getDate(),
             d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
-            d.getMotifAnnulation()
+            d.getMotifAnnulation(),
+            d.getStatut().name()
         );
     }
 
@@ -83,7 +84,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             .map(d -> new DistributionDetailInfo(
                 d.getId(), d.getTitre(), d.getDate(),
                 d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
-                d.getMotifAnnulation()
+                d.getMotifAnnulation(),
+                d.getStatut().name()
             ))
             .toList();
     }
@@ -92,6 +94,16 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
     public List<UUID> trouverIdsTermineesEntre(LocalDate debut, LocalDate fin) {
         return distributionRepository
             .findByDateBetweenAndStatut(debut, fin, StatutDistribution.TERMINEE)
+            .stream()
+            .map(Distribution::getId)
+            .toList();
+    }
+
+    @Override
+    public List<UUID> trouverIdsNonAnnuleesEntre(LocalDate debut, LocalDate fin) {
+        return distributionRepository
+            .findByDateBetweenAndStatutIn(debut, fin, List.of(
+                StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS, StatutDistribution.TERMINEE))
             .stream()
             .map(Distribution::getId)
             .toList();

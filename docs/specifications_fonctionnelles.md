@@ -97,7 +97,7 @@ Cette section décrivait à l'origine un socle multi-association (isolation de p
 **Ce qui reste exigé en V1 :**
 
 - L'association peut exporter l'intégralité de ses données (traduction concrète de la promesse de non-enfermement).
-- Toute donnée personnelle peut être supprimée à la demande de la personne concernée (RGPD).
+- Toute donnée personnelle peut être supprimée à la demande de la personne concernée (RGPD), y compris par elle-même depuis son compte. Le dernier responsable actif ne peut pas effacer son compte avant d'avoir désigné un successeur.
 - Une autre association qui voudrait utiliser Solivio déploie sa propre instance (code sous licence AGPL), sans partager de base.
 
 ### 4.3 Module Configuration de l'association
@@ -125,6 +125,10 @@ C'est le cœur du produit. Il doit être la partie la plus soignée de la V1.
 - Définir des **capacités** : nombre maximal de bénéficiaires, nombre de bénévoles attendus, éventuellement par créneau.
 - Gérer le **cycle de vie** de la distribution selon des états fixes : brouillon, publiée, en cours, terminée, annulée.
 - Publier une distribution (la rendre visible pour les inscriptions) et l'annuler (avec notification automatique des inscrits).
+- Modifier une distribution tant qu'elle n'a pas démarré (brouillon ou publiée) : intitulé, description, date, lieu, capacités, créneaux. Les places déjà attribuées sont protégées : une capacité ne descend jamais sous le nombre d'inscrits confirmés, et un créneau qui a reçu des inscriptions ne peut pas être supprimé. Le mode de créneau ne change plus une fois la distribution publiée. Un changement de date, de lieu ou d'horaires prévient par email les inscrits confirmés et en liste d'attente (comme RG6) ; une capacité augmentée fait avancer la liste d'attente (RG3).
+- Supprimer une distribution restée en brouillon (jamais publiée, donc sans inscrit) ; une distribution publiée s'annule.
+- Revenir à « publiée » après un démarrage accidentel, tant qu'aucune présence n'a été pointée.
+- Réactiver une distribution annulée par erreur, tant que sa date n'est pas passée : elle retrouve son état d'avant (un brouillon reste brouillon, sinon publiée). Les inscriptions supprimées par l'annulation sont rétablies avec leur statut et leur rang, sauf celle d'une personne inscrite entre-temps à une autre distribution de la même semaine (RG1), qui est invitée à se réinscrire ; une place ainsi libérée fait avancer la liste d'attente. Chaque personne concernée est prévenue par email. Une désinscription personnelle n'est jamais rétablie.
 - Consulter la liste des inscrits (bénéficiaires et bénévoles) d'une distribution.
 
 **Précision sur le cycle de vie.** En V1, les états et les transitions d'une distribution sont **fixes et codés en dur** (le cycle décrit ci-dessus). La possibilité pour chaque association de définir ses propres états et transitions (par exemple ajouter une étape de validation par un responsable) relève du moteur de workflow configurable, explicitement repoussé en V3. C'est une application directe de la discipline de périmètre : on code un cycle qui marche, on le rend configurable seulement quand le besoin réel de plusieurs associations différentes est confirmé.
@@ -181,7 +185,7 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 
 - Pour une distribution, saisir la liste des denrées disponibles. Chaque denrée comporte : un libellé (par exemple "pommes de terre"), une unité (unités, kilogrammes, litres...), et une quantité saisie **en conditionnement** : un nombre de contenants multiplié par une quantité par contenant.
 - L'application calcule automatiquement la **quantité totale** de chaque denrée. Exemple : 10 sacs x 100 pommes de terre = 1 000 pommes de terre.
-- L'application calcule la **dotation par bénéficiaire** de chaque denrée, par division de la quantité totale par le nombre de bénéficiaires retenu, **arrondie à l'inférieur, avec un plancher à 1** : la dotation affichée n'est jamais 0 (voir la règle ci-dessous).
+- L'application calcule la **dotation par bénéficiaire** de chaque denrée, par division de la quantité totale par le nombre de bénéficiaires retenu, **arrondie à l'inférieur au palier de l'unité, avec un plancher d'un palier** : la dotation affichée n'est jamais 0 (voir la règle ci-dessous).
 - L'application affiche le **reste** (la quantité non répartie). Exemple : 1 000 / 97 bénéficiaires = 10 par personne, reste 30. Ce que l'association fait du reste est laissé à sa décision sur le terrain.
 - **Cas où il n'y a pas assez pour tout le monde.** Si la quantité totale est inférieure au nombre de bénéficiaires (la division donnerait moins de 1 par personne), la dotation est fixée à 1 par personne, mais la denrée s'épuise avant d'avoir servi tout le monde. L'application l'indique clairement : "1 par personne, mais seulement pour X bénéficiaires sur Y". Exemple : 50 yaourts pour 100 inscrits donnent 1 yaourt pour 50 personnes, et 50 personnes sans yaourt. L'application ne cherche pas à résoudre ce manque - il fait partie de la réalité du terrain - elle le rend visible pour que l'association décide en connaissance de cause.
 - Le coordinateur choisit la **base de calcul** du nombre de bénéficiaires :
@@ -191,7 +195,7 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 
 **Lien avec les autres modules.** Ce module s'appuie sur le module Inscriptions (base par défaut) et, en option, sur le module Présence (pour le recalcul sur les présents réels). C'est pourquoi il est placé au cœur du bloc opérationnel de la V1.
 
-**Précision sur l'arrondi selon l'unité.** Pour les denrées comptées à l'unité (pommes de terre, yaourts), l'arrondi à l'inférieur donne un entier. Pour les denrées au poids ou au volume (légumes en vrac, lait), l'arrondi se fait à un palier pratique (par exemple au demi-kilo) plutôt qu'à l'entier ; ce palier est un raffinement de présentation, le principe reste l'arrondi à l'inférieur avec affichage du reste.
+**Précision sur l'arrondi selon l'unité.** Pour les denrées comptées à l'unité ou à la pièce (pommes de terre, yaourts), le palier est 1 : l'arrondi à l'inférieur donne un entier. Pour les denrées au poids ou au volume (légumes en vrac, lait), le palier est le demi-kilo ou le demi-litre : 15 kg pour 20 personnes donnent 0,5 kg chacun, avec 5 kg de reste. Le principe reste l'arrondi à l'inférieur avec affichage du reste.
 
 **Repoussé (V2 et au-delà) :** la connexion de ce calcul à un stock permanent (où les denrées proviendraient d'un inventaire alimenté par les dons), les denrées "à volonté" ou "selon disponibilité", et la répartition pondérée (donner plus à certains profils). En V1, la répartition est égalitaire et le calcul est autonome.
 
@@ -272,21 +276,21 @@ Gérer des campagnes (collecte, sensibilisation, recrutement) avec objectif, dur
 
 Ces règles métier transverses conditionnent le comportement du produit. Elles sont en V1 sauf mention contraire.
 
-**RG1 - Fréquence d'inscription des bénéficiaires.** L'association peut définir une limite (par exemple : un bénéficiaire ne peut s'inscrire qu'à une distribution par semaine). En V1, cette limite est un paramètre simple ; sa configuration fine par l'association est un raffinement ultérieur.
+**RG1 - Fréquence d'inscription des bénéficiaires.** L'association peut définir une limite (par exemple : un bénéficiaire ne peut s'inscrire qu'à une distribution par semaine). En V1, cette limite est un paramètre simple ; sa configuration fine par l'association est un raffinement ultérieur. Précisions retenues en octobre 2026 : la limite par défaut est d'une distribution par semaine ; la semaine est la semaine calendaire (du lundi au dimanche) de la distribution visée ; les inscriptions confirmées et celles en liste d'attente comptent, celles des distributions annulées non.
 
 **RG2 - Unicité par distribution.** Un bénéficiaire ne peut s'inscrire qu'une fois à une même distribution (cohérent avec la règle réelle "un colis par personne par distribution").
 
 **RG3 - Liste d'attente.** Quand la capacité est atteinte, les nouvelles inscriptions vont en liste d'attente et sont promues automatiquement, dans l'ordre, dès qu'une place se libère.
 
-**RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
+**RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur : à la clôture d'une distribution, un bénéficiaire confirmé resté non pointé est enregistré absent (absence déduite, distinguée d'une absence pointée) ; un pointage fait après coup par un gestionnaire la corrige. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
 
-**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
+**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles : le bénéficiaire lui-même et le responsable, dont chaque consultation est tracée dans le journal d'audit ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
 
 **RG6 - Annulation et information.** Toute annulation de distribution déclenche une notification automatique de tous les inscrits. Aucun inscrit ne doit se déplacer pour rien faute d'information.
 
 **RG7 - Non-enfermement.** Une association peut à tout moment exporter et supprimer l'intégralité de ses données.
 
-**RG8 - Répartition des denrées.** La dotation par bénéficiaire d'une denrée est égale à la quantité totale divisée par le nombre de bénéficiaires retenu, **arrondie à l'inférieur, avec un plancher à 1** (la dotation n'est jamais 0). La quantité totale est calculée à partir du conditionnement (nombre de contenants x quantité par contenant). Le nombre de bénéficiaires retenu est, par défaut, le nombre d'inscrits ; le coordinateur peut choisir le nombre de présents réels. Lorsque la quantité totale est inférieure au nombre de bénéficiaires, la dotation est de 1 par personne et la denrée s'épuise avant d'avoir servi tout le monde : l'application affiche alors le nombre de bénéficiaires servis et le nombre de bénéficiaires sans, sans chercher à corriger ce manque. Le reste éventuel est affiché. Chaque denrée est calculée indépendamment. La répartition est égalitaire en V1.
+**RG8 - Répartition des denrées.** La dotation par bénéficiaire d'une denrée est égale à la quantité totale divisée par le nombre de bénéficiaires retenu, **arrondie à l'inférieur au palier de l'unité (1 à l'unité et à la pièce, 0,5 au kilo et au litre), avec un plancher d'un palier** (la dotation n'est jamais 0). La quantité totale est calculée à partir du conditionnement (nombre de contenants x quantité par contenant). Le nombre de bénéficiaires retenu est, par défaut, le nombre d'inscrits ; le coordinateur peut choisir le nombre de présents réels, et ce choix est enregistré sur la distribution. Lorsque la quantité totale ne permet pas de donner un palier à chacun, la dotation est d'un palier par personne et la denrée s'épuise avant d'avoir servi tout le monde : l'application affiche alors le nombre de bénéficiaires servis et le nombre de bénéficiaires sans, sans chercher à corriger ce manque. Le reste éventuel est affiché. Chaque denrée est calculée indépendamment. La répartition est égalitaire en V1.
 
 ## 7. Exigences non fonctionnelles
 

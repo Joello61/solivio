@@ -14,6 +14,10 @@ import {
 import { inscrire, desinscrire } from "@/lib/api/distributions";
 import type { InscriptionResponse, TypeInscription, CreneauResponse } from "@/types/distribution";
 
+function libelleCreneau(c: CreneauResponse): string {
+  return `${c.heureDebut.slice(0, 5)} - ${c.heureFin.slice(0, 5)} (${c.capacite} places)`;
+}
+
 interface Props {
   distributionId: string;
   creneaux: CreneauResponse[];
@@ -43,7 +47,7 @@ export function InscriptionButton({
 
   async function handleInscrire() {
     if (necessisteChoixCreneau && !creneauChoisi) {
-      setErreur("Veuillez choisir un creneau.");
+      setErreur("Veuillez choisir un créneau.");
       return;
     }
     setPending(true);
@@ -68,7 +72,7 @@ export function InscriptionButton({
       router.refresh();
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Desinscription impossible.");
+      setErreur(err.detail ?? err.message ?? "Désinscription impossible.");
     } finally {
       setPending(false);
     }
@@ -80,7 +84,7 @@ export function InscriptionButton({
 
       {estInscrit ? (
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-800/40 px-4 py-2.5">
+          <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-2.5">
             <p className="text-base font-bold text-primary leading-none">
               {inscriptionExistante?.statut === "LISTE_ATTENTE" ? "Liste d'attente" : "Inscrit(e)"}
             </p>
@@ -91,7 +95,7 @@ export function InscriptionButton({
             )}
           </div>
           <Button size="sm" variant="outline" onClick={handleDesinscrire} disabled={pending}>
-            {pending ? <><Spinner size="sm" /> Annulation...</> : "Se desinscrire"}
+            {pending ? <><Spinner size="sm" /> Annulation...</> : "Se désinscrire"}
           </Button>
         </div>
       ) : (
@@ -99,19 +103,20 @@ export function InscriptionButton({
           {necessisteChoixCreneau && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground" htmlFor="creneau-select">
-                Choisir un creneau
+                Choisir un créneau
               </label>
               <Select
+                items={creneaux.map((c) => ({ value: c.id, label: libelleCreneau(c) }))}
                 value={creneauChoisi || undefined}
                 onValueChange={(v) => { if (v !== null) setCreneauChoisi(v); }}
               >
                 <SelectTrigger id="creneau-select" className="w-full">
-                  <SelectValue placeholder="-- Selectionnez un creneau --" />
+                  <SelectValue placeholder="-- Sélectionnez un créneau --" />
                 </SelectTrigger>
                 <SelectContent>
                   {creneaux.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.heureDebut} - {c.heureFin} ({c.capacite} places)
+                      {libelleCreneau(c)}
                     </SelectItem>
                   ))}
                 </SelectContent>

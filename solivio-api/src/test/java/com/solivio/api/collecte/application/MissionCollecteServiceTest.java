@@ -1,5 +1,6 @@
 package com.solivio.api.collecte.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
 import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +38,7 @@ class MissionCollecteServiceTest {
     @Mock private MissionCollecteRepository missionRepository;
     @Mock private CollecteEventPublisher eventPublisher;
     @Mock private PersonneQueryPort personneQueryPort;
+    @Mock private AuditService auditService;
 
     private MissionCollecteService service;
     private UUID missionId;
@@ -45,7 +48,7 @@ class MissionCollecteServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MissionCollecteService(missionRepository, eventPublisher, personneQueryPort);
+        service = new MissionCollecteService(missionRepository, eventPublisher, personneQueryPort, auditService);
         missionId = UUID.randomUUID();
         creeParId = UUID.randomUUID();
         benevoleId = UUID.randomUUID();
@@ -201,12 +204,67 @@ class MissionCollecteServiceTest {
 
         MissionCollecteResponse response = service.annuler(
             missionId, new AnnulerMissionRequest("Raison test"),
-            "admin@example.com"
+            "admin@example.com", true
         );
 
         assertThat(response.statut()).isEqualTo("ANNULEE");
         assertThat(response.raisonAnnulation()).isEqualTo("Raison test");
         verify(eventPublisher).publierAnnulee(any(), any(), any());
+    }
+
+    // I3 : un benevole n'annule que la mission qui lui est assignee.
+    @Test
+    void annuler_parUnBenevoleNonAssigne_estIntrouvable() {
+        mission.prendreEnCharge(benevoleId);
+        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(personneQueryPort.trouverPersonne("autre@example.com"))
+            .thenReturn(new PersonneInfo(UUID.randomUUID(), "Autre", "Benevole"));
+
+        assertThatThrownBy(() -> service.annuler(
+            missionId, new AnnulerMissionRequest("Raison"), "autre@example.com", false))
+            .isInstanceOf(NotFoundException.class);
+        verify(missionRepository, never()).save(any());
+    }
+
+    @Test
+    void annuler_parLeBenevoleAssigne_passeMissionAnnulee() {
+        mission.prendreEnCharge(benevoleId);
+        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(personneQueryPort.trouverPersonne("ben@example.com"))
+            .thenReturn(new PersonneInfo(benevoleId, "Ben", "Evole"));
+        when(missionRepository.save(any(MissionCollecte.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MissionCollecteResponse response = service.annuler(
+            missionId, new AnnulerMissionRequest("Empechement"), "ben@example.com", false);
+
+        assertThat(response.statut()).isEqualTo("ANNULEE");
+    }
+
+    @Test
+    void detail_parUnAutreBenevole_masqueLeNomDuBenevoleAssigne() {
+        mission.prendreEnCharge(benevoleId);
+        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(personneQueryPort.trouverPersonne("autre@example.com"))
+            .thenReturn(new PersonneInfo(UUID.randomUUID(), "Autre", "Benevole"));
+
+        MissionCollecteResponse response = service.detail(missionId, "autre@example.com", false);
+
+        assertThat(response.benevoleNomComplet()).isNull();
+        verify(personneQueryPort, never()).trouverPersonneParId(benevoleId);
+    }
+
+    @Test
+    void detail_parLeBenevoleAssigne_afficheSonNom() {
+        mission.prendreEnCharge(benevoleId);
+        when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(personneQueryPort.trouverPersonne("ben@example.com"))
+            .thenReturn(new PersonneInfo(benevoleId, "Ben", "Evole"));
+        when(personneQueryPort.trouverPersonneParId(benevoleId))
+            .thenReturn(new PersonneContactInfo(benevoleId, "ben@example.com", "Ben", "Evole"));
+
+        MissionCollecteResponse response = service.detail(missionId, "ben@example.com", false);
+
+        assertThat(response.benevoleNomComplet()).isNotNull();
     }
 
     @Test
@@ -223,8 +281,10 @@ class MissionCollecteServiceTest {
     @Test
     void detail_retourneLaMission() {
         when(missionRepository.findById(missionId)).thenReturn(Optional.of(mission));
+        when(personneQueryPort.trouverPersonne("admin@example.com"))
+            .thenReturn(new PersonneInfo(creeParId, "Admin", "Test"));
 
-        MissionCollecteResponse response = service.detail(missionId);
+        MissionCollecteResponse response = service.detail(missionId, "admin@example.com", true);
 
         assertThat(response.id()).isEqualTo(missionId);
         assertThat(response.titre()).isEqualTo("Collecte test");
@@ -234,7 +294,7 @@ class MissionCollecteServiceTest {
     void detail_echoueSiMissionInexistante() {
         when(missionRepository.findById(missionId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.detail(missionId))
+        assertThatThrownBy(() -> service.detail(missionId, "admin@example.com", true))
             .isInstanceOf(NotFoundException.class);
     }
 

@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -65,6 +67,17 @@ public class SecurityConfig {
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
         this.environment = environment;
+    }
+
+    // ADR-011 : un responsable peut tout ce que peut un coordinateur, qui peut tout ce
+    // que peut un benevole. Le beneficiaire reste hors hierarchie. Statique, comme le
+    // recommande Spring Security, pour etre disponible avant la securite des methodes.
+    @Bean
+    static RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.withDefaultRolePrefix()
+            .role("RESPONSABLE").implies("COORDINATEUR")
+            .role("COORDINATEUR").implies("BENEVOLE")
+            .build();
     }
 
     @Bean

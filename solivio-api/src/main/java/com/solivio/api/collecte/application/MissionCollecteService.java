@@ -1,5 +1,6 @@
 package com.solivio.api.collecte.application;
 
+import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.collecte.domain.MissionCollecte;
 import com.solivio.api.collecte.domain.StatutMission;
 import com.solivio.api.collecte.infrastructure.evenements.CollecteEventPublisher;
@@ -12,11 +13,10 @@ import com.solivio.api.collecte.infrastructure.web.dto.MissionCollecteResponse;
 import com.solivio.api.collecte.infrastructure.web.dto.UpdateMissionCollecteRequest;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneInfo;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,15 +35,18 @@ public class MissionCollecteService {
     private final MissionCollecteRepository missionRepository;
     private final CollecteEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final AuditService auditService;
 
     public MissionCollecteService(
         MissionCollecteRepository missionRepository,
         CollecteEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        AuditService auditService
     ) {
         this.missionRepository = missionRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.auditService = auditService;
     }
 
     public MissionCollecteResponse creer(CreateMissionCollecteRequest request,
@@ -51,8 +54,8 @@ public class MissionCollecteService {
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         int capacite = request.capacitePersonnes() != null ? request.capacitePersonnes() : 6;
         MissionCollecte mission = new MissionCollecte(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             placeId(request.lieuCollecte()),
             adresse(request.lieuCollecte()),
             latitude(request.lieuCollecte()),
@@ -67,7 +70,8 @@ public class MissionCollecteService {
         );
         missionRepository.save(mission);
         eventPublisher.publierCreee(mission.getId(), mission.getDateHeure());
-        return toResponse(mission, null);
+        auditService.tracer("MISSION_COLLECTE_CREEE", "mission_collecte", mission.getId());
+        return toResponse(mission, null, null);
     }
 
     public MissionCollecteResponse modifier(UUID missionId, UpdateMissionCollecteRequest request) {
@@ -76,10 +80,10 @@ public class MissionCollecteService {
             throw new ConflictException("Modification impossible : la mission n'est pas disponible");
         }
         if (request.titre() != null) {
-            mission.setTitre(Jsoup.clean(request.titre(), Safelist.none()));
+            mission.setTitre(Assainissement.nettoyer(request.titre()));
         }
         if (request.description() != null) {
-            mission.setDescription(Jsoup.clean(request.description(), Safelist.none()));
+            mission.setDescription(Assainissement.nettoyer(request.description()));
         }
         if (request.dateHeure() != null) {
             mission.setDateHeure(request.dateHeure());
@@ -99,19 +103,24 @@ public class MissionCollecteService {
             mission.setLieuDepotLatitude(latitude(request.lieuDepot()));
             mission.setLieuDepotLongitude(longitude(request.lieuDepot()));
         }
-        return toResponse(missionRepository.save(mission), null);
+        auditService.tracer("MISSION_COLLECTE_MODIFIEE", "mission_collecte", missionId);
+        return toResponse(missionRepository.save(mission), null, null);
     }
 
     public MissionCollecteResponse annuler(UUID missionId, AnnulerMissionRequest request,
-                                           String emailPar) {
+                                           String emailPar, boolean gestionnaire) {
         PersonneInfo par = personneQueryPort.trouverPersonne(emailPar);
         MissionCollecte mission = trouverOuEchouer(missionId);
+        if (!gestionnaire && !par.id().equals(mission.getBenevoleId())) {
+            throw new NotFoundException("Mission de collecte introuvable : " + missionId);
+        }
         UUID benevoleAssigneId = mission.getBenevoleId();
-        String raisonSaine = request.raison() != null ? Jsoup.clean(request.raison(), Safelist.none()) : null;
+        String raisonSaine = Assainissement.nettoyer(request.raison());
         mission.annuler(par.id(), raisonSaine);
         missionRepository.save(mission);
         eventPublisher.publierAnnulee(mission.getId(), mission.getDateHeure(), benevoleAssigneId);
-        return toResponse(mission, null);
+        auditService.tracer("MISSION_COLLECTE_ANNULEE", "mission_collecte", missionId);
+        return toResponse(mission, null, par.id());
     }
 
     public MissionCollecteResponse prendre(UUID missionId, String emailBenevole) {
@@ -127,7 +136,8 @@ public class MissionCollecteService {
         mission.prendreEnCharge(benevole.id());
         missionRepository.save(mission);
         PersonneContactInfo info = personneQueryPort.trouverPersonneParId(benevole.id());
-        return toResponse(mission, info.nom() + " " + info.prenom());
+        auditService.tracer("MISSION_COLLECTE_PRISE", "mission_collecte", missionId);
+        return toResponse(mission, info.nom() + " " + info.prenom(), benevole.id());
     }
 
     public MissionCollecteResponse liberer(UUID missionId, String emailBenevole) {
@@ -141,7 +151,8 @@ public class MissionCollecteService {
         }
         mission.liberer();
         missionRepository.save(mission);
-        return toResponse(mission, null);
+        auditService.tracer("MISSION_COLLECTE_LIBEREE", "mission_collecte", missionId);
+        return toResponse(mission, null, benevole.id());
     }
 
     public MissionCollecteResponse validerCollecte(UUID missionId) {
@@ -149,7 +160,8 @@ public class MissionCollecteService {
         mission.validerCollecte();
         missionRepository.save(mission);
         String benevoleNom = resolveBenevoleNom(mission.getBenevoleId());
-        return toResponse(mission, benevoleNom);
+        auditService.tracer("MISSION_COLLECTE_VALIDEE", "mission_collecte", missionId);
+        return toResponse(mission, benevoleNom, null);
     }
 
     public MissionCollecteResponse validerDepot(UUID missionId, String emailBenevole) {
@@ -158,23 +170,41 @@ public class MissionCollecteService {
         mission.validerDepot(benevole.id());
         missionRepository.save(mission);
         PersonneContactInfo info = personneQueryPort.trouverPersonneParId(benevole.id());
-        return toResponse(mission, info.nom() + " " + info.prenom());
+        auditService.tracer("MISSION_DEPOT_VALIDE", "mission_collecte", missionId);
+        return toResponse(mission, info.nom() + " " + info.prenom(), benevole.id());
     }
 
     @Transactional(readOnly = true)
-    public List<MissionCollecteResponse> lister(StatutMission statut) {
+    public List<MissionCollecteResponse> lister(StatutMission statut, String emailLecteur, boolean gestionnaire) {
         List<MissionCollecte> missions = statut != null
             ? missionRepository.findByStatutOrderByDateHeureAsc(statut)
             : missionRepository.findAllByOrderByDateHeureAsc();
+        UUID lecteurId = personneIdOuNull(emailLecteur);
         return missions.stream()
-            .map(m -> toResponse(m, resolveBenevoleNom(m.getBenevoleId())))
+            .map(m -> toResponse(m, nomVisible(m, gestionnaire, lecteurId), lecteurId))
             .toList();
     }
 
     @Transactional(readOnly = true)
-    public MissionCollecteResponse detail(UUID missionId) {
+    public MissionCollecteResponse detail(UUID missionId, String emailLecteur, boolean gestionnaire) {
         MissionCollecte mission = trouverOuEchouer(missionId);
-        return toResponse(mission, resolveBenevoleNom(mission.getBenevoleId()));
+        UUID lecteurId = personneIdOuNull(emailLecteur);
+        return toResponse(mission, nomVisible(mission, gestionnaire, lecteurId), lecteurId);
+    }
+
+    // Minimisation (CLAUDE.md section 6) : un benevole ne voit que son propre nom
+    // sur les missions, jamais celui des autres.
+    private String nomVisible(MissionCollecte mission, boolean gestionnaire, UUID lecteurId) {
+        boolean assigneAuLecteur = lecteurId != null && lecteurId.equals(mission.getBenevoleId());
+        return gestionnaire || assigneAuLecteur ? resolveBenevoleNom(mission.getBenevoleId()) : null;
+    }
+
+    private UUID personneIdOuNull(String email) {
+        try {
+            return personneQueryPort.trouverPersonne(email).id();
+        } catch (NotFoundException e) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -183,7 +213,7 @@ public class MissionCollecteService {
         PersonneContactInfo info = personneQueryPort.trouverPersonneParId(benevole.id());
         String nom = info.nom() + " " + info.prenom();
         return missionRepository.findByBenevoleIdOrderByDateHeureAsc(benevole.id()).stream()
-            .map(m -> toResponse(m, nom))
+            .map(m -> toResponse(m, nom, benevole.id()))
             .toList();
     }
 
@@ -204,7 +234,7 @@ public class MissionCollecteService {
         }
     }
 
-    static MissionCollecteResponse toResponse(MissionCollecte m, String benevoleNomComplet) {
+    static MissionCollecteResponse toResponse(MissionCollecte m, String benevoleNomComplet, UUID lecteurId) {
         return new MissionCollecteResponse(
             m.getId(),
             m.getTitre(),
@@ -218,6 +248,7 @@ public class MissionCollecteService {
             m.getStatut().name(),
             m.getBenevoleId(),
             benevoleNomComplet,
+            lecteurId != null && lecteurId.equals(m.getBenevoleId()),
             m.getDatePriseEnCharge(),
             m.getDateCollecteEffectuee(),
             m.getDateDepotValide(),

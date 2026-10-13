@@ -41,16 +41,15 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-xl border border-input bg-white px-4 py-2 text-sm whitespace-nowrap",
+        "flex w-fit items-center justify-between gap-1.5 rounded-xl border border-input bg-card px-4 py-2 text-sm whitespace-nowrap",
         "transition-all duration-150 outline-none select-none",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20",
-        "focus-visible:shadow-[0_0_0_1px_oklch(0.532_0.118_185_/_0.15)]",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/60",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
         "data-placeholder:text-muted-foreground/60",
         "data-[size=default]:h-10 data-[size=sm]:h-8 data-[size=sm]:px-3",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
-        "dark:bg-neutral-900 dark:border-neutral-700",
+        "",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
@@ -141,8 +140,8 @@ function SelectItem({
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-lg px-3 py-2 pr-8 text-sm",
         "outline-hidden select-none transition-colors duration-100",
-        "hover:bg-teal-50 hover:text-teal-700",
-        "focus:bg-teal-50 focus:text-teal-700",
+        "hover:bg-primary/10 hover:text-primary",
+        "focus:bg-primary/10 focus:text-primary",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className

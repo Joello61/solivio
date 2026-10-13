@@ -4,5 +4,8 @@
 |`com.solivio.api.distribution`
 |Bean references
 |* `c.s.a.s.identity.PersonneQueryPort` (in shared)
+* `c.s.a.s.temps.HorlogeAssociation` (in shared)
 * `c.s.a.a.application.AuditService` (in audit)
+* `c.s.a.s.inscription.InscriptionQueryPort` (in shared)
+* `c.s.a.s.verrou.VerrouDistribution` (in shared)
 |===

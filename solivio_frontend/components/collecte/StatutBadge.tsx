@@ -3,23 +3,23 @@ import type { StatutMission } from "@/types/collecte";
 const CONFIG: Record<StatutMission, { label: string; className: string }> = {
   DISPONIBLE: {
     label: "Disponible",
-    className: "bg-teal-50 text-teal-700 border border-teal-200",
+    className: "bg-primary/10 text-primary border border-primary/25",
   },
   PRISE_EN_CHARGE: {
     label: "Prise en charge",
-    className: "bg-amber-50 text-amber-700 border border-amber-200",
+    className: "bg-warning/10 text-warning border border-warning/30",
   },
   COLLECTE_EFFECTUEE: {
-    label: "Collecte effectuee",
-    className: "bg-blue-50 text-blue-700 border border-blue-200",
+    label: "Collecte effectuée",
+    className: "bg-info/10 text-info border border-info/30",
   },
   DEPOT_VALIDE: {
-    label: "Depot valide",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    label: "Dépôt validé",
+    className: "bg-success/10 text-success border border-success/30",
   },
   ANNULEE: {
-    label: "Annulee",
-    className: "bg-red-50 text-red-700 border border-red-200",
+    label: "Annulée",
+    className: "bg-destructive/10 text-destructive border border-destructive/30",
   },
 };
 

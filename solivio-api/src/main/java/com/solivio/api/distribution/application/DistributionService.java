@@ -1,8 +1,7 @@
 package com.solivio.api.distribution.application;
 
-import com.solivio.api.shared.lieu.LieuResponse;
-import com.solivio.api.shared.lieu.LieuRequest;
-import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.audit.application.AuditService;
+import com.solivio.api.distribution.domain.BaseRepartition;
 import com.solivio.api.distribution.domain.Creneau;
 import com.solivio.api.distribution.domain.Distribution;
 import com.solivio.api.distribution.domain.ModeCreneauDistribution;
@@ -17,45 +16,61 @@ import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
+import com.solivio.api.shared.lieu.Lieu;
+import com.solivio.api.shared.lieu.LieuRequest;
+import com.solivio.api.shared.lieu.LieuResponse;
+import com.solivio.api.shared.temps.HorlogeAssociation;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class DistributionService {
 
+    private static final List<StatutDistribution> STATUTS_OUVERTS =
+        List.of(StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS);
+
     private final DistributionRepository distributionRepository;
     private final CreneauRepository creneauRepository;
     private final DistributionEventPublisher eventPublisher;
     private final PersonneQueryPort personneQueryPort;
+    private final HorlogeAssociation horloge;
+    private final AuditService auditService;
 
     public DistributionService(
         DistributionRepository distributionRepository,
         CreneauRepository creneauRepository,
         DistributionEventPublisher eventPublisher,
-        PersonneQueryPort personneQueryPort
+        PersonneQueryPort personneQueryPort,
+        HorlogeAssociation horloge,
+        AuditService auditService
     ) {
         this.distributionRepository = distributionRepository;
         this.creneauRepository = creneauRepository;
         this.eventPublisher = eventPublisher;
         this.personneQueryPort = personneQueryPort;
+        this.horloge = horloge;
+        this.auditService = auditService;
     }
 
     public DistributionResponse creer(CreateDistributionRequest request, String emailCreateur) {
-        validerCreneaux(request);
-        PersonneQueryPort.PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
+        if (request.date().isBefore(horloge.aujourdhui())) {
+            throw new IllegalArgumentException("La date de la distribution est deja passee.");
+        }
         ModeCreneauDistribution mode = parseModeCreneauDistribution(request.modeCreneau());
+        validerCreneaux(request.creneaux(), mode);
+        PersonneQueryPort.PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
 
         Distribution distribution = new Distribution(
-            Jsoup.clean(request.titre(), Safelist.none()),
-            request.description() != null ? Jsoup.clean(request.description(), Safelist.none()) : null,
+            Assainissement.nettoyer(request.titre()),
+            Assainissement.nettoyer(request.description()),
             toLieu(request.lieu()),
             request.date(),
             request.capaciteBeneficiaires(),
@@ -71,6 +86,7 @@ public class DistributionService {
             ))
             .toList();
 
+        auditService.tracer("DISTRIBUTION_CREEE", "distribution", distribution.getId());
         return toResponse(distribution, creneaux);
     }
 
@@ -78,17 +94,31 @@ public class DistributionService {
         Distribution d = trouverOuEchouer(distributionId);
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
+        auditService.tracer("DISTRIBUTION_PUBLIEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
     public DistributionResponse demarrer(UUID distributionId) {
         Distribution d = trouverOuEchouer(distributionId);
-        if (d.getDate().isAfter(LocalDate.now())) {
+        if (d.getDate().isAfter(horloge.aujourdhui())) {
             throw new ConflictException(
                 "La distribution ne peut pas etre demarree avant sa date : " + d.getDate()
             );
         }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
+        auditService.tracer("DISTRIBUTION_DEMARREE", "distribution", distributionId);
+        return toResponse(distributionRepository.save(d),
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+    }
+
+    /** RG8 : nombre de beneficiaires retenu pour la repartition, choisi par le coordinateur. */
+    public DistributionResponse changerBaseRepartition(UUID distributionId, String base) {
+        Distribution d = trouverOuEchouer(distributionId);
+        if (d.getStatut() == StatutDistribution.ANNULEE) {
+            throw new ConflictException("La repartition d'une distribution annulee ne se modifie plus.");
+        }
+        d.setBaseRepartition(BaseRepartition.valueOf(base));
+        auditService.tracer("DISTRIBUTION_BASE_REPARTITION", "distribution", distributionId);
         return toResponse(distributionRepository.save(d),
             creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
@@ -98,35 +128,52 @@ public class DistributionService {
         d.transitionnerVers(StatutDistribution.TERMINEE, null);
         distributionRepository.save(d);
         eventPublisher.publierTerminee(distributionId, d.getDate());
+        auditService.tracer("DISTRIBUTION_TERMINEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
     public DistributionResponse annuler(UUID distributionId, String motif) {
         Distribution d = trouverOuEchouer(distributionId);
-        String motifSain = motif != null ? Jsoup.clean(motif, Safelist.none()) : null;
+        String motifSain = Assainissement.nettoyer(motif);
         d.transitionnerVers(StatutDistribution.ANNULEE, motifSain);
         distributionRepository.save(d);
         eventPublisher.publierAnnulee(distributionId, d.getDate());
+        auditService.tracer("DISTRIBUTION_ANNULEE", "distribution", distributionId);
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
     @Transactional(readOnly = true)
     public List<DistributionResponse> lister() {
-        return distributionRepository.findAllByOrderByDateDesc().stream()
-            .map(d -> toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(d.getId())))
-            .toList();
+        return avecCreneaux(distributionRepository.findAllByOrderByDateDesc());
     }
 
     @Transactional(readOnly = true)
+    // Vue des membres qui ne gerent pas : distributions a venir ou du jour, en cours
+    // comprises, de la plus proche a la plus lointaine. L'historique passe par
+    // "Mes inscriptions".
     public List<DistributionResponse> listerPubliees() {
-        return distributionRepository.findByStatutOrderByDateDesc(StatutDistribution.PUBLIEE).stream()
-            .map(d -> toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(d.getId())))
+        return avecCreneaux(distributionRepository.findByStatutInAndDateGreaterThanEqualOrderByDateAsc(
+            STATUTS_OUVERTS, horloge.aujourdhui()));
+    }
+
+    // Une requete pour les creneaux de toute la liste, au lieu d'une par distribution.
+    private List<DistributionResponse> avecCreneaux(List<Distribution> distributions) {
+        Map<UUID, List<Creneau>> creneauxParDistribution = creneauRepository
+            .findByDistributionIdInOrderByHeureDebut(distributions.stream().map(Distribution::getId).toList())
+            .stream()
+            .collect(Collectors.groupingBy(Creneau::getDistributionId));
+        return distributions.stream()
+            .map(d -> toResponse(d, creneauxParDistribution.getOrDefault(d.getId(), List.of())))
             .toList();
     }
 
     @Transactional(readOnly = true)
-    public DistributionResponse detail(UUID distributionId) {
+    public DistributionResponse detail(UUID distributionId, boolean gestionnaire) {
         Distribution d = trouverOuEchouer(distributionId);
+        // Un brouillon n'existe pas pour qui ne gere pas les distributions (404, pas 403).
+        if (!gestionnaire && d.getStatut() == StatutDistribution.BROUILLON) {
+            throw new NotFoundException("Distribution introuvable : " + distributionId);
+        }
         return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
     }
 
@@ -136,11 +183,14 @@ public class DistributionService {
             .orElseThrow(() -> new NotFoundException("Distribution introuvable : " + distributionId));
     }
 
-    private void validerCreneaux(CreateDistributionRequest request) {
-        if (request.creneaux() == null || request.creneaux().isEmpty()) {
+    static void validerCreneaux(List<AjouterCreneauRequest> creneaux, ModeCreneauDistribution mode) {
+        if (creneaux == null || creneaux.isEmpty()) {
             throw new IllegalArgumentException("Au moins un creneau est requis.");
         }
-        for (AjouterCreneauRequest c : request.creneaux()) {
+        if (mode == ModeCreneauDistribution.CRENEAU_UNIQUE && creneaux.size() > 1) {
+            throw new IllegalArgumentException("Une distribution en creneau unique n'a qu'un seul creneau.");
+        }
+        for (AjouterCreneauRequest c : creneaux) {
             LocalTime debut = c.heureDebut();
             LocalTime fin = c.heureFin();
             if (debut == null || fin == null || !fin.isAfter(debut)) {
@@ -151,7 +201,7 @@ public class DistributionService {
         }
     }
 
-    private ModeCreneauDistribution parseModeCreneauDistribution(String modeCreneau) {
+    static ModeCreneauDistribution parseModeCreneauDistribution(String modeCreneau) {
         if (modeCreneau == null || modeCreneau.isBlank()) {
             return ModeCreneauDistribution.CRENEAU_UNIQUE;
         }
@@ -183,7 +233,7 @@ public class DistributionService {
         );
     }
 
-    private static Lieu toLieu(LieuRequest r) {
+    static Lieu toLieu(LieuRequest r) {
         if (r == null) {
             return null;
         }

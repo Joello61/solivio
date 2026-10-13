@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  bottomNavItems,
   filterNavItems,
   isNavItemActive,
   NAV_SECTIONS,
@@ -67,6 +68,50 @@ describe("NAV_SECTIONS", () => {
     const firstSection = NAV_SECTIONS[0];
     expect(firstSection.items.length).toBeGreaterThan(0);
     // Certains items peuvent avoir des restrictions (ex: Mes missions pour les bénévoles)
+  });
+
+  // Le backend refuse au coordinateur GET /membres et PATCH /association.
+  it("ne propose ni Membres ni Configuration au coordinateur", () => {
+    const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["coordinateur"])).map((i) => i.href);
+    expect(hrefs).not.toContain("/association/membres");
+    expect(hrefs).not.toContain("/association/configuration");
+  });
+
+  it("propose les roles benevoles au coordinateur et au responsable seulement", () => {
+    const pour = (role: string) =>
+      NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, [role])).map((i) => i.href);
+    expect(pour("coordinateur")).toContain("/association/roles-benevoles");
+    expect(pour("responsable")).toContain("/association/roles-benevoles");
+    expect(pour("benevole")).not.toContain("/association/roles-benevoles");
+  });
+
+  it("propose les statistiques aux gestionnaires seulement", () => {
+    const pour = (role: string) =>
+      NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, [role])).map((i) => i.href);
+    expect(pour("coordinateur")).toContain("/statistiques");
+    expect(pour("super_admin")).toContain("/statistiques");
+    expect(pour("benevole")).not.toContain("/statistiques");
+    expect(pour("beneficiaire")).not.toContain("/statistiques");
+  });
+
+  it("adapte la barre basse au role", () => {
+    const hrefs = (roles: string[]) => bottomNavItems(roles).map((i) => i.href);
+    expect(hrefs(["beneficiaire"])).toEqual(["/dashboard", "/distributions", "/mes-inscriptions", "/mon-compte"]);
+    expect(hrefs(["benevole"])).toEqual(["/dashboard", "/distributions", "/missions-collecte", "/mon-compte"]);
+    expect(hrefs(["coordinateur"])).toEqual(["/dashboard", "/distributions", "/statistiques", "/mon-compte"]);
+    expect(hrefs(["super_admin"])).toContain("/statistiques");
+  });
+
+  it("ne propose pas les missions de collecte au beneficiaire", () => {
+    const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["beneficiaire"])).map((i) => i.href);
+    expect(hrefs).not.toContain("/missions-collecte");
+    expect(hrefs).not.toContain("/mes-missions-collecte");
+  });
+
+  it("ne reference plus le role admin supprime", () => {
+    NAV_SECTIONS.flatMap((s) => s.items).forEach((item) => {
+      expect(item.roles ?? []).not.toContain("admin");
+    });
   });
 
   it("la section Administration contient uniquement des items super_admin", () => {

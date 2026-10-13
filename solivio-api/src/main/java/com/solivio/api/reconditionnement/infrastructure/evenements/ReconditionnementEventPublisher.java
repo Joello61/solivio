@@ -1,5 +1,6 @@
 package com.solivio.api.reconditionnement.infrastructure.evenements;
 
+import com.solivio.api.reconditionnement.events.InscriptionReconditionnementConfirmee;
 import com.solivio.api.reconditionnement.events.SessionReconditionnementAnnulee;
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -18,6 +19,10 @@ public class ReconditionnementEventPublisher {
 
     public ReconditionnementEventPublisher(ApplicationEventPublisher events) {
         this.events = events;
+    }
+
+    public void publierInscriptionConfirmee(UUID sessionId, UUID personneId) {
+        events.publishEvent(new InscriptionReconditionnementConfirmee(sessionId, personneId, UUID.randomUUID()));
     }
 
     public void publierAnnulee(UUID sessionId, ZonedDateTime dateHeureDebut) {

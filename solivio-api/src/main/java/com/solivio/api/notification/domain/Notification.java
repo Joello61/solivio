@@ -20,6 +20,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Notification {
 
+    /** Longueur de la colonne type_evenement (V13) : chaque TypeEvenementNotification doit y tenir. */
+    public static final int LONGUEUR_TYPE_EVENEMENT = 50;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -31,7 +34,7 @@ public class Notification {
     private UUID distributionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type_evenement", nullable = false, length = 35)
+    @Column(name = "type_evenement", nullable = false, length = LONGUEUR_TYPE_EVENEMENT)
     private TypeEvenementNotification typeEvenement;
 
     @Enumerated(EnumType.STRING)
@@ -48,16 +51,21 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String erreur;
 
+    @Column(name = "cle_idempotence", length = 200)
+    private String cleIdempotence;
+
     @Column(name = "date_envoi", nullable = false)
     private Instant dateEnvoi = Instant.now();
 
     public static Notification envoye(
+        String cleIdempotence,
         UUID personneId,
         UUID distributionId,
         TypeEvenementNotification typeEvenement,
         String sujet
     ) {
         Notification n = new Notification();
+        n.cleIdempotence = cleIdempotence;
         n.personneId = personneId;
         n.distributionId = distributionId;
         n.typeEvenement = typeEvenement;
@@ -67,6 +75,7 @@ public class Notification {
     }
 
     public static Notification echec(
+        String cleIdempotence,
         UUID personneId,
         UUID distributionId,
         TypeEvenementNotification typeEvenement,
@@ -74,6 +83,7 @@ public class Notification {
         String erreur
     ) {
         Notification n = new Notification();
+        n.cleIdempotence = cleIdempotence;
         n.personneId = personneId;
         n.distributionId = distributionId;
         n.typeEvenement = typeEvenement;

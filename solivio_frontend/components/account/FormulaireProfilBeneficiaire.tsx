@@ -18,41 +18,16 @@ import {
 } from "@/components/ui/select";
 import { mettreAJourProfilBeneficiaire } from "@/lib/api/profil";
 import type { ProfilBeneficiaireResponse } from "@/types/profil";
+import {
+  CATEGORIES_NATIONALITE,
+  NIVEAUX_ACADEMIQUES,
+  SITUATIONS_LOGEMENT,
+  STATUTS_BOURSIER,
+} from "@/lib/profil-beneficiaire";
 
 interface Props {
   profil: ProfilBeneficiaireResponse;
 }
-
-const STATUTS_BOURSIER = [
-  { value: "boursier", label: "Boursier" },
-  { value: "non_boursier", label: "Non boursier" },
-];
-
-const CATEGORIES_NATIONALITE = [
-  { value: "francaise", label: "Francaise" },
-  { value: "ressortissant_ue", label: "Ressortissant UE" },
-  { value: "hors_ue", label: "Hors UE" },
-];
-
-const NIVEAUX_ACADEMIQUES = [
-  { value: "L1", label: "Licence 1" },
-  { value: "L2", label: "Licence 2" },
-  { value: "L3", label: "Licence 3" },
-  { value: "M1", label: "Master 1" },
-  { value: "M2", label: "Master 2" },
-  { value: "doctorat", label: "Doctorat" },
-  { value: "BTS", label: "BTS" },
-  { value: "autre", label: "Autre" },
-];
-
-const SITUATIONS_LOGEMENT = [
-  { value: "seul", label: "Seul(e)" },
-  { value: "colocation", label: "Colocation" },
-  { value: "chez_parents", label: "Chez les parents" },
-  { value: "residence", label: "Residence universitaire" },
-  { value: "sans_domicile_stable", label: "Sans domicile stable" },
-  { value: "autre", label: "Autre" },
-];
 
 interface SelectFieldProps {
   id: string;
@@ -63,11 +38,16 @@ interface SelectFieldProps {
   placeholder?: string;
 }
 
+const EMPLOI = [
+  { value: "true", label: "Oui" },
+  { value: "false", label: "Non" },
+];
+
 function SelectField({ id, label, value, onChange, options, placeholder = "-- Choisir --" }: SelectFieldProps) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
+      <Select items={options} value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -127,7 +107,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       router.refresh();
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise a jour.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors de la mise à jour.");
     } finally {
       setPending(false);
     }
@@ -143,8 +123,8 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
       </div>
 
       {!profil.complet && (
-        <Alert className="border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400 text-sm">
-          Completez votre dossier pour faciliter l&apos;inscription aux distributions.
+        <Alert className="border-warning/50 bg-warning/10 text-warning text-sm">
+          Complétez votre dossier pour faciliter l&apos;inscription aux distributions.
         </Alert>
       )}
 
@@ -161,7 +141,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <SelectField
           id="categorieNationalite"
-          label="Nationalite"
+          label="Nationalité"
           value={categorieNationalite}
           onChange={setCategorieNationalite}
           options={CATEGORIES_NATIONALITE}
@@ -177,7 +157,7 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         {statutBoursier === "boursier" && (
           <div className="space-y-1.5">
-            <Label htmlFor="echelonBourse">Echelon de bourse</Label>
+            <Label htmlFor="echelonBourse">Échelon de bourse</Label>
             <Input
               id="echelonBourse"
               type="number"
@@ -205,14 +185,14 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
 
         <SelectField
           id="niveauAcademique"
-          label="Niveau academique"
+          label="Niveau académique"
           value={niveauAcademique}
           onChange={setNiveauAcademique}
           options={NIVEAUX_ACADEMIQUES}
         />
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="etablissement">Etablissement</Label>
+          <Label htmlFor="etablissement">Établissement</Label>
           <Input
             id="etablissement"
             value={etablissement}
@@ -231,23 +211,26 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
         />
 
         <div className="space-y-1.5">
-          <Label htmlFor="aEmploi">Emploi etudiant</Label>
-          <Select value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
+          <Label htmlFor="aEmploi">Emploi étudiant</Label>
+          <Select items={EMPLOI} value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
             <SelectTrigger id="aEmploi" className="w-full">
               <SelectValue placeholder="-- Choisir --" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">Oui</SelectItem>
-              <SelectItem value="false">Non</SelectItem>
+              {EMPLOI.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-teal-800 dark:bg-teal-950/20 dark:border-teal-800/40 dark:text-teal-400">
+        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Dossier mis a jour avec succes.</span>
+          <span className="text-sm">Dossier mis à jour avec succès.</span>
         </div>
       )}
       {erreur && <Alert variant="destructive">{erreur}</Alert>}

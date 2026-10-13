@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, CalendarX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,32 +10,19 @@ import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Distributions" };
 
-async function fetchMeEtDistributions(cookieHeader: string): Promise<{
+async function fetchMeEtDistributions(): Promise<{
   me: MeResponse | null;
   distributions: DistributionResponse[];
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-
-  const [meRes, distribRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/distributions`, { headers, cache: "no-store" }),
+  const [me, distributions] = await Promise.all([
+    lireMoi(),
+    lireServeur<DistributionResponse[]>("/api/distributions"),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const distributions = distribRes.ok ? ((await distribRes.json()) as DistributionResponse[]) : [];
-
-  return { me, distributions };
+  return { me, distributions: distributions ?? [] };
 }
 
 export default async function DistributionsPage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const { me, distributions } = await fetchMeEtDistributions(cookieHeader);
+  const { me, distributions } = await fetchMeEtDistributions();
 
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),
@@ -54,7 +41,7 @@ export default async function DistributionsPage() {
           <h1 className="text-3xl font-bold text-foreground font-display">Distributions</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez et suivez toutes les distributions de l'association."
+              ? "Gérez et suivez toutes les distributions de l'association."
               : "Consultez et inscrivez-vous aux distributions disponibles."}
           </p>
         </div>
@@ -70,11 +57,11 @@ export default async function DistributionsPage() {
       {estGestionnaire && distributions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {[
-            { statut: "BROUILLON", label: "Brouillon", cls: "bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
-            { statut: "PUBLIEE",   label: "Publiee",   cls: "bg-primary text-primary-foreground border-transparent" },
-            { statut: "EN_COURS",  label: "En cours",  cls: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-800/40" },
-            { statut: "TERMINEE",  label: "Terminee",  cls: "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700" },
-            { statut: "ANNULEE",   label: "Annulee",   cls: "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40" },
+            { statut: "BROUILLON", label: "Brouillon", cls: "bg-muted text-muted-foreground border-border" },
+            { statut: "PUBLIEE",   label: "Publiée",   cls: "bg-primary text-primary-foreground border-transparent" },
+            { statut: "EN_COURS",  label: "En cours",  cls: "bg-primary/10 text-primary border-primary/25" },
+            { statut: "TERMINEE",  label: "Terminée",  cls: "bg-muted text-muted-foreground border-border" },
+            { statut: "ANNULEE",   label: "Annulée",   cls: "bg-destructive/10 text-destructive border-destructive/30" },
           ]
             .filter((s) => (nbParStatut[s.statut] ?? 0) > 0)
             .map((s) => (
@@ -91,18 +78,18 @@ export default async function DistributionsPage() {
 
       {/* Contenu */}
       {distributions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={CalendarX}
             title="Aucune distribution"
             description={
               estGestionnaire
-                ? "Aucune distribution n'a ete creee. Commencez par en creer une."
+                ? "Aucune distribution n'a été créée. Commencez par en créer une."
                 : "Aucune distribution n'est disponible pour le moment."
             }
             action={
               estGestionnaire
-                ? { label: "Creer une distribution", href: "/distributions/nouvelle" }
+                ? { label: "Créer une distribution", href: "/distributions/nouvelle" }
                 : undefined
             }
           />

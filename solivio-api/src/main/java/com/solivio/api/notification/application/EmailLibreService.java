@@ -48,13 +48,13 @@ public class EmailLibreService {
                 emailService.envoyerEmailLibre(p.email(), sujet, corps);
                 notificationRepository.save(
                     com.solivio.api.notification.domain.Notification.envoye(
-                        p.id(), null, TypeEvenementNotification.EMAIL_LIBRE, sujet));
-                log.debug("Email libre envoye a {}", p.email());
+                        null, p.id(), null, TypeEvenementNotification.EMAIL_LIBRE, sujet));
+                log.debug("Email libre envoye a la personne {}", p.id());
             } catch (NotificationEmailException e) {
                 notificationRepository.save(
                     com.solivio.api.notification.domain.Notification.echec(
-                        p.id(), null, TypeEvenementNotification.EMAIL_LIBRE, sujet, e.getMessage()));
-                log.error("Echec email libre a {} : {}", p.email(), e.getMessage());
+                        null, p.id(), null, TypeEvenementNotification.EMAIL_LIBRE, sujet, e.getMessage()));
+                log.error("Echec email libre pour la personne {} : {}", p.id(), e.getMessage());
             }
         }
     }

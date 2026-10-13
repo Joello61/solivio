@@ -11,6 +11,7 @@ import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.inscription.InscriptionQueryPort;
+import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,9 @@ import java.util.UUID;
 @Service
 @Transactional
 public class RepartitionService {
+
+    private static final double PALIER_VRAC = 0.5;
+    private static final double EPSILON = 1e-9;
 
     private final DenreeDistributionRepository denreeRepository;
     private final DistributionQueryPort distributionQueryPort;
@@ -42,15 +46,16 @@ public class RepartitionService {
         validerModifiable(distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
+        String libelle = Assainissement.nettoyer(request.libelle());
 
         DenreeDistribution denree = new DenreeDistribution(
             distributionId,
-            request.libelle(),
+            libelle,
             unite,
             request.nombreContenants(),
             request.quantiteParContenant()
         );
-        catalogueDenreeService.enregistrerSiInconnu(request.libelle());
+        catalogueDenreeService.enregistrerSiInconnu(libelle);
         denreeRepository.save(denree);
         return toResponse(denree);
     }
@@ -60,13 +65,14 @@ public class RepartitionService {
         DenreeDistribution denree = trouverOuEchouer(denreeId, distributionId);
 
         UniteConditionnement unite = parseUnite(request.unite());
-        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(request.libelle());
-        denree.setLibelle(request.libelle());
+        String libelle = Assainissement.nettoyer(request.libelle());
+        boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(libelle);
+        denree.setLibelle(libelle);
         denree.setUnite(unite);
         denree.setNombreContenants(request.nombreContenants());
         denree.setQuantiteParContenant(request.quantiteParContenant());
         if (libelleChange) {
-            catalogueDenreeService.enregistrerSiInconnu(request.libelle());
+            catalogueDenreeService.enregistrerSiInconnu(libelle);
         }
         denreeRepository.save(denree);
         return toResponse(denree);
@@ -112,10 +118,14 @@ public class RepartitionService {
     }
 
     // RG8 : calcul de dotation par beneficiaire.
-    // dotation = floor(total / nb), plancher 1, penurie si total < nb.
+    // dotation = arrondi a l'inferieur au palier de total / nb, plancher d'un palier ;
+    // penurie quand chacun ne peut pas recevoir un palier. Palier 1 a l'unite et a la piece,
+    // 0,5 au poids et au volume (precision sur l'arrondi, section 4.7).
     static DotationDenreeDto calculerDotationDenree(DenreeDistribution denree, int nbBeneficiaires) {
         double total = denree.quantiteTotale();
+        double palier = palier(denree.getUnite());
 
+        // Personne a servir (aucun inscrit ou aucun present) : pas de penurie, tout reste.
         if (nbBeneficiaires <= 0) {
             return new DotationDenreeDto(
                 denree.getId(),
@@ -126,18 +136,18 @@ public class RepartitionService {
                 total,
                 0,
                 total,
-                true,
+                false,
                 0
             );
         }
 
-        double dotationBrute = Math.floor(total / nbBeneficiaires);
-        boolean penurie = dotationBrute < 1;
+        double dotationBrute = arrondirAuPalier(total / nbBeneficiaires, palier);
+        boolean penurie = dotationBrute < palier;
 
         if (penurie) {
-            // Chaque personne pouvant etre servie recoit 1 unite (plancher 1)
-            int nbPeutRecevoir = (int) Math.floor(total);
-            double reste = total - nbPeutRecevoir;
+            // Chaque personne pouvant etre servie recoit un palier (plancher)
+            int nbPeutRecevoir = (int) arrondirAuPalier(total / palier, 1);
+            double reste = arrondirQuantite(total - nbPeutRecevoir * palier);
             return new DotationDenreeDto(
                 denree.getId(),
                 denree.getLibelle(),
@@ -145,14 +155,14 @@ public class RepartitionService {
                 denree.getNombreContenants(),
                 denree.getQuantiteParContenant(),
                 total,
-                1,
+                palier,
                 reste,
                 true,
                 nbPeutRecevoir
             );
         }
 
-        double reste = total - nbBeneficiaires * dotationBrute;
+        double reste = arrondirQuantite(total - nbBeneficiaires * dotationBrute);
         return new DotationDenreeDto(
             denree.getId(),
             denree.getLibelle(),
@@ -165,6 +175,19 @@ public class RepartitionService {
             false,
             nbBeneficiaires
         );
+    }
+
+    static double palier(UniteConditionnement unite) {
+        return unite == UniteConditionnement.KILOGRAMME || unite == UniteConditionnement.LITRE ? PALIER_VRAC : 1;
+    }
+
+    // Marge contre les erreurs d'arrondi des flottants (1.5 / 0.5 = 2.9999...).
+    private static double arrondirAuPalier(double valeur, double palier) {
+        return Math.floor(valeur / palier + EPSILON) * palier;
+    }
+
+    private static double arrondirQuantite(double valeur) {
+        return Math.round(valeur * 1000) / 1000.0;
     }
 
     private void validerModifiable(UUID distributionId) {

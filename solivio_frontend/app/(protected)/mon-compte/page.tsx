@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { lireMoi } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -13,19 +13,12 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { MeResponse } from "@/types/auth";
+import { ChangementMotDePasse } from "@/components/account/ChangementMotDePasse";
+import { EffacementDonnees } from "@/components/account/EffacementDonnees";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
+import { ROLE_LABELS } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Mon compte" };
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  admin: "Administrateur",
-  responsable: "Responsable",
-  coordinateur: "Coordinateur",
-  benevole: "Benevole",
-  beneficiaire: "Beneficiaire",
-};
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -35,22 +28,9 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-async function fetchMe(cookieHeader: string): Promise<MeResponse | null> {
-  const res = await fetch(
-    `${process.env.API_URL ?? "http://localhost:8080"}/api/auth/me`,
-    { headers: { Cookie: cookieHeader }, cache: "no-store" }
-  );
-  return res.ok ? (res.json() as Promise<MeResponse>) : null;
-}
 
 export default async function MonComptePage() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const user = await fetchMe(cookieHeader);
+  const user = await lireMoi();
   if (!user) redirect("/login");
 
   const estBeneficiaire = user.roles.includes("beneficiaire");
@@ -60,24 +40,24 @@ export default async function MonComptePage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground font-display">Mon compte</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gerer vos informations personnelles et votre photo de profil.
+          Gérer vos informations personnelles et votre photo de profil.
         </p>
       </div>
 
       {estBeneficiaire && (
         <Link
           href="/mon-compte/profil-beneficiaire"
-          className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 p-4 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-150"
+          className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-150"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 transition-colors duration-150">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors duration-150">
             <FolderOpen className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-150">
-              Dossier beneficiaire
+              Dossier bénéficiaire
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Completez votre dossier social pour beneficier des distributions.
+              Complétez votre dossier social pour bénéficier des distributions.
             </p>
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
@@ -86,9 +66,9 @@ export default async function MonComptePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Carte metadata */}
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-5 space-y-5">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-5">
           <div className="flex items-center gap-2.5 pb-4 border-b border-border/60">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 border border-teal-100 dark:bg-teal-950/30 dark:border-teal-800/40">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
               <BadgeCheck className="h-4 w-4 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground">Statut du compte</p>
@@ -98,7 +78,7 @@ export default async function MonComptePage() {
             {/* Roles */}
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Role{user.roles.length > 1 ? "s" : ""}
+                Rôle{user.roles.length > 1 ? "s" : ""}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {user.roles.map((role) => (
@@ -122,19 +102,19 @@ export default async function MonComptePage() {
               {/* Email verifie */}
               <div className="flex items-start gap-3">
                 {user.emailVerifie ? (
-                  <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-teal-500" />
+                  <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
                 ) : (
-                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
                 )}
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">Email</p>
                   <p
                     className={[
                       "text-sm font-medium",
-                      user.emailVerifie ? "text-teal-600 dark:text-teal-400" : "text-amber-600 dark:text-amber-400",
+                      user.emailVerifie ? "text-primary" : "text-warning",
                     ].join(" ")}
                   >
-                    {user.emailVerifie ? "Verifie" : "Non verifie"}
+                    {user.emailVerifie ? "Vérifié" : "Non vérifié"}
                   </p>
                 </div>
               </div>
@@ -166,7 +146,7 @@ export default async function MonComptePage() {
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Mis a jour le</p>
+                  <p className="text-xs text-muted-foreground">Mis à jour le</p>
                   <p className="text-sm font-medium text-foreground">
                     {formatDate(user.dateModification)}
                   </p>
@@ -185,10 +165,15 @@ export default async function MonComptePage() {
         </div>
 
         {/* Formulaire */}
-        <div className="lg:col-span-2 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6">
+        <div className="lg:col-span-2 rounded-2xl border border-border/60 bg-card shadow-sm p-6">
           <FormulaireMonCompte user={user} />
         </div>
       </div>
+
+      {/* Un compte Google n'a pas de mot de passe local. */}
+      {user.authMethod === "password" && <ChangementMotDePasse />}
+
+      <EffacementDonnees />
     </div>
   );
 }

@@ -32,7 +32,7 @@ export function AppShell({ user, children }: AppShellProps) {
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden bg-neutral-50/50 dark:bg-neutral-950">
+      <div className="flex h-dvh overflow-hidden bg-background">
         <Sidebar
           user={user}
           collapsed={sidebarCollapsed}
@@ -49,7 +49,7 @@ export function AppShell({ user, children }: AppShellProps) {
         </div>
       </div>
 
-      <BottomNav />
+      <BottomNav roles={user.roles} />
     </>
   );
 }

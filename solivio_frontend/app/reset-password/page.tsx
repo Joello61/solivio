@@ -70,11 +70,11 @@ function ResetPasswordForm() {
   return (
     <AuthLayout
       title="Nouveau mot de passe"
-      description={email ? `Code envoye a ${email}` : "Entrez le code recu par email."}
+      description={email ? `Code envoyé à ${email}` : "Entrez le code reçu par email."}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Code de verification</Label>
+          <Label>Code de vérification</Label>
           <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
             {digits.map((d, i) => (
               <input
@@ -88,11 +88,11 @@ function ResetPasswordForm() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 aria-label={`Chiffre ${i + 1}`}
                 className={[
-                  "h-13 w-11 rounded-xl border-2 bg-white text-center text-lg font-bold font-mono",
+                  "h-13 w-11 rounded-xl border-2 bg-card text-center text-lg font-bold font-mono",
                   "text-foreground caret-transparent transition-all duration-150",
                   "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20",
-                  "dark:bg-neutral-900",
-                  d ? "border-primary bg-teal-50 dark:bg-teal-950/30" : "border-border",
+                  "",
+                  d ? "border-primary bg-primary/10" : "border-border",
                 ].join(" ")}
               />
             ))}
@@ -108,7 +108,7 @@ function ResetPasswordForm() {
             autoComplete="new-password"
             value={nouveauMotDePasse}
             onChange={(e) => setNouveauMotDePasse(e.target.value)}
-            placeholder="8 caracteres minimum"
+            placeholder="8 caractères minimum"
           />
         </div>
 
@@ -120,7 +120,7 @@ function ResetPasswordForm() {
             autoComplete="new-password"
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
-            placeholder="Repetez votre mot de passe"
+            placeholder="Répétez votre mot de passe"
           />
         </div>
 
@@ -137,7 +137,7 @@ function ResetPasswordForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/login" className="text-primary hover:underline">
-          Retour a la connexion
+          Retour à la connexion
         </Link>
       </p>
     </AuthLayout>

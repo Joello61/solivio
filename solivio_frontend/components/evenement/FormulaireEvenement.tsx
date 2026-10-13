@@ -1,5 +1,6 @@
 "use client";
 
+import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
@@ -16,8 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
-import { creerEvenement } from "@/lib/api/evenement";
-import type { TypeEvenement, PublicCible, ModeInscription } from "@/types/evenement";
+import { creerEvenement, modifierEvenement } from "@/lib/api/evenement";
+import { versSaisieDateHeure } from "@/lib/utils";
+import type {
+  EvenementResponse,
+  TypeEvenement,
+  PublicCible,
+  ModeInscription,
+} from "@/types/evenement";
 import type { LieuRequest } from "@/types/distribution";
 
 // État du formulaire
@@ -48,6 +55,46 @@ const INIT: FormState = {
   capaciteParticipants: "",
   modeInscription: "OBLIGATOIRE",
 };
+
+function etatInitial(evenement?: EvenementResponse): FormState {
+  if (!evenement) return INIT;
+  return {
+    titre: evenement.titre,
+    description: evenement.description ?? "",
+    type: evenement.type,
+    dateHeureDebut: versSaisieDateHeure(evenement.dateHeureDebut),
+    dateHeureFin: versSaisieDateHeure(evenement.dateHeureFin),
+    aBesoiNStaff: evenement.aBesoiNStaff,
+    capaciteStaff: evenement.capaciteStaff?.toString() ?? "",
+    ouvertParticipants: evenement.ouvertParticipants,
+    publicParticipants: evenement.publicParticipants ?? "",
+    capaciteParticipants: evenement.capaciteParticipants?.toString() ?? "",
+    modeInscription: evenement.modeInscription,
+  };
+}
+
+function lieuInitial(evenement?: EvenementResponse): LieuRequest | undefined {
+  if (!evenement?.lieuAdresseFormatee) return undefined;
+  return {
+    placeId: evenement.lieuPlaceId ?? undefined,
+    adresseFormatee: evenement.lieuAdresseFormatee,
+    latitude: evenement.lieuLatitude ?? undefined,
+    longitude: evenement.lieuLongitude ?? undefined,
+  };
+}
+
+// Base UI n'affiche le libelle de la valeur choisie que si on lui passe les items.
+const TYPES = [
+  { value: "STAND", label: "Stand" },
+  { value: "FETE", label: "Fête" },
+  { value: "AUTRE", label: "Autre" },
+];
+
+const PUBLICS = [
+  { value: "BENEVOLES", label: "Bénévoles uniquement" },
+  { value: "BENEFICIAIRES", label: "Bénéficiaires uniquement" },
+  { value: "TOUS", label: "Tous" },
+];
 
 // Barre de progression
 const STEPS = ["Informations & lieu", "Participants & inscription"];
@@ -98,10 +145,10 @@ function StepBar({ current }: { current: number }) {
 }
 
 // Composant principal
-export function FormulaireEvenement() {
+export function FormulaireEvenement({ evenement }: { evenement?: EvenementResponse } = {}) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(INIT);
-  const [lieu, setLieu] = useState<LieuRequest | undefined>(undefined);
+  const [form, setForm] = useState<FormState>(() => etatInitial(evenement));
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(() => lieuInitial(evenement));
   const [step, setStep] = useState(0);
   const [pending, setPending] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -112,10 +159,7 @@ export function FormulaireEvenement() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/public/config")
-      .then((r) => r.json())
-      .then((d: { googleMapsApiKey?: string }) => setMapsApiKey(d.googleMapsApiKey ?? ""))
-      .catch(() => setMapsApiKey(""));
+    lireCleGoogleMaps().then(setMapsApiKey);
   }, []);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -128,11 +172,11 @@ export function FormulaireEvenement() {
       return;
     }
     if (!form.dateHeureDebut || !form.dateHeureFin) {
-      setErreurStep1("Les dates de debut et de fin sont requises.");
+      setErreurStep1("Les dates de début et de fin sont requises.");
       return;
     }
     if (form.dateHeureFin <= form.dateHeureDebut) {
-      setErreurStep1("La date de fin doit etre apres la date de debut.");
+      setErreurStep1("La date de fin doit être après la date de début.");
       return;
     }
     setErreurStep1(null);
@@ -144,7 +188,7 @@ export function FormulaireEvenement() {
     setPending(true);
     setErreur(null);
     try {
-      const evenement = await creerEvenement({
+      const payload = {
         titre: form.titre,
         description: form.description || undefined,
         type: form.type,
@@ -162,8 +206,12 @@ export function FormulaireEvenement() {
           ? Number(form.capaciteParticipants)
           : undefined,
         modeInscription: form.modeInscription,
-      });
-      router.push(`/evenements/${evenement.id}`);
+      };
+      const enregistre = evenement
+        ? await modifierEvenement(evenement.id, payload)
+        : await creerEvenement(payload);
+      router.push(`/evenements/${enregistre.id}`);
+      router.refresh();
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
@@ -198,10 +246,10 @@ export function FormulaireEvenement() {
               </div>
             )}
 
-            {/* Section : Informations generales */}
+            {/* Section : Informations générales */}
             <div className="p-6 space-y-4">
               <h3 className="text-sm font-semibold text-foreground font-display">
-                Informations generales
+                Informations générales
               </h3>
 
               <div className="space-y-1.5">
@@ -230,6 +278,7 @@ export function FormulaireEvenement() {
               <div className="space-y-1.5">
                 <Label htmlFor="type">Type</Label>
                 <Select
+                  items={TYPES}
                   value={form.type}
                   onValueChange={(v) => set("type", v as TypeEvenement)}
                 >
@@ -237,9 +286,11 @@ export function FormulaireEvenement() {
                     <SelectValue placeholder="Choisir un type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="STAND">Stand</SelectItem>
-                    <SelectItem value="FETE">Fete</SelectItem>
-                    <SelectItem value="AUTRE">Autre</SelectItem>
+                    {TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -266,7 +317,7 @@ export function FormulaireEvenement() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="debut">
-                    Debut <span className="text-destructive">*</span>
+                    Début <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="debut"
@@ -317,7 +368,7 @@ export function FormulaireEvenement() {
               {/* Section : Besoin staff */}
               <div className="p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground font-display">
-                  Besoin de staff benevole
+                  Besoin de staff bénévole
                 </h3>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -327,7 +378,7 @@ export function FormulaireEvenement() {
                     className="size-4 rounded accent-primary"
                   />
                   <span className="text-sm text-foreground">
-                    Cet evenement recherche des benevoles staff
+                    Cet événement recherche des bénévoles staff
                   </span>
                 </label>
                 {form.aBesoiNStaff && (
@@ -359,7 +410,7 @@ export function FormulaireEvenement() {
                     className="size-4 rounded accent-primary"
                   />
                   <span className="text-sm text-foreground">
-                    Cet evenement est ouvert aux participants
+                    Cet événement est ouvert aux participants
                   </span>
                 </label>
                 {form.ouvertParticipants && (
@@ -367,6 +418,7 @@ export function FormulaireEvenement() {
                     <div className="space-y-1.5">
                       <Label htmlFor="publicCible">Public cible</Label>
                       <Select
+                        items={PUBLICS}
                         value={form.publicParticipants}
                         onValueChange={(v) => set("publicParticipants", v as PublicCible)}
                       >
@@ -374,9 +426,11 @@ export function FormulaireEvenement() {
                           <SelectValue placeholder="-- Choisir --" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="BENEVOLES">Benevoles uniquement</SelectItem>
-                          <SelectItem value="BENEFICIAIRES">Beneficiaires uniquement</SelectItem>
-                          <SelectItem value="TOUS">Tous</SelectItem>
+                          {PUBLICS.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>
+                              {p.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -456,10 +510,12 @@ export function FormulaireEvenement() {
                 <Button type="submit" disabled={pending} className="flex-1">
                   {pending ? (
                     <>
-                      <Spinner size="sm" className="mr-2" /> Creation...
+                      <Spinner size="sm" className="mr-2" /> Enregistrement...
                     </>
+                  ) : evenement ? (
+                    "Enregistrer les modifications"
                   ) : (
-                    "Creer l'evenement"
+                    "Créer l'événement"
                   )}
                 </Button>
               </div>

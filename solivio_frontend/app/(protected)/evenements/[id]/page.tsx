@@ -1,41 +1,29 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
 import { StatutBadge } from "@/components/evenement/StatutBadge";
 import { EvenementActions } from "@/components/evenement/EvenementActions";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
-import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Detail evenement" };
+export const metadata: Metadata = { title: "Détail événement" };
 
 const LABEL_TYPE: Record<string, string> = {
   STAND: "Stand",
-  FETE: "Fete",
-  AUTRE: "Evenement",
+  FETE: "Fête",
+  AUTRE: "Événement",
 };
 
-async function fetchData(id: string, cookieHeader: string) {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-  const [evRes, meRes] = await Promise.all([
-    fetch(`${baseUrl}/api/evenements/${id}`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
+async function fetchData(id: string) {
+  const [evenement, me] = await Promise.all([
+    lireServeur<EvenementResponse>(`/api/evenements/${id}`),
+    lireMoi(),
   ]);
-  const evenement = evRes.ok ? ((await evRes.json()) as EvenementResponse) : null;
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-
-  let mesParticipations: ParticipationEvenementResponse[] = [];
-  if (me) {
-    const mesEvRes = await fetch(`${baseUrl}/api/evenements/mes-evenements`, {
-      headers,
-      cache: "no-store",
-    });
-    mesParticipations = mesEvRes.ok
-      ? ((await mesEvRes.json()) as ParticipationEvenementResponse[])
-      : [];
-  }
+  const mesParticipations = me
+    ? ((await lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements")) ?? [])
+    : [];
   return { evenement, me, mesParticipations };
 }
 
@@ -45,14 +33,12 @@ interface Props {
 
 export default async function DetailEvenementPage({ params }: Props) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { evenement, me, mesParticipations } = await fetchData(id, cookieHeader);
+  const { evenement, me, mesParticipations } = await fetchData(id);
 
   if (!evenement) notFound();
 
   const estGestionnaire =
-    me?.roles.some((r) => ["admin", "coordinateur", "responsable", "super_admin"].includes(r)) ??
+    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
     false;
   const estBenevole = me?.roles.includes("benevole") ?? false;
   const estBeneficiaire = me?.roles.includes("beneficiaire") ?? false;
@@ -75,7 +61,7 @@ export default async function DetailEvenementPage({ params }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm p-6 space-y-4">
+      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-3 text-sm">
           <Calendar className="size-4 text-muted-foreground shrink-0" />
           <span>
@@ -122,7 +108,7 @@ export default async function DetailEvenementPage({ params }: Props) {
             <UserCheck className="size-4 text-muted-foreground shrink-0" />
             <span>
               Staff : {evenement.nbStaff}
-              {evenement.capaciteStaff ? ` / ${evenement.capaciteStaff}` : ""} benevoles
+              {evenement.capaciteStaff ? ` / ${evenement.capaciteStaff}` : ""} bénévoles
             </span>
           </div>
         )}
@@ -162,6 +148,7 @@ export default async function DetailEvenementPage({ params }: Props) {
         ouvertParticipants={evenement.ouvertParticipants}
         modeInscription={evenement.modeInscription}
         estGestionnaire={estGestionnaire}
+        estResponsable={estResponsable(me?.roles ?? [])}
         estBenevole={estBenevole}
         estBeneficiaire={estBeneficiaire}
         dejaInscrit={dejaInscrit}

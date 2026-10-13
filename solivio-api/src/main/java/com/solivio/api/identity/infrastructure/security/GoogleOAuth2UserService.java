@@ -64,15 +64,15 @@ public class GoogleOAuth2UserService extends DefaultOAuth2UserService {
                 compte.setGoogleId(googleId);
                 compte.setEmailVerifie(true);
                 compteRepository.save(compte);
-                log.info("Compte existant lie a Google : {}", email);
+                log.info("Compte {} lie a Google", compte.getId());
             },
             () -> {
                 // Cas 3 : nouveau compte Google
                 Compte compte = new Compte(email, null, nom, prenom);
                 compte.setGoogleId(googleId);
                 compte.setEmailVerifie(true);
-                compteRepository.save(compte);
-                log.info("Nouveau compte cree via Google : {}", email);
+                Compte cree = compteRepository.save(compte);
+                log.info("Compte {} cree via Google", cree.getId());
             }
         );
     }

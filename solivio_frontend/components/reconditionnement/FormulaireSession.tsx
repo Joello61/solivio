@@ -1,5 +1,6 @@
 "use client";
 
+import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -18,14 +19,14 @@ const schema = z
   .object({
     titre: z.string().min(1, "Le titre est requis").max(200),
     description: z.string().optional(),
-    dateHeureDebut: z.string().min(1, "La date/heure de debut est requise"),
+    dateHeureDebut: z.string().min(1, "La date/heure de début est requise"),
     dateHeureFin: z.string().min(1, "La date/heure de fin est requise"),
     capacite: z.string().optional(),
   })
   .refine(
     (d) =>
       !d.dateHeureDebut || !d.dateHeureFin || d.dateHeureFin > d.dateHeureDebut,
-    { message: "La fin doit etre apres le debut", path: ["dateHeureFin"] },
+    { message: "La fin doit être après le début", path: ["dateHeureFin"] },
   );
 
 type FormValues = z.infer<typeof schema>;
@@ -40,10 +41,7 @@ export function FormulaireSession() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/public/config")
-      .then((r) => r.json())
-      .then((d: { googleMapsApiKey?: string }) => setMapsApiKey(d.googleMapsApiKey ?? ""))
-      .catch(() => setMapsApiKey(""));
+    lireCleGoogleMaps().then(setMapsApiKey);
   }, []);
 
   const {
@@ -97,14 +95,14 @@ export function FormulaireSession() {
           id="description"
           {...register("description")}
           rows={3}
-          placeholder="Informations complementaires..."
+          placeholder="Informations complémentaires..."
           className="flex w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="dateHeureDebut">Date et heure de debut *</Label>
+          <Label htmlFor="dateHeureDebut">Date et heure de début *</Label>
           <Input
             id="dateHeureDebut"
             type="datetime-local"
@@ -153,7 +151,7 @@ export function FormulaireSession() {
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner size="sm" className="mr-2" /> : null}
-        Creer la session
+        Créer la session
       </Button>
     </form>
   );

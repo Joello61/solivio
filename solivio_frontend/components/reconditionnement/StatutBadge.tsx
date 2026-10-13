@@ -5,26 +5,26 @@ const STATUT_CONFIG: Record<StatutSession, { label: string; className: string }>
   BROUILLON: {
     label: "Brouillon",
     className:
-      "bg-neutral-100 text-neutral-500 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700",
+      "bg-muted text-muted-foreground border border-border",
   },
   PUBLIEE: {
-    label: "Publiee",
+    label: "Publiée",
     className: "bg-primary text-primary-foreground",
   },
   EN_COURS: {
     label: "En cours",
     className:
-      "bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/40",
+      "bg-primary/10 text-primary border border-primary/25",
   },
   TERMINEE: {
-    label: "Terminee",
+    label: "Terminée",
     className:
-      "bg-neutral-100 text-neutral-500 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700",
+      "bg-muted text-muted-foreground border border-border",
   },
   ANNULEE: {
-    label: "Annulee",
+    label: "Annulée",
     className:
-      "bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
+      "bg-destructive/10 text-destructive border border-destructive/30",
   },
 };
 

@@ -61,6 +61,8 @@ Chaque module est un sous-package direct de `com.solivio.api` :
 
 > Règle de conception : aucun module n'accède aux tables, repositories ou entités d'un autre module. Le test de modularité Spring Modulith en est le garant.
 
+**Date du jour.** Le conteneur tourne en UTC. Les règles métier qui dépendent de la date (démarrage d'une distribution, date passée à la création, désistement tardif, rappel de la veille) utilisent `shared.temps.HorlogeAssociation`, qui calcule « aujourd'hui » dans le fuseau configuré par l'association (Europe/Paris par défaut). Les tâches planifiées gardent un cron en Europe/Paris, car un cron ne peut pas suivre une configuration modifiable.
+
 ### 2.4 Structure interne d'un module
 
 Chaque module suit une organisation en couches inspirée de l'architecture hexagonale :
@@ -96,14 +98,20 @@ Kafka avait été retenu pour l'apprentissage et pour préparer une extraction e
 1. Un service transactionnel publie un événement (record Java) avec `ApplicationEventPublisher`.
 2. Le **registre de publication** (table `event_publication`, starter JDBC) enregistre une entrée par écouteur concerné, dans la même transaction que la donnée métier. Si la transaction échoue, aucun événement n'existe.
 3. Après validation, chaque écouteur `@ApplicationModuleListener` (asynchrone, dans sa propre transaction) traite l'événement. En cas de succès, l'entrée est marquée terminée (mode `archive`) ; en cas d'échec, elle reste en attente.
-4. Les publications non terminées sont republiées au redémarrage, et une tâche planifiée relance celles en échec. Une alerte se déclenche si des publications restent bloquées.
+4. Les publications non terminées sont republiées au redémarrage, et une tâche planifiée (`MaintenancePublicationsJob`, toutes les 10 minutes) relance celles en échec depuis au moins 5 minutes, dans la limite de 5 tentatives. Au-delà, la publication reste en échec et l'alerte sur `solivio_evenements_publications_echouees` se déclenche.
 
-Conséquence : la livraison est garantie **au moins une fois**. Un écouteur doit donc tolérer d'être exécuté deux fois pour le même événement (par exemple ne pas envoyer deux fois le même email si la trace d'envoi existe déjà).
+Conséquence : la livraison est garantie **au moins une fois**. Un écouteur doit donc tolérer d'être exécuté deux fois pour le même événement.
+
+Pour les notifications, chaque envoi porte une **clé d'idempotence** (`notification.cle_idempotence`) : le type de notification suivi de l'identifiant de l'occurrence (`occurrenceId` des événements d'inscription, de modification de distribution et d'inscription à une session de reconditionnement, sinon l'identifiant de la distribution, de l'événement, de la mission ou de la session). Avant d'envoyer, l'écouteur prend un verrou consultatif PostgreSQL sur le couple (clé, personne) et saute le destinataire si une trace `ENVOYE` existe déjà ; un index unique partiel garantit la règle en base. Les traces sont écrites dans une transaction propre (`NotificationTraceur`), puis l'écouteur lève `NotificationsIncompletesException` si au moins un envoi a échoué : la publication reste en échec, la relance ne renvoie qu'aux destinataires non servis. L'email libre (envoi direct par un coordinateur) et l'email général de l'association, sans personne associée, n'ont pas de clé.
 
 ### 4.3 Usages
 
 - Notifications : confirmation d'inscription, promotion depuis la liste d'attente, désistement tardif d'un bénévole, annulation de distribution, d'événement, de mission de collecte ou de session de reconditionnement, rappel de la veille.
-- Statistiques : calcul et enregistrement des statistiques à la clôture d'une distribution.
+- Modification d'une distribution publiée : `distribution` publie `DistributionModifiee` (changement pratique, capacité augmentée, identifiant d'occurrence) ; `inscription` promeut la liste d'attente sous le verrou partagé `shared.verrou.VerrouDistribution` (le même que la modification), `notification` prévient les inscrits actifs avec la clé `MODIFICATION_DISTRIBUTION:{occurrence}`.
+- Inscription à une session de reconditionnement : `reconditionnement` publie `InscriptionReconditionnementConfirmee` (session, personne, identifiant d'occurrence) ; `notification` envoie la confirmation avec la clé `CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT:{occurrence}`, si bien qu'une réinscription après désistement est confirmée à nouveau.
+- Annulation d'une distribution (RG6) : `inscription` écoute `DistributionAnnulee`, annule toutes les inscriptions confirmées et en liste d'attente, puis publie `InscriptionsAnnuleesParDistribution` ; `notification` écoute ce second événement pour prévenir chaque personne. L'enchaînement évite que `notification` lise les inscrits pendant leur annulation. L'événement porte un identifiant d'occurrence : après une réactivation, une nouvelle annulation prévient à nouveau.
+- Réactivation d'une distribution annulée par erreur : `distribution` publie `DistributionReactivee` ; `inscription` rétablit les inscriptions annulées par la distribution (sauf conflit avec RG1), fait avancer la liste d'attente, puis publie `InscriptionsRetabliesParDistribution`, que `notification` écoute (clé `REACTIVATION_DISTRIBUTION:{occurrence}`).
+- Clôture d'une distribution : `inscription` écoute `DistributionTerminee`, enregistre les absences des bénéficiaires non pointés (RG4), puis publie `AbsencesEnregistrees` ; `statistique` écoute ce second événement pour calculer les statistiques sur l'état final.
 
 ## 5. L'authentification
 
@@ -125,7 +133,9 @@ Le backend accepte les deux modes. Derrière Traefik, Spring Boot doit faire con
 
 ### 5.3 Rôles
 
-`super_admin` (drapeau sur le compte), `admin`, `responsable`, `coordinateur`, `benevole`, `beneficiaire`. Les rôles sont portés dans le jeton et vérifiés côté backend (`@PreAuthorize`). Le frontend n'est jamais une frontière de sécurité.
+`super_admin` (drapeau sur le compte), `responsable`, `coordinateur`, `benevole`, `beneficiaire`. Les rôles sont portés dans le jeton et vérifiés côté backend (`@PreAuthorize`). Le frontend n'est jamais une frontière de sécurité.
+
+Les rôles forment une hiérarchie (ADR-011) : `responsable` > `coordinateur` > `benevole`. Un responsable passe donc tout contrôle réservé au coordinateur ou au bénévole. `beneficiaire` reste en dehors, et `super_admin` est cité explicitement là où il est autorisé. Les contrôles faits dans le code métier sur les rôles bruts (`SolivioUserDetails.aUnDesRoles`, type d'inscription) ne suivent pas la hiérarchie.
 
 ## 6. La base de données : PostgreSQL
 
@@ -165,12 +175,13 @@ Elle est gelée depuis la refonte du socle d'octobre 2026 : les changements d'AP
 - Sauvegarde quotidienne de la base et des fichiers déposés par le service `backup`, chiffrée par clé publique et copiée sur Cloudflare R2, avec un test de restauration trimestriel (ADR-009, `docker/backup/README.md`).
 - Environnements : la branche `dev` alimente la préproduction (`https://staging.solivio.joeltech.fr`, projet Compose `solivio-staging`), la branche `main` la production (`https://solivio.joeltech.fr`, projet `solivio`). Les deux tournent sur le même VPS, avec des secrets Infisical distincts.
 - Intégration et déploiement continus : GitHub Actions, images publiées sur GHCR et étiquetées par SHA de commit, déploiement par script SSH avec Infisical (ADR-008), sans coupure grâce à `docker-rollout` (ADR-010). Les images ne sont jamais construites sur le serveur.
+- Seule la tête de la branche est déployée : GitHub ne garde qu'une exécution en attente par branche, et des fusions rapprochées peuvent laisser passer en dernier l'exécution d'un commit plus ancien. Juste avant de déployer, le job vérifie que son commit est toujours la tête ; sinon il ne déploie pas et relance la CI sur la tête si aucune exécution n'est prévue pour elle (`.github/scripts/tete-de-branche.sh`, déclencheur `workflow_dispatch`).
 
 ## 11. L'observabilité
 
 L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `infrastructure`) :
 
-- **Journaux** : JSON au format ECS sur la sortie standard (profil `prod`), collectés par Grafana Alloy vers Loki. Chaque ligne porte le `request_id`, l'identifiant de trace (`traceId`, `spanId`) et, si la requête est authentifiée, l'identifiant (UUID) du compte (`account_id`). Aucune donnée personnelle ni aucune donnée de `profil_beneficiaire` n'est journalisée.
+- **Journaux** : JSON au format ECS sur la sortie standard (profil `prod`), collectés par Grafana Alloy vers Loki. Chaque ligne porte le `request_id`, l'identifiant de trace (`traceId`, `spanId`) et, si la requête est authentifiée, l'identifiant (UUID) du compte (`account_id`). Aucune donnée personnelle ni aucune donnée de `profil_beneficiaire` n'est journalisée : les personnes sont désignées par leur UUID, et les messages d'erreur SMTP, qui citent souvent le destinataire, passent par `shared.journal.DonneesPersonnelles` avant d'être journalisés ou enregistrés dans `notification.erreur`.
 - **Identifiant de requête** : attribué à chaque requête (ou repris de l'en-tête `X-Request-Id` s'il est sûr), renvoyé dans l'en-tête de réponse et dans le corps de chaque erreur, pour relier une erreur signalée à ses journaux.
 - **Métriques** : Micrometer, exposées au format Prometheus sur `/actuator/prometheus`, sur le port de gestion `8081` non routé par Traefik et protégé par le jeton `METRICS_SCRAPE_TOKEN` (en-tête `Authorization: Bearer`, comparaison à temps constant ; sans jeton configuré, les métriques sont inaccessibles). Le port de gestion expose aussi les sondes `/actuator/health/liveness` et `/actuator/health/readiness`, publiques et sans détail. Métriques techniques (HTTP, JVM, pool de connexions) et métiers :
   - `solivio_inscriptions_confirmees_total`, `solivio_inscriptions_promues_total`, `solivio_desistements_tardifs_total` ;
@@ -179,7 +190,7 @@ L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `i
 - **Traces** : OpenTelemetry (OTLP HTTP) vers Tempo dans le profil `prod` (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, par défaut `http://tempo:4318/v1/traces`), y compris les interactions entre modules publiées par Spring Modulith. Seule la propagation W3C est acceptée. L'attribut `deployment.environment.name` vient de `DEPLOYMENT_ENVIRONMENT` (`staging` ou `production`).
 - **Tableaux de bord et alertes** : provisionnés comme du code dans le dépôt `infrastructure` (Grafana) : tableau de bord "Solivio - Application" (variable d'environnement), six alertes de production (backend injoignable, réponses 5xx, latence, échecs de connexion, événements internes en échec, erreurs dans les journaux). La préproduction est collectée sur un réseau séparé (`observability-staging`), sans alerte.
 - **Disponibilité** : moniteurs Uptime Kuma sur PostgreSQL (nom complet du conteneur), sur l'URL publique de santé de chaque environnement et sur les sauvegardes (moniteur "push").
-- **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques.
+- **Traçabilité métier** : assurée par le journal d'audit, distinct des journaux techniques. Chaque service métier écrit sa trace (`AuditService.tracer`, propagation `MANDATORY`) dans la transaction de l'action, au nom du compte authentifié lu dans le contexte de sécurité : une action annulée ne laisse pas de trace, et une trace impossible à écrire annule l'action. L'export des données de l'association est tracé.
 
 ## 12. La sécurité
 
@@ -282,7 +293,14 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Statut** : acceptée (octobre 2026).
 - **Contexte** : `docker compose up` remplaçait backend et frontend en place, d'où une interruption à chaque déploiement, le temps que la nouvelle version démarre. Cobage a résolu ce problème avec `docker-rollout`.
 - **Décision** : le script de déploiement bascule backend et frontend avec `docker-rollout` (v0.14, figé par commit et vérifié par empreinte) : la nouvelle version démarre à côté de l'ancienne, Traefik ne lui envoie du trafic qu'une fois son contrôle de santé au vert (readiness pour le backend), puis l'ancienne est vidée et arrêtée. Le vidage passe par le contrôle de santé : un fichier `/tmp/drain` le fait échouer, Traefik retire le conteneur du routage, puis l'arrêt gracieux termine les requêtes en cours. Pas de nginx : contrairement à Cobage (PHP-FPM), les deux applications servent HTTP elles-mêmes et Traefik découvre les conteneurs dynamiquement.
-- **Conséquences** : une version qui ne devient jamais saine est retirée et l'ancienne continue de servir ; les migrations Flyway restent additives, l'ancienne version tournant sur le nouveau schéma pendant la bascule ; le nom des conteneurs backend et frontend change à chaque déploiement (`-1`, `-2`...), aucune surveillance ne doit le viser ; pendant le chevauchement (une à deux minutes), les tâches planifiées existent en double, un déploiement à 08:00 pourrait donc envoyer deux fois le rappel de la veille.
+- **Conséquences** : une version qui ne devient jamais saine est retirée et l'ancienne continue de servir ; les migrations Flyway restent additives, l'ancienne version tournant sur le nouveau schéma pendant la bascule ; le nom des conteneurs backend et frontend change à chaque déploiement (`-1`, `-2`...), aucune surveillance ne doit le viser ; pendant le chevauchement (une à deux minutes), les tâches planifiées existent en double ; un déploiement à 08:00 émet deux fois le rappel de la veille, mais la clé d'idempotence `RAPPEL_VEILLE:{distribution}` (section 4.2) n'envoie l'email qu'une fois par personne.
+
+### ADR-011 - Suppression du rôle admin et hiérarchie des rôles
+
+- **Statut** : acceptée (octobre 2026).
+- **Contexte** : le rôle `admin` n'était défini dans aucun document et donnait des droits disparates (inviter, email libre, événements, collectes, mais ni distributions, ni membres, ni configuration, ni statistiques). Avec une seule association (ADR-001), il doublait `responsable` pour la direction de l'association et le drapeau `super_admin` pour l'administration technique. Sans hiérarchie, chaque `@PreAuthorize` devait aussi recopier la liste complète des rôles autorisés.
+- **Décision** : `admin` est supprimé (migration V12 : les éventuels admins deviennent responsables, contraintes `CHECK` resserrées). Un bean `RoleHierarchy` déclare `responsable` > `coordinateur` > `benevole`, pris en compte par la sécurité des méthodes.
+- **Conséquences** : coordinateurs et responsables passent les contrôles « bénévole » (par exemple prendre une mission de collecte) ; un jeton émis avant la migration avec le rôle `admin` ne donne plus aucun droit ; la V12 resserre une contrainte, contrairement à la règle additive de l'ADR-010, sans risque tant qu'aucune invitation `admin` n'est créée pendant la bascule (aucun écran ne le propose).
 
 ## 15. Synthèse
 

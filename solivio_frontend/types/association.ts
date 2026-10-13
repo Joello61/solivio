@@ -33,6 +33,12 @@ export interface MembreResponse {
   dateDebut: string;
 }
 
+export interface InviterMembrePayload {
+  email: string;
+  role: "responsable" | "coordinateur" | "benevole";
+  coordoType?: string;
+}
+
 export interface UpdateRoleMembrePayload {
   role: string;
   coordoType?: string;

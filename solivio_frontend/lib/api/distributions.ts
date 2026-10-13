@@ -12,22 +12,32 @@ import type {
   CatalogueDenreeResponse,
   MembreSuggestion,
   PointageAdHocResponse,
+  UpdateDistributionPayload,
 } from "@/types/distribution";
-
-export function listerDistributions(): Promise<DistributionResponse[]> {
-  return apiGet<DistributionResponse[]>("/api/distributions");
-}
-
-export function detailDistribution(id: string): Promise<DistributionResponse> {
-  return apiGet<DistributionResponse>(`/api/distributions/${id}`);
-}
 
 export function creerDistribution(payload: CreateDistributionPayload): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>("/api/distributions", payload);
 }
 
+export function modifierDistribution(id: string, payload: UpdateDistributionPayload): Promise<DistributionResponse> {
+  return apiFetch<DistributionResponse>(`/api/distributions/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+/** Brouillon uniquement : une distribution publiee s'annule. */
+export function supprimerDistribution(id: string): Promise<void> {
+  return apiFetch<void>(`/api/distributions/${id}`, { method: "DELETE" });
+}
+
 export function publierDistribution(id: string): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>(`/api/distributions/${id}/publier`, {});
+}
+
+export function annulerDemarrageDistribution(id: string): Promise<DistributionResponse> {
+  return apiPost<DistributionResponse>(`/api/distributions/${id}/annuler-demarrage`, {});
+}
+
+export function reactiverDistribution(id: string): Promise<DistributionResponse> {
+  return apiPost<DistributionResponse>(`/api/distributions/${id}/reactiver`, {});
 }
 
 export function demarrerDistribution(id: string): Promise<DistributionResponse> {
@@ -40,10 +50,6 @@ export function terminerDistribution(id: string): Promise<DistributionResponse> 
 
 export function annulerDistribution(id: string, motif: string): Promise<DistributionResponse> {
   return apiPost<DistributionResponse>(`/api/distributions/${id}/annuler`, { motif });
-}
-
-export function listerInscrits(distributionId: string): Promise<InscriptionResponse[]> {
-  return apiGet<InscriptionResponse[]>(`/api/distributions/${distributionId}/inscriptions`);
 }
 
 export function mesInscriptions(distributionId: string): Promise<InscriptionResponse[]> {
@@ -113,6 +119,16 @@ export function supprimerDenree(distributionId: string, denreeId: string): Promi
   });
 }
 
+export function changerBaseRepartition(
+  distributionId: string,
+  base: "INSCRITS" | "PRESENTS",
+): Promise<DistributionResponse> {
+  return apiFetch<DistributionResponse>(`/api/distributions/${distributionId}/base-repartition`, {
+    method: "PUT",
+    body: JSON.stringify({ base }),
+  });
+}
+
 export function calculerDotation(
   distributionId: string,
   base?: "INSCRITS" | "PRESENTS",
@@ -143,15 +159,6 @@ export function archiverTypeRole(id: string): Promise<void> {
 }
 
 // --- Roles assignes par le coordinateur sur une inscription ---
-
-export function listerRoles(
-  distributionId: string,
-  inscriptionId: string,
-): Promise<RoleBenevoleResponse[]> {
-  return apiGet<RoleBenevoleResponse[]>(
-    `/api/distributions/${distributionId}/inscriptions/${inscriptionId}/roles`,
-  );
-}
 
 export function assignerRole(
   distributionId: string,
@@ -227,10 +234,6 @@ export function envoyerInvitationVisiteur(
 
 export function rechercherCatalogueDenrees(q: string): Promise<CatalogueDenreeResponse[]> {
   return apiGet<CatalogueDenreeResponse[]>(`/api/denrees/catalogue?q=${encodeURIComponent(q)}`);
-}
-
-export function listerCatalogueDenrees(): Promise<CatalogueDenreeResponse[]> {
-  return apiGet<CatalogueDenreeResponse[]>("/api/denrees/catalogue");
 }
 
 export function creerCatalogueDenree(libelle: string): Promise<CatalogueDenreeResponse> {

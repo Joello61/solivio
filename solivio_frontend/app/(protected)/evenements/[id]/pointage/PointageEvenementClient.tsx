@@ -11,14 +11,14 @@ const LABEL_ROLE: Record<string, string> = {
 };
 
 const COULEUR_PRESENCE: Record<string, string> = {
-  NON_POINTE: "bg-slate-100 text-slate-600",
-  PRESENT: "bg-emerald-100 text-emerald-700",
-  ABSENT: "bg-red-100 text-red-700",
+  NON_POINTE: "bg-muted text-muted-foreground",
+  PRESENT: "bg-success/15 text-success",
+  ABSENT: "bg-destructive/15 text-destructive",
 };
 
 const LABEL_PRESENCE: Record<string, string> = {
   NON_POINTE: "Non pointe",
-  PRESENT: "Present",
+  PRESENT: "Présent",
   ABSENT: "Absent",
 };
 
@@ -76,14 +76,14 @@ export function PointageEvenementClient({ evenementId, participationsInitiales }
       <div className="rounded-2xl border border-border/60 overflow-hidden">
         {filtrees.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Aucun participant trouve.
+            Aucun participant trouvé.
           </div>
         ) : (
           <ul className="divide-y divide-border/40">
             {filtrees.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-neutral-900"
+                className="flex items-center justify-between gap-3 px-4 py-3 bg-card"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
@@ -100,8 +100,8 @@ export function PointageEvenementClient({ evenementId, participationsInitiales }
                   <button
                     onClick={() => marquer(p.id, "PRESENT")}
                     disabled={isPending || p.presence === "PRESENT"}
-                    title="Marquer present"
-                    className="size-8 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center disabled:opacity-40 transition-colors"
+                    title="Marquer présent"
+                    className="size-8 rounded-lg bg-success/10 text-success hover:bg-success/15 flex items-center justify-center disabled:opacity-40 transition-colors"
                   >
                     <Check className="size-4" />
                   </button>
@@ -109,7 +109,7 @@ export function PointageEvenementClient({ evenementId, participationsInitiales }
                     onClick={() => marquer(p.id, "ABSENT")}
                     disabled={isPending || p.presence === "ABSENT"}
                     title="Marquer absent"
-                    className="size-8 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 flex items-center justify-center disabled:opacity-40 transition-colors"
+                    className="size-8 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/15 flex items-center justify-center disabled:opacity-40 transition-colors"
                   >
                     <X className="size-4" />
                   </button>

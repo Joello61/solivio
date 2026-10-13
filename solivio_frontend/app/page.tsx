@@ -16,7 +16,6 @@ import {
   X,
   CheckCircle2,
   XCircle,
-  Clock,
   LayoutDashboard,
   ClipboardCheck,
   UserCheck,
@@ -29,15 +28,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
+// Comme l'ecran de pointage reel : le nom, le type d'inscrit et le statut, rien d'autre.
 const MOCK_BENEFICIARIES = [
-  { prenom: "Amara", creneau: "10h00", statut: "present" },
-  { prenom: "Lucas", creneau: "10h00", statut: "present" },
-  { prenom: "Inès", creneau: "10h15", statut: "present" },
-  { prenom: "Théo", creneau: "10h15", statut: "absent" },
-  { prenom: "Fatou", creneau: "10h30", statut: "present" },
-  { prenom: "Mathieu", creneau: "10h30", statut: "present" },
-  { prenom: "Yasmine", creneau: "10h45", statut: "en attente" },
-  { prenom: "Romain", creneau: "10h45", statut: "en attente" },
+  { nom: "Amara Diallo", type: "Bénéf.", statut: "present" },
+  { nom: "Lucas Martin", type: "Bénévole", statut: "present" },
+  { nom: "Inès Benali", type: "Bénéf.", statut: "present" },
+  { nom: "Théo Garcia", type: "Bénéf.", statut: "absent" },
+  { nom: "Fatou Camara", type: "Bénéf.", statut: "present" },
+  { nom: "Mathieu Roux", type: "Bénéf.", statut: "present" },
+  { nom: "Yasmine Haddad", type: "Bénéf.", statut: "en attente" },
+  { nom: "Romain Petit", type: "Bénévole", statut: "en attente" },
 ];
 
 function CheckinWidget() {
@@ -58,26 +58,26 @@ function CheckinWidget() {
 
   return (
     <div className="relative w-full max-w-120 mx-auto lg:mx-0 lg:ml-auto">
-      <div className="absolute -inset-4 bg-teal-500/10 dark:bg-teal-500/6 rounded-3xl blur-2xl pointer-events-none" />
+      <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl pointer-events-none" />
       <div className="relative border border-border bg-card rounded-2xl overflow-hidden shadow-xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/60">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-            <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-            <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+            <span className="h-2.5 w-2.5 rounded-full bg-warning" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success" />
           </div>
           <span className="text-[11px] font-semibold text-muted-foreground tracking-wider">
             Pointage - 15 juin 2026
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 bg-teal-500/12 px-2 py-0.5 rounded-full border border-teal-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/12 px-2 py-0.5 rounded-full border border-primary/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             En direct
           </span>
         </div>
 
         <div className="grid grid-cols-[1fr_80px_90px] gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 border-b border-border/40">
-          <span>Prénom</span>
-          <span className="text-center">Créneau</span>
+          <span>Nom</span>
+          <span className="text-center">Type</span>
           <span className="text-center">Statut</span>
         </div>
 
@@ -89,24 +89,23 @@ function CheckinWidget() {
               <div
                 key={i}
                 className={`grid grid-cols-[1fr_80px_90px] gap-2 px-4 py-2.5 items-center text-sm transition-colors duration-300 ${
-                  isActive ? "bg-teal-500/8 dark:bg-teal-500/5" : ""
+                  isActive ? "bg-primary/8" : ""
                 }`}
               >
-                <span className={`font-semibold transition-colors duration-300 ${isActive ? "text-teal-700 dark:text-teal-300" : "text-foreground"}`}>
-                  {b.prenom}
+                <span className={`font-semibold transition-colors duration-300 ${isActive ? "text-primary" : "text-foreground"}`}>
+                  {b.nom}
                 </span>
-                <span className="flex items-center justify-center gap-1 text-[11px] font-mono text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {b.creneau}
+                <span className="flex items-center justify-center text-[11px] text-muted-foreground">
+                  {b.type}
                 </span>
                 <span className="flex justify-center">
                   {b.statut === "present" && isPast ? (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Présent
                     </span>
                   ) : b.statut === "absent" && isPast ? (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-red-500 dark:text-red-400">
+                    <span className="flex items-center gap-1 text-[11px] font-semibold text-destructive">
                       <XCircle className="h-3.5 w-3.5" />
                       Absent
                     </span>
@@ -149,7 +148,7 @@ function RepartitionSimulator() {
         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Calcul de dotation
         </span>
-        <span className="text-xs font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-500/20 font-bold">
+        <span className="text-xs font-mono text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 font-bold">
           {count} inscrits
         </span>
       </div>
@@ -180,9 +179,9 @@ function RepartitionSimulator() {
 
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Carottes", val: `${calcul.carottes} kg`, bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/40" },
-            { label: "Pâtes", val: `${calcul.pates} pqt`, bg: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-900/40" },
-            { label: "Lait", val: `${calcul.lait} bq`, bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/40" },
+            { label: "Carottes", val: `${calcul.carottes} kg`, bg: "bg-warning/10 border-warning/30" },
+            { label: "Pâtes", val: `${calcul.pates} pqt`, bg: "bg-warning/10 border-warning/30" },
+            { label: "Lait", val: `${calcul.lait} bq`, bg: "bg-info/10 border-info/30" },
           ].map((item) => (
             <div key={item.label} className={`rounded-xl border p-3 text-center ${item.bg}`}>
               <div className="text-base font-mono font-extrabold text-foreground">{item.val}</div>
@@ -234,7 +233,7 @@ export default function LandingPage() {
     },
     {
       q: "Comment sont protégées les données des bénéficiaires ?",
-      a: "La confidentialité est intégrée dès la conception. Les bénévoles au pointage ne voient que le prénom et le créneau. Les statistiques de fin de distribution sont agrégées et pseudonymisées. Aucun hébergement hors Union européenne.",
+      a: "La confidentialité est intégrée dès la conception. Les bénévoles au pointage ne voient que le nom et le statut d'inscription, jamais le dossier social. Les statistiques de fin de distribution sont agrégées et pseudonymisées. Aucun hébergement hors Union européenne.",
     },
     {
       q: "Notre fonctionnement avec des créneaux horaires est-il compatible ?",
@@ -255,14 +254,14 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased">
+    <div className="flex flex-col min-h-dvh bg-background text-foreground antialiased">
 
       {/* NAV */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="h-8 w-8 rounded-xl bg-teal-600 flex items-center justify-center shadow-sm group-hover:bg-teal-700 transition-colors">
+              <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow-sm group-hover:bg-primary/90 transition-colors">
                 <Image src="/logo.svg" alt="" width={18} height={18} />
               </div>
               <span className="font-display font-bold text-base tracking-tight text-foreground">
@@ -343,19 +342,19 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(circle, oklch(0.747 0.018 264) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, var(--muted-foreground) 1px, transparent 1px)",
             backgroundSize: "28px 28px",
             opacity: 0.18,
           }}
         />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-teal-500/5 to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-16 items-center">
             <div className="space-y-7 animate-slide-up-fade">
               <h1 className="font-display font-extrabold text-4xl sm:text-5xl xl:text-[3.5rem] tracking-tight text-foreground leading-[1.07]">
                 Gérez vos distributions alimentaires{" "}
-                <span className="text-teal-600 dark:text-teal-400">
+                <span className="text-primary">
                   sans perdre de données.
                 </span>
               </h1>
@@ -385,7 +384,7 @@ export default function LandingPage() {
                   ["100% gratuit", "Associations"],
                 ].map(([val, label]) => (
                   <div key={val} className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                     <span className="text-xs text-muted-foreground">
                       <span className="font-semibold text-foreground">{val}</span>{" "}
                       {label}
@@ -401,10 +400,10 @@ export default function LandingPage() {
       </section>
 
       {/* PROBLEME */}
-      <section id="probleme" className="py-20 border-b border-border scroll-mt-14 bg-neutral-50 dark:bg-neutral-900/40">
+      <section id="probleme" className="py-20 border-b border-border scroll-mt-14 bg-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
               Le constat
             </p>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground leading-tight">
@@ -416,12 +415,12 @@ export default function LandingPage() {
             <div className="grid grid-cols-[2fr_3fr_3fr] border-b border-border">
               <div className="px-5 py-3" />
               <div className="px-5 py-3 border-l border-border">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-red-500 dark:text-red-400">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-destructive">
                   Fichier tableur
                 </span>
               </div>
               <div className="px-5 py-3 border-l border-border">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
                   Solivio
                 </span>
               </div>
@@ -437,7 +436,7 @@ export default function LandingPage() {
               {
                 sujet: "Pointage le jour J",
                 tableur: "Les bénévoles consultent les dossiers complets avec les coordonnées.",
-                solivio: "Interface restreinte : prénom et créneau uniquement. Rien d'autre.",
+                solivio: "Interface restreinte : nom et statut uniquement. Rien d'autre.",
                 icon: <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />,
               },
               {
@@ -460,13 +459,13 @@ export default function LandingPage() {
                 </div>
                 <div className="px-5 py-4 text-sm text-muted-foreground border-r border-border/40 leading-relaxed">
                   <span className="flex items-start gap-2">
-                    <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                    <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                     {row.tableur}
                   </span>
                 </div>
-                <div className="px-5 py-4 text-sm text-foreground leading-relaxed bg-teal-500/[0.03] dark:bg-teal-500/[0.06]">
+                <div className="px-5 py-4 text-sm text-foreground leading-relaxed bg-primary/[0.04]">
                   <span className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     {row.solivio}
                   </span>
                 </div>
@@ -480,7 +479,7 @@ export default function LandingPage() {
       <section id="fonctions" className="py-20 border-b border-border scroll-mt-14 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
               Ce que ça résout
             </p>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground leading-tight">
@@ -492,7 +491,7 @@ export default function LandingPage() {
             {[
               {
                 badge: "Coordinateurs",
-                icon: <LayoutDashboard className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
+                icon: <LayoutDashboard className="h-5 w-5 text-primary" />,
                 color: "teal",
                 title: "Planifier sans tableur",
                 desc: "Créez les distributions, configurez les créneaux, affectez les dotations. L'historique reste même quand le bureau change.",
@@ -500,44 +499,44 @@ export default function LandingPage() {
               },
               {
                 badge: "Bénévoles",
-                icon: <ClipboardCheck className="h-5 w-5 text-coral-600 dark:text-coral-400" />,
+                icon: <ClipboardCheck className="h-5 w-5 text-accent-strong" />,
                 color: "coral",
                 title: "Pointer en confiance",
-                desc: "Interface tablette avec seulement le prénom. Aucun document social visible. Le pointage prend 2 secondes par personne.",
-                footer: "Pointage sur tablette",
+                desc: "Sur téléphone, seulement le nom et le statut. Aucun document social visible. Le pointage prend 2 secondes par personne.",
+                footer: "Pointage sur téléphone",
               },
               {
                 badge: "Bénéficiaires",
-                icon: <UserCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
+                icon: <UserCheck className="h-5 w-5 text-primary" />,
                 color: "teal",
                 title: "S'inscrire discrètement",
-                desc: "Inscription rapide au créneau souhaité, sans créer de compte ni de mot de passe. Confirmation par e-mail automatique.",
+                desc: "Inscription rapide au créneau souhaité, depuis son téléphone, avec son compte email ou Google. Confirmation par e-mail automatique.",
                 footer: "Discrétion et autonomie",
               },
             ].map((card, i) => (
               <div
                 key={i}
-                className="group border border-border rounded-2xl p-6 bg-card flex flex-col justify-between hover:border-teal-500/30 hover:shadow-md transition-all duration-200"
+                className="group border border-border rounded-2xl p-6 bg-card flex flex-col justify-between hover:border-primary/30 hover:shadow-md transition-all duration-200"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span
                       className={`inline-block text-[10px] font-bold uppercase tracking-widest rounded-md px-2 py-1 ${
                         card.color === "teal"
-                          ? "bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-500/20"
-                          : "bg-coral-500/10 text-coral-700 dark:text-coral-400 border border-coral-500/20"
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "bg-accent/10 text-accent-strong border border-accent/20"
                       }`}
                     >
                       {card.badge}
                     </span>
-                    <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center group-hover:bg-teal-500/10 transition-colors">
+                    <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                       {card.icon}
                     </div>
                   </div>
                   <h3 className="font-display font-bold text-lg text-foreground leading-snug">{card.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-sm font-semibold text-teal-600 dark:text-teal-400 group-hover:translate-x-0.5 transition-transform duration-150">
+                <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-sm font-semibold text-primary group-hover:translate-x-0.5 transition-transform duration-150">
                   {card.footer}
                   <ArrowRight className="h-4 w-4" />
                 </div>
@@ -548,19 +547,19 @@ export default function LandingPage() {
       </section>
 
       {/* SIMULATION */}
-      <section id="simulation" className="py-20 border-b border-border scroll-mt-14 bg-teal-50/40 dark:bg-teal-950/10">
+      <section id="simulation" className="py-20 border-b border-border scroll-mt-14 bg-primary/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">
                 Répartition des denrées
               </p>
               <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground leading-tight">
                 La dotation calculée{" "}
-                <span className="text-teal-600 dark:text-teal-400">au panier près.</span>
+                <span className="text-primary">au panier près.</span>
               </h2>
               <p className="text-base text-muted-foreground leading-relaxed">
-                Entrez vos stocks. Solivio calcule instantanément la dotation par bénéficiaire inscrit en minimisant le gaspillage et les inégalités entre créneaux.
+                Entrez vos stocks. Solivio calculé instantanément la dotation par bénéficiaire inscrit en minimisant le gaspillage et les inégalités entre créneaux.
               </p>
               <ul className="space-y-3 pt-1">
                 {[
@@ -569,7 +568,7 @@ export default function LandingPage() {
                   "Restants identifiés pour redistribution ou don",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
@@ -584,7 +583,7 @@ export default function LandingPage() {
       <section id="philosophie" className="py-20 border-b border-border scroll-mt-14 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
               Nos engagements
             </p>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground leading-tight">
@@ -595,26 +594,26 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               {
-                icon: <Database className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
+                icon: <Database className="h-5 w-5 text-primary" />,
                 title: "Instance dédiée",
                 desc: "Solivio est déployé pour Linkee Toulouse sur sa propre base de données, partagée avec aucune autre structure.",
               },
               {
-                icon: <ShieldCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
+                icon: <ShieldCheck className="h-5 w-5 text-primary" />,
                 title: "Confidentialité by design",
                 desc: "Aucune donnée sociale transmise au-delà du strict nécessaire. Les bénévoles ne voient jamais les dossiers complets.",
               },
               {
-                icon: <HeartHandshake className="h-5 w-5 text-teal-600 dark:text-teal-400" />,
+                icon: <HeartHandshake className="h-5 w-5 text-primary" />,
                 title: "Export libre, toujours",
                 desc: "Exportez vos listes d'inscrits et membres en un clic. Vous restez propriétaire de vos données, à tout moment.",
               },
             ].map((card) => (
               <div
                 key={card.title}
-                className="border border-border rounded-2xl p-6 bg-card space-y-4 hover:border-teal-500/30 hover:shadow-sm transition-all duration-200"
+                className="border border-border rounded-2xl p-6 bg-card space-y-4 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
               >
-                <div className="h-10 w-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                   {card.icon}
                 </div>
                 <h3 className="font-display font-bold text-base text-foreground">{card.title}</h3>
@@ -643,10 +642,10 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ - 2 colonnes independantes */}
-      <section id="faq" className="py-20 border-b border-border scroll-mt-14 bg-neutral-50 dark:bg-neutral-900/40">
+      <section id="faq" className="py-20 border-b border-border scroll-mt-14 bg-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
               FAQ
             </p>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground">
@@ -716,7 +715,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">
                 Nous contacter
               </p>
               <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight text-foreground leading-tight">
@@ -729,32 +728,32 @@ export default function LandingPage() {
               <div className="space-y-3 pt-2">
                 <a
                   href="mailto:contact@solivio.org"
-                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-teal-500/30 hover:bg-teal-500/[0.02] transition-all duration-150 group"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150 group"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
-                    <Mail className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <Mail className="h-4 w-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">E-mail général</p>
                     <p className="text-xs text-muted-foreground">contact@solivio.org</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </a>
 
                 <a
                   href="https://github.com/Joello61/solivio"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-teal-500/30 hover:bg-teal-500/[0.02] transition-all duration-150 group"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150 group"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
-                    <GitBranch className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <GitBranch className="h-4 w-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Code source sur GitHub</p>
                     <p className="text-xs text-muted-foreground">github.com/Joello61/solivio</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </a>
               </div>
             </div>
@@ -768,7 +767,7 @@ export default function LandingPage() {
                     <input
                       type="text"
                       placeholder="Jean"
-                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 transition-all"
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 transition-all"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -776,7 +775,7 @@ export default function LandingPage() {
                     <input
                       type="text"
                       placeholder="Dupont"
-                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 transition-all"
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 transition-all"
                     />
                   </div>
                 </div>
@@ -785,7 +784,7 @@ export default function LandingPage() {
                   <input
                     type="email"
                     placeholder="jean.dupont@asso.fr"
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 transition-all"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -793,7 +792,7 @@ export default function LandingPage() {
                   <textarea
                     rows={4}
                     placeholder="Décrivez votre besoin ou votre question..."
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 transition-all resize-none"
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary/50 transition-all resize-none"
                   />
                 </div>
                 <Button className="w-full font-semibold shadow-sm">
@@ -807,12 +806,12 @@ export default function LandingPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="py-24 scroll-mt-14" style={{ backgroundColor: "oklch(0.447 0.098 185)" }}>
+      <section className="py-24 scroll-mt-14 bg-brand-deep">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-7">
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white leading-[1.1]">
+          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-on-brand leading-[1.1]">
             Prêt à structurer vos prochaines distributions ?
           </h2>
-          <p className="text-white/70 text-base leading-relaxed max-w-xl mx-auto">
+          <p className="text-on-brand/70 text-base leading-relaxed max-w-xl mx-auto">
             Déployez Solivio gratuitement pour votre association. Aucune carte bancaire, aucune condition cachée.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
@@ -826,7 +825,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto text-sm font-semibold text-white border-white/30 bg-transparent hover:bg-white/10 hover:border-white/50"
+                className="w-full sm:w-auto text-sm font-semibold text-on-brand border-on-brand/30 bg-transparent hover:bg-on-brand/10 hover:border-on-brand/50"
               >
                 Se connecter
               </Button>
@@ -839,7 +838,7 @@ export default function LandingPage() {
       <footer className="bg-background border-t border-border py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-5">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-teal-600 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
               <Image src="/logo.svg" alt="" width={16} height={16} />
             </div>
             <span className="font-display font-bold text-sm text-foreground">Solivio</span>

@@ -59,7 +59,7 @@ describe("VerifyEmailPage", () => {
     renderPage("email=alice%40example.com&raison=non-verifie");
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(/pas encore verifiee/);
+      expect(screen.getByRole("status")).toHaveTextContent(/pas encore vérifiée/);
     });
     expect(authLib.resendVerification).toHaveBeenCalledTimes(1);
     expect(authLib.resendVerification).toHaveBeenCalledWith("alice@example.com");
@@ -73,7 +73,7 @@ describe("VerifyEmailPage", () => {
     });
 
     expect(authLib.resendVerification).toHaveBeenCalledWith("alice@example.com");
-    expect(screen.getByRole("status")).toHaveTextContent(/nouveau code a ete envoye/);
+    expect(screen.getByRole("status")).toHaveTextContent(/nouveau code a été envoyé/);
   });
 
   it("affiche l'erreur du serveur quand le renvoi est refuse", async () => {

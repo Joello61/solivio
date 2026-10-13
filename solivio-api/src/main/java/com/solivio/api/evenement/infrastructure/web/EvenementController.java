@@ -1,6 +1,5 @@
 package com.solivio.api.evenement.infrastructure.web;
 
-import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.evenement.application.EvenementService;
 import com.solivio.api.evenement.application.ParticipationEvenementService;
 import com.solivio.api.evenement.infrastructure.web.dto.AnnulerEvenementRequest;
@@ -32,16 +31,13 @@ public class EvenementController {
 
     private final EvenementService evenementService;
     private final ParticipationEvenementService participationService;
-    private final AuditService auditService;
 
     public EvenementController(
         EvenementService evenementService,
-        ParticipationEvenementService participationService,
-        AuditService auditService
+        ParticipationEvenementService participationService
     ) {
         this.evenementService = evenementService;
         this.participationService = participationService;
-        this.auditService = auditService;
     }
 
     @GetMapping
@@ -53,13 +49,12 @@ public class EvenementController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> creer(
         @Valid @RequestBody CreateEvenementRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         EvenementResponse response = evenementService.creer(request, user.getUsername());
-        auditService.tracer(user.getCompteId(), "EVENEMENT_CREE", "evenement", response.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -69,37 +64,31 @@ public class EvenementController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> modifier(
         @PathVariable UUID id,
-        @Valid @RequestBody UpdateEvenementRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody UpdateEvenementRequest request
     ) {
         EvenementResponse response = evenementService.modifier(id, request);
-        auditService.tracer(user.getCompteId(), "EVENEMENT_MODIFIE", "evenement", id);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/publier")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> publier(
-        @PathVariable UUID id,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @PathVariable UUID id
     ) {
         EvenementResponse response = evenementService.publier(id);
-        auditService.tracer(user.getCompteId(), "EVENEMENT_PUBLIE", "evenement", id);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/annuler")
-    @PreAuthorize("hasAnyRole('ADMIN','RESPONSABLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
     public ResponseEntity<EvenementResponse> annuler(
         @PathVariable UUID id,
-        @Valid @RequestBody AnnulerEvenementRequest request,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @Valid @RequestBody AnnulerEvenementRequest request
     ) {
         EvenementResponse response = evenementService.annuler(id, request);
-        auditService.tracer(user.getCompteId(), "EVENEMENT_ANNULE", "evenement", id);
         return ResponseEntity.ok(response);
     }
 

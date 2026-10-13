@@ -41,13 +41,13 @@ export function DialogAjoutBenevole({ distributionId, onBenevoleAjoute, onVisite
         render={
           <Button variant="outline" size="sm">
             <UserPlus className="size-4" />
-            Ajouter un benevole
+            Ajouter un bénévole
           </Button>
         }
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajouter un benevole</DialogTitle>
+          <DialogTitle>Ajouter un bénévole</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="existant">
           <TabsList variant="line" className="w-full">
@@ -134,7 +134,7 @@ function OngletMembreExistant({
         }
         <Input
           className="pl-9"
-          placeholder="Rechercher par nom ou prenom..."
+          placeholder="Rechercher par nom ou prénom..."
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           autoFocus
@@ -146,7 +146,7 @@ function OngletMembreExistant({
       {suggestions.length > 0 && (
         <div className="rounded-xl border border-border/60 overflow-hidden divide-y divide-border/60">
           {suggestions.map((m) => (
-            <div key={m.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-teal-50/30">
+            <div key={m.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-primary/5">
               <div>
                 <p className="text-sm font-medium">{m.nom} {m.prenom}</p>
                 <p className="text-xs text-muted-foreground">{m.email}</p>
@@ -167,7 +167,7 @@ function OngletMembreExistant({
 
       {recherche.length >= 2 && !chargement && suggestions.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-2">
-          Aucun membre trouve pour &quot;{recherche}&quot;.
+          Aucun membre trouvé pour &quot;{recherche}&quot;.
         </p>
       )}
     </div>
@@ -223,9 +223,9 @@ function OngletVisiteur({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Prenom *</label>
+          <label className="text-xs font-medium text-muted-foreground">Prénom *</label>
           <Input
-            placeholder="Prenom"
+            placeholder="Prénom"
             value={prenom}
             onChange={(e) => setPrenom(e.target.value)}
             required
@@ -242,7 +242,7 @@ function OngletVisiteur({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Role (optionnel)</label>
+        <label className="text-xs font-medium text-muted-foreground">Rôle (optionnel)</label>
         <Input
           placeholder="Ex : Accueil, Distribution..."
           value={role}

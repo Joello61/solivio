@@ -88,7 +88,7 @@ export function SessionActions({ sessionId, statut, estResponsable, estCoordinat
             onClick={() => executer("demarrer", () => demarrerSession(sessionId))}
             disabled={!!pending}
           >
-            {pending === "demarrer" ? <Spinner size="sm" /> : "Demarrer"}
+            {pending === "demarrer" ? <Spinner size="sm" /> : "Démarrer"}
           </Button>
         )}
         {peutTerminer && (
@@ -130,7 +130,7 @@ export function SessionActions({ sessionId, statut, estResponsable, estCoordinat
             onClick={() => executer("desinscrire", () => desinscrireSession(sessionId))}
             disabled={!!pending}
           >
-            {pending === "desinscrire" ? <Spinner size="sm" /> : "Se desinscrire"}
+            {pending === "desinscrire" ? <Spinner size="sm" /> : "Se désinscrire"}
           </Button>
         )}
       </div>

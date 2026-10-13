@@ -20,6 +20,8 @@ public interface CompteRepository extends JpaRepository<Compte, UUID> {
 
     // Le pattern est passe depuis Java ("%term%", deja en minuscules) pour eviter
     // l'inference bytea de Hibernate 7 sur les parametres non types dans CONCAT.
+    long countBySuperAdminTrueAndActifTrue();
+
     @Query("SELECT c FROM Compte c WHERE "
         + "(:pattern IS NULL OR LOWER(c.nom) LIKE :pattern "
         + " OR LOWER(c.prenom) LIKE :pattern "

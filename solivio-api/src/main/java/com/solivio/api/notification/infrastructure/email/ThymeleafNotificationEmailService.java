@@ -54,6 +54,19 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
     }
 
     @Override
+    public void envoyerModificationDistribution(String email, ContexteEmail contexte) {
+        envoyer(email, "Distribution modifiee - " + contexte.distribution().titre(),
+            "modification-distribution", contexteThymeleaf(contexte));
+    }
+
+    @Override
+    public void envoyerReactivationDistribution(String email, ContexteEmail contexte, boolean inscriptionRetablie) {
+        Context ctx = contexteThymeleaf(contexte);
+        ctx.setVariable("inscriptionRetablie", inscriptionRetablie);
+        envoyer(email, "Distribution retablie - " + contexte.distribution().titre(), "reactivation-distribution", ctx);
+    }
+
+    @Override
     public void envoyerRappelVeille(String email, ContexteEmail contexte) {
         envoyer(email, "Rappel : distribution demain - " + contexte.distribution().titre(),
             "rappel-veille", contexteThymeleaf(contexte));
@@ -183,8 +196,9 @@ public class ThymeleafNotificationEmailService implements NotificationEmailServi
             helper.setText(corps, true);
             mailSender.send(message);
         } catch (MessagingException | MailException e) {
-            log.error("Echec envoi email a {} ({}): {}", destinataire, sujet, e.getMessage());
-            throw new NotificationEmailException(destinataire, sujet, e);
+            NotificationEmailException echec = new NotificationEmailException(e);
+            log.error("Echec envoi du template {} : {}", template, echec.getMessage());
+            throw echec;
         }
     }
 }

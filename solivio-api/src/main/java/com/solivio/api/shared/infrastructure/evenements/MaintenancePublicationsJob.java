@@ -1,5 +1,6 @@
 package com.solivio.api.shared.infrastructure.evenements;
 
+import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.modulith.events.CompletedEventPublications;
@@ -22,6 +23,13 @@ public class MaintenancePublicationsJob {
     // Laisse le temps a une panne passagere de se resorber avant de reessayer.
     static final Duration AGE_MINIMUM_RELANCE = Duration.ofMinutes(5);
     static final Duration CONSERVATION_ARCHIVE = Duration.ofDays(30);
+    // Au-dela, la publication reste en echec et l'alerte sur
+    // solivio_evenements_publications_echouees prend le relais.
+    static final int MAX_TENTATIVES = 5;
+
+    static final ResubmissionOptions OPTIONS_RELANCE = ResubmissionOptions.defaults()
+        .withMinAge(AGE_MINIMUM_RELANCE)
+        .withFilter(publication -> publication.getCompletionAttempts() < MAX_TENTATIVES);
 
     private final FailedEventPublications failedPublications;
     private final CompletedEventPublications completedPublications;
@@ -35,10 +43,10 @@ public class MaintenancePublicationsJob {
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT2M")
     public void relancerLesEchecs() {
         log.debug("Relance des publications d'evenements en echec");
-        failedPublications.resubmit(ResubmissionOptions.defaults().withMinAge(AGE_MINIMUM_RELANCE));
+        failedPublications.resubmit(OPTIONS_RELANCE);
     }
 
-    @Scheduled(cron = "0 30 3 * * *", zone = "Europe/Paris")
+    @Scheduled(cron = "0 30 3 * * *", zone = HorlogeAssociation.FUSEAU_PAR_DEFAUT)
     public void purgerLArchive() {
         completedPublications.deletePublicationsOlderThan(CONSERVATION_ARCHIVE);
     }

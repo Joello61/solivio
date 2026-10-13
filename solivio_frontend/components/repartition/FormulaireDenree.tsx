@@ -23,8 +23,8 @@ import type { DenreeResponse } from "@/types/distribution";
 const schema = z.object({
   libelle: z.string().min(1, "Le libelle est requis").max(200),
   unite: z.enum(["UNITE", "KILOGRAMME", "LITRE", "PIECE"]),
-  nombreContenants: z.number().int().positive("Doit etre positif"),
-  quantiteParContenant: z.number().positive("Doit etre positif"),
+  nombreContenants: z.number().int().positive("Doit être positif"),
+  quantiteParContenant: z.number().positive("Doit être positif"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -33,7 +33,7 @@ const UNITES: { value: FormValues["unite"]; label: string }[] = [
   { value: "KILOGRAMME", label: "Kilogramme (kg)" },
   { value: "LITRE", label: "Litre (L)" },
   { value: "PIECE", label: "Piece" },
-  { value: "UNITE", label: "Unite generique" },
+  { value: "UNITE", label: "Unité générique" },
 ];
 
 interface Props {
@@ -82,12 +82,12 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="unite">Unite</Label>
+        <Label htmlFor="unite">Unité</Label>
         <Controller
           name="unite"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select items={UNITES} value={field.value} onValueChange={field.onChange}>
               <SelectTrigger id="unite" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -110,6 +110,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
           <Input
             id="nombreContenants"
             type="number"
+            inputMode="numeric"
             min="1"
             step="1"
             {...register("nombreContenants", { valueAsNumber: true })}
@@ -120,10 +121,11 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="quantiteParContenant">Quantite par contenant</Label>
+          <Label htmlFor="quantiteParContenant">Quantité par contenant</Label>
           <Input
             id="quantiteParContenant"
             type="number"
+            inputMode="decimal"
             min="0.001"
             step="0.001"
             {...register("quantiteParContenant", { valueAsNumber: true })}

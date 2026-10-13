@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, Pencil, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,9 @@ import {
   demarrerDistribution,
   terminerDistribution,
   annulerDistribution,
+  supprimerDistribution,
+  annulerDemarrageDistribution,
+  reactiverDistribution,
 } from "@/lib/api/distributions";
 import type { StatutDistribution } from "@/types/distribution";
 
@@ -33,11 +38,14 @@ export function DistributionActions({ distributionId, statut, distributionDate }
   const [erreur, setErreur] = useState<string | null>(null);
   const [annulationOpen, setAnnulationOpen] = useState(false);
   const [motif, setMotif] = useState("");
+  const [suppressionOpen, setSuppressionOpen] = useState(false);
+  const [reactivationOpen, setReactivationOpen] = useState(false);
 
   const aujourd = new Date();
   aujourd.setHours(0, 0, 0, 0);
   const dateDistrib = new Date(distributionDate + "T00:00:00");
   const estDateFuture = dateDistrib > aujourd;
+  const estDatePassee = dateDistrib < aujourd;
 
   async function executer(action: string) {
     setPending(action);
@@ -52,6 +60,13 @@ export function DistributionActions({ distributionId, statut, distributionDate }
           break;
         case "terminer":
           await terminerDistribution(distributionId);
+          break;
+        case "annuler-demarrage":
+          await annulerDemarrageDistribution(distributionId);
+          break;
+        case "reactiver":
+          await reactiverDistribution(distributionId);
+          setReactivationOpen(false);
           break;
         default:
           break;
@@ -82,6 +97,21 @@ export function DistributionActions({ distributionId, statut, distributionDate }
     }
   }
 
+  async function confirmerSuppression() {
+    setPending("supprimer");
+    setErreur(null);
+    try {
+      await supprimerDistribution(distributionId);
+      setSuppressionOpen(false);
+      router.push("/distributions");
+      router.refresh();
+    } catch (e: unknown) {
+      const err = e as { detail?: string; message?: string };
+      setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
+      setPending(null);
+    }
+  }
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -99,13 +129,42 @@ export function DistributionActions({ distributionId, statut, distributionDate }
             onClick={() => executer("demarrer")}
             disabled={pending !== null || estDateFuture}
           >
-            {pending === "demarrer" ? <><Spinner size="sm" /> Demarrage...</> : "Demarrer"}
+            {pending === "demarrer" ? <><Spinner size="sm" /> Démarrage...</> : "Démarrer"}
           </Button>
         )}
 
         {statut === "EN_COURS" && (
           <Button size="sm" onClick={() => executer("terminer")} disabled={pending !== null}>
-            {pending === "terminer" ? <><Spinner size="sm" /> Cloture...</> : "Terminer"}
+            {pending === "terminer" ? <><Spinner size="sm" /> Clôture...</> : "Terminer"}
+          </Button>
+        )}
+
+        {/* Demarrage accidentel : le backend refuse si une presence a deja ete pointee. */}
+        {statut === "EN_COURS" && (
+          <Button size="sm" variant="outline" onClick={() => executer("annuler-demarrage")} disabled={pending !== null}>
+            <Undo2 className="size-3.5 mr-1" />
+            {pending === "annuler-demarrage" ? "Retour..." : "Revenir à publiée"}
+          </Button>
+        )}
+
+        {statut === "ANNULEE" && !estDatePassee && (
+          <Button size="sm" variant="outline" onClick={() => setReactivationOpen(true)} disabled={pending !== null}>
+            <RotateCcw className="size-3.5 mr-1" />
+            Réactiver
+          </Button>
+        )}
+
+        {(statut === "BROUILLON" || statut === "PUBLIEE") && (
+          <Link href={`/distributions/${distributionId}/modifier`} className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+            <Pencil className="size-3.5 mr-1" />
+            Modifier
+          </Link>
+        )}
+
+        {statut === "BROUILLON" && (
+          <Button size="sm" variant="outline" onClick={() => setSuppressionOpen(true)} disabled={pending !== null}>
+            <Trash2 className="size-3.5 mr-1" />
+            Supprimer le brouillon
           </Button>
         )}
 
@@ -122,7 +181,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
 
         {statut === "PUBLIEE" && estDateFuture && (
           <p className="w-full text-xs text-muted-foreground">
-            Le demarrage sera possible le{" "}
+            Le démarrage sera possible le{" "}
             {dateDistrib.toLocaleDateString("fr-FR", {
               weekday: "long",
               day: "numeric",
@@ -132,16 +191,60 @@ export function DistributionActions({ distributionId, statut, distributionDate }
         )}
       </div>
 
+      {/* Reactivation apres une annulation par erreur : les inscriptions sont retablies (backend). */}
+      <Dialog open={reactivationOpen} onOpenChange={setReactivationOpen}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Réactiver la distribution</DialogTitle>
+            <DialogDescription>
+              Elle retrouve son état d&apos;avant l&apos;annulation. Les inscriptions supprimées par
+              l&apos;annulation sont rétablies, sauf pour les personnes inscrites entre-temps à une autre
+              distribution de la semaine. Chacun est prévenu par email.
+            </DialogDescription>
+          </DialogHeader>
+          {erreur && <p className="text-sm text-destructive">{erreur}</p>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReactivationOpen(false)}>
+              Retour
+            </Button>
+            <Button onClick={() => executer("reactiver")} disabled={pending !== null}>
+              {pending === "reactiver" && <Spinner size="sm" className="mr-2" />}
+              Réactiver
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suppression d'un brouillon : jamais publie, donc sans inscrit */}
+      <Dialog open={suppressionOpen} onOpenChange={setSuppressionOpen}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Supprimer le brouillon</DialogTitle>
+            <DialogDescription>
+              Ce brouillon et ses créneaux seront supprimés définitivement. Personne n&apos;y est inscrit.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuppressionOpen(false)}>
+              Retour
+            </Button>
+            <Button variant="destructive" onClick={confirmerSuppression} disabled={pending === "supprimer"}>
+              {pending === "supprimer" ? <><Spinner size="sm" /> Suppression...</> : "Supprimer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog de confirmation d'annulation avec motif */}
       <Dialog open={annulationOpen} onOpenChange={setAnnulationOpen}>
         <DialogContent showCloseButton>
           <DialogHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-800/40 mb-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 border border-destructive/30 mb-1">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <DialogTitle>Annuler la distribution</DialogTitle>
             <DialogDescription>
-              Cette action est irreversible. Les participants inscrits seront notifies.
+              Cette action est irréversible. Les participants inscrits seront notifies.
             </DialogDescription>
           </DialogHeader>
 
@@ -154,7 +257,7 @@ export function DistributionActions({ distributionId, statut, distributionDate }
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
               rows={3}
-              placeholder="Ex : manque de denrees disponibles..."
+              placeholder="Ex : manque de denrées disponibles..."
               className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 resize-none"
               autoFocus
             />

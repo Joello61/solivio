@@ -89,7 +89,7 @@ L'ancien découpage entre un registre global et des données par association est
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | compte | référence | Le compte, unique |
-| role | énumération | admin, responsable, coordinateur, benevole, beneficiaire |
+| role | énumération | responsable, coordinateur, benevole, beneficiaire (hiérarchie : responsable > coordinateur > benevole, ADR-011) |
 | coordo_type | texte | Sous-type libre d'un coordinateur (ex : coordo_sec) |
 | statut | énumération | actif, suspendu, invite_en_attente |
 | invite_par | référence | Compte qui a invité, optionnel |
@@ -158,6 +158,7 @@ L'ancien découpage entre un registre global et des données par association est
 | mode_creneau | énumération | creneau_unique ou creneaux_decoupes (voir ci-dessous) - choisi par l'association |
 | base_repartition | énumération | inscrits (défaut) ou presents - base du calcul de dotation |
 | motif_annulation | texte | Rempli en cas d'annulation |
+| statut_avant_annulation | énumération | Statut au moment de l'annulation, pour une réactivation |
 | cree_par | référence | La personne qui a créé la distribution |
 | unite_organisationnelle | référence | **Vide en V1**, réservé pour l'antenne |
 | date_creation | date-heure | Création |
@@ -198,8 +199,10 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | personne | référence | La personne inscrite |
 | type | énumération | beneficiaire ou benevole |
 | statut | énumération | confirmee, liste_attente, annulee |
+| statut_avant_annulation | énumération | Statut avant une annulation de la distribution (confirmee ou liste_attente) ; vide après une désinscription personnelle |
 | rang_liste_attente | entier | Position en liste d'attente (si applicable) |
 | presence | énumération | non_pointe (défaut), present, absent |
+| absence_deduite | booléen | Vrai si l'absence a été enregistrée à la clôture faute de pointage (RG4), faux pour une absence pointée |
 | date_pointage | date-heure | Quand la présence a été pointée |
 | pointe_par | référence | Qui a pointé |
 | date_inscription | date-heure | Quand la personne s'est inscrite |
@@ -228,7 +231,7 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 | type_role | référence | Entrée du catalogue (optionnel) |
 | libelle_libre | texte | Libellé ad hoc si pas de catalogue (optionnel) |
 
-> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par admin, responsable ou coordinateur après l'inscription du bénévole.
+> Au moins l'un des deux champs `type_role` ou `libelle_libre` est non null. Un bénévole peut cumuler plusieurs rôles (plusieurs lignes liées à la même inscription). Les rôles sont attribués par un responsable ou un coordinateur après l'inscription du bénévole. Un rôle archivé (`actif` faux) reste dans l'historique mais ne peut plus être attribué.
 
 ### 4.4 Répartition des denrées
 
@@ -256,11 +259,12 @@ L'association décide, pour chaque distribution, comment fonctionnent les créne
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | personne | référence | Le destinataire |
-| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, promotion_liste_attente |
+| type_evenement | énumération | confirmation_inscription, rappel_veille, annulation, modification_distribution, reactivation_distribution, promotion_liste_attente, et les notifications des événements, missions et sessions |
 | canal | énumération | email (V1) ; sms, push réservés pour la V2 |
 | sujet | texte | Objet du message |
 | statut | énumération | envoye, echec |
-| erreur | texte | Détail en cas d'échec |
+| erreur | texte | Détail en cas d'échec, sans adresse email |
+| cle_idempotence | texte | Type de notification et identifiant de l'occurrence (par exemple `RAPPEL_VEILLE:{distribution}`) ; unique par personne parmi les envois réussis. Vide pour l'email libre |
 | date_envoi | date-heure | Horodatage |
 
 > En V1, le contenu des messages est codé en dur (pas de modèles éditables). L'entité `modele_notification` est réservée pour la V2 (section 5).
@@ -330,7 +334,7 @@ Lecture : le compte porte la connexion et le rôle (membre) ; la personne porte 
 
 **Horodatage.** Les entités importantes portent une date de création ; les modifications sensibles passent par le journal d'audit.
 
-**Effacement logique.** Les personnes et les entités porteuses d'historique ne sont pas supprimées physiquement mais marquées supprimées, sauf demande explicite de suppression définitive (droit à l'effacement RGPD), qui elle est réelle et complète.
+**Effacement logique.** Les personnes et les entités porteuses d'historique ne sont pas supprimées physiquement mais marquées supprimées, sauf demande explicite de suppression définitive (droit à l'effacement RGPD), qui elle est réelle et complète : le compte, ses identifiants, ses jetons, son avatar et le profil bénéficiaire sont supprimés ; la personne et les copies de son nom (inscriptions) sont anonymisées de façon irréversible, ce qui en fait des données qui ne sont plus personnelles tout en gardant l'historique et les compteurs. La personne peut le demander elle-même depuis son compte ; un super administrateur traite les demandes reçues hors de l'application.
 
 **Pseudonymisation.** Les statistiques et les journaux ne manipulent pas d'identité nominative : ils comptent et agrègent. L'exposition nominative est réservée aux écrans à accès restreint.
 

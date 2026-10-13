@@ -10,6 +10,7 @@ vi.mock("@/lib/api/distributions", () => ({
   modifierDenree: vi.fn(),
   supprimerDenree: vi.fn(),
   calculerDotation: vi.fn(),
+  changerBaseRepartition: vi.fn().mockResolvedValue({}),
 }));
 
 const denreeMock: DenreeResponse = {
@@ -91,6 +92,25 @@ describe("RepartitionPanel", () => {
     expect(screen.getByText(/3 personne/)).toBeInTheDocument();
   });
 
+  it("sans beneficiaire, attend les inscriptions au lieu d'annoncer une penurie", () => {
+    const sansInscrit: DotationResponse = {
+      ...dotationNormale,
+      nbBeneficiaires: 0,
+      denrees: [{ ...dotationNormale.denrees[0], dotation: 0, reste: 50, penurie: false, nbPeutRecevoir: 0 }],
+    };
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={sansInscrit}
+        modifiable={true}
+      />,
+    );
+
+    expect(screen.getByText(/Aucun bénéficiaire inscrit/)).toBeInTheDocument();
+    expect(screen.queryByText(/Stock insuffisant/)).not.toBeInTheDocument();
+  });
+
   it("affiche le nombre de beneficiaires dans la base de calcul", () => {
     render(
       <RepartitionPanel
@@ -103,7 +123,7 @@ describe("RepartitionPanel", () => {
 
     // Le chiffre et le libelle sont dans des <span> distincts
     expect(screen.getByText("10")).toBeInTheDocument();
-    expect(screen.getByText(/beneficiaire/)).toBeInTheDocument();
+    expect(screen.getByText(/bénéficiaire/)).toBeInTheDocument();
   });
 
   it("affiche le bouton d'ajout de denree si modifiable", () => {
@@ -116,7 +136,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /Ajouter une denree/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ajouter une denrée/ })).toBeInTheDocument();
   });
 
   it("affiche le formulaire d'ajout au clic", async () => {
@@ -130,7 +150,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Ajouter une denree/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Ajouter une denrée/ }));
     });
 
     expect(screen.getByLabelText("Libelle")).toBeInTheDocument();
@@ -147,7 +167,7 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText("Inscrits")).toBeInTheDocument();
-    expect(screen.getByText("Presents reels")).toBeInTheDocument();
+    expect(screen.getByText("Présents réels")).toBeInTheDocument();
   });
 
   it("appelle calculerDotation avec PRESENTS au clic sur la bascule", async () => {
@@ -167,11 +187,48 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Presents reels"));
+      fireEvent.click(screen.getByText("Présents réels"));
     });
 
+    expect(distributionsApi.changerBaseRepartition).toHaveBeenCalledWith("dist-1", "PRESENTS");
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");
     expect(await screen.findByText("7")).toBeInTheDocument();
+  });
+
+  it("garde la base precedente si son enregistrement echoue", async () => {
+    vi.mocked(distributionsApi.changerBaseRepartition).mockRejectedValueOnce(new Error("refus"));
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[]}
+        dotationInitiale={{ ...dotationNormale, denrees: [] }}
+        modifiable={true}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Présents réels"));
+    });
+
+    expect(screen.getByText(/n'a pas pu être enregistré/)).toBeInTheDocument();
+    expect(distributionsApi.calculerDotation).not.toHaveBeenCalled();
+  });
+
+  it("affiche une dotation au demi-kilo avec une virgule", () => {
+    render(
+      <RepartitionPanel
+        distributionId="dist-1"
+        denreesInitiales={[denreeMock]}
+        dotationInitiale={{
+          ...dotationNormale,
+          nbBeneficiaires: 20,
+          denrees: [{ ...dotationNormale.denrees[0], quantiteTotale: 15, dotation: 0.5, reste: 5, nbPeutRecevoir: 20 }],
+        }}
+        modifiable={true}
+      />,
+    );
+
+    expect(screen.getByText("0,5 kg")).toBeInTheDocument();
   });
 
   it("affiche le reste si non nul", () => {
@@ -211,7 +268,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/Aucune denree saisie/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucune denrée saisie/)).toBeInTheDocument();
   });
 
   // --- Mode lecture seule (distribution terminee ou annulee) ---
@@ -226,7 +283,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/cloturee/i)).toBeInTheDocument();
+    expect(screen.getByText(/clôturée/i)).toBeInTheDocument();
   });
 
   it("masque le bouton d'ajout quand non modifiable", () => {
@@ -239,7 +296,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.queryByText(/Ajouter une denree/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ajouter une denrée/)).not.toBeInTheDocument();
   });
 
   it("masque les boutons modifier et supprimer quand non modifiable", () => {

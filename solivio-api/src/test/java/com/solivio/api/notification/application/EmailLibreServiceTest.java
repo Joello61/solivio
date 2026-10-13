@@ -136,7 +136,7 @@ class EmailLibreServiceTest {
         UUID id = UUID.randomUUID();
         PersonneContactInfo p = new PersonneContactInfo(id, "fail@ex.com", "Fail", "F");
         when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(p));
-        doThrow(new NotificationEmailException("fail@ex.com", "sujet", new RuntimeException("SMTP KO")))
+        doThrow(new NotificationEmailException(new RuntimeException("SMTP KO")))
             .when(emailService).envoyerEmailLibre(anyString(), anyString(), anyString());
 
         service.envoyer(CibleEmail.BENEVOLES, "sujet", "corps");

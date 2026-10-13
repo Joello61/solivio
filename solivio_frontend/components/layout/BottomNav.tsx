@@ -2,17 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BOTTOM_NAV_ITEMS, isNavItemActive } from "./navigation";
+import { bottomNavItems, isNavItemActive } from "./navigation";
 
-const ITEMS = [
-  ...BOTTOM_NAV_ITEMS,
-  { href: "/mon-compte", label: "Compte", icon: CircleUser },
-];
-
-export function BottomNav() {
+export function BottomNav({ roles }: { roles: string[] }) {
   const pathname = usePathname();
+  const items = bottomNavItems(roles);
 
   return (
     <nav
@@ -21,16 +16,16 @@ export function BottomNav() {
       aria-label="Navigation mobile"
     >
       {/* Barre de navigation avec blur et bordure */}
-      <div className="border-t border-border/60 bg-white/95 backdrop-blur-md shadow-lg dark:bg-neutral-950/95">
+      <div className="border-t border-border/60 bg-background/95 backdrop-blur-md shadow-lg">
         <div className="flex items-stretch">
-          {ITEMS.map((item) => {
+          {items.map((item) => {
             const active = isNavItemActive(item.href, pathname);
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-1 flex-col items-center justify-center gap-1 pt-3 pb-2.5 px-1 transition-all duration-150"
+                className="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 pt-2.5 pb-2 px-1 transition-all duration-150"
                 aria-current={active ? "page" : undefined}
               >
                 {/* Indicateur pilule */}
@@ -49,7 +44,7 @@ export function BottomNav() {
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-semibold leading-none transition-colors",
+                    "text-[11px] font-semibold leading-none transition-colors",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >

@@ -8,7 +8,6 @@ import * as authLib from "@/lib/auth";
 vi.mock("@/lib/auth", () => ({
   login: vi.fn(),
   logout: vi.fn(),
-  getMe: vi.fn(),
 }));
 
 const navigation = vi.hoisted(() => ({ push: vi.fn(), params: new URLSearchParams() }));
@@ -51,12 +50,12 @@ describe("LoginPage", () => {
 
   it("affiche le lien mot de passe oublie", () => {
     renderLogin();
-    expect(screen.getByText(/Mot de passe oublie/)).toBeInTheDocument();
+    expect(screen.getByText(/Mot de passe oublié/)).toBeInTheDocument();
   });
 
   it("affiche le lien d'inscription", () => {
     renderLogin();
-    expect(screen.getByText(/Creer un compte/)).toBeInTheDocument();
+    expect(screen.getByText(/Créer un compte/)).toBeInTheDocument();
   });
 
   it("desactive le bouton pendant la soumission", async () => {
@@ -157,13 +156,13 @@ describe("LoginPage", () => {
   it("confirme la verification de l'email au retour de la page de code", () => {
     navigation.params = new URLSearchParams("verified=1");
     renderLogin();
-    expect(screen.getByRole("status")).toHaveTextContent(/Adresse email verifiee/);
+    expect(screen.getByRole("status")).toHaveTextContent(/Adresse email vérifiée/);
   });
 
   it("coche 'Rester connecte' change l'etat du checkbox", async () => {
     const user = userEvent.setup();
     renderLogin();
-    const checkbox = screen.getByRole("checkbox", { name: /Rester connecte/ });
+    const checkbox = screen.getByRole("checkbox", { name: /Rester connecté/ });
     expect(checkbox).not.toBeChecked();
     await user.click(checkbox);
     expect(checkbox).toBeChecked();

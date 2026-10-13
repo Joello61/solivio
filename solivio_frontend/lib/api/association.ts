@@ -1,16 +1,12 @@
-import { apiGet, apiFetch, apiFetchRaw } from "@/lib/api";
+import { apiFetch, apiFetchRaw, apiPost, apiTelecharger } from "@/lib/api";
 import type {
   AssociationResponse,
   UpdateAssociationPayload,
   MembreResponse,
   UpdateRoleMembrePayload,
+  InviterMembrePayload,
   StatistiqueDistributionResponse,
-  StatistiquePeriodeResponse,
 } from "@/types/association";
-
-export function lireAssociation(): Promise<AssociationResponse> {
-  return apiGet<AssociationResponse>("/api/association");
-}
 
 export function mettreAJourAssociation(
   payload: UpdateAssociationPayload
@@ -28,10 +24,6 @@ export function uploadLogo(file: File): Promise<AssociationResponse> {
     method: "POST",
     body: form,
   });
-}
-
-export function listerMembres(): Promise<MembreResponse[]> {
-  return apiGet<MembreResponse[]>("/api/association/membres");
 }
 
 export function mettreAJourRoleMembre(
@@ -60,26 +52,14 @@ export function changerStatutMembre(
   });
 }
 
-export function statsDistribution(
-  id: string
-): Promise<StatistiqueDistributionResponse> {
-  return apiGet<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${id}`);
+export function inviterMembre(payload: InviterMembrePayload): Promise<void> {
+  return apiPost<void>("/api/invitations", payload);
 }
 
-export function listeStatsDistributions(
-  debut: string,
-  fin: string
-): Promise<StatistiqueDistributionResponse[]> {
-  return apiGet<StatistiqueDistributionResponse[]>(
-    `/api/statistiques/distributions?debut=${debut}&fin=${fin}`
-  );
+export function exporterDonnees(): Promise<Blob> {
+  return apiTelecharger("/api/association/export");
 }
 
-export function statsPeriode(
-  debut: string,
-  fin: string
-): Promise<StatistiquePeriodeResponse> {
-  return apiGet<StatistiquePeriodeResponse>(
-    `/api/statistiques/periode?debut=${debut}&fin=${fin}`
-  );
+export function recalculerStatistiques(distributionId: string): Promise<StatistiqueDistributionResponse> {
+  return apiPost<StatistiqueDistributionResponse>(`/api/statistiques/distributions/${distributionId}/recalculer`, {});
 }

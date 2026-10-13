@@ -47,7 +47,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
       setNouveauLibelle("");
     } catch (err) {
       const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la creation.");
+      setErreur(e.detail ?? e.message ?? "Erreur lors de la création.");
     } finally {
       setPending(false);
     }
@@ -114,7 +114,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
         <Input
           value={nouveauLibelle}
           onChange={(e) => setNouveauLibelle(e.target.value)}
-          placeholder="Nouvelle denree (ex : Pommes de terre)"
+          placeholder="Nouvelle denrée (ex : Pommes de terre)"
           className="flex-1"
           disabled={pending}
         />
@@ -129,7 +129,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
 
       {/* Liste */}
       {denrees.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-neutral-50 dark:bg-neutral-900 px-6 py-10 text-center">
+        <div className="rounded-2xl border border-border/60 bg-muted px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">Le catalogue est vide.</p>
         </div>
       ) : (
@@ -137,13 +137,13 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="secondary">{denrees.length}</Badge>
             <span className="text-sm text-muted-foreground">
-              denree{denrees.length !== 1 ? "s" : ""}
+              denrée{denrees.length !== 1 ? "s" : ""}
             </span>
           </div>
 
-          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
             {denrees.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 dark:hover:bg-teal-950/20 transition-colors">
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors">
                 {editId === d.id ? (
                   <>
                     <Input
@@ -214,10 +214,10 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
             <AlertDialogMedia className="bg-destructive/10">
               <AlertTriangle className="text-destructive" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer la denree</AlertDialogTitle>
+            <AlertDialogTitle>Supprimer la denrée</AlertDialogTitle>
             <AlertDialogDescription>
-              &quot;{suppressionCible?.libelle}&quot; sera supprimee du catalogue.
-              Cette action est irreversible.
+              &quot;{suppressionCible?.libelle}&quot; sera supprimée du catalogue.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

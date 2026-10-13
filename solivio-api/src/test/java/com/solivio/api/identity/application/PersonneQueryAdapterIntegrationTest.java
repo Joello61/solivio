@@ -6,6 +6,7 @@ import com.solivio.api.identity.domain.Personne;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.identity.infrastructure.persistence.PersonneRepository;
+import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort.PersonneContactInfo;
 import com.solivio.api.support.SolivioIntegrationTest;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SolivioIntegrationTest
 class PersonneQueryAdapterIntegrationTest {
@@ -42,6 +44,14 @@ class PersonneQueryAdapterIntegrationTest {
         creerMembre("benevole@test.com", "benevole", "actif");
 
         assertThat(personneQueryPort.trouverContactsParRole("coordinateur")).isEmpty();
+    }
+
+    // Le message d'une NotFoundException part dans la reponse HTTP et les journaux.
+    @Test
+    void trouverPersonne_inconnueNeRepetePasLEmail() {
+        assertThatThrownBy(() -> personneQueryPort.trouverPersonne("inconnu@test.com"))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageNotContaining("inconnu@test.com");
     }
 
     private void creerMembre(String email, String role, String statut) {

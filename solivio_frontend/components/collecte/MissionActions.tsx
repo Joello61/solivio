@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   prendreEnCharge,
@@ -11,25 +13,26 @@ import {
   validerDepot,
   annulerMission,
 } from "@/lib/api/collecte";
+import { cn } from "@/lib/utils";
 import type { StatutMission } from "@/types/collecte";
 
 interface Props {
   missionId: string;
   statut: StatutMission;
-  benevoleId: string | null;
-  meId: string | null;
+  assigneAuLecteur: boolean;
   estGestionnaire: boolean;
   estBenevole: boolean;
 }
 
-export function MissionActions({ missionId, statut, benevoleId, meId, estGestionnaire, estBenevole }: Props) {
+export function MissionActions({ missionId, statut, assigneAuLecteur, estGestionnaire, estBenevole }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [raisonAnnulation, setRaisonAnnulation] = useState("");
   const [showAnnulationForm, setShowAnnulationForm] = useState(false);
 
-  const estAssigne = meId !== null && meId === benevoleId;
+  // Le backend compare a la personne : l'id du compte ne correspond jamais a benevoleId.
+  const estAssigne = assigneAuLecteur;
 
   async function executer(action: string, fn: () => Promise<unknown>) {
     setPending(action);
@@ -45,13 +48,14 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
     }
   }
 
+  const peutModifier = estGestionnaire && statut === "DISPONIBLE";
   const peutPrendre = estBenevole && statut === "DISPONIBLE";
   const peutLiberer = estBenevole && estAssigne && statut === "PRISE_EN_CHARGE";
   const peutValiderCollecte = estGestionnaire && statut === "PRISE_EN_CHARGE";
   const peutValiderDepot = estBenevole && estAssigne && statut === "COLLECTE_EFFECTUEE";
-  const peutAnnuler = estGestionnaire && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
+  const peutAnnuler = (estGestionnaire || estAssigne) && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
 
-  if (!peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
+  if (!peutModifier && !peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
     return null;
   }
 
@@ -75,6 +79,16 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
           </Button>
         )}
 
+        {peutModifier && (
+          <Link
+            href={`/missions-collecte/${missionId}/modifier`}
+            className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+          >
+            <Pencil className="mr-2 size-4" />
+            Modifier
+          </Link>
+        )}
+
         {peutLiberer && (
           <Button
             variant="outline"
@@ -83,7 +97,7 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
             size="sm"
           >
             {pending === "liberer" ? <Spinner className="mr-2 size-4" /> : null}
-            Se desister
+            Se désister
           </Button>
         )}
 
@@ -105,7 +119,7 @@ export function MissionActions({ missionId, statut, benevoleId, meId, estGestion
             size="sm"
           >
             {pending === "valider-depot" ? <Spinner className="mr-2 size-4" /> : null}
-            Valider le depot
+            Valider le dépôt
           </Button>
         )}
 

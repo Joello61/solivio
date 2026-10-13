@@ -38,7 +38,7 @@ describe("RegisterPage", () => {
 
   it("affiche les champs du formulaire d'inscription", () => {
     renderRegister();
-    expect(screen.getByLabelText(/Prenom/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Prénom/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Nom/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Adresse email/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Mot de passe/)).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe("RegisterPage", () => {
       </Suspense>,
     );
 
-    fireEvent.change(screen.getByLabelText(/Prenom/), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText(/Prénom/), { target: { value: "Alice" } });
     fireEvent.change(screen.getByLabelText(/Nom/), { target: { value: "Dupont" } });
     fireEvent.change(screen.getByLabelText(/Adresse email/), {
       target: { value: "alice@example.com" },
@@ -68,7 +68,7 @@ describe("RegisterPage", () => {
     });
 
     await act(async () => {
-      fireEvent.submit(screen.getByRole("button", { name: "Creer mon compte" }).closest("form")!);
+      fireEvent.submit(screen.getByRole("button", { name: "Créer mon compte" }).closest("form")!);
     });
 
     expect(authLib.register).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe("RegisterPage", () => {
 
     renderRegister();
 
-    fireEvent.change(screen.getByLabelText(/Prenom/), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText(/Prénom/), { target: { value: "Alice" } });
     fireEvent.change(screen.getByLabelText(/Nom/), { target: { value: "Dupont" } });
     fireEvent.change(screen.getByLabelText(/Adresse email/), {
       target: { value: "alice@example.com" },
@@ -98,7 +98,7 @@ describe("RegisterPage", () => {
     });
 
     await act(async () => {
-      fireEvent.submit(screen.getByRole("button", { name: "Creer mon compte" }).closest("form")!);
+      fireEvent.submit(screen.getByRole("button", { name: "Créer mon compte" }).closest("form")!);
     });
 
     await waitFor(() => {

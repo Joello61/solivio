@@ -5,15 +5,17 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { assignerRole, retirerRole } from "@/lib/api/distributions";
+import type { RoleAttribuable } from "@/lib/roles-benevoles";
 import type { RoleBenevoleResponse } from "@/types/distribution";
 
 interface Props {
   distributionId: string;
   inscriptionId: string;
   rolesInitiaux: RoleBenevoleResponse[];
+  catalogue?: RoleAttribuable[];
 }
 
-export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux }: Props) {
+export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux, catalogue = [] }: Props) {
   const [roles, setRoles] = useState<RoleBenevoleResponse[]>(rolesInitiaux);
   const [showForm, setShowForm] = useState(false);
   const [libelle, setLibelle] = useState("");
@@ -24,18 +26,20 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
   async function handleAjouter() {
     const libelleNormalise = libelle.trim();
     if (!libelleNormalise) return;
+    await ajouter({ libelleLibre: libelleNormalise });
+  }
+
+  async function ajouter(payload: { typeRoleId?: string; libelleLibre?: string }) {
     setPending(true);
     setErreur(null);
     try {
-      const role = await assignerRole(distributionId, inscriptionId, {
-        libelleLibre: libelleNormalise,
-      });
+      const role = await assignerRole(distributionId, inscriptionId, payload);
       setRoles((prev) => [...prev, role]);
       setLibelle("");
       setShowForm(false);
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Impossible d'ajouter le role.");
+      setErreur(err.detail ?? err.message ?? "Impossible d'ajouter le rôle.");
     } finally {
       setPending(false);
     }
@@ -49,7 +53,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
     } catch (e: unknown) {
       const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Impossible de retirer le role.");
+      setErreur(err.detail ?? err.message ?? "Impossible de retirer le rôle.");
     } finally {
       setRetirantId(null);
     }
@@ -61,7 +65,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
         {roles.map((role) => (
           <span
             key={role.id}
-            className="inline-flex items-center gap-1 rounded-full bg-teal-50 border border-teal-200 dark:bg-teal-950/30 dark:border-teal-800/40 px-2.5 py-0.5 text-xs font-medium text-primary"
+            className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/25 px-2.5 py-0.5 text-xs font-medium text-primary"
           >
             {role.libelle}
             <button
@@ -69,7 +73,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
               disabled={retirantId === role.id}
               onClick={() => handleRetirer(role.id)}
               className="text-primary/60 hover:text-primary disabled:opacity-40 transition-colors"
-              aria-label={`Retirer le role ${role.libelle}`}
+              aria-label={`Retirer le rôle ${role.libelle}`}
             >
               {retirantId === role.id ? (
                 <Spinner size="sm" className="h-2.5 w-2.5" />
@@ -84,13 +88,31 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
             type="button"
             onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary/80 transition-colors"
-            aria-label="Ajouter un role"
+            aria-label="Ajouter un rôle"
           >
             <Plus className="size-3" />
-            Ajouter un role
+            Ajouter un rôle
           </button>
         )}
       </div>
+
+      {showForm && catalogue.length > 0 && (
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Rôles du catalogue">
+          {catalogue
+            .filter((c) => !roles.some((r) => r.typeRoleId === c.id))
+            .map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                disabled={pending}
+                onClick={() => ajouter({ typeRoleId: c.id })}
+                className="inline-flex min-h-8 items-center rounded-full border border-border px-3 text-xs text-foreground hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50 transition-colors"
+              >
+                {c.libelle}
+              </button>
+            ))}
+        </div>
+      )}
 
       {showForm && (
         <div className="flex items-center gap-2">
@@ -102,7 +124,7 @@ export function RoleBenevolePanel({ distributionId, inscriptionId, rolesInitiaux
               if (e.key === "Enter") handleAjouter();
               if (e.key === "Escape") { setShowForm(false); setLibelle(""); }
             }}
-            placeholder="Ex : distribution des carottes"
+            placeholder={catalogue.length > 0 ? "Ou un rôle libre" : "Ex : distribution des carottes"}
             autoFocus
             className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           />

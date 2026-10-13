@@ -11,6 +11,9 @@ import {
   Truck,
   PartyPopper,
   Mail,
+  Tags,
+  BarChart3,
+  CircleUser,
 } from "lucide-react";
 
 export interface NavItem {
@@ -31,10 +34,26 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/distributions", label: "Distributions", icon: CalendarDays },
       { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
-      { href: "/missions-collecte", label: "Missions collecte", icon: Truck },
-      { href: "/mes-missions-collecte", label: "Mes missions", icon: Truck, roles: ["benevole"] },
-      { href: "/evenements", label: "Evenements", icon: PartyPopper },
-      { href: "/mes-evenements", label: "Mes evenements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
+      {
+        href: "/missions-collecte",
+        label: "Missions collecte",
+        icon: Truck,
+        roles: ["benevole", "coordinateur", "responsable", "super_admin"],
+      },
+      {
+        href: "/mes-missions-collecte",
+        label: "Mes missions",
+        icon: Truck,
+        roles: ["benevole", "coordinateur", "responsable"],
+      },
+      { href: "/evenements", label: "Événements", icon: PartyPopper },
+      {
+        href: "/statistiques",
+        label: "Statistiques",
+        icon: BarChart3,
+        roles: ["coordinateur", "responsable", "super_admin"],
+      },
+      { href: "/mes-evenements", label: "Mes événements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList },
     ],
   },
@@ -45,17 +64,23 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/association/configuration",
         label: "Configuration",
         icon: SlidersHorizontal,
-        roles: ["coordinateur", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
       },
       {
         href: "/association/membres",
         label: "Membres",
         icon: Users,
-        roles: ["coordinateur", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
+      },
+      {
+        href: "/association/roles-benevoles",
+        label: "Rôles bénévoles",
+        icon: Tags,
+        roles: ["coordinateur", "responsable"],
       },
       {
         href: "/association/catalogue-denrees",
-        label: "Catalogue denrees",
+        label: "Catalogue denrées",
         icon: Package,
         roles: ["responsable", "super_admin"],
       },
@@ -68,7 +93,7 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/notifications/email-libre",
         label: "Email aux membres",
         icon: Mail,
-        roles: ["admin", "responsable", "super_admin"],
+        roles: ["responsable", "super_admin"],
       },
       {
         href: "/admin/utilisateurs",
@@ -80,11 +105,23 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export const BOTTOM_NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/distributions", label: "Distributions", icon: CalendarDays },
-  { href: "/mes-inscriptions", label: "Inscriptions", icon: ClipboardList },
-];
+const ACCUEIL: NavItem = { href: "/dashboard", label: "Accueil", icon: LayoutDashboard };
+const DISTRIBUTIONS: NavItem = { href: "/distributions", label: "Distributions", icon: CalendarDays };
+const COMPTE: NavItem = { href: "/mon-compte", label: "Compte", icon: CircleUser };
+
+/**
+ * Barre basse mobile : les quatre destinations les plus utiles au role. Un gestionnaire
+ * suit les chiffres, un benevole ses missions, un beneficiaire ses inscriptions.
+ */
+export function bottomNavItems(roles: string[]): NavItem[] {
+  const gestionnaire = roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r));
+  const troisieme: NavItem = gestionnaire
+    ? { href: "/statistiques", label: "Statistiques", icon: BarChart3 }
+    : roles.includes("benevole")
+      ? { href: "/missions-collecte", label: "Missions", icon: Truck }
+      : { href: "/mes-inscriptions", label: "Inscriptions", icon: ClipboardList };
+  return [ACCUEIL, DISTRIBUTIONS, troisieme, COMPTE];
+}
 
 export function filterNavItems(items: NavItem[], roles: string[]): NavItem[] {
   return items.filter(

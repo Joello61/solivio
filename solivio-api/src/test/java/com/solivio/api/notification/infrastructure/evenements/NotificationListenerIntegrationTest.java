@@ -71,7 +71,7 @@ class NotificationListenerIntegrationTest {
     @Test
     void inscriptionConfirmee_envoieEmailDeConfirmation() {
         publierDansUneTransaction(new InscriptionConfirmee(
-            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
+            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null, UUID.randomUUID()));
 
         await().atMost(15, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") >= 1);
@@ -85,7 +85,7 @@ class NotificationListenerIntegrationTest {
     @Test
     void inscriptionPromue_envoieEmailDePromotion() {
         publierDansUneTransaction(new InscriptionPromue(
-            UUID.randomUUID(), distributionId, personneId, "BENEVOLE", null));
+            UUID.randomUUID(), distributionId, personneId, "BENEVOLE", null, UUID.randomUUID()));
 
         await().atMost(15, TimeUnit.SECONDS)
             .until(() -> compterEmailsPour("marie@example.com") >= 1);
@@ -94,15 +94,43 @@ class NotificationListenerIntegrationTest {
             .contains("place").contains("Distribution Test");
     }
 
+    // Livraison au moins une fois : un evenement rejoue (relance, redemarrage) ne
+    // renvoie pas l'email grace a la cle d'idempotence.
     @Test
-    void distributionAnnulee_envoieEmailAuxInscritsConfirmes() {
+    void evenementRejoue_nEnvoieQuUnSeulEmail() {
+        InscriptionConfirmee event = new InscriptionConfirmee(
+            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null, UUID.randomUUID());
+        publierDansUneTransaction(event);
+        await().atMost(15, TimeUnit.SECONDS).until(() -> publicationsArchiveesDeLaNotification() >= 1);
+
+        publierDansUneTransaction(event);
+        await().atMost(15, TimeUnit.SECONDS).until(() -> publicationsArchiveesDeLaNotification() >= 2);
+
+        assertThat(compterEmailsPour("marie@example.com")).isEqualTo(1);
+    }
+
+    // Chaine RG6 : distribution annulee -> inscriptions annulees (module inscription)
+    // -> email a chaque personne, confirmee ou en liste d'attente.
+    @Test
+    void distributionAnnulee_annuleLesInscriptionsEtPrevientConfirmesEtAttente() {
+        UUID paulId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Martin', 'Paul', ?)",
+            paulId, "paul@example.com");
+        jdbcTemplate.update(
+            "INSERT INTO inscription (id, distribution_id, personne_id, nom, prenom, type, statut, "
+                + "rang_liste_attente) VALUES (?, ?, ?, 'Martin', 'Paul', 'BENEFICIAIRE', 'LISTE_ATTENTE', 1)",
+            UUID.randomUUID(), distributionId, paulId);
+
         publierDansUneTransaction(new DistributionAnnulee(distributionId, LocalDate.now()));
 
-        await().atMost(15, TimeUnit.SECONDS)
-            .until(() -> compterEmailsPour("marie@example.com") >= 1);
+        await().atMost(15, TimeUnit.SECONDS).until(() ->
+            compterEmailsPour("marie@example.com") >= 1 && compterEmailsPour("paul@example.com") >= 1);
 
         assertThat(sujetDu(messagesMailpitPour("marie@example.com").get(0)))
             .contains("annulee").contains("Distribution Test");
+        assertThat(jdbcTemplate.queryForList(
+            "SELECT DISTINCT statut FROM inscription WHERE distribution_id = ?", String.class, distributionId))
+            .containsExactly("ANNULEE");
     }
 
     // Avec Kafka, l'envoi partait avant la validation : un rollback notifiait quand meme.
@@ -110,7 +138,7 @@ class NotificationListenerIntegrationTest {
     void transactionAnnulee_nEnvoieAucunEmail() {
         transactionTemplate.executeWithoutResult(status -> {
             events.publishEvent(new InscriptionConfirmee(
-                UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
+                UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null, UUID.randomUUID()));
             status.setRollbackOnly();
         });
 
@@ -122,9 +150,11 @@ class NotificationListenerIntegrationTest {
     @Test
     void publicationTraitee_estArchiveeEtPlusEnAttente() {
         publierDansUneTransaction(new InscriptionConfirmee(
-            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null));
+            UUID.randomUUID(), distributionId, personneId, "BENEFICIAIRE", null, UUID.randomUUID()));
 
-        await().atMost(15, TimeUnit.SECONDS).until(() -> publicationsArchivees() >= 1);
+        // MetriquesMetier archive sa publication des la validation : on attend celle de
+        // l'ecouteur de notification, asynchrone, pour ne pas conclure trop tot.
+        await().atMost(15, TimeUnit.SECONDS).until(() -> publicationsArchiveesDeLaNotification() >= 1);
         assertThat(publicationsEnAttente()).isZero();
     }
 
@@ -137,8 +167,10 @@ class NotificationListenerIntegrationTest {
             "SELECT count(*) FROM event_publication WHERE completion_date IS NULL", Integer.class);
     }
 
-    private int publicationsArchivees() {
-        return jdbcTemplate.queryForObject("SELECT count(*) FROM event_publication_archive", Integer.class);
+    private int publicationsArchiveesDeLaNotification() {
+        return jdbcTemplate.queryForObject(
+            "SELECT count(*) FROM event_publication_archive WHERE listener_id LIKE ?", Integer.class,
+            NotificationListener.class.getName() + "%");
     }
 
     // --- Helpers Mailpit ---

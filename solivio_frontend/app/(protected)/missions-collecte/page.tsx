@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Plus, Truck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,26 +15,20 @@ const ONGLETS: { statut: StatutMission | null; label: string }[] = [
   { statut: "DISPONIBLE", label: "Disponibles" },
   { statut: "PRISE_EN_CHARGE", label: "En cours" },
   { statut: "COLLECTE_EFFECTUEE", label: "Collecte faite" },
-  { statut: "DEPOT_VALIDE", label: "Terminees" },
-  { statut: "ANNULEE", label: "Annulees" },
+  { statut: "DEPOT_VALIDE", label: "Terminées" },
+  { statut: "ANNULEE", label: "Annulées" },
 ];
 
-async function fetchData(cookieHeader: string, statut?: string): Promise<{
+async function fetchData(statut?: string): Promise<{
   me: MeResponse | null;
   missions: MissionCollecteResponse[];
 }> {
-  const baseUrl = process.env.API_URL ?? "http://localhost:8080";
-  const headers = { Cookie: cookieHeader };
-  const qs = statut ? `?statut=${statut}` : "";
-
-  const [meRes, missionsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/auth/me`, { headers, cache: "no-store" }),
-    fetch(`${baseUrl}/api/missions-collecte${qs}`, { headers, cache: "no-store" }),
+  const qs = statut ? `?statut=${encodeURIComponent(statut)}` : "";
+  const [me, missions] = await Promise.all([
+    lireMoi(),
+    lireServeur<MissionCollecteResponse[]>(`/api/missions-collecte${qs}`),
   ]);
-
-  const me = meRes.ok ? ((await meRes.json()) as MeResponse) : null;
-  const missions = missionsRes.ok ? ((await missionsRes.json()) as MissionCollecteResponse[]) : [];
-  return { me, missions };
+  return { me, missions: missions ?? [] };
 }
 
 interface Props {
@@ -43,13 +37,9 @@ interface Props {
 
 export default async function MissionsCollectePage({ searchParams }: Props) {
   const { statut } = await searchParams;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
-  const { me, missions } = await fetchData(cookieHeader, statut);
+  const { me, missions } = await fetchData(statut);
 
-  const estGestionnaire = me?.roles.some((r) =>
-    ["admin", "coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
 
   return (
     <div className="space-y-8">
@@ -58,7 +48,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
           <h1 className="text-3xl font-bold text-foreground font-display">Missions collecte</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {estGestionnaire
-              ? "Gerez les missions de collecte et de depot."
+              ? "Gérez les missions de collecte et de dépôt."
               : "Consultez et prenez en charge les missions disponibles."}
           </p>
         </div>
@@ -91,7 +81,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
       </div>
 
       {missions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <EmptyState
             icon={Truck}
             title="Aucune mission"
@@ -102,7 +92,7 @@ export default async function MissionsCollectePage({ searchParams }: Props) {
             }
             action={
               estGestionnaire
-                ? { label: "Creer une mission", href: "/missions-collecte/nouvelle" }
+                ? { label: "Créer une mission", href: "/missions-collecte/nouvelle" }
                 : undefined
             }
           />
