@@ -4,7 +4,8 @@ import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, AlertCircle } from "lucide-react";
 import { SessionActions } from "@/components/reconditionnement/SessionActions";
-import { StatutBadge } from "@/components/reconditionnement/StatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_SESSION } from "@/lib/libelles";
 import { ListeInscritsReco } from "@/components/reconditionnement/ListeInscritsReco";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { SessionReconditionnementResponse, InscriptionReconditionnementResponse } from "@/types/reconditionnement";
@@ -60,7 +61,7 @@ export default async function SessionDetailPage({
       {/* En-tete */}
       <div className="flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold text-foreground font-display">{session.titre}</h1>
-        <StatutBadge statut={session.statut} />
+        <Statut libelle={STATUT_SESSION[session.statut]} />
       </div>
 
       {session.motifAnnulation && (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Calendar, MapPin, Truck, User } from "lucide-react";
-import { StatutBadge } from "./StatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_MISSION } from "@/lib/libelles";
 import type { MissionCollecteResponse } from "@/types/collecte";
 
 interface Props {
@@ -16,7 +17,7 @@ export function MissionCollecteCard({ mission }: Props) {
       <div className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground line-clamp-2">{mission.titre}</h2>
-          <StatutBadge statut={mission.statut} />
+          <Statut libelle={STATUT_MISSION[mission.statut]} />
         </div>
 
         <div className="space-y-1.5">

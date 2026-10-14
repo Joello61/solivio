@@ -3,7 +3,8 @@ import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
 import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
-import { StatutBadge } from "@/components/evenement/StatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_EVENEMENT } from "@/lib/libelles";
 import { EvenementActions } from "@/components/evenement/EvenementActions";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
@@ -54,7 +55,7 @@ export default async function DetailEvenementPage({ params }: Props) {
             </p>
             <h1 className="text-3xl font-bold text-foreground font-display">{evenement.titre}</h1>
           </div>
-          <StatutBadge statut={evenement.statut} />
+          <Statut libelle={STATUT_EVENEMENT[evenement.statut]} />
         </div>
         {evenement.description && (
           <p className="text-sm text-muted-foreground">{evenement.description}</p>
