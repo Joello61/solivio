@@ -31,9 +31,17 @@ const distribution: DistributionResponse = {
   motifAnnulation: null,
   dateCreation: "2099-03-01T10:00:00Z",
   creneaux: [
-    { id: "c1", heureDebut: "17:00:00", heureFin: "18:00:00", capacite: 15 },
-    { id: "c2", heureDebut: "18:00:00", heureFin: "19:00:00", capacite: 15 },
+    { id: "c1", heureDebut: "17:00:00", heureFin: "18:00:00", capacite: 15, placesRestantes: 15, confirmes: 0, enAttente: 0 },
+    { id: "c2", heureDebut: "18:00:00", heureFin: "19:00:00", capacite: 15, placesRestantes: 15, confirmes: 0, enAttente: 0 },
   ],
+  remplissage: {
+    placesRestantesBeneficiaires: 30,
+    placesRestantesBenevoles: null,
+    beneficiairesConfirmes: 0,
+    beneficiairesEnAttente: 0,
+    benevolesConfirmes: 0,
+    benevolesEnAttente: 0,
+  },
 };
 
 describe("CreateDistributionForm en modification", () => {

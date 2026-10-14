@@ -18,6 +18,31 @@ export interface CreneauResponse {
   heureDebut: string;
   heureFin: string;
   capacite: number;
+  // Tient compte de la capacite globale de la distribution.
+  placesRestantes: number;
+  // Effectifs reserves aux gestionnaires, null sinon.
+  confirmes: number | null;
+  enAttente: number | null;
+}
+
+/** Places restantes pour tous ; effectifs reserves aux gestionnaires (null sinon). */
+export interface RemplissageResponse {
+  placesRestantesBeneficiaires: number;
+  placesRestantesBenevoles: number | null;
+  beneficiairesConfirmes: number | null;
+  beneficiairesEnAttente: number | null;
+  benevolesConfirmes: number | null;
+  benevolesEnAttente: number | null;
+}
+
+/** Prochaine distribution annoncee sur la page d'accueil publique. */
+export interface DistributionPubliqueResponse {
+  date: string;
+  heureDebut: string | null;
+  heureFin: string | null;
+  lieuNom: string | null;
+  lieuAdresse: string | null;
+  complet: boolean;
 }
 
 export interface LieuResponse {
@@ -58,6 +83,7 @@ export interface DistributionResponse {
   motifAnnulation: string | null;
   dateCreation: string;
   creneaux: CreneauResponse[];
+  remplissage: RemplissageResponse;
 }
 
 export interface RoleBenevoleResponse {
