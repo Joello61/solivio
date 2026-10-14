@@ -9,8 +9,7 @@ const COULEUR_LITTERALE = /#[0-9a-fA-F]{3,8}\b|oklch\(|rgba?\(/;
 // Logo Google (couleurs imposees par la marque) et couleurs par defaut de
 // l'association (donnees configurables, pas du style).
 const EXCEPTIONS_LITTERALES = new Set([
-  "app/login/page.tsx",
-  "app/register/page.tsx",
+  "components/auth/ConnexionGoogle.tsx",
   "components/association/FormulaireConfiguration.tsx",
 ]);
 
