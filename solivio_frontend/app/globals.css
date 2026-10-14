@@ -5,48 +5,7 @@
 /* Dark mode via classe .dark sur <html>. */
 @custom-variant dark (&:is(.dark *));
 
-/* PRIMITIVES - Palette Solivio 2026 */
 @theme inline {
-
-  /* Teal (primaire) */
-  --color-teal-50:  oklch(0.984 0.014 186);
-  --color-teal-100: oklch(0.952 0.038 186);
-  --color-teal-200: oklch(0.890 0.072 186);
-  --color-teal-300: oklch(0.800 0.104 186);
-  --color-teal-400: oklch(0.700 0.124 186);
-  --color-teal-500: oklch(0.620 0.128 186);
-  --color-teal-600: oklch(0.532 0.118 185);
-  --color-teal-700: oklch(0.447 0.098 185);
-  --color-teal-800: oklch(0.358 0.078 184);
-  --color-teal-900: oklch(0.270 0.056 183);
-  --color-teal-950: oklch(0.175 0.036 183);
-
-  /* Coral (accent chaud) */
-  --color-coral-50:  oklch(0.985 0.018 35);
-  --color-coral-100: oklch(0.960 0.048 38);
-  --color-coral-200: oklch(0.915 0.092 42);
-  --color-coral-300: oklch(0.850 0.138 45);
-  --color-coral-400: oklch(0.780 0.178 47);
-  --color-coral-500: oklch(0.706 0.213 47);
-  --color-coral-600: oklch(0.618 0.192 44);
-  --color-coral-700: oklch(0.518 0.165 42);
-  --color-coral-800: oklch(0.410 0.130 40);
-  --color-coral-900: oklch(0.330 0.100 38);
-  --color-coral-950: oklch(0.220 0.065 36);
-
-  /* Neutral (gris de base, legere teinte chaude) */
-  --color-neutral-50:  oklch(0.988 0.002 264);
-  --color-neutral-100: oklch(0.965 0.003 264);
-  --color-neutral-200: oklch(0.924 0.006 264);
-  --color-neutral-300: oklch(0.872 0.010 264);
-  --color-neutral-400: oklch(0.747 0.018 264);
-  --color-neutral-500: oklch(0.621 0.022 264);
-  --color-neutral-600: oklch(0.504 0.025 264);
-  --color-neutral-700: oklch(0.395 0.022 264);
-  --color-neutral-800: oklch(0.285 0.016 264);
-  --color-neutral-900: oklch(0.208 0.012 264);
-  --color-neutral-950: oklch(0.130 0.008 264);
-
   /* TOKENS SEMANTIQUES */
 
   --color-background:           var(--background);
@@ -90,29 +49,23 @@
   --radius-3xl:  calc(var(--radius) * 2);
   --radius-full: 9999px;
 
-  /* SHADOWS - Systeme d'elevation a 5 niveaux
-     Niveau 0 = pas de shadow (surfaces a plat)
-     Niveau 1 = cards au repos
-     Niveau 2 = cards au hover / elements sureleves
-     Niveau 3 = dropdowns / popovers
-     Niveau 4 = modales
-     + shadows colorees pour boutons primaires */
-  --shadow-xs:  0 1px 2px 0 oklch(0 0 0 / 0.05);
-  --shadow-sm:  0 1px 3px 0 oklch(0 0 0 / 0.08), 0 1px 2px -1px oklch(0 0 0 / 0.06);
-  --shadow-md:  0 4px 6px -1px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.06);
-  --shadow-lg:  0 10px 15px -3px oklch(0 0 0 / 0.08), 0 4px 6px -4px oklch(0 0 0 / 0.05);
-  --shadow-xl:  0 20px 25px -5px oklch(0 0 0 / 0.10), 0 8px 10px -6px oklch(0 0 0 / 0.06);
-  --shadow-2xl: 0 25px 50px -12px oklch(0 0 0 / 0.20);
+  /* ELEVATION - a plat par defaut ; ombre legere pour ce qui flotte
+     (menus, feuilles, toasts), plus marquee pour les modales. */
+  --shadow-xs:  0 1px 2px 0 oklch(0.230 0.021 162.5 / 0.06);
+  --shadow-sm:  0 1px 3px 0 oklch(0.230 0.021 162.5 / 0.08), 0 1px 2px -1px oklch(0.230 0.021 162.5 / 0.06);
+  --shadow-md:  0 4px 12px -2px oklch(0.230 0.021 162.5 / 0.10), 0 2px 4px -2px oklch(0.230 0.021 162.5 / 0.06);
+  --shadow-lg:  0 12px 24px -6px oklch(0.230 0.021 162.5 / 0.16), 0 4px 8px -4px oklch(0.230 0.021 162.5 / 0.08);
+  --shadow-xl:  0 20px 40px -8px oklch(0.230 0.021 162.5 / 0.22);
+  --shadow-2xl: 0 28px 56px -12px oklch(0.230 0.021 162.5 / 0.30);
 
-  /* Shadows colorees - donnent de la profondeur brandee aux CTAs */
-  --shadow-primary:    0 4px 14px 0 oklch(0.532 0.118 185 / 0.32);
-  --shadow-primary-lg: 0 8px 24px 0 oklch(0.532 0.118 185 / 0.38);
-  --shadow-accent:     0 4px 14px 0 oklch(0.706 0.213 47 / 0.32);
+  /* TYPOGRAPHIE - aucun texte sous 13 px : text-xs est remonte a 13 px. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
 
   /* POLICES */
-  --font-sans:    var(--font-dm-sans);
-  --font-display: var(--font-plus-jakarta-sans);
-  --font-mono:    var(--font-geist-mono);
+  --font-sans:    var(--font-atkinson-next);
+  --font-display: var(--font-bricolage);
+  --font-mono:    var(--font-atkinson-mono);
 
   /* Z-INDEX - Echelle d'empilement */
   --z-base:    0;
@@ -125,111 +78,106 @@
   --z-tooltip: 70;
 }
 
-/* MODE CLAIR */
+/* MODE CLAIR
+   Papier legerement vert, encre sombre, pin pour l'action, citron pour ce qui
+   se passe maintenant. */
 :root {
-  /* Fond blanc tres legererement chaud - jamais froid */
-  --background:    oklch(0.988 0.002 85);
-  --foreground:    oklch(0.208 0.012 264);
+  --background:    oklch(0.969 0.004 121.6);
+  --foreground:    oklch(0.230 0.021 162.5);
 
-  /* Cards : blanc pur pour maximiser le contraste avec le fond */
   --card:          oklch(1 0 0);
-  --card-foreground: oklch(0.208 0.012 264);
+  --card-foreground: oklch(0.230 0.021 162.5);
 
   --popover:       oklch(1 0 0);
-  --popover-foreground: oklch(0.208 0.012 264);
+  --popover-foreground: oklch(0.230 0.021 162.5);
 
-  /* Primaire : Teal vif #0D9488 */
-  --primary:          oklch(0.532 0.118 185);
+  /* Pin : action principale, confirme */
+  --primary:          oklch(0.392 0.067 168.6);
   --primary-foreground: oklch(1 0 0);
 
-  /* Secondaire : teal tres pale pour ghost/outline */
-  --secondary:          oklch(0.984 0.014 186);
-  --secondary-foreground: oklch(0.447 0.098 185);
+  /* Pin tres pale : selection, filtre actif, etat confirme */
+  --secondary:          oklch(0.939 0.014 162.5);
+  --secondary-foreground: oklch(0.392 0.067 168.6);
 
-  /* Muted : neutre tres pale */
-  --muted:            oklch(0.965 0.003 264);
-  --muted-foreground: oklch(0.504 0.025 264);
+  /* Papier enfonce : fonds de controles segmentes, survols */
+  --muted:            oklch(0.946 0.006 128.5);
+  --muted-foreground: oklch(0.478 0.016 159.5);
 
-  /* Accent : Coral vif #F97316 */
-  --accent:          oklch(0.706 0.213 47);
-  --accent-foreground: oklch(0.130 0.008 264);
+  /* Citron : maintenant, aujourd'hui, a faire. Toujours avec du texte encre. */
+  --accent:          oklch(0.849 0.157 91.5);
+  --accent-foreground: oklch(0.230 0.021 162.5);
 
-  /* Destructif */
-  --destructive:          oklch(0.577 0.245 27);
+  --destructive:          oklch(0.501 0.178 28.7);
   --destructive-foreground: oklch(1 0 0);
 
-  /* Bordures et champs */
-  --border: oklch(0.924 0.006 264);
-  --input:  oklch(0.924 0.006 264);
-  --ring:   oklch(0.532 0.118 185);
+  --border: oklch(0.902 0.009 134.9);
+  --input:  oklch(0.848 0.012 141.3);
+  --ring:   oklch(0.392 0.067 168.6);
 
-  /* Etats : la valeur sert au texte et aux icones (contraste AA sur fond clair),
-     les fonds legers s'obtiennent par transparence (bg-success/10). */
-  --success:            oklch(0.508 0.118 165.6);
+  /* Etats : la valeur sert au texte et aux icones (contraste AA sur le papier),
+     les fonds legers s'obtiennent par transparence (bg-warning/10). */
+  --success:            oklch(0.472 0.092 160.8);
   --success-foreground: oklch(1 0 0);
-  --warning:            oklch(0.555 0.163 49);
+  --warning:            oklch(0.508 0.108 73.3);
   --warning-foreground: oklch(1 0 0);
-  --info:               oklch(0.488 0.243 264.4);
+  --info:               oklch(0.489 0.140 255.8);
   --info-foreground:    oklch(1 0 0);
-  /* Corail lisible en texte, l'accent etant reserve aux fonds */
-  --accent-strong:      oklch(0.518 0.165 42);
+  /* Citron lisible en texte, le citron plein etant reserve aux fonds */
+  --accent-strong:      oklch(0.483 0.100 82.4);
   /* Voile des modales et des images, noir dans les deux modes */
   --overlay:            oklch(0 0 0);
-  /* Surfaces de marque (bandeaux, appels a l'action, texte sur photo) :
-     identiques dans les deux modes, texte toujours blanc. */
-  --brand:              oklch(0.532 0.118 185);
-  --brand-deep:         oklch(0.447 0.098 185);
+  /* Surfaces de marque (billet, bandeaux) : identiques dans les deux modes,
+     texte toujours blanc. */
+  --brand:              oklch(0.392 0.067 168.6);
+  --brand-deep:         oklch(0.331 0.057 169.7);
   --on-brand:           oklch(1 0 0);
 
-  /* Rayon de base shadcn */
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 }
 
 /* MODE SOMBRE
-   Fond quasi-noir avec une legere teinte neutre (pas de couleur marque)
-   pour maximiser la lisibilite et la professionnalisme */
+   Encre verte profonde, le pin s'eclaircit pour rester lisible. */
 .dark {
   /* Controles natifs (selecteur de date, barres de defilement) en sombre */
   color-scheme: dark;
-  --background:    oklch(0.148 0.008 264);
-  --foreground:    oklch(0.960 0.004 264);
+  --background:    oklch(0.188 0.011 163.5);
+  --foreground:    oklch(0.957 0.007 145.5);
 
-  --card:          oklch(0.192 0.010 264);
-  --card-foreground: oklch(0.960 0.004 264);
+  --card:          oklch(0.237 0.016 160.6);
+  --card-foreground: oklch(0.957 0.007 145.5);
 
-  --popover:       oklch(0.192 0.010 264);
-  --popover-foreground: oklch(0.960 0.004 264);
+  --popover:       oklch(0.237 0.016 160.6);
+  --popover-foreground: oklch(0.957 0.007 145.5);
 
-  /* Primaire en dark : teal un cran plus clair pour rester lisible */
-  --primary:          oklch(0.620 0.128 186);
-  --primary-foreground: oklch(0.148 0.008 264);
+  --primary:          oklch(0.735 0.109 164.2);
+  --primary-foreground: oklch(0.202 0.025 162.8);
 
-  --secondary:          oklch(0.255 0.014 264);
-  --secondary-foreground: oklch(0.800 0.104 186);
+  --secondary:          oklch(0.323 0.039 166.1);
+  --secondary-foreground: oklch(0.827 0.088 164.6);
 
-  --muted:            oklch(0.238 0.012 264);
-  --muted-foreground: oklch(0.621 0.022 264);
+  --muted:            oklch(0.270 0.017 163.4);
+  --muted-foreground: oklch(0.742 0.017 160.5);
 
-  --accent:          oklch(0.706 0.213 47);
-  --accent-foreground: oklch(0.130 0.008 264);
+  --accent:          oklch(0.849 0.157 91.5);
+  --accent-foreground: oklch(0.230 0.021 162.5);
 
-  --destructive:          oklch(0.704 0.191 22);
-  --destructive-foreground: oklch(1 0 0);
+  --destructive:          oklch(0.745 0.127 25.8);
+  --destructive-foreground: oklch(0.202 0.025 162.8);
 
-  --border: oklch(1 0 0 / 10%);
-  --input:  oklch(1 0 0 / 14%);
-  --ring:   oklch(0.620 0.128 186);
+  --border: oklch(0.317 0.017 166.0);
+  --input:  oklch(0.384 0.021 161.8);
+  --ring:   oklch(0.735 0.109 164.2);
 
-  --success:            oklch(0.765 0.177 163.2);
-  --success-foreground: oklch(0.148 0.008 264);
-  --warning:            oklch(0.828 0.189 84.4);
-  --warning-foreground: oklch(0.148 0.008 264);
-  --info:               oklch(0.707 0.165 254.6);
-  --info-foreground:    oklch(0.148 0.008 264);
-  --accent-strong:      oklch(0.850 0.138 45);
+  --success:            oklch(0.771 0.114 160.5);
+  --success-foreground: oklch(0.202 0.025 162.8);
+  --warning:            oklch(0.841 0.120 83.7);
+  --warning-foreground: oklch(0.202 0.025 162.8);
+  --info:               oklch(0.763 0.098 257.3);
+  --info-foreground:    oklch(0.202 0.025 162.8);
+  --accent-strong:      oklch(0.849 0.157 91.5);
   --overlay:            oklch(0 0 0);
-  --brand:              oklch(0.532 0.118 185);
-  --brand-deep:         oklch(0.447 0.098 185);
+  --brand:              oklch(0.420 0.072 168.6);
+  --brand-deep:         oklch(0.331 0.057 169.7);
   --on-brand:           oklch(1 0 0);
 }
 
@@ -264,12 +212,6 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes bounce-in {
-  0%   { opacity: 0; transform: scale(0.85); }
-  60%  { opacity: 1; transform: scale(1.03); }
-  100% { transform: scale(1); }
-}
-
 @theme inline {
   --animate-shimmer:         shimmer 1.8s ease-in-out infinite;
   --animate-slide-up-fade:   slide-up-fade 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -277,7 +219,6 @@
   --animate-fade-in:         fade-in 0.18s ease-out both;
   --animate-scale-in:        scale-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-in-right:  slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-bounce-in:       bounce-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* BASE */
@@ -289,7 +230,6 @@
   body {
     @apply bg-background text-foreground;
     scroll-behavior: smooth;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -304,13 +244,9 @@
     font-family: var(--font-display), var(--font-sans);
   }
 
-  /*
-   * L'espace de Plus Jakarta Sans est tres etroite en gras aux petites tailles
-   * (2 px a 14 px) : "Mon inscription" se lisait "Moninscription". On la ramene
-   * a la largeur de celle de DM Sans.
-   */
   h1, h2, h3, h4, .font-display {
-    word-spacing: 0.12em;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
   }
 
   /* Selection de texte avec la couleur primaire */
@@ -362,33 +298,6 @@
 
 /* UTILITAIRES CUSTOM */
 @layer utilities {
-  /* Gradient de marque - usage sur les heros et les accents forts */
-  .gradient-brand {
-    background: linear-gradient(135deg, oklch(0.532 0.118 185), oklch(0.447 0.098 185));
-  }
-
-  /* Gradient brand vers coral */
-  .gradient-brand-coral {
-    background: linear-gradient(135deg, oklch(0.532 0.118 185), oklch(0.706 0.213 47));
-  }
-
-  /* Surface tintee primaire - pour les cards stat et les sections hero */
-  .surface-primary {
-    background-color: oklch(0.984 0.014 186);
-    border: 1px solid oklch(0.890 0.072 186);
-  }
-
-  /* Shadow coloree sur les boutons primaires */
-  .shadow-primary {
-    box-shadow: var(--shadow-primary);
-  }
-  .shadow-primary-lg {
-    box-shadow: var(--shadow-primary-lg);
-  }
-  .shadow-accent {
-    box-shadow: var(--shadow-accent);
-  }
-
   /* Shimmer skeleton */
   .animate-shimmer-bg {
     background: linear-gradient(

@@ -32,7 +32,7 @@ export function BottomNav({ roles }: { roles: string[] }) {
                 <div
                   className={cn(
                     "flex items-center justify-center rounded-xl px-4 py-1.5 transition-all duration-200",
-                    active ? "bg-primary shadow-primary" : "bg-transparent",
+                    active ? "bg-primary" : "bg-transparent",
                   )}
                 >
                   <Icon
@@ -44,7 +44,7 @@ export function BottomNav({ roles }: { roles: string[] }) {
                 </div>
                 <span
                   className={cn(
-                    "text-[11px] font-semibold leading-none transition-colors",
+                    "text-xs font-semibold leading-none transition-colors",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >

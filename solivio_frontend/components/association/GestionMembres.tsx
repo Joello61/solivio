@@ -139,7 +139,7 @@ function CarteMembre({
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
@@ -160,10 +160,10 @@ function CarteMembre({
               </Link>
             )}
             <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <Badge variant={variantStatut(statut)} className="text-[11px]">
+              <Badge variant={variantStatut(statut)} className="text-xs">
                 {labelStatut(statut)}
               </Badge>
-              <Badge variant="secondary" className="text-[11px]">
+              <Badge variant="secondary" className="text-xs">
                 {labelRole(role)}
               </Badge>
             </div>
@@ -355,7 +355,7 @@ function LigneMembreRow({
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${estSuspendu ? "opacity-50" : ""}`}>
         <td className="py-3.5 px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">

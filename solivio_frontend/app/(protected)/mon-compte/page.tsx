@@ -157,7 +157,7 @@ export default async function MonComptePage() {
             {/* ID utilisateur */}
             <div className="pt-3 border-t border-border/60">
               <p className="text-xs text-muted-foreground mb-1">Identifiant</p>
-              <p className="text-[11px] font-mono text-muted-foreground/60 break-all leading-relaxed select-all">
+              <p className="text-xs font-mono text-muted-foreground/60 break-all leading-relaxed select-all">
                 {user.id}
               </p>
             </div>

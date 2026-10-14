@@ -60,7 +60,7 @@ export function Header({ user }: HeaderProps) {
           href="/dashboard"
           className="flex items-center gap-2 lg:hidden shrink-0"
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary shadow-primary">
+          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary">
             <Image src="/logo.svg" alt="Solivio" width={18} height={18} style={{ width: 18, height: 18 }} />
           </div>
           <span className="font-display font-bold text-foreground tracking-tight">Solivio</span>
@@ -85,7 +85,7 @@ export function Header({ user }: HeaderProps) {
             aria-expanded={menuOpen}
             aria-haspopup="true"
           >
-            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden ring-2 ring-primary/20">
+            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image
                   unoptimized

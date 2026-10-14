@@ -66,7 +66,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             collapsed ? "justify-center" : "flex-1",
           )}
         >
-          <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-xl bg-primary shadow-primary">
+          <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-xl bg-primary">
             <Image
               src="/logo.svg"
               alt="Solivio"
@@ -114,7 +114,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             <div key={sectionIndex} className="space-y-0.5">
               {/* Libelle de section */}
               {!collapsed && section.title && (
-                <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/50">
+                <p className="px-3 pb-2 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground/50">
                   {section.title}
                 </p>
               )}
@@ -137,7 +137,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
                         "flex h-9 w-9 items-center justify-center rounded-xl mx-auto",
                         "transition-all duration-150",
                         active
-                          ? "bg-primary text-primary-foreground shadow-primary"
+                          ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -154,7 +154,7 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
                       "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
                       "transition-all duration-150",
                       active
-                        ? "bg-primary text-primary-foreground shadow-primary"
+                        ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
@@ -179,11 +179,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
               "flex h-9 w-9 items-center justify-center rounded-xl mx-auto",
               "transition-all duration-150",
               isNavItemActive("/mon-compte", pathname)
-                ? "bg-primary text-primary-foreground shadow-primary"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold overflow-hidden">
+            <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold overflow-hidden">
               {avatarSrc ? (
                 <Image unoptimized src={avatarSrc} alt="" fill sizes="28px" className="object-cover" />
               ) : (
@@ -197,11 +197,11 @@ export function Sidebar({ user, collapsed, onCollapseToggle }: SidebarProps) {
             className={cn(
               "flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150",
               isNavItemActive("/mon-compte", pathname)
-                ? "bg-primary text-primary-foreground shadow-primary"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold overflow-hidden ring-2 ring-primary/20">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image unoptimized src={avatarSrc} alt="" fill sizes="32px" className="object-cover" />
               ) : (

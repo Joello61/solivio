@@ -82,7 +82,7 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
         ].join(" ")}
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
             {initiales}
           </div>
           <div className="flex-1 min-w-0">
@@ -92,14 +92,14 @@ function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{compte.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <Badge variant={compte.actif ? "default" : "destructive"} className="text-[11px]">
+              <Badge variant={compte.actif ? "default" : "destructive"} className="text-xs">
                 {compte.actif ? "Actif" : "Inactif"}
               </Badge>
               {compte.superAdmin && (
-                <Badge variant="secondary" className="text-[11px]">Super admin</Badge>
+                <Badge variant="secondary" className="text-xs">Super admin</Badge>
               )}
               {!compte.emailVerifie && (
-                <Badge variant="outline" className="text-[11px] text-warning border-warning/30">
+                <Badge variant="outline" className="text-xs text-warning border-warning/30">
                   Email non vérifié
                 </Badge>
               )}
@@ -299,7 +299,7 @@ function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: 
       <tr className={`border-b border-border/60 last:border-0 transition-opacity ${!compte.actif ? "opacity-50" : ""}`}>
         <td className="py-3.5 pr-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
               {initiales}
             </div>
             <div className="min-w-0">
