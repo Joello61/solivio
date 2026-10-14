@@ -132,6 +132,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
           </p>
         )}
       </div>
+      <ActionPrincipaleMobile action={action} distributionId={id} />
 
       {/* Corps en 2 colonnes sur desktop */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -451,7 +452,6 @@ export default async function DistributionDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
-      <ActionPrincipaleMobile action={action} distributionId={id} />
     </div>
   );
 }
