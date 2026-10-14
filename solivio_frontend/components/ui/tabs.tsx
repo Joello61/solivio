@@ -34,7 +34,7 @@ const tabsListVariants = cva(
     variants: {
       variant: {
         default: "bg-muted rounded-xl",
-        line: "gap-2 bg-transparent rounded-none",
+        line: "gap-6 bg-transparent rounded-none",
       },
     },
     defaultVariants: {
@@ -64,7 +64,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
       data-slot="tabs-trigger"
       className={cn(
         "relative inline-flex items-center justify-center gap-1.5 rounded-lg",
-        "px-3 py-1.5 text-sm font-medium whitespace-nowrap",
+        "min-h-10 px-3.5 py-2 text-base font-medium whitespace-nowrap",
         "text-muted-foreground border border-transparent",
         "transition-all duration-150 outline-none",
         "group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start",
@@ -75,15 +75,15 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         "group-data-[variant=default]/tabs-list:data-active:bg-card",
         "group-data-[variant=default]/tabs-list:data-active:text-foreground",
         "group-data-[variant=default]/tabs-list:data-active:shadow-sm",
-        "group-data-[variant=default]/tabs-list:data-active:border-border/60",
+        "group-data-[variant=default]/tabs-list:data-active:font-semibold",
         /* Variante line : indicateur en bas */
         "group-data-[variant=line]/tabs-list:rounded-none",
-        "group-data-[variant=line]/tabs-list:px-4 group-data-[variant=line]/tabs-list:py-2.5",
-        "group-data-[variant=line]/tabs-list:data-active:text-primary",
+        "group-data-[variant=line]/tabs-list:px-0 group-data-[variant=line]/tabs-list:min-h-11",
+        "group-data-[variant=line]/tabs-list:data-active:text-foreground group-data-[variant=line]/tabs-list:data-active:font-semibold",
         "after:absolute after:transition-all after:duration-200",
         "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:inset-x-0",
         "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:bottom-[-1px]",
-        "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:h-0.5",
+        "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:h-[3px]",
         "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:bg-primary",
         "group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:after:rounded-full",
         "group-data-[variant=line]/tabs-list:after:opacity-0",
@@ -100,7 +100,7 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("flex-1 text-sm outline-none", className)}
+      className={cn("flex-1 text-base outline-none", className)}
       {...props}
     />
   )

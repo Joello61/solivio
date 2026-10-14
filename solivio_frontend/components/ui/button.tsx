@@ -3,76 +3,64 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/*
+ * Tailles : "default" (44 px) est la cible tactile confortable, utilisee partout
+ * sur mobile ; "sm" sert aux tableaux denses sur ordinateur ; "xl" (56 px) au
+ * mode jour J.
+ */
 const buttonVariants = cva(
-  /* Base : layout + typographie + transitions */
   [
     "group/button inline-flex shrink-0 items-center justify-center gap-2",
-    "rounded-lg border border-transparent font-medium whitespace-nowrap",
-    "text-sm leading-none select-none",
-    "transition-all duration-150 ease-out",
-    "outline-none focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
-    "disabled:pointer-events-none disabled:opacity-45",
+    "rounded-lg border border-transparent font-semibold whitespace-nowrap",
+    "leading-none select-none",
+    "transition-colors duration-150 ease-out",
+    "outline-none focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "disabled:pointer-events-none disabled:opacity-50",
     "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
-    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-    "active:not-aria-[haspopup]:scale-[0.98]",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1.125rem]",
   ].join(" "),
   {
     variants: {
       variant: {
-        /* Primaire : fond teal plein, shadow coloree au hover */
-        default: [
-          "bg-primary text-primary-foreground border-primary",
-          "hover:bg-primary/90 hover:border-primary",
-          "hover:shadow-primary",
-          "active:bg-primary/90",
-        ].join(" "),
+        /* Action principale : une seule par ecran */
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
 
-        /* Secondaire : fond teal tres pale, texte teal */
-        secondary: [
-          "bg-primary/10 text-primary border-primary/20",
-          "hover:bg-primary/15 hover:border-primary/25",
-        ].join(" "),
+        /* Action d'appoint mise en avant : pin pale */
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
 
-        /* Outline : bordure visible, fond transparent */
-        outline: [
-          "bg-transparent text-foreground border-border",
-          "hover:bg-muted hover:border-border",
-          "",
-        ].join(" "),
+        /* Action courante : bordure lisible sur papier comme sur carte */
+        outline: "bg-card text-foreground border-input hover:bg-muted",
 
-        /* Ghost : sans bordure ni fond, discret */
-        ghost: [
-          "bg-transparent text-muted-foreground border-transparent",
-          "hover:bg-muted hover:text-foreground",
-        ].join(" "),
+        /* Action discrete, barres d'outils */
+        ghost: "bg-transparent text-foreground hover:bg-muted",
 
-        /* Accent : coral/orange pour CTAs secondaires importants */
-        accent: [
-          "bg-accent text-accent-foreground border-accent",
-          "hover:bg-accent hover:border-accent",
-          "hover:shadow-accent",
-        ].join(" "),
+        /* Citron : ce qui se passe maintenant (ouvrir le jour J) */
+        accent: "bg-accent text-accent-foreground hover:bg-accent/85",
 
-        /* Destructif : rouge discret en fond, plus visible au hover */
+        /* Destruction proposee : discrete, jamais au premier plan */
         destructive: [
-          "bg-destructive/10 text-destructive border-destructive/20",
-          "hover:bg-destructive/20 hover:border-destructive/40",
-          "focus-visible:ring-destructive/30",
+          "bg-transparent text-destructive border-destructive/40",
+          "hover:bg-destructive/10 focus-visible:ring-destructive/30",
         ].join(" "),
 
-        /* Link : texte seul avec underline au hover */
-        link: "text-primary underline-offset-4 hover:underline border-transparent bg-transparent",
+        /* Destruction confirmee, dans une boite de dialogue uniquement */
+        "destructive-solid": [
+          "bg-destructive text-destructive-foreground",
+          "hover:bg-destructive/90 focus-visible:ring-destructive/30",
+        ].join(" "),
+
+        link: "h-auto px-0 text-primary underline-offset-4 hover:underline border-transparent bg-transparent",
       },
       size: {
-        xs: "h-7 px-2.5 text-xs rounded-md gap-1 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 px-3 text-sm rounded-lg gap-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        default: "h-9 px-4 text-sm",
-        lg: "h-10 px-5 text-base rounded-xl",
-        xl: "h-12 px-6 text-base rounded-xl font-semibold",
-        icon: "size-9 rounded-lg",
-        "icon-xs": "size-7 rounded-md [&_svg:not([class*='size-'])]:size-3.5",
-        "icon-sm": "size-8 rounded-lg [&_svg:not([class*='size-'])]:size-4",
-        "icon-lg": "size-10 rounded-xl [&_svg:not([class*='size-'])]:size-5",
+        xs: "h-8 px-2.5 text-sm rounded-md gap-1.5 [&_svg:not([class*='size-'])]:size-4",
+        sm: "h-9 px-3 text-sm gap-1.5 [&_svg:not([class*='size-'])]:size-4",
+        default: "h-11 px-4 text-base",
+        lg: "h-12 px-5 text-base",
+        xl: "h-14 px-6 text-lg rounded-xl",
+        icon: "size-11",
+        "icon-xs": "size-8 rounded-md [&_svg:not([class*='size-'])]:size-4",
+        "icon-sm": "size-9 [&_svg:not([class*='size-'])]:size-4",
+        "icon-lg": "size-12 [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {

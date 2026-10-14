@@ -15,15 +15,15 @@ function PasswordInput({
     <div className="relative">
       <Input
         type={visible ? "text" : "password"}
-        className={cn("pr-9", className)}
+        className={cn("pr-12", className)}
         {...props}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         className={cn(
-          "absolute right-3 top-1/2 -translate-y-1/2",
-          "flex h-7 w-7 items-center justify-center rounded-lg",
+          "absolute right-1 top-1/2 -translate-y-1/2",
+          "flex size-9 items-center justify-center rounded-md",
           "text-muted-foreground hover:text-foreground hover:bg-muted",
           "transition-all duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
@@ -32,9 +32,9 @@ function PasswordInput({
         tabIndex={-1}
       >
         {visible ? (
-          <EyeOff className="h-4 w-4" />
+          <EyeOff className="size-5" />
         ) : (
-          <Eye className="h-4 w-4" />
+          <Eye className="size-5" />
         )}
       </button>
     </div>

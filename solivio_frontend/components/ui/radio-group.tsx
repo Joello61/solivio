@@ -21,7 +21,7 @@ function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
       data-slot="radio-group-item"
       className={cn(
         "group/radio-group-item peer relative flex aspect-square size-5 shrink-0 rounded-full",
-        "border-2 border-border bg-card outline-none",
+        "border-2 border-input bg-card outline-none",
         "transition-all duration-150",
         "after:absolute after:-inset-x-3 after:-inset-y-2",
         "focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:border-ring",
