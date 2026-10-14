@@ -1,5 +1,8 @@
 import { cookies } from "next/headers";
 import type { MeResponse } from "@/types/auth";
+import type { DistributionResponse } from "@/types/distribution";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { distributionsDuJour, jourAssociation, type InscriptionDuMembre } from "@/lib/distribution-du-jour";
 
 // Appels depuis les composants serveur : le backend est joint en direct (API_URL,
 // reseau interne) avec les cookies de la requete du navigateur.
@@ -27,4 +30,21 @@ export async function accesServeur(chemin: string): Promise<boolean> {
 
 export function lireMoi(): Promise<MeResponse | null> {
   return lireServeur<MeResponse>("/api/auth/me");
+}
+
+/**
+ * Distributions du jour du membre : toutes pour un gestionnaire, celles ou il est
+ * benevole confirme sinon. Un beneficiaire ne pointe pas : liste vide.
+ */
+export async function lireDistributionsDuJour(
+  roles: string[],
+  maintenant = new Date(),
+): Promise<DistributionResponse[]> {
+  const gestionnaire = estGestionnaireDistribution(roles);
+  if (!gestionnaire && !roles.includes("benevole")) return [];
+  const [distributions, inscriptions] = await Promise.all([
+    lireServeur<DistributionResponse[]>("/api/distributions"),
+    gestionnaire ? null : lireServeur<InscriptionDuMembre[]>("/api/inscriptions/mes"),
+  ]);
+  return distributionsDuJour(distributions ?? [], jourAssociation(maintenant), gestionnaire, inscriptions ?? []);
 }
