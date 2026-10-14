@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, Mail, ArrowRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { forgotPassword } from "@/lib/auth";
+import { messageErreur } from "@/lib/erreurs";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,9 +25,7 @@ export default function ForgotPasswordPage() {
       await forgotPassword(email);
       setSent(true);
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? (err as { detail?: string }).detail ?? err.message : "Erreur";
-      setError(msg);
+      setError(messageErreur(err, "Erreur"));
     } finally {
       setPending(false);
     }
@@ -36,31 +34,17 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <AuthLayout title="Email envoyé">
-        <div className="flex flex-col items-center gap-5 py-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
-            <CheckCircle className="h-8 w-8 text-primary" />
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-base font-semibold text-foreground font-display">Code envoyé !</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Si un compte est associe a{" "}
-              <strong className="text-foreground">{email}</strong>, vous allez recevoir
-              un email avec un code de réinitialisation.
-            </p>
-          </div>
-        </div>
+        <p className="text-base text-foreground">
+          Si un compte existe pour <strong className="font-semibold">{email}</strong>, un code de
+          réinitialisation vient de lui être envoyé. Pensez à regarder dans les indésirables.
+        </p>
         <Link
           href={`/reset-password?email=${encodeURIComponent(email)}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 h-10 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+          className={buttonVariants({ className: "w-full" })}
         >
           Saisir le code de vérification
-          <ArrowRight className="h-4 w-4 shrink-0" />
         </Link>
-        <p className="text-center text-sm text-muted-foreground">
-          <Link href="/login" className="text-primary font-medium hover:underline">
-            Retour à la connexion
-          </Link>
-        </p>
+        <RetourConnexion />
       </AuthLayout>
     );
   }
@@ -68,42 +52,44 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Mot de passe oublié"
-      description="Entrez votre adresse email pour recevoir un code de réinitialisation."
+      description="Indiquez votre adresse email : nous vous enverrons un code pour choisir un nouveau mot de passe."
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Adresse email</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@example.com"
-              className="pl-9"
-            />
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <FormField label="Adresse email" htmlFor="email">
+          <Input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </FormField>
 
         <FormError message={error} />
 
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? (
-            <><Spinner size="sm" /> Envoi en cours...</>
+            <>
+              <Spinner size="sm" /> Envoi en cours...
+            </>
           ) : (
             "Envoyer le code"
           )}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
-        <Link href="/login" className="text-primary hover:underline">
-          Retour à la connexion
-        </Link>
-      </p>
+      <RetourConnexion />
     </AuthLayout>
+  );
+}
+
+function RetourConnexion() {
+  return (
+    <p className="text-center text-base">
+      <Link href="/login" className="font-semibold text-primary hover:underline">
+        Retour à la connexion
+      </Link>
+    </p>
   );
 }
