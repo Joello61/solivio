@@ -3,7 +3,10 @@ import {
   bottomNavItems,
   filterNavItems,
   isNavItemActive,
+  itemActif,
+  libelleNav,
   NAV_SECTIONS,
+  sectionsPourRoles,
 } from "@/components/layout/navigation";
 import type { NavItem } from "@/components/layout/navigation";
 
@@ -96,10 +99,16 @@ describe("NAV_SECTIONS", () => {
 
   it("adapte la barre basse au role", () => {
     const hrefs = (roles: string[]) => bottomNavItems(roles).map((i) => i.href);
-    expect(hrefs(["beneficiaire"])).toEqual(["/dashboard", "/distributions", "/mes-inscriptions", "/mon-compte"]);
-    expect(hrefs(["benevole"])).toEqual(["/dashboard", "/distributions", "/missions-collecte", "/mon-compte"]);
-    expect(hrefs(["coordinateur"])).toEqual(["/dashboard", "/distributions", "/statistiques", "/mon-compte"]);
+    expect(hrefs(["beneficiaire"])).toEqual(["/dashboard", "/distributions", "/mes-inscriptions"]);
+    expect(hrefs(["benevole"])).toEqual(["/dashboard", "/distributions", "/missions-collecte"]);
+    expect(hrefs(["coordinateur"])).toEqual(["/dashboard", "/distributions", "/statistiques"]);
     expect(hrefs(["super_admin"])).toContain("/statistiques");
+  });
+
+  it("met le jour J a la place de la troisieme case le jour d'une distribution", () => {
+    const items = bottomNavItems(["coordinateur"], "/distributions/d1/pointage");
+    expect(items.map((i) => i.href)).toEqual(["/dashboard", "/distributions", "/distributions/d1/pointage"]);
+    expect(items[2].label).toBe("Jour J");
   });
 
   it("ne propose pas les missions de collecte au beneficiaire", () => {
@@ -114,11 +123,40 @@ describe("NAV_SECTIONS", () => {
     });
   });
 
+  it("range le message aux membres dans la section Association", () => {
+    const association = NAV_SECTIONS.find((s) => s.title === "Association");
+    expect(association?.items.map((i) => i.href)).toContain("/notifications/email-libre");
+  });
+
   it("la section Administration contient uniquement des items super_admin", () => {
     const adminSection = NAV_SECTIONS.find((s) => s.title === "Administration");
     expect(adminSection).toBeDefined();
     adminSection!.items.forEach((item) => {
       expect(item.roles).toContain("super_admin");
     });
+  });
+});
+
+describe("libelleNav", () => {
+  it("parle de planning au gestionnaire et d'agenda aux autres", () => {
+    const agenda = NAV_SECTIONS[0].items.find((i) => i.href === "/distributions")!;
+    expect(libelleNav(agenda, ["coordinateur"])).toBe("Planning");
+    expect(libelleNav(agenda, ["beneficiaire"])).toBe("Agenda");
+  });
+});
+
+describe("sectionsPourRoles", () => {
+  it("retire les sections vides", () => {
+    const titres = sectionsPourRoles(["beneficiaire"]).map((s) => s.title);
+    expect(titres).toEqual([undefined, "Activités"]);
+  });
+});
+
+describe("itemActif", () => {
+  it("choisit l'entree la plus precise", () => {
+    const items = sectionsPourRoles(["benevole"]).flatMap((s) => s.items);
+    expect(itemActif(items, "/missions-collecte/m1")?.href).toBe("/missions-collecte");
+    expect(itemActif(items, "/mes-missions-collecte")?.href).toBe("/mes-missions-collecte");
+    expect(itemActif(items, "/inconnu")).toBeUndefined();
   });
 });

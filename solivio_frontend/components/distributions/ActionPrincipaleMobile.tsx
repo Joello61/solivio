@@ -11,32 +11,26 @@ interface Props {
 }
 
 /**
- * Action de terrain fixee au-dessus de la barre basse, sur telephone : la page
- * de detail est longue et l'action utile se retrouvait tout en bas.
+ * Action de terrain placee sous le titre, sur telephone : la page de detail est
+ * longue et l'action utile se retrouvait tout en bas. Elle reste dans le flux de
+ * la page pour ne pas empiler une seconde barre fixe sur la navigation.
  */
 export function ActionPrincipaleMobile({ action, distributionId }: Props) {
   if (!action) return null;
   return (
-    <>
-      {/* Reserve la place de la barre pour que la fin de la page reste visible. */}
-      <div className="h-16 lg:hidden" aria-hidden />
-      <div
-        className="fixed inset-x-0 z-20 border-t border-border/60 bg-background/95 px-4 py-2.5 backdrop-blur-md lg:hidden"
-        style={{ bottom: "calc(4.25rem + env(safe-area-inset-bottom, 0px))" }}
-      >
-        {action === "pointage" ? (
-          <Link href={`/distributions/${distributionId}/pointage`} className={cn(buttonVariants(), "h-11 w-full")}>
-            <ClipboardList className="mr-2 size-4" />
-            Ouvrir le pointage
-          </Link>
-        ) : (
-          <a href="#mon-inscription" className={cn(buttonVariants(), "h-11 w-full")}>
-            <UserPlus className="mr-2 size-4" />
-            S&apos;inscrire à cette distribution
-          </a>
-        )}
-      </div>
-    </>
+    <div className="lg:hidden">
+      {action === "pointage" ? (
+        <Link href={`/distributions/${distributionId}/pointage`} className={cn(buttonVariants({ size: "lg" }), "w-full")}>
+          <ClipboardList aria-hidden="true" />
+          Ouvrir le pointage
+        </Link>
+      ) : (
+        <a href="#mon-inscription" className={cn(buttonVariants({ size: "lg" }), "w-full")}>
+          <UserPlus aria-hidden="true" />
+          S&apos;inscrire à cette distribution
+        </a>
+      )}
+    </div>
   );
 }
 

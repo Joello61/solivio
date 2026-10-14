@@ -1,5 +1,6 @@
 "use client";
 
+import { NOM_ASSOCIATION } from "@/lib/marque";
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -54,7 +55,7 @@ function CompleteGoogleRegistrationForm() {
       description={
         isInvitation
           ? "Vérifiez vos informations pour accepter l'invitation."
-          : "Vérifiez vos informations pour rejoindre Linkee Toulouse."
+          : `Vérifiez vos informations pour rejoindre ${NOM_ASSOCIATION}.`
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">

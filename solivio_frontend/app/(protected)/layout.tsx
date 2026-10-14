@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { lireMoi } from "@/lib/api/serveur";
+import { lireDistributionsDuJour, lireMoi } from "@/lib/api/serveur";
 import { AppShell } from "@/components/layout/AppShell";
 import { RequeteProvider } from "@/components/providers/RequeteProvider";
 
@@ -18,9 +18,16 @@ export default async function ProtectedLayout({
 
   if (!user) redirect("/login");
 
+  // Le jour d'une distribution, la navigation mene droit au pointage (ou a la
+  // fiche tant qu'elle n'a pas demarre).
+  const [duJour] = await lireDistributionsDuJour(user.roles).catch(() => []);
+  const jourJ = duJour
+    ? duJour.statut === "EN_COURS" ? `/distributions/${duJour.id}/pointage` : `/distributions/${duJour.id}`
+    : undefined;
+
   return (
     <RequeteProvider>
-      <AppShell user={user}>{children}</AppShell>
+      <AppShell user={user} jourJ={jourJ}>{children}</AppShell>
     </RequeteProvider>
   );
 }

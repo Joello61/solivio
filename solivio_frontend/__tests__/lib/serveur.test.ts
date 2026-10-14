@@ -4,7 +4,7 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ getAll: () => [{ name: "access_token", value: "jeton" }] }),
 }));
 
-import { accesServeur, lireServeur } from "@/lib/api/serveur";
+import { accesServeur, lireDistributionsDuJour, lireServeur } from "@/lib/api/serveur";
 
 function reponse(status: number, corps: unknown = {}): Response {
   return new Response(JSON.stringify(corps), { status, headers: { "Content-Type": "application/json" } });
@@ -37,5 +37,35 @@ describe("accesServeur", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(reponse(200, [])).mockResolvedValueOnce(reponse(404)));
     await expect(accesServeur("/api/distributions/d1/pointage?q=")).resolves.toBe(true);
     await expect(accesServeur("/api/distributions/d2/pointage?q=")).resolves.toBe(false);
+  });
+});
+
+describe("lireDistributionsDuJour", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const midi = new Date("2026-10-14T10:00:00Z");
+  const distribution = (id: string, date: string, statut: string) => ({ id, date, statut, creneaux: [] });
+
+  it("ne sollicite pas le backend pour un beneficiaire", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(lireDistributionsDuJour(["beneficiaire"], midi)).resolves.toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("renvoie au gestionnaire toutes les distributions du jour", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reponse(200, [
+      distribution("hier", "2026-10-13", "TERMINEE"),
+      distribution("jour", "2026-10-14", "EN_COURS"),
+    ])));
+    const duJour = await lireDistributionsDuJour(["coordinateur"], midi);
+    expect(duJour.map((d) => d.id)).toEqual(["jour"]);
+  });
+
+  it("ne garde pour un benevole que celles ou il est confirme", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(reponse(200, [distribution("a", "2026-10-14", "PUBLIEE"), distribution("b", "2026-10-14", "PUBLIEE")]))
+      .mockResolvedValueOnce(reponse(200, [{ distributionId: "b", type: "BENEVOLE", statut: "CONFIRMEE" }])));
+    const duJour = await lireDistributionsDuJour(["benevole"], midi);
+    expect(duJour.map((d) => d.id)).toEqual(["b"]);
   });
 });

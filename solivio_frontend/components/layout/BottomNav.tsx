@@ -2,58 +2,72 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { bottomNavItems, isNavItemActive } from "./navigation";
+import type { MeResponse } from "@/types/auth";
+import { MenuMobile } from "./MenuMobile";
+import { bottomNavItems, isNavItemActive, libelleNav } from "./navigation";
 
-export function BottomNav({ roles }: { roles: string[] }) {
+const caseNav = "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-1 pt-2 pb-1.5 text-sm";
+
+function Pastille({ actif, children }: { actif: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-14 items-center justify-center rounded-full",
+        actif ? "bg-secondary text-secondary-foreground" : "text-muted-foreground",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function BottomNav({ user, jourJ }: { user: MeResponse; jourJ?: string }) {
   const pathname = usePathname();
-  const items = bottomNavItems(roles);
+  const items = bottomNavItems(user.roles, jourJ);
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-30 lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Navigation mobile"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      {/* Barre de navigation avec blur et bordure */}
-      <div className="border-t border-border/60 bg-background/95 backdrop-blur-md shadow-lg">
-        <div className="flex items-stretch">
-          {items.map((item) => {
-            const active = isNavItemActive(item.href, pathname);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 pt-2.5 pb-2 px-1 transition-all duration-150"
-                aria-current={active ? "page" : undefined}
-              >
-                {/* Indicateur pilule */}
-                <div
-                  className={cn(
-                    "flex items-center justify-center rounded-xl px-4 py-1.5 transition-all duration-200",
-                    active ? "bg-primary" : "bg-transparent",
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 shrink-0 transition-colors",
-                      active ? "text-primary-foreground" : "text-muted-foreground",
-                    )}
-                  />
-                </div>
-                <span
-                  className={cn(
-                    "text-xs font-semibold leading-none transition-colors",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  {item.label}
+      <div className="flex items-stretch">
+        {items.map((item) => {
+          const actif = isNavItemActive(item.href, pathname);
+          const Icone = item.icon;
+          const jour = item.href === jourJ;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={actif ? "page" : undefined}
+              className={cn(caseNav, actif ? "font-bold text-foreground" : "text-muted-foreground")}
+            >
+              {jour ? (
+                <span className="flex h-8 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                  <Icone aria-hidden="true" className="size-5" />
                 </span>
-              </Link>
-            );
-          })}
-        </div>
+              ) : (
+                <Pastille actif={actif}>
+                  <Icone aria-hidden="true" className="size-5" />
+                </Pastille>
+              )}
+              {libelleNav(item, user.roles)}
+            </Link>
+          );
+        })}
+        <MenuMobile
+          user={user}
+          declencheur={
+            <button type="button" className={cn(caseNav, "text-muted-foreground")}>
+              <Pastille actif={false}>
+                <Menu aria-hidden="true" className="size-5" />
+              </Pastille>
+              Menu
+            </button>
+          }
+        />
       </div>
     </nav>
   );

@@ -90,7 +90,7 @@ Primitives dans `components/ui/` (fondées sur `@base-ui/react`).
 | `action-menu` | Menu "Plus" ; les actions destructrices sont séparées en bas |
 | `sheet` | Panneau qui monte du bas sur téléphone, latéral sur ordinateur |
 | `dialog`, `alert-dialog` | Confirmations |
-| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tabs`, `tooltip`, `breadcrumb`, `separator`, `sonner`, `theme-toggle` | Structure et états |
+| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tabs`, `tooltip`, `separator`, `sonner`, `theme-toggle` | Structure et états |
 
 Règles :
 

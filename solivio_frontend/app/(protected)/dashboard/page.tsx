@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { estGestionnaireDistribution } from "@/lib/droits-distribution";
-import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { lireDistributionsDuJour, lireMoi, lireServeur } from "@/lib/api/serveur";
 import { BarChart3, Users, Heart, Calendar, Settings, UserCog, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import type { MeResponse } from "@/types/auth";
 import type { StatistiquePeriodeResponse } from "@/types/association";
 import type { DistributionResponse } from "@/types/distribution";
 import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
-import { distributionsDuJour, jourAssociation, type InscriptionDuMembre } from "@/lib/distribution-du-jour";
+import { NOM_ASSOCIATION } from "@/lib/marque";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -26,16 +26,12 @@ async function fetchDashboardData(): Promise<{
   const me = await lireMoi();
   const roles = me?.roles ?? [];
   const gestionnaire = estGestionnaireDistribution(roles);
-  // Un beneficiaire ne pointe pas : pas de carte du jour pour lui.
-  const concerne = gestionnaire || roles.includes("benevole");
-  const [distributions, inscriptions, statsMois] = await Promise.all([
-    concerne ? lireServeur<DistributionResponse[]>("/api/distributions") : null,
-    concerne && !gestionnaire ? lireServeur<InscriptionDuMembre[]>("/api/inscriptions/mes") : null,
+  const [duJour, statsMois] = await Promise.all([
+    lireDistributionsDuJour(roles, now),
     gestionnaire
       ? lireServeur<StatistiquePeriodeResponse>(`/api/statistiques/periode?debut=${debut}&fin=${fin}`).catch(() => null)
       : null,
   ]);
-  const duJour = distributionsDuJour(distributions ?? [], jourAssociation(now), gestionnaire, inscriptions ?? []);
   return { me, statsMois, statsErreur: gestionnaire && statsMois === null, duJour };
 }
 
@@ -116,7 +112,7 @@ export default async function DashboardPage() {
           Bonjour, {me?.prenom ?? "utilisateur"}
         </h1>
         <p className="text-muted-foreground">
-          Bienvenue sur votre espace Linkee Toulouse.
+          Bienvenue sur votre espace {NOM_ASSOCIATION}.
         </p>
       </div>
 
