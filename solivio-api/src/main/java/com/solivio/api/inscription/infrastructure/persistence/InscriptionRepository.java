@@ -155,4 +155,10 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
         + "SUM(CASE WHEN i.type = 'BENEFICIAIRE' AND i.statut = 'CONFIRMEE' THEN 1 ELSE 0 END), COUNT(i) "
         + "FROM Inscription i WHERE i.distributionId = :distId AND i.creneauId IS NOT NULL GROUP BY i.creneauId")
     List<Object[]> compterParCreneau(@Param("distId") UUID distributionId);
+
+    // [distributionId, creneauId, type, statut, nombre] des inscriptions actives
+    @Query("SELECT i.distributionId, i.creneauId, i.type, i.statut, COUNT(i) FROM Inscription i "
+        + "WHERE i.distributionId IN :distributionIds AND i.statut IN ('CONFIRMEE', 'LISTE_ATTENTE') "
+        + "GROUP BY i.distributionId, i.creneauId, i.type, i.statut")
+    List<Object[]> compterRemplissage(@Param("distributionIds") Collection<UUID> distributionIds);
 }

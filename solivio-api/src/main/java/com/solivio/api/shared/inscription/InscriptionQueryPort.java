@@ -1,5 +1,6 @@
 package com.solivio.api.shared.inscription;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +32,26 @@ public interface InscriptionQueryPort {
     /** Presences deja pointees, inscrits et visiteurs ponctuels confondus. */
     long compterPointages(UUID distributionId);
 
+    /**
+     * Remplissage de plusieurs distributions, en une requete : inscriptions confirmees
+     * et en liste d'attente par type, et pour les beneficiaires par creneau. Une
+     * distribution sans inscription est absente de la table.
+     */
+    Map<UUID, Remplissage> compterRemplissage(Collection<UUID> distributionIds);
+
     record ComptesCreneau(int confirmes, int total) {}
+
+    record Remplissage(
+        int beneficiairesConfirmes,
+        int beneficiairesEnAttente,
+        int benevolesConfirmes,
+        int benevolesEnAttente,
+        Map<UUID, RemplissageCreneau> parCreneau
+    ) {
+        public static final Remplissage VIDE = new Remplissage(0, 0, 0, 0, Map.of());
+    }
+
+    record RemplissageCreneau(int confirmes, int enAttente) {}
 
     record DestinataireMail(UUID personneId, String email, String prenom,
                             String typeInscription, UUID creneauId) {}

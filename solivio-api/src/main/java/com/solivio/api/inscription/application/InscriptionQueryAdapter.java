@@ -11,6 +11,8 @@ import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -76,6 +78,46 @@ public class InscriptionQueryAdapter implements InscriptionQueryPort {
             .collect(Collectors.toMap(
                 ligne -> (UUID) ligne[0],
                 ligne -> new ComptesCreneau(((Number) ligne[1]).intValue(), ((Number) ligne[2]).intValue())));
+    }
+
+    @Override
+    public Map<UUID, Remplissage> compterRemplissage(Collection<UUID> distributionIds) {
+        if (distributionIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Remplissage> parDistribution = new HashMap<>();
+        for (Object[] ligne : inscriptionRepository.compterRemplissage(distributionIds)) {
+            parDistribution.merge((UUID) ligne[0], remplissageDeLigne(ligne), InscriptionQueryAdapter::cumuler);
+        }
+        return parDistribution;
+    }
+
+    private static Remplissage remplissageDeLigne(Object[] ligne) {
+        UUID creneauId = (UUID) ligne[1];
+        boolean beneficiaire = ligne[2] == TypeInscription.BENEFICIAIRE;
+        boolean confirmee = ligne[3] == StatutInscription.CONFIRMEE;
+        int nombre = ((Number) ligne[4]).intValue();
+        int confirmes = confirmee ? nombre : 0;
+        int enAttente = confirmee ? 0 : nombre;
+        // La capacite d'un creneau ne vise que les beneficiaires (RG3).
+        Map<UUID, RemplissageCreneau> parCreneau = beneficiaire && creneauId != null
+            ? Map.of(creneauId, new RemplissageCreneau(confirmes, enAttente))
+            : Map.of();
+        return beneficiaire
+            ? new Remplissage(confirmes, enAttente, 0, 0, parCreneau)
+            : new Remplissage(0, 0, confirmes, enAttente, parCreneau);
+    }
+
+    private static Remplissage cumuler(Remplissage a, Remplissage b) {
+        Map<UUID, RemplissageCreneau> parCreneau = new HashMap<>(a.parCreneau());
+        b.parCreneau().forEach((id, c) -> parCreneau.merge(id, c, (x, y) ->
+            new RemplissageCreneau(x.confirmes() + y.confirmes(), x.enAttente() + y.enAttente())));
+        return new Remplissage(
+            a.beneficiairesConfirmes() + b.beneficiairesConfirmes(),
+            a.beneficiairesEnAttente() + b.beneficiairesEnAttente(),
+            a.benevolesConfirmes() + b.benevolesConfirmes(),
+            a.benevolesEnAttente() + b.benevolesEnAttente(),
+            parCreneau);
     }
 
     private List<DestinataireMail> destinataires(List<Inscription> inscrits) {
