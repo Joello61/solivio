@@ -197,6 +197,9 @@ solivio:
     limite-debit-auth:
       # Appels POST par minute et par IP sur les points d'entree publics d'authentification.
       requetes-par-minute: 10
+    limite-debit-public:
+      # Appels GET par minute et par IP sur les lectures publiques (page d'accueil).
+      requetes-par-minute: 30
   cors:
     allowed-origins: ${SOLIVIO_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   uploads:
