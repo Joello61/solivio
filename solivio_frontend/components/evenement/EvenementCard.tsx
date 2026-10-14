@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Calendar, MapPin, Users, UserCheck } from "lucide-react";
-import { StatutBadge } from "./StatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_EVENEMENT } from "@/lib/libelles";
 import type { EvenementResponse } from "@/types/evenement";
 
 const LABEL_TYPE: Record<string, string> = {
@@ -28,7 +29,7 @@ export function EvenementCard({ evenement }: Props) {
           </p>
           <h3 className="font-semibold text-foreground leading-snug truncate">{evenement.titre}</h3>
         </div>
-        <StatutBadge statut={evenement.statut} />
+        <Statut libelle={STATUT_EVENEMENT[evenement.statut]} />
       </div>
 
       <div className="space-y-1.5 text-sm text-muted-foreground">

@@ -77,7 +77,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
         {/* En-tete */}
         <div className="flex h-14 items-center justify-between px-4 border-b border-border/60 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary shadow-primary shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary shrink-0">
               <Image src="/logo.svg" alt="Solivio" width={18} height={18} style={{ width: 18, height: 18 }} />
             </div>
             <span className="font-display font-bold text-foreground tracking-tight">Solivio</span>
@@ -100,7 +100,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
             return (
               <div key={sectionIndex} className="space-y-0.5">
                 {section.title && (
-                  <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/50">
+                  <p className="px-3 pb-2 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground/50">
                     {section.title}
                   </p>
                 )}
@@ -115,7 +115,7 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
                         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
                         "transition-all duration-150",
                         active
-                          ? "bg-primary text-primary-foreground shadow-primary"
+                          ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -137,11 +137,11 @@ export function MobileDrawer({ user, open, onClose }: MobileDrawerProps) {
               "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
               "transition-all duration-150",
               isNavItemActive("/mon-compte", pathname)
-                ? "bg-primary text-primary-foreground shadow-primary"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold overflow-hidden ring-2 ring-primary/20">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold overflow-hidden ring-2 ring-primary/20">
               {avatarSrc ? (
                 <Image
                   unoptimized

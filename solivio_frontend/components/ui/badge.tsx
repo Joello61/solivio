@@ -4,49 +4,33 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/*
+ * Pastilles de statut. Le plus important se voit le plus : "accent" (citron) pour
+ * ce qui se passe maintenant, "muted" pour ce qui est passe. Jamais la couleur
+ * seule : le libelle porte toujours l'information.
+ */
 const badgeVariants = cva(
   [
-    "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden",
-    "rounded-full border px-2.5 py-0.5",
+    "group/badge inline-flex h-6 w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden",
+    "rounded-full border border-transparent px-2.5",
     "text-xs font-semibold leading-none whitespace-nowrap",
-    "transition-colors duration-150",
     "focus-visible:ring-2 focus-visible:ring-ring/50",
-    "[&>svg]:pointer-events-none [&>svg]:size-3",
+    "[&>svg]:pointer-events-none [&>svg]:size-3.5",
   ].join(" "),
   {
     variants: {
       variant: {
-        /* Primaire : fond teal plein */
-        default:
-          "bg-primary border-primary text-primary-foreground",
-
-        /* Secondaire : teal pale */
-        secondary:
-          "bg-primary/10 border-primary/25 text-primary",
-
-        /* Succes : identique secondaire (teal = succes dans ce contexte) */
-        success:
-          "bg-primary/10 border-primary/25 text-primary",
-
-        /* Avertissement : coral/orange */
-        warning:
-          "bg-accent/10 border-accent/30 text-accent-strong",
-
-        /* Accent : coral plein */
-        accent:
-          "bg-accent border-accent text-accent-foreground",
-
-        /* Destructif : rouge pale */
-        destructive:
-          "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/40",
-
-        /* Outline : bordure seulement */
-        outline:
-          "bg-transparent border-border text-foreground",
-
-        /* Muted : gris neutre */
-        muted:
-          "bg-muted border-transparent text-muted-foreground",
+        default: "bg-secondary text-secondary-foreground",
+        secondary: "bg-secondary text-secondary-foreground",
+        success: "bg-success/12 text-success",
+        warning: "bg-warning/12 text-warning",
+        info: "bg-info/12 text-info",
+        accent: "bg-accent text-accent-foreground",
+        destructive: "bg-destructive/12 text-destructive",
+        outline: "border-border text-foreground",
+        /* Brouillon : pas encore reel */
+        dashed: "border-dashed border-muted-foreground/60 text-foreground",
+        muted: "bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {

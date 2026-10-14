@@ -158,7 +158,7 @@ function CarteInscription({
         {date ? (
           <div className="flex-shrink-0 w-10 text-center">
             <p className="text-xl font-bold text-foreground leading-none tabular-nums">{jour}</p>
-            <p className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider mt-0.5 capitalize">{mois}</p>
+            <p className="text-xs uppercase font-medium text-muted-foreground tracking-wider mt-0.5 capitalize">{mois}</p>
           </div>
         ) : (
           <div className="flex-shrink-0 w-10" />

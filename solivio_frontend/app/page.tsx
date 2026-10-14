@@ -66,16 +66,16 @@ function CheckinWidget() {
             <span className="h-2.5 w-2.5 rounded-full bg-warning" />
             <span className="h-2.5 w-2.5 rounded-full bg-success" />
           </div>
-          <span className="text-[11px] font-semibold text-muted-foreground tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground tracking-wider">
             Pointage - 15 juin 2026
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/12 px-2 py-0.5 rounded-full border border-primary/20">
+          <span className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/12 px-2 py-0.5 rounded-full border border-primary/20">
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             En direct
           </span>
         </div>
 
-        <div className="grid grid-cols-[1fr_80px_90px] gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 border-b border-border/40">
+        <div className="grid grid-cols-[1fr_80px_90px] gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground/60 border-b border-border/40">
           <span>Nom</span>
           <span className="text-center">Type</span>
           <span className="text-center">Statut</span>
@@ -95,22 +95,22 @@ function CheckinWidget() {
                 <span className={`font-semibold transition-colors duration-300 ${isActive ? "text-primary" : "text-foreground"}`}>
                   {b.nom}
                 </span>
-                <span className="flex items-center justify-center text-[11px] text-muted-foreground">
+                <span className="flex items-center justify-center text-xs text-muted-foreground">
                   {b.type}
                 </span>
                 <span className="flex justify-center">
                   {b.statut === "present" && isPast ? (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-success">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Présent
                     </span>
                   ) : b.statut === "absent" && isPast ? (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-destructive">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-destructive">
                       <XCircle className="h-3.5 w-3.5" />
                       Absent
                     </span>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground/40">en attente</span>
+                    <span className="text-xs text-muted-foreground/40">en attente</span>
                   )}
                 </span>
               </div>
@@ -119,10 +119,10 @@ function CheckinWidget() {
         </div>
 
         <div className="px-4 py-2.5 border-t border-border bg-muted/30 flex justify-between items-center">
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono">
             {Math.max(0, activeIndex)} / {MOCK_BENEFICIARIES.length} pointés
           </span>
-          <span className="text-[11px] text-muted-foreground/50 font-medium">
+          <span className="text-xs text-muted-foreground/50 font-medium">
             Données pseudonymisées - RGPD
           </span>
         </div>
@@ -170,7 +170,7 @@ function RepartitionSimulator() {
             onChange={(e) => setCount(Number(e.target.value))}
             className="w-full accent-primary h-1.5"
           />
-          <div className="flex justify-between text-[10px] font-mono text-muted-foreground/50">
+          <div className="flex justify-between text-xs font-mono text-muted-foreground/50">
             <span>80</span>
             <span>190</span>
             <span>300</span>
@@ -185,16 +185,16 @@ function RepartitionSimulator() {
           ].map((item) => (
             <div key={item.label} className={`rounded-xl border p-3 text-center ${item.bg}`}>
               <div className="text-base font-mono font-extrabold text-foreground">{item.val}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wide font-bold">{item.label}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wide font-bold">{item.label}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Non distribués
           </span>
-          <span className="text-[11px] font-mono text-muted-foreground">
+          <span className="text-xs font-mono text-muted-foreground">
             {calcul.restesPates} pqt pâtes - {calcul.restesLait} bq lait
           </span>
         </div>
@@ -415,12 +415,12 @@ export default function LandingPage() {
             <div className="grid grid-cols-[2fr_3fr_3fr] border-b border-border">
               <div className="px-5 py-3" />
               <div className="px-5 py-3 border-l border-border">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-destructive">
+                <span className="text-xs font-bold uppercase tracking-widest text-destructive">
                   Fichier tableur
                 </span>
               </div>
               <div className="px-5 py-3 border-l border-border">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary">
                   Solivio
                 </span>
               </div>
@@ -521,7 +521,7 @@ export default function LandingPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-block text-[10px] font-bold uppercase tracking-widest rounded-md px-2 py-1 ${
+                      className={`inline-block text-xs font-bold uppercase tracking-widest rounded-md px-2 py-1 ${
                         card.color === "teal"
                           ? "bg-primary/10 text-primary border border-primary/20"
                           : "bg-accent/10 text-accent-strong border border-accent/20"
@@ -631,7 +631,7 @@ export default function LandingPage() {
             ].map((b) => (
               <span
                 key={b.label}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground border border-border rounded-full px-3 py-1.5 bg-muted/40"
+                className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground border border-border rounded-full px-3 py-1.5 bg-muted/40"
               >
                 {b.icon}
                 {b.label}

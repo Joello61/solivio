@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
 import { Calendar, MapPin, Truck, User, Users } from "lucide-react";
-import { StatutBadge } from "@/components/collecte/StatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_MISSION } from "@/lib/libelles";
 import { MissionActions } from "@/components/collecte/MissionActions";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { MissionCollecteResponse } from "@/types/collecte";
@@ -41,7 +42,7 @@ export default async function DetailMissionCollectePage({ params }: Props) {
       <div className="space-y-2">
         <div className="flex items-start gap-3">
           <h1 className="text-3xl font-bold text-foreground font-display flex-1">{mission.titre}</h1>
-          <StatutBadge statut={mission.statut} />
+          <Statut libelle={STATUT_MISSION[mission.statut]} />
         </div>
         {mission.description && (
           <p className="text-sm text-muted-foreground">{mission.description}</p>

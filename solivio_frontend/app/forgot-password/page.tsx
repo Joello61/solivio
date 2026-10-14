@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
         </div>
         <Link
           href={`/reset-password?email=${encodeURIComponent(email)}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 h-10 text-sm font-semibold text-primary-foreground shadow-primary hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 h-10 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all duration-150"
         >
           Saisir le code de vérification
           <ArrowRight className="h-4 w-4 shrink-0" />

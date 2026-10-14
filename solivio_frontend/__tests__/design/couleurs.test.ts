@@ -42,4 +42,14 @@ describe("couleurs", () => {
         .map((ligne) => `${f}: ${ligne.trim()}`));
     expect(fautes).toEqual([]);
   });
+
+  // DESIGN.md : aucun texte sous 13 px. L'echelle Tailwind (text-xs = 13 px) suffit.
+  it("n'utilise aucune taille de texte arbitraire en pixels", () => {
+    const fautes = sources.flatMap((f) =>
+      readFileSync(f, "utf8").split("\n")
+        .filter((ligne) => /text-\[\d+(\.\d+)?px\]/.test(ligne))
+        .map((ligne) => `${f}: ${ligne.trim()}`),
+    );
+    expect(fautes).toEqual([]);
+  });
 });

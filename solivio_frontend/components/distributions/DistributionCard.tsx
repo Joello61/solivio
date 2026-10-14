@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Calendar, MapPin, Users, ChevronRight } from "lucide-react";
-import { DistributionStatutBadge } from "./DistributionStatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_DISTRIBUTION } from "@/lib/libelles";
 import { DistributionActions } from "./DistributionActions";
 import { cn } from "@/lib/utils";
 import type { DistributionResponse } from "@/types/distribution";
@@ -34,7 +35,7 @@ export function DistributionCard({ distribution, estGestionnaire }: Props) {
         <h3 className="text-base font-semibold text-foreground leading-snug">
           {distribution.titre}
         </h3>
-        <DistributionStatutBadge statut={distribution.statut} />
+        <Statut libelle={STATUT_DISTRIBUTION[distribution.statut]} />
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

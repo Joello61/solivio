@@ -41,13 +41,13 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-xl border border-input bg-card px-4 py-2 text-sm whitespace-nowrap",
+        "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-card px-3.5 py-2 text-base whitespace-nowrap",
         "transition-all duration-150 outline-none select-none",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/60",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
         "data-placeholder:text-muted-foreground/60",
-        "data-[size=default]:h-10 data-[size=sm]:h-8 data-[size=sm]:px-3",
+        "data-[size=default]:h-11 data-[size=sm]:h-9 data-[size=sm]:px-3 data-[size=sm]:text-sm",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
         "",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -95,7 +95,7 @@ function SelectContent({
           className={cn(
             "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-40",
             "origin-(--transform-origin) overflow-x-hidden overflow-y-auto",
-            "rounded-xl bg-popover text-popover-foreground",
+            "rounded-lg bg-popover text-popover-foreground",
             "shadow-lg border border-border/60",
             "p-1",
             "duration-150",
@@ -138,7 +138,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-lg px-3 py-2 pr-8 text-sm",
+        "relative flex min-h-10 w-full cursor-default items-center gap-1.5 rounded-md px-3 py-2 pr-8 text-base",
         "outline-hidden select-none transition-colors duration-100",
         "hover:bg-primary/10 hover:text-primary",
         "focus:bg-primary/10 focus:text-primary",

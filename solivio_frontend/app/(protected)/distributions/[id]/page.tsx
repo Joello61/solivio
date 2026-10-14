@@ -16,7 +16,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DistributionStatutBadge } from "@/components/distributions/DistributionStatutBadge";
+import { Statut } from "@/components/ui/statut";
+import { STATUT_DISTRIBUTION } from "@/lib/libelles";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
 import { InscriptionButton } from "@/components/distributions/InscriptionButton";
 import { ActionPrincipaleMobile, actionPrincipale } from "@/components/distributions/ActionPrincipaleMobile";
@@ -123,7 +124,7 @@ export default async function DistributionDetailPage({ params }: PageProps) {
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold text-foreground font-display">{distribution.titre}</h1>
-          <DistributionStatutBadge statut={distribution.statut} />
+          <Statut libelle={STATUT_DISTRIBUTION[distribution.statut]} />
         </div>
         {distribution.motifAnnulation && (
           <p className="text-sm text-muted-foreground">
