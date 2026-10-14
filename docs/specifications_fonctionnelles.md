@@ -2,11 +2,13 @@
 
 > Ce que le produit fait concrètement, module par module, et où passe la ligne de la première version.
 
-**Document structurant - version 1.1**
+**Document structurant - version 1.2**
 **Statut : référence de travail**
-**Dernière mise à jour : juin 2026**
+**Dernière mise à jour : octobre 2026**
 
-> Changement depuis la version 1.0 : ajout en V1 du module Répartition des denrées (calcul de dotation par bénéficiaire pour une distribution), à la demande du porteur, sur la base d'un besoin opérationnel réel observé.
+> Changement depuis la version 1.1 : ajout des trois modules complémentaires livrés en juin 2026 et jusque-là absents de ce document : Événements, Missions de collecte et Sessions de reconditionnement (section 4.10). Le document décrit le comportement réellement implémenté.
+>
+> Rappel de la version 1.1 : ajout en V1 du module Répartition des denrées (calcul de dotation par bénéficiaire pour une distribution), à la demande du porteur, sur la base d'un besoin opérationnel réel observé.
 
 ## Avertissement de lecture
 
@@ -60,6 +62,9 @@ Voici la carte complète des modules, tous niveaux confondus. Les sections suiva
 | Répartition des denrées | Calcul de la dotation par bénéficiaire pour une distribution | V1 |
 | Notifications | Emails automatiques (confirmation, rappel, annulation) | V1 |
 | Statistiques de base | Indicateurs essentiels de pilotage | V1 |
+| Événements | Stands, fêtes et autres événements, avec participants et équipe bénévole | V1 (complémentaire) |
+| Missions de collecte | Aller chercher des denrées et les déposer à l'association | V1 (complémentaire) |
+| Sessions de reconditionnement | Séances de travail sur place, avec inscription et pointage | V1 (complémentaire) |
 | Ressources et stocks | Suivi des denrées et ressources | V2 |
 | Dons | Suivi des dons, intégration de la collecte externe | V2 |
 | Configurabilité étendue | Champs et types personnalisables par l'association | V2 |
@@ -209,6 +214,7 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 - Rappel automatique la veille de la distribution.
 - Notification automatique en cas d'annulation de la distribution.
 - Notification de promotion depuis la liste d'attente (une place s'est libérée).
+- Les emails des modules complémentaires : publication et annulation d'un événement, création et annulation d'une mission de collecte, confirmation d'inscription et annulation d'une session de reconditionnement (section 4.10).
 
 **Repoussé (V2) :** l'envoi de messages groupés libres, les modèles de messages éditables par l'association, et les canaux supplémentaires (SMS, notifications push). En V1, les messages ont un contenu fixe et soigné, en français.
 
@@ -225,6 +231,59 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 **Précision sur la confidentialité.** Les statistiques sont présentées de manière **agrégée et pseudonymisée**. On compte des bénéficiaires, on ne les expose pas nominativement dans les tableaux de bord. C'est une exigence RGPD et éthique, applicable dès la V1.
 
 **Repoussé (V2 et au-delà) :** les exports détaillés pour les financeurs, les tableaux de bord avancés, et les statistiques de plaidoyer sur la précarité.
+
+### 4.10 Modules complémentaires
+
+Linkee Toulouse ne fait pas que des distributions. Trois activités ont été ajoutées en juin 2026, en plus des neuf points de la V1 (section 9). Elles réutilisent le socle de la V1 (comptes, rôles, notifications, journal d'audit) mais restent indépendantes des distributions : elles n'ont ni créneaux, ni liste d'attente, ni règle de fréquence, et n'alimentent ni la répartition ni les statistiques.
+
+Chaque création, modification, changement d'état, inscription et pointage est tracé dans le journal d'audit. Un texte saisi (titre, description, motif d'annulation) est assaini avant d'être enregistré.
+
+#### 4.10.1 Événements
+
+**Objectif.** Organiser les événements de l'association autres que les distributions (stand, fête, autre), pour lesquels il faut une équipe de bénévoles, des participants, ou les deux.
+
+**Fonctions :**
+
+- Le responsable crée un événement : titre, description, type (stand, fête, autre), lieu, début et fin (la fin est après le début).
+- Il précise si l'événement **a besoin d'une équipe bénévole** (staff) et s'il est **ouvert à des participants**, et dans ce cas à quel public : bénévoles, bénéficiaires ou tous.
+- Il choisit le **mode d'inscription** : obligatoire (inscription et pointage), libre (inscription facultative), ou sans inscription.
+- Il peut fixer une capacité pour l'équipe et une capacité pour les participants ; une fois une capacité atteinte, les inscriptions sont refusées (pas de liste d'attente).
+- Cycle de vie fixe : brouillon, publié, en cours, terminé, annulé. Un événement n'est modifiable qu'en brouillon ; il s'annule avec une raison.
+- Une personne s'inscrit à un événement publié ou en cours, dans l'équipe (bénévoles seulement, et seulement si l'événement a besoin d'une équipe) ou comme participant (si son rôle correspond au public visé). Elle se désinscrit elle-même et retrouve ses événements dans "Mes événements".
+- Le coordinateur et le responsable consultent la liste des inscrits et pointent la présence (présent, absent), en mode d'inscription obligatoire seulement.
+
+**Emails.** À la publication, les bénévoles sont prévenus si une équipe est recherchée, et le public visé si l'événement est ouvert aux participants. À l'annulation, les inscrits sont prévenus (et l'adresse générale de l'association en mode libre) ; sans inscription, tous les bénévoles et bénéficiaires le sont.
+
+#### 4.10.2 Missions de collecte
+
+**Objectif.** Organiser la récupération de denrées chez un partenaire et leur dépôt à l'association, confiées à un bénévole.
+
+**Ce que ce module n'est pas.** Il ne gère ni les dons ni les donateurs (module Dons, V2), ni la quantité collectée, ni un stock (module Ressources et stocks, V2). Il suit seulement l'avancement d'un trajet.
+
+**Fonctions :**
+
+- Le responsable crée une mission : titre, description, lieu de collecte, lieu de dépôt, date et heure, nombre de personnes prévues (6 par défaut). Il peut la modifier tant qu'elle est disponible.
+- Un bénévole **prend en charge** une mission disponible. Il ne peut avoir qu'une mission en cours à la fois. Il peut la **libérer** tant que la collecte n'est pas validée : elle redevient disponible.
+- Le responsable **valide la collecte**, puis le bénévole assigné, et lui seul, **valide le dépôt**.
+- Cycle de vie fixe : disponible, prise en charge, collecte effectuée, dépôt validé, annulée. Le responsable annule une mission non terminée, avec une raison ; le bénévole assigné peut aussi annuler la sienne.
+- Les bénévoles voient la liste des missions et retrouvent les leurs dans "Mes missions de collecte".
+
+**Confidentialité.** Un bénévole ne voit le nom du bénévole assigné que sur sa propre mission ; le responsable le voit sur toutes.
+
+**Emails.** À la création, tous les bénévoles sont prévenus. À l'annulation d'une mission prise en charge, le bénévole assigné est prévenu.
+
+#### 4.10.3 Sessions de reconditionnement
+
+**Objectif.** Organiser les séances de reconditionnement de l'association et savoir qui y vient.
+
+**Fonctions :**
+
+- Le responsable crée une session : titre, description, lieu, début et fin (la fin est après le début), capacité facultative. Une capacité atteinte refuse les nouvelles inscriptions (pas de liste d'attente).
+- Cycle de vie fixe : brouillon, publiée, en cours, terminée, annulée. Le responsable publie, démarre, termine ou annule une session (avec un motif).
+- Toute personne connectée voit les sessions publiées et s'inscrit à une session publiée ; elle se désinscrit tant que la session n'a pas démarré, et peut se réinscrire ensuite. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
+- Le coordinateur et le responsable consultent les inscrits et pointent la présence (présent, absent) pendant ou après la session.
+
+**Emails.** Une inscription est confirmée par email, y compris une réinscription après désistement. À l'annulation, les inscrits sont prévenus.
 
 ## 5. Détail fonctionnel des modules ultérieurs
 
@@ -337,6 +396,8 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 8. de consulter des statistiques de base agrégées et pseudonymisées ;
 9. le tout de façon traçable, avec export des données de l'association et suppression des données personnelles.
 
+**En complément**, la V1 de Linkee Toulouse organise aussi ses événements, ses missions de collecte et ses sessions de reconditionnement (section 4.10). Ces modules ont été livrés en juin 2026.
+
 **La V1 ne fait rien d'autre.** Elle inclut le calcul de répartition des denrées pour une distribution (point 6), mais **pas** la gestion d'un stock permanent. Et elle ne fait ni dons, ni campagnes, ni workflow configurable, ni formulaires sur mesure, ni multi-antennes, ni interface de programmation, ni SMS. Ces fonctions viendront, dans l'ordre, après que la V1 aura prouvé sa valeur en conditions réelles.
 
 ## 10. Ce que ce document implique pour la suite
@@ -350,7 +411,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 
 **Le cœur.** Le module Distributions et le module Inscriptions sont le cœur du produit. C'est là qu'est la différence, et c'est là que doit aller le soin.
 
-**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, avec export des données. Rien de plus.
+**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, avec export des données. En complément, les événements, les missions de collecte et les sessions de reconditionnement de Linkee Toulouse. Rien de plus.
 
 **Le reste.** Stocks, dons, configurabilité étendue, statistiques avancées et SMS viennent en V2. Workflow configurable, formulaires sur mesure, multi-antennes, interface de programmation et campagnes viennent en V3 - décrits ici pour que le modèle de données les anticipe, pas pour les construire maintenant.
 
