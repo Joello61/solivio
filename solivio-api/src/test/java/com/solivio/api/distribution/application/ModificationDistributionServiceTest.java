@@ -58,7 +58,8 @@ class ModificationDistributionServiceTest {
     void setUp() {
         lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(ZoneId.of("Europe/Paris"));
         service = new ModificationDistributionService(distributionRepository, creneauRepository, eventPublisher,
-            inscriptionQueryPort, verrou, new HorlogeAssociation(Clock.systemUTC(), associationQueryPort), auditService);
+            inscriptionQueryPort, verrou, new HorlogeAssociation(Clock.systemUTC(), associationQueryPort), auditService,
+            new ReponseDistribution(inscriptionQueryPort));
         distribution = new Distribution("Distribution", null, null, date, 10, 5,
             ModeCreneauDistribution.CRENEAU_UNIQUE, UUID.randomUUID());
         distribution.setId(distributionId);
