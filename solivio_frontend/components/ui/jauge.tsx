@@ -58,7 +58,7 @@ export function Jauge({
       )}
       <div
         role="meter"
-        aria-label={sansTexte ? libelle : undefined}
+        aria-label={libelle}
         aria-valuenow={valeur}
         aria-valuemin={0}
         aria-valuemax={capacite}

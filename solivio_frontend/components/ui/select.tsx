@@ -46,7 +46,7 @@ function SelectTrigger({
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/60",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20",
-        "data-placeholder:text-muted-foreground/60",
+        "data-placeholder:text-muted-foreground",
         "data-[size=default]:h-11 data-[size=sm]:h-9 data-[size=sm]:px-3 data-[size=sm]:text-sm",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5",
         "",
