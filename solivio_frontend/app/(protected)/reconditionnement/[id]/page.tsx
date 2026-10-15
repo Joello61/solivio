@@ -1,139 +1,138 @@
-import { notFound } from "next/navigation";
-import { estGestionnaireDistribution } from "@/lib/droits-distribution";
-import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
-import { Calendar, Clock, MapPin, Users, AlertCircle } from "lucide-react";
-import { SessionActions } from "@/components/reconditionnement/SessionActions";
+import { notFound } from "next/navigation";
+import { MapPin } from "lucide-react";
+import { PlanDepliable } from "@/components/distributions/PlanDepliable";
+import { ActionsSession } from "@/components/reconditionnement/ActionsSession";
+import { ParticipationSession } from "@/components/reconditionnement/ParticipationSession";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Jauge } from "@/components/ui/jauge";
+import { List, ListRow } from "@/components/ui/list-row";
+import { PageHeader } from "@/components/ui/page-header";
+import { Rail } from "@/components/ui/rail";
 import { Statut } from "@/components/ui/statut";
-import { STATUT_SESSION } from "@/lib/libelles";
-import { ListeInscritsReco } from "@/components/reconditionnement/ListeInscritsReco";
-import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
-import type { SessionReconditionnementResponse, InscriptionReconditionnementResponse } from "@/types/reconditionnement";
+import { ETAPES_ACTIVITE, etapeActivite, quandActivite } from "@/lib/activites";
+import { dateLongue, lieuCourt } from "@/lib/agenda";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { STATUT_PRESENCE } from "@/lib/libelles";
+import { lienItineraire } from "@/lib/lieu";
+import { estResponsable } from "@/lib/roles";
+import type { StatutPresence } from "@/types/distribution";
+import type { InscriptionReconditionnementResponse, SessionReconditionnementResponse } from "@/types/reconditionnement";
 
 export const metadata: Metadata = { title: "Session de reconditionnement" };
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function capitale(texte: string): string {
+  return texte.charAt(0).toUpperCase() + texte.slice(1);
 }
 
-async function fetchData(id: string) {
+export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [session, me] = await Promise.all([
     lireServeur<SessionReconditionnementResponse>(`/api/sessions-reconditionnement/${id}`),
     lireMoi(),
   ]);
-  if (!session) return null;
-
-  const estGestionnaire = estGestionnaireDistribution(me?.roles ?? []);
-  const inscrits = estGestionnaire
-    ? ((await lireServeur<InscriptionReconditionnementResponse[]>(
-        `/api/sessions-reconditionnement/${id}/inscrits`,
-      )) ?? [])
-    : [];
-  return { session, me, inscrits };
-}
-
-export default async function SessionDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-
-  const data = await fetchData(id);
-  if (!data) notFound();
-
-  const { session, me, inscrits } = data;
-
-  const estResponsable = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
-  const estCoordinateur = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  if (!session) notFound();
+  const roles = me?.roles ?? [];
+  const gestion = estGestionnaireDistribution(roles);
+  const [inscrits, miennes] = await Promise.all([
+    gestion ? lireServeur<InscriptionReconditionnementResponse[]>(`/api/sessions-reconditionnement/${id}/inscrits`) : null,
+    lireServeur<InscriptionReconditionnementResponse[]>(`/api/sessions-reconditionnement/${id}/inscriptions/mes`),
+  ]);
+  const inscrit = (miennes ?? []).some((i) => i.statut === "CONFIRMEE");
+  const { date, plage } = quandActivite(session.dateHeureDebut, session.dateHeureFin);
+  const etape = etapeActivite(session.statut);
+  const lieu = session.lieu;
+  const itineraire = lieu ? lienItineraire(lieu) : null;
+  const avecPresence = session.statut === "EN_COURS" || session.statut === "TERMINEE";
+  const liste = (inscrits ?? []).filter((i) => i.statut === "CONFIRMEE");
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      {/* En-tete */}
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold text-foreground font-display">{session.titre}</h1>
-        <Statut libelle={STATUT_SESSION[session.statut]} />
-      </div>
+    <div className="flex max-w-3xl flex-col gap-6">
+      <PageHeader
+        className="mb-0 sm:mb-0"
+        retour={{ href: "/reconditionnement", libelle: "Reconditionnement" }}
+        surtitre="Reconditionnement"
+        titre={session.titre}
+        description={`${capitale(dateLongue(date))}, ${plage}.`}
+        actions={
+          gestion && (
+            <ActionsSession sessionId={id} statut={session.statut} estResponsable={estResponsable(roles)} nbInscrits={session.nbInscrits} />
+          )
+        }
+      />
 
-      {session.motifAnnulation && (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          <AlertCircle className="size-4 shrink-0" />
-          {session.motifAnnulation}
-        </div>
+      {session.statut === "ANNULEE" ? (
+        <Alert variant="destructive">
+          <AlertTitle>Session annulée</AlertTitle>
+          {session.motifAnnulation && <AlertDescription>{session.motifAnnulation}</AlertDescription>}
+        </Alert>
+      ) : (
+        gestion && etape !== null && <Rail etapes={ETAPES_ACTIVITE} courante={etape} libelle="Cycle de la session" />
       )}
 
-      {/* Informations */}
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-3">
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="size-4 shrink-0 text-muted-foreground" />
-          <span>
-            <span className="font-medium text-foreground">Début :</span>{" "}
-            <span className="text-muted-foreground">{formatDateTime(session.dateHeureDebut)}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="size-4 shrink-0 text-muted-foreground" />
-          <span>
-            <span className="font-medium text-foreground">Fin :</span>{" "}
-            <span className="text-muted-foreground">{formatDateTime(session.dateHeureFin)}</span>
-          </span>
-        </div>
-        {session.lieu?.adresseFormatee && (
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="size-4 shrink-0 text-muted-foreground" />
-            <span className="text-muted-foreground">{session.lieu.adresseFormatee}</span>
-          </div>
-        )}
-        {session.lieu?.latitude != null && session.lieu?.longitude != null && (
-          <CarteEmplacement
-            lieu={{
-              latitude: session.lieu.latitude,
-              longitude: session.lieu.longitude,
-              adresseFormatee: session.lieu.adresseFormatee,
-            }}
-            interactive={true}
-          />
-        )}
-        <div className="flex items-center gap-2 text-sm">
-          <Users className="size-4 shrink-0 text-muted-foreground" />
-          <span className="text-muted-foreground">
-            {session.nbInscrits} inscrit{session.nbInscrits !== 1 ? "s" : ""}
-            {session.capacite != null ? ` / ${session.capacite} places` : ""}
-          </span>
-        </div>
-        {session.description && (
-          <p className="text-sm text-muted-foreground pt-1 border-t border-border/40">
-            {session.description}
-          </p>
-        )}
-      </div>
-
-      {/* Inscrits et pointage (coordinateur) */}
-      {estCoordinateur && inscrits.length >= 0 && (
-        <ListeInscritsReco
+      {!gestion && (
+        <ParticipationSession
           sessionId={id}
-          inscrits={inscrits}
-          statut={session.statut}
-          estCoordinateur={!!estCoordinateur}
+          inscrit={inscrit}
+          ouverte={session.statut === "PUBLIEE"}
+          complet={session.capacite != null && session.nbInscrits >= session.capacite}
         />
       )}
 
-      {/* Actions */}
-      <SessionActions
-        sessionId={id}
-        statut={session.statut}
-        estResponsable={!!estResponsable}
-        estCoordinateur={!!estCoordinateur}
-      />
+      {session.description && <p className="text-base whitespace-pre-line text-foreground">{session.description}</p>}
+
+      {lieu?.adresseFormatee && (
+        <section aria-label="Lieu" className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-base font-semibold text-foreground">{lieuCourt(lieu)}</span>
+              {lieu.nom && <span className="text-base text-muted-foreground">{lieu.adresseFormatee}</span>}
+              {itineraire && (
+                <a href={itineraire} target="_blank" rel="noopener noreferrer" className="w-fit font-semibold text-primary underline underline-offset-4">
+                  Itinéraire
+                </a>
+              )}
+            </div>
+          </div>
+          {lieu.latitude != null && lieu.longitude != null && <PlanDepliable lieu={lieu} />}
+        </section>
+      )}
+
+      {session.capacite ? (
+        <Jauge
+          valeur={session.nbInscrits}
+          capacite={session.capacite}
+          libelle={`${session.nbInscrits} inscrits sur ${session.capacite}`}
+          detail={session.nbInscrits >= session.capacite ? "Complet" : `${session.capacite - session.nbInscrits} places libres`}
+        />
+      ) : (
+        <p className="text-base text-muted-foreground">
+          {session.nbInscrits} inscrit{session.nbInscrits > 1 ? "s" : ""}, sans limite de places.
+        </p>
+      )}
+
+      {gestion && (
+        <section aria-labelledby="titre-inscrits" className="flex flex-col gap-3">
+          <h2 id="titre-inscrits" className="font-display text-xl font-bold text-foreground">
+            Inscrits <span className="font-sans text-base font-normal text-muted-foreground tabular-nums">{liste.length}</span>
+          </h2>
+          {liste.length === 0 ? (
+            <p className="text-base text-muted-foreground">Personne pour l&apos;instant.</p>
+          ) : (
+            <List>
+              {liste.map((i) => (
+                <ListRow
+                  key={i.id}
+                  titre={i.nomComplet}
+                  fin={avecPresence ? <Statut libelle={STATUT_PRESENCE[i.presence as StatutPresence]} /> : undefined}
+                />
+              ))}
+            </List>
+          )}
+        </section>
+      )}
     </div>
   );
 }

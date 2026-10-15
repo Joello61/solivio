@@ -1,159 +1,188 @@
-import { notFound } from "next/navigation";
-import { lireMoi, lireServeur } from "@/lib/api/serveur";
-import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
-import { Calendar, Clock, MapPin, Users, UserCheck, ClipboardList } from "lucide-react";
+import { notFound } from "next/navigation";
+import { MapPin } from "lucide-react";
+import { ActionsEvenement } from "@/components/evenement/ActionsEvenement";
+import { ParticipationEvenement } from "@/components/evenement/ParticipationEvenement";
+import { PlanDepliable } from "@/components/distributions/PlanDepliable";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Jauge } from "@/components/ui/jauge";
+import { List, ListRow } from "@/components/ui/list-row";
+import { PageHeader } from "@/components/ui/page-header";
+import { Rail } from "@/components/ui/rail";
 import { Statut } from "@/components/ui/statut";
-import { STATUT_EVENEMENT } from "@/lib/libelles";
-import { EvenementActions } from "@/components/evenement/EvenementActions";
-import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
+import {
+  ETAPES_ACTIVITE,
+  MODE_INSCRIPTION,
+  PUBLIC_CIBLE,
+  TYPE_EVENEMENT,
+  etapeActivite,
+  placesOuvertes,
+  quandActivite,
+} from "@/lib/activites";
+import { dateLongue } from "@/lib/agenda";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { STATUT_PRESENCE } from "@/lib/libelles";
+import { lienItineraire } from "@/lib/lieu";
+import { estResponsable } from "@/lib/roles";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 
-export const metadata: Metadata = { title: "Détail événement" };
+export const metadata: Metadata = { title: "Événement" };
 
-const LABEL_TYPE: Record<string, string> = {
-  STAND: "Stand",
-  FETE: "Fête",
-  AUTRE: "Événement",
-};
-
-async function fetchData(id: string) {
-  const [evenement, me] = await Promise.all([
-    lireServeur<EvenementResponse>(`/api/evenements/${id}`),
-    lireMoi(),
-  ]);
-  const mesParticipations = me
-    ? ((await lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements")) ?? [])
-    : [];
-  return { evenement, me, mesParticipations };
+function capitale(texte: string): string {
+  return texte.charAt(0).toUpperCase() + texte.slice(1);
 }
 
-interface Props {
-  params: Promise<{ id: string }>;
+function Remplissage({ libelle, nombre, capacite }: { libelle: string; nombre: number; capacite: number | null }) {
+  if (capacite) {
+    return (
+      <Jauge
+        valeur={nombre}
+        capacite={capacite}
+        libelle={`${libelle} : ${nombre} sur ${capacite}`}
+        detail={nombre >= capacite ? "Complet" : `${capacite - nombre} places libres`}
+      />
+    );
+  }
+  return (
+    <p className="text-base text-foreground">
+      <span className="font-semibold">{libelle}</span> : {nombre}, sans limite de places
+    </p>
+  );
 }
 
-export default async function DetailEvenementPage({ params }: Props) {
+function Inscrits({ titre, liste, avecPresence }: { titre: string; liste: ParticipationEvenementResponse[]; avecPresence: boolean }) {
+  if (liste.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="font-display text-lg font-bold text-foreground">
+        {titre} <span className="font-sans text-base font-normal text-muted-foreground tabular-nums">{liste.length}</span>
+      </h3>
+      <List>
+        {liste.map((p) => (
+          <ListRow
+            key={p.id}
+            titre={p.personneNomComplet ?? "Membre"}
+            fin={avecPresence ? <Statut libelle={STATUT_PRESENCE[p.presence]} /> : undefined}
+          />
+        ))}
+      </List>
+    </section>
+  );
+}
+
+export default async function DetailEvenementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { evenement, me, mesParticipations } = await fetchData(id);
-
+  const [evenement, me] = await Promise.all([lireServeur<EvenementResponse>(`/api/evenements/${id}`), lireMoi()]);
   if (!evenement) notFound();
+  const roles = me?.roles ?? [];
+  const gestion = estGestionnaireDistribution(roles);
+  if (!gestion && evenement.statut === "BROUILLON") notFound();
 
-  const estGestionnaire =
-    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
-    false;
-  const estBenevole = me?.roles.includes("benevole") ?? false;
-  const estBeneficiaire = me?.roles.includes("beneficiaire") ?? false;
-  const dejaInscrit = mesParticipations.some((p) => p.evenementId === id);
+  const [participations, mesParticipations] = await Promise.all([
+    gestion ? lireServeur<ParticipationEvenementResponse[]>(`/api/evenements/${id}/participations`) : null,
+    lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements"),
+  ]);
+  const maParticipation = (mesParticipations ?? []).find((p) => p.evenementId === id) ?? null;
+  const { date, plage } = quandActivite(evenement.dateHeureDebut, evenement.dateHeureFin);
+  const etape = etapeActivite(evenement.statut);
+  const mode = MODE_INSCRIPTION[evenement.modeInscription];
+  const itineraire = evenement.lieuAdresseFormatee ? lienItineraire({ adresseFormatee: evenement.lieuAdresseFormatee, latitude: evenement.lieuLatitude, longitude: evenement.lieuLongitude }) : null;
+  const avecPresence = evenement.modeInscription === "OBLIGATOIRE" && (evenement.statut === "EN_COURS" || evenement.statut === "TERMINE");
+  const tous = participations ?? [];
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      <div className="space-y-2">
-        <div className="flex items-start gap-3">
-          <div className="flex-1 space-y-0.5">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {LABEL_TYPE[evenement.type] ?? evenement.type}
-            </p>
-            <h1 className="text-3xl font-bold text-foreground font-display">{evenement.titre}</h1>
-          </div>
-          <Statut libelle={STATUT_EVENEMENT[evenement.statut]} />
-        </div>
-        {evenement.description && (
-          <p className="text-sm text-muted-foreground">{evenement.description}</p>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
-        <div className="flex items-center gap-3 text-sm">
-          <Calendar className="size-4 text-muted-foreground shrink-0" />
-          <span>
-            {new Date(evenement.dateHeureDebut).toLocaleDateString("fr-FR", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <Clock className="size-4 text-muted-foreground shrink-0" />
-          <span>
-            {new Date(evenement.dateHeureDebut).toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-            {" - "}
-            {new Date(evenement.dateHeureFin).toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
-        {evenement.lieuAdresseFormatee && (
-          <div className="flex items-center gap-3 text-sm">
-            <MapPin className="size-4 text-muted-foreground shrink-0" />
-            <span>{evenement.lieuAdresseFormatee}</span>
-          </div>
-        )}
-        {evenement.lieuLatitude != null && evenement.lieuLongitude != null && (
-          <CarteEmplacement
-            lieu={{
-              latitude: evenement.lieuLatitude,
-              longitude: evenement.lieuLongitude,
-              adresseFormatee: evenement.lieuAdresseFormatee,
-            }}
-            interactive={true}
-          />
-        )}
-        {evenement.aBesoiNStaff && (
-          <div className="flex items-center gap-3 text-sm">
-            <UserCheck className="size-4 text-muted-foreground shrink-0" />
-            <span>
-              Staff : {evenement.nbStaff}
-              {evenement.capaciteStaff ? ` / ${evenement.capaciteStaff}` : ""} bénévoles
-            </span>
-          </div>
-        )}
-        {evenement.ouvertParticipants && (
-          <div className="flex items-center gap-3 text-sm">
-            <Users className="size-4 text-muted-foreground shrink-0" />
-            <span>
-              Participants : {evenement.nbParticipants}
-              {evenement.capaciteParticipants ? ` / ${evenement.capaciteParticipants}` : ""}
-              {evenement.publicParticipants ? ` (${evenement.publicParticipants.toLowerCase()})` : ""}
-            </span>
-          </div>
-        )}
-        {evenement.modeInscription && (
-          <div className="flex items-center gap-3 text-sm">
-            <ClipboardList className="size-4 text-muted-foreground shrink-0" />
-            <span>
-              Mode : {evenement.modeInscription === "OBLIGATOIRE"
-                ? "Inscription obligatoire"
-                : evenement.modeInscription === "LIBRE"
-                  ? "Inscription libre"
-                  : "Sans inscription"}
-            </span>
-          </div>
-        )}
-        {evenement.raisonAnnulation && (
-          <div className="rounded-xl bg-destructive/8 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-            Raison : {evenement.raisonAnnulation}
-          </div>
-        )}
-      </div>
-
-      <EvenementActions
-        evenementId={evenement.id}
-        statut={evenement.statut}
-        aBesoiNStaff={evenement.aBesoiNStaff}
-        ouvertParticipants={evenement.ouvertParticipants}
-        modeInscription={evenement.modeInscription}
-        estGestionnaire={estGestionnaire}
-        estResponsable={estResponsable(me?.roles ?? [])}
-        estBenevole={estBenevole}
-        estBeneficiaire={estBeneficiaire}
-        dejaInscrit={dejaInscrit}
+    <div className="flex max-w-3xl flex-col gap-6">
+      <PageHeader
+        className="mb-0 sm:mb-0"
+        retour={{ href: "/evenements", libelle: "Événements" }}
+        surtitre={TYPE_EVENEMENT[evenement.type]}
+        titre={evenement.titre}
+        description={`${capitale(dateLongue(date))}, ${plage}.`}
+        actions={
+          gestion && (
+            <ActionsEvenement
+              evenementId={id}
+              statut={evenement.statut}
+              modeInscription={evenement.modeInscription}
+              estResponsable={estResponsable(roles)}
+              nbInscrits={evenement.nbStaff + evenement.nbParticipants}
+            />
+          )
+        }
       />
+
+      {evenement.statut === "ANNULE" ? (
+        <Alert variant="destructive">
+          <AlertTitle>Événement annulé</AlertTitle>
+          {evenement.raisonAnnulation && <AlertDescription>{evenement.raisonAnnulation}</AlertDescription>}
+        </Alert>
+      ) : (
+        gestion && etape !== null && <Rail etapes={ETAPES_ACTIVITE} courante={etape} libelle="Cycle de l'événement" />
+      )}
+
+      {!gestion && (
+        <ParticipationEvenement
+          evenementId={id}
+          monRole={maParticipation?.role ?? null}
+          places={maParticipation ? [] : placesOuvertes(evenement, roles)}
+        />
+      )}
+
+      {evenement.description && <p className="text-base whitespace-pre-line text-foreground">{evenement.description}</p>}
+
+      {evenement.lieuAdresseFormatee && (
+        <section aria-label="Lieu" className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-base text-foreground">{evenement.lieuAdresseFormatee}</span>
+              {itineraire && (
+                <a href={itineraire} target="_blank" rel="noopener noreferrer" className="w-fit font-semibold text-primary underline underline-offset-4">
+                  Itinéraire
+                </a>
+              )}
+            </div>
+          </div>
+          {evenement.lieuLatitude != null && evenement.lieuLongitude != null && (
+            <PlanDepliable lieu={{ latitude: evenement.lieuLatitude, longitude: evenement.lieuLongitude, adresseFormatee: evenement.lieuAdresseFormatee }} />
+          )}
+        </section>
+      )}
+
+      <section aria-labelledby="titre-organisation" className="flex flex-col gap-4">
+        <h2 id="titre-organisation" className="font-display text-xl font-bold text-foreground">
+          Organisation
+        </h2>
+        <p className="text-base text-muted-foreground">
+          <span className="font-semibold text-foreground">{mode.libelle}.</span> {mode.consequence}
+        </p>
+        {evenement.aBesoiNStaff && <Remplissage libelle="Équipe" nombre={evenement.nbStaff} capacite={evenement.capaciteStaff} />}
+        {evenement.ouvertParticipants && (
+          <>
+            <Remplissage libelle="Participants" nombre={evenement.nbParticipants} capacite={evenement.capaciteParticipants} />
+            {evenement.publicParticipants && (
+              <p className="text-base text-muted-foreground">Ouvert à : {PUBLIC_CIBLE[evenement.publicParticipants].toLowerCase()}.</p>
+            )}
+          </>
+        )}
+      </section>
+
+      {gestion && (
+        <section aria-labelledby="titre-inscrits" className="flex flex-col gap-4">
+          <h2 id="titre-inscrits" className="font-display text-xl font-bold text-foreground">
+            Inscrits
+          </h2>
+          {tous.length === 0 ? (
+            <p className="text-base text-muted-foreground">Personne pour l&apos;instant.</p>
+          ) : (
+            <>
+              <Inscrits titre="Équipe" liste={tous.filter((p) => p.role === "STAFF")} avecPresence={avecPresence} />
+              <Inscrits titre="Participants" liste={tous.filter((p) => p.role === "PARTICIPANT")} avecPresence={avecPresence} />
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }

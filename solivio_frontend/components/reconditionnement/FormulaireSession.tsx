@@ -9,24 +9,28 @@ import { z } from "zod";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { FormField } from "@/components/ui/form-field";
+import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
+import { SectionFormulaire } from "@/components/shared/SectionFormulaire";
+import { messageErreur } from "@/lib/erreurs";
 import { creerSession } from "@/lib/api/reconditionnement";
 import type { LieuRequest } from "@/types/distribution";
 
 const schema = z
   .object({
-    titre: z.string().min(1, "Le titre est requis").max(200),
+    titre: z.string().min(1, "Donnez un titre à la session.").max(200),
     description: z.string().optional(),
-    dateHeureDebut: z.string().min(1, "La date/heure de début est requise"),
-    dateHeureFin: z.string().min(1, "La date/heure de fin est requise"),
+    dateHeureDebut: z.string().min(1, "Indiquez le début."),
+    dateHeureFin: z.string().min(1, "Indiquez la fin."),
     capacite: z.string().optional(),
   })
   .refine(
     (d) =>
       !d.dateHeureDebut || !d.dateHeureFin || d.dateHeureFin > d.dateHeureDebut,
-    { message: "La fin doit être après le début", path: ["dateHeureFin"] },
+    { message: "La fin doit venir après le début.", path: ["dateHeureFin"] },
   );
 
 type FormValues = z.infer<typeof schema>;
@@ -67,92 +71,57 @@ export function FormulaireSession() {
             : undefined,
       });
       router.push(`/reconditionnement/${session.id}`);
-    } catch (e: unknown) {
-      const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
+    } catch (e) {
+      setErreur(messageErreur(e, "La session n'a pas pu être créée. Réessayez dans un instant."));
     }
   }
 
   const form = (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {erreur && (
-        <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {erreur}
-        </p>
-      )}
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex max-w-2xl flex-col gap-6">
+      <SectionFormulaire titre="La session">
+        <FormField label="Titre" htmlFor="titre" required error={errors.titre?.message}>
+          <Input id="titre" {...register("titre")} />
+        </FormField>
+        <FormField label="Description" htmlFor="description" hint="Ce qui sera fait, ce qu'il faut apporter.">
+          <Textarea id="description" rows={3} {...register("description")} />
+        </FormField>
+      </SectionFormulaire>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="titre">Titre *</Label>
-        <Input id="titre" {...register("titre")} placeholder="Tri et reconditionnement printemps" />
-        {errors.titre && (
-          <p className="text-xs text-destructive">{errors.titre.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
-        <textarea
-          id="description"
-          {...register("description")}
-          rows={3}
-          placeholder="Informations complémentaires..."
-          className="flex w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="dateHeureDebut">Date et heure de début *</Label>
-          <Input
-            id="dateHeureDebut"
-            type="datetime-local"
-            {...register("dateHeureDebut")}
-          />
-          {errors.dateHeureDebut && (
-            <p className="text-xs text-destructive">{errors.dateHeureDebut.message}</p>
-          )}
+      <SectionFormulaire titre="Quand et où">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Début" htmlFor="dateHeureDebut" required error={errors.dateHeureDebut?.message}>
+            <Input id="dateHeureDebut" type="datetime-local" {...register("dateHeureDebut")} />
+          </FormField>
+          <FormField label="Fin" htmlFor="dateHeureFin" required error={errors.dateHeureFin?.message}>
+            <Input id="dateHeureFin" type="datetime-local" {...register("dateHeureFin")} />
+          </FormField>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="dateHeureFin">Date et heure de fin *</Label>
-          <Input
-            id="dateHeureFin"
-            type="datetime-local"
-            {...register("dateHeureFin")}
-          />
-          {errors.dateHeureFin && (
-            <p className="text-xs text-destructive">{errors.dateHeureFin.message}</p>
-          )}
-        </div>
-      </div>
+        <FormField label="Lieu">
+          <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} placeholder="Rechercher une adresse" />
+        </FormField>
+      </SectionFormulaire>
 
-      <div className="space-y-1.5">
-        <Label>Lieu</Label>
-        <AdresseAutocomplete
-          value={lieu?.adresseFormatee}
-          onSelect={setLieu}
-          onClear={() => setLieu(undefined)}
-        />
-      </div>
+      <SectionFormulaire titre="Places">
+        <FormField
+          label="Nombre de places"
+          htmlFor="capacite"
+          error={errors.capacite?.message}
+          hint="Facultatif. Une fois atteint, les inscriptions sont refusées : pas de liste d'attente."
+        >
+          <Input id="capacite" type="number" inputMode="numeric" min="1" {...register("capacite")} className="w-32" />
+        </FormField>
+      </SectionFormulaire>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="capacite">Nombre de places (optionnel)</Label>
-        <Input
-          id="capacite"
-          type="number"
-          min="1"
-          {...register("capacite")}
-          placeholder="20"
-          className="max-w-[180px]"
-        />
-        {errors.capacite && (
-          <p className="text-xs text-destructive">{errors.capacite.message}</p>
-        )}
+      {erreur && <Alert variant="destructive">{erreur}</Alert>}
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button type="button" variant="ghost" onClick={() => router.back()}>
+          Annuler
+        </Button>
+        <Button type="submit" size="lg" disabled={isSubmitting}>
+          {isSubmitting && <Spinner size="sm" />}
+          Créer le brouillon
+        </Button>
       </div>
-
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? <Spinner size="sm" className="mr-2" /> : null}
-        Créer la session
-      </Button>
     </form>
   );
 

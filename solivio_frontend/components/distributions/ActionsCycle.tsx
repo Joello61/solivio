@@ -16,10 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { FeuilleAnnulation } from "@/components/shared/FeuilleAnnulation";
 import {
   annulerDemarrageDistribution,
   annulerDistribution,
@@ -79,7 +77,6 @@ export function ActionsCycle({ distributionId, statut, date, aujourdhui, nbInscr
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation>(null);
   const [annulation, setAnnulation] = useState(false);
-  const [motif, setMotif] = useState("");
   const pointage = `/distributions/${distributionId}/pointage`;
 
   async function executer(action: ActionCycle, appel: () => Promise<unknown>, apres?: () => void) {
@@ -224,39 +221,27 @@ export function ActionsCycle({ distributionId, statut, date, aujourdhui, nbInscr
         </DialogContent>
       </Dialog>
 
-      <Sheet open={annulation} onOpenChange={setAnnulation}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Annuler la distribution</SheetTitle>
-            <SheetDescription>
-              {nbInscrits > 0
-                ? `Les ${nbInscrits} personnes inscrites ou en attente seront prévenues par email, avec le motif.`
-                : "Personne n'est encore inscrit. Le motif reste visible sur la distribution."}
-            </SheetDescription>
-          </SheetHeader>
-          <FormField label="Motif" htmlFor="motif-annulation" required hint="Par exemple : livraison de denrées reportée.">
-            <Textarea id="motif-annulation" rows={3} value={motif} onChange={(e) => setMotif(e.target.value)} />
-          </FormField>
-          <p className="text-base text-muted-foreground">
+      <FeuilleAnnulation
+        ouvert={annulation}
+        onOpenChange={setAnnulation}
+        objet="la distribution"
+        consequence={
+          nbInscrits > 0
+            ? `Les ${nbInscrits} personnes inscrites ou en attente seront prévenues par email, avec le motif.`
+            : "Personne n'est encore inscrit. Le motif reste visible sur la distribution."
+        }
+        exemple="livraison de denrées reportée."
+        aide={
+          <>
             Une annulation par erreur se rattrape tant que la date n&apos;est pas passée : &quot;Réactiver&quot; rétablit les
             inscriptions.
-          </p>
-          {erreur && <Alert variant="destructive">{erreur}</Alert>}
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
-            <Button
-              variant="destructive-solid"
-              disabled={!motif.trim() || enCours !== null}
-              onClick={() => executer("annuler", () => annulerDistribution(distributionId, motif.trim()))}
-            >
-              {enCours === "annuler" && <Spinner size="sm" />}
-              Annuler la distribution
-            </Button>
-            <Button variant="outline" onClick={() => setAnnulation(false)}>
-              Garder la distribution
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </>
+        }
+        onConfirmer={async (motif) => {
+          await annulerDistribution(distributionId, motif);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

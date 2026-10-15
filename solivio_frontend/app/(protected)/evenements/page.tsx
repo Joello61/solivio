@@ -1,108 +1,85 @@
-import Link from "next/link";
-import { lireMoi, lireServeur } from "@/lib/api/serveur";
-import { estResponsable } from "@/lib/roles";
 import type { Metadata } from "next";
-import { Plus, CalendarDays } from "lucide-react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { ListeActivites, type LigneActivite } from "@/components/activites/ListeActivites";
 import { buttonVariants } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { EvenementCard } from "@/components/evenement/EvenementCard";
+import {
+  SECTIONS_ACTIVITE,
+  TYPE_EVENEMENT,
+  quandActivite,
+  sectionActivite,
+  trierActivites,
+  type SectionActivite,
+} from "@/lib/activites";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { STATUT_EVENEMENT } from "@/lib/libelles";
+import { estResponsable } from "@/lib/roles";
 import type { EvenementResponse } from "@/types/evenement";
 
 export const metadata: Metadata = { title: "Événements" };
 
-const FILTRES = [
-  { label: "Tous", statut: "" },
-  { label: "Publies", statut: "PUBLIE" },
-  { label: "En cours", statut: "EN_COURS" },
-  { label: "Termines", statut: "TERMINE" },
-  { label: "Brouillons", statut: "BROUILLON" },
-] as const;
+function equipe(e: EvenementResponse): string | null {
+  if (!e.aBesoiNStaff) return null;
+  return e.capaciteStaff ? `équipe ${e.nbStaff} sur ${e.capaciteStaff}` : `équipe de ${e.nbStaff}`;
+}
 
-async function fetchData(statut: string, type: string) {
-  const qs = new URLSearchParams();
-  if (statut) qs.set("statut", statut);
-  if (type) qs.set("type", type);
-  const [evenements, me] = await Promise.all([
-    lireServeur<EvenementResponse[]>(`/api/evenements?${qs}`),
+function participants(e: EvenementResponse): string | null {
+  if (!e.ouvertParticipants) return null;
+  const n = `${e.nbParticipants} participant${e.nbParticipants > 1 ? "s" : ""}`;
+  return e.capaciteParticipants ? `${n} sur ${e.capaciteParticipants}` : n;
+}
+
+function ligne(e: EvenementResponse): LigneActivite {
+  const { date, plage } = quandActivite(e.dateHeureDebut, e.dateHeureFin);
+  return {
+    id: e.id,
+    href: `/evenements/${e.id}`,
+    date,
+    titre: e.titre,
+    details: [`${TYPE_EVENEMENT[e.type]}, ${plage}`, [equipe(e), participants(e)].filter(Boolean).join(", ") || null],
+    statut: STATUT_EVENEMENT[e.statut],
+  };
+}
+
+export default async function EvenementsPage({ searchParams }: { searchParams: Promise<{ section?: string }> }) {
+  const [{ section }, me, evenements] = await Promise.all([
+    searchParams,
     lireMoi(),
+    lireServeur<EvenementResponse[]>("/api/evenements"),
   ]);
-  return { evenements: evenements ?? [], me };
-}
-
-interface Props {
-  searchParams: Promise<{ statut?: string; type?: string }>;
-}
-
-export default async function EvenementsPage({ searchParams }: Props) {
-  const { statut = "", type = "" } = await searchParams;
-  const { evenements, me } = await fetchData(statut, type);
-
-  const estGestionnaire =
-    me?.roles.some((r) => ["coordinateur", "responsable", "super_admin"].includes(r)) ??
-    false;
-
-  // La creation est reservee aux responsables (backend).
-  const peutCreer = estResponsable(me?.roles ?? []);
+  const roles = me?.roles ?? [];
+  const maintenant = new Date();
+  const gestion = estGestionnaireDistribution(roles);
+  // Un membre ne voit ni les brouillons ni les annulations.
+  const visibles = (evenements ?? []).filter((e) => gestion || (e.statut !== "BROUILLON" && e.statut !== "ANNULE"));
+  const sections = SECTIONS_ACTIVITE.filter((s) => gestion || s.valeur === "a-venir" || s.valeur === "passees").map((s) => ({
+    ...s,
+    lignes: trierActivites(
+      visibles.filter((e) => sectionActivite(e, maintenant) === s.valeur),
+      s.valeur,
+      (e) => e.dateHeureDebut,
+    ).map(ligne),
+  }));
+  const aVenir = sections.find((s) => s.valeur === "a-venir")?.lignes.length ?? 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground font-display">Événements</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {estGestionnaire
-              ? "Gérez et suivez tous les événements de l'association."
-              : "Consultez et inscrivez-vous aux événements disponibles."}
-          </p>
-        </div>
-        {peutCreer && (
-          <Link href="/evenements/nouveau" className={buttonVariants({ size: "sm" })}>
-            <Plus className="mr-2 size-4" />
+    <ListeActivites<SectionActivite>
+      titre="Événements"
+      description={aVenir ? `${aVenir} événement${aVenir > 1 ? "s" : ""} à venir.` : "Aucun événement à venir."}
+      actions={
+        estResponsable(roles) && (
+          <Link href="/evenements/nouveau" className={buttonVariants()}>
+            <Plus aria-hidden="true" />
             Nouvel événement
           </Link>
-        )}
-      </div>
-
-      <div className="flex gap-2 flex-wrap">
-        {FILTRES.map((f) => (
-          <Link
-            key={f.label}
-            href={`/evenements${f.statut ? `?statut=${f.statut}` : ""}${type ? `${f.statut ? "&" : "?"}type=${type}` : ""}`}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              statut === f.statut
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {f.label}
-          </Link>
-        ))}
-      </div>
-
-      {evenements.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
-          <EmptyState
-            icon={CalendarDays}
-            title="Aucun événement"
-            description={
-              estGestionnaire
-                ? "Aucun événement n'a été créé. Commencez par en créer un."
-                : "Aucun événement n'est disponible pour le moment."
-            }
-            action={
-              peutCreer
-                ? { label: "Créer un événement", href: "/evenements/nouveau" }
-                : undefined
-            }
-          />
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {evenements.map((e) => (
-            <EvenementCard key={e.id} evenement={e} />
-          ))}
-        </div>
-      )}
-    </div>
+        )
+      }
+      sections={sections}
+      section={(section as SectionActivite) ?? "a-venir"}
+      defaut="a-venir"
+      vide="Rien dans cette section."
+      libelleFiltre="Événements à afficher"
+    />
   );
 }

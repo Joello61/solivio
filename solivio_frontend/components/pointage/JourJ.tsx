@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
 import { MutationObserver, useMutationState, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, Check, CloudOff, RotateCcw, Undo2, UserX, X } from "lucide-react";
-import { ActionMenu } from "@/components/ui/action-menu";
+import { CloudOff } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { SearchField } from "@/components/ui/search-field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { AjoutEquipe } from "@/components/pointage/AjoutEquipe";
+import { EnteteJourJ } from "@/components/pointage/EnteteJourJ";
+import { LignePointable } from "@/components/pointage/LignePointable";
 import { ClotureJourJ } from "@/components/pointage/ClotureJourJ";
 import { Visiteurs } from "@/components/pointage/Visiteurs";
 import { horaire } from "@/lib/agenda";
@@ -27,7 +27,6 @@ import {
   type LignePointage,
   type PresencePointee,
 } from "@/lib/pointage";
-import { cn } from "@/lib/utils";
 import type { InscriptionResponse, PointageAdHocResponse, PointageInfoResponse } from "@/types/distribution";
 
 // Les pointages des autres benevoles apparaissent sans recharger la page.
@@ -159,41 +158,14 @@ export function JourJ({ distributionId, jour, fuseau = "Europe/Paris", peutGerer
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-30 flex flex-col gap-3 bg-foreground px-4 pt-2.5 pb-4 text-background sm:px-6 dark:border-b dark:border-border dark:bg-card dark:text-foreground">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
-          <Link
-            href={`/distributions/${distributionId}`}
-            className="-ml-2 inline-flex h-11 items-center gap-1.5 rounded-lg px-2 text-base font-semibold hover:bg-current/10"
-          >
-            <X aria-hidden="true" className="size-5" />
-            Quitter
-          </Link>
-          <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-accent px-3 text-sm font-bold text-accent-foreground">
-            <span aria-hidden="true" className="size-2 rounded-full bg-accent-foreground" />
-            {close ? "Clos" : "Jour J"}
-          </span>
-        </div>
-        <div className="mx-auto flex w-full max-w-3xl items-end justify-between gap-3">
-          <div>
-            <p className="text-sm opacity-75">{jour}</p>
-            <p aria-live="polite" className="flex items-baseline gap-2">
-              <span className="font-display text-5xl leading-none font-extrabold tabular-nums">{presents}</span>
-              <span className="text-lg opacity-80">
-                présent{presents > 1 ? "s" : ""} sur {beneficiaires.length}
-              </span>
-            </p>
-          </div>
-          <p className="font-mono text-sm opacity-80 tabular-nums">
-            {equipePresente} bénévole{equipePresente > 1 ? "s" : ""}
-          </p>
-        </div>
-        <div aria-hidden="true" className="mx-auto h-2 w-full max-w-3xl overflow-hidden rounded-full bg-current/20">
-          <div
-            className="h-full rounded-full bg-accent transition-[width] duration-200 motion-reduce:transition-none"
-            style={{ width: `${beneficiaires.length ? (presents / beneficiaires.length) * 100 : 0}%` }}
-          />
-        </div>
-      </header>
+      <EnteteJourJ
+        quitter={`/distributions/${distributionId}`}
+        pastille={close ? "Clos" : "Jour J"}
+        intitule={jour}
+        presents={presents}
+        attendus={beneficiaires.length}
+        complement={`${equipePresente} bénévole${equipePresente > 1 ? "s" : ""}`}
+      />
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-3 px-4 pt-3 pb-28 sm:px-6">
         {close && (
@@ -272,7 +244,15 @@ export function JourJ({ distributionId, jour, fuseau = "Europe/Paris", peutGerer
               )}
               <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
                 {g.lignes.map((l) => (
-                  <LigneJourJ key={l.inscriptionId} ligne={l} onPointer={(p) => pointerLigne(l, p)} />
+                  <LignePointable
+                    key={l.inscriptionId}
+                    titre={`${l.nom} ${l.prenom}`}
+                    nom={`${l.prenom} ${l.nom}`}
+                    presence={l.presence as PresencePointee}
+                    etat={l.etat}
+                    onPointer={(p) => pointerLigne(l, p)}
+                    onReessayer={() => l.derniereDemande && pointerLigne(l, l.derniereDemande)}
+                  />
                 ))}
               </ul>
             </section>
@@ -284,82 +264,5 @@ export function JourJ({ distributionId, jour, fuseau = "Europe/Paris", peutGerer
         {peutGerer && !close && <ClotureJourJ distributionId={distributionId} nonPointes={aPointer.length} />}
       </div>
     </div>
-  );
-}
-
-function EtatEnvoi({ ligne, onReessayer }: { ligne: LignePointage; onReessayer: () => void }) {
-  if (ligne.etat === "envoi") {
-    return (
-      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-        <Spinner size="sm" className="size-3" /> Envoi
-      </span>
-    );
-  }
-  if (ligne.etat === "attente") {
-    return (
-      <span className="inline-flex items-center gap-1 text-sm font-semibold text-warning">
-        <CloudOff aria-hidden="true" className="size-4" /> En attente d&apos;envoi
-      </span>
-    );
-  }
-  if (ligne.etat === "echec") {
-    return (
-      <button
-        type="button"
-        onClick={onReessayer}
-        className="inline-flex min-h-9 w-fit items-center gap-1 rounded-full border border-destructive/40 px-3 text-sm font-semibold text-destructive"
-      >
-        <AlertTriangle aria-hidden="true" className="size-4" /> Échec, réessayer
-        <RotateCcw aria-hidden="true" className="size-3.5" />
-      </button>
-    );
-  }
-  return null;
-}
-
-/*
- * Toucher la ligne marque present : c'est le geste du jour J. "Absent" et le
- * retour a "a pointer" passent par le menu, puisque les non-pointes deviennent
- * absents a la cloture (RG4).
- */
-function LigneJourJ({ ligne, onPointer }: { ligne: LignePointage; onPointer: (presence: PresencePointee) => void }) {
-  const present = ligne.presence === "PRESENT";
-  const absent = ligne.presence === "ABSENT";
-  const nom = `${ligne.prenom} ${ligne.nom}`;
-  const actions = [
-    ...(absent ? [] : [{ label: "Marquer absent", icon: UserX, onClick: () => onPointer("ABSENT") }]),
-    ...(ligne.presence === "NON_POINTE" ? [] : [{ label: "Remettre à pointer", icon: Undo2, onClick: () => onPointer("NON_POINTE") }]),
-  ];
-
-  return (
-    <li className={cn("flex items-center", present && "bg-secondary")}>
-      <button
-        type="button"
-        aria-pressed={present}
-        aria-label={`Marquer ${nom} présent`}
-        onClick={() => !present && onPointer("PRESENT")}
-        className="flex min-h-15 min-w-0 flex-1 items-center gap-3 py-2 pr-2 pl-4 text-left focus-visible:-outline-offset-2"
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-full border-2",
-            present ? "border-primary bg-primary text-primary-foreground" : "border-input",
-          )}
-        >
-          {present && <Check className="size-5" strokeWidth={3} />}
-        </span>
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate text-lg font-semibold text-foreground">
-            {ligne.nom} {ligne.prenom}
-          </span>
-          {absent && !ligne.etat && <span className="text-sm text-muted-foreground">Absent</span>}
-        </span>
-      </button>
-      <div className="flex shrink-0 items-center gap-1 pr-2">
-        <EtatEnvoi ligne={ligne} onReessayer={() => ligne.derniereDemande && onPointer(ligne.derniereDemande)} />
-        <ActionMenu items={actions} label={`Plus d'actions pour ${nom}`} className="border-transparent bg-transparent text-muted-foreground" />
-      </div>
-    </li>
   );
 }

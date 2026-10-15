@@ -15,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
 import { GenerateurCreneaux } from "@/components/distributions/GenerateurCreneaux";
+import { SectionFormulaire } from "@/components/shared/SectionFormulaire";
 import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
 import { lireCleGoogleMaps } from "@/lib/api/config";
 import { dateLongue, horaire, libellePlaces } from "@/lib/agenda";
@@ -67,15 +68,6 @@ function valeursDepuis(d: DistributionResponse, copie: { date: string } | null):
       capacite: c.capacite,
     })),
   };
-}
-
-function Section({ titre, children }: { titre: string; children: React.ReactNode }) {
-  return (
-    <fieldset className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:p-6">
-      <legend className="float-left mb-1 w-full font-display text-xl font-bold text-foreground">{titre}</legend>
-      {children}
-    </fieldset>
-  );
 }
 
 interface Props {
@@ -181,7 +173,7 @@ export function CreateDistributionForm({ distribution, modele, aujourdhui }: Pro
   return (
     <APIProvider apiKey={mapsApiKey} libraries={["places"]}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex max-w-2xl flex-col gap-6" noValidate>
-        <Section titre="Quand et où">
+        <SectionFormulaire titre="Quand et où">
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Date" htmlFor="date" required error={errors.date?.message}>
               <Input id="date" type="date" min={distribution ? undefined : aujourdhui} {...register("date")} />
@@ -199,9 +191,9 @@ export function CreateDistributionForm({ distribution, modele, aujourdhui }: Pro
           >
             <Input id="titre" {...register("titre")} />
           </FormField>
-        </Section>
+        </SectionFormulaire>
 
-        <Section titre="Créneaux">
+        <SectionFormulaire titre="Créneaux">
           <p className="text-base text-muted-foreground">
             {modeFige === "CRENEAU_UNIQUE"
               ? "Distribution publiée avec un seul créneau : on ne peut plus la découper."
@@ -272,9 +264,9 @@ export function CreateDistributionForm({ distribution, modele, aujourdhui }: Pro
               Ajouter un créneau
             </Button>
           )}
-        </Section>
+        </SectionFormulaire>
 
-        <Section titre="Capacités">
+        <SectionFormulaire titre="Capacités">
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               label="Bénéficiaires"
@@ -309,13 +301,13 @@ export function CreateDistributionForm({ distribution, modele, aujourdhui }: Pro
               />
             </FormField>
           </div>
-        </Section>
+        </SectionFormulaire>
 
-        <Section titre="Description">
+        <SectionFormulaire titre="Description">
           <FormField label="À savoir" htmlFor="description" hint="Ce qu'il faut apporter, comment trouver l'entrée. Facultatif.">
             <Textarea id="description" rows={3} {...register("description")} />
           </FormField>
-        </Section>
+        </SectionFormulaire>
 
         <section aria-labelledby="apercu" className="flex flex-col gap-2">
           <h2 id="apercu" className="font-display text-lg font-bold text-foreground">
