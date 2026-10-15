@@ -15,6 +15,9 @@ import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./b
 
 // Libelles du bouton selon le role et l'horaire choisi.
 const RESERVER = /réserver|je viens aider|venir à|liste d'attente/i;
+// Lien vers la fiche d'une distribution, hors creation, duplication et jour J.
+const CARTE_DISTRIBUTION =
+  "a[href^='/distributions/']:not([href^='/distributions/nouvelle']):not([href$='/pointage'])";
 
 test.describe("Parcours inscription beneficiaire", () => {
   // La base de test n'a pas de distribution : on en cree une, sinon les tests
@@ -31,7 +34,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    await expect(page.getByRole("heading", { name: /distributions/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /planning|agenda/i })).toBeVisible();
   });
 
   test("navigation vers le detail d'une distribution", async ({ page }) => {
@@ -44,7 +47,7 @@ test.describe("Parcours inscription beneficiaire", () => {
 
     // Si aucune distribution, le message "Aucune distribution" est affiche
     const aucuneDistrib = page.getByText(/aucune distribution/i);
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
 
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
@@ -67,7 +70,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -80,6 +83,9 @@ test.describe("Parcours inscription beneficiaire", () => {
 
     // Le bouton de reservation est present pour tout membre qui peut s'inscrire (le
     // coordinateur du test s'inscrit en benevole) sur une distribution publiee.
+    // Sur la feuille d'un gestionnaire, l'inscription comme benevole est repliee.
+    const venirAider = page.getByText("Venir aider sur cette distribution");
+    if (await venirAider.isVisible().catch(() => false)) await venirAider.click();
     const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
@@ -104,7 +110,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -115,6 +121,9 @@ test.describe("Parcours inscription beneficiaire", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
+    // Sur la feuille d'un gestionnaire, l'inscription comme benevole est repliee.
+    const venirAider = page.getByText("Venir aider sur cette distribution");
+    if (await venirAider.isVisible().catch(() => false)) await venirAider.click();
     const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
