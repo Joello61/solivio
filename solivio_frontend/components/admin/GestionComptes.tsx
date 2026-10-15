@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { Initiales } from "@/components/ui/initiales";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -181,12 +182,15 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
       header: "Utilisateur",
       sortable: true,
       cell: (c) => (
-        <button type="button" onClick={() => setOuvertId(c.id)} className="flex flex-col text-left hover:underline">
-          <span className="font-semibold text-foreground">
-            {c.nom} {c.prenom}
-            {c.id === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+        <button type="button" onClick={() => setOuvertId(c.id)} className="group flex items-center gap-3 text-left">
+          <Initiales prenom={c.prenom} nom={c.nom} />
+          <span className="flex flex-col">
+            <span className="font-semibold text-foreground group-hover:underline">
+              {c.nom} {c.prenom}
+              {c.id === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+            </span>
+            <span className="text-sm text-muted-foreground">{c.email}</span>
           </span>
-          <span className="text-sm text-muted-foreground">{c.email}</span>
         </button>
       ),
     },
