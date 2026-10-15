@@ -13,6 +13,7 @@ import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
+import com.solivio.api.shared.distribution.DistributionQueryPort.HoraireCreneau;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
@@ -43,6 +44,7 @@ public class InscriptionService {
 
     // Limite hebdomadaire si l'association n'en a pas configure (RG1).
     private static final int FREQUENCE_PAR_DEFAUT = 1;
+    static final String CODE_FREQUENCE_DEPASSEE = "FREQUENCY_LIMIT";
 
     private final InscriptionRepository inscriptionRepository;
     private final DistributionQueryPort distributionQueryPort;
@@ -429,7 +431,7 @@ public class InscriptionService {
     private void verifierFrequence(UUID personneId, DistributionQueryPort.DistributionInfo distrib) {
         if (frequenceDepassee(personneId, distrib)) {
             int maxParSemaine = frequenceMaxParSemaine();
-            throw new ConflictException(maxParSemaine == 1
+            throw new ConflictException(CODE_FREQUENCE_DEPASSEE, maxParSemaine == 1
                 ? "Vous etes deja inscrit(e) a une distribution cette semaine."
                 : "Vous etes deja inscrit(e) a " + maxParSemaine + " distributions cette semaine, "
                     + "la limite fixee par l'association.");
