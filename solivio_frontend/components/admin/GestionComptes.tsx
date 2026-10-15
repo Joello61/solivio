@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Search, AlertTriangle, Eraser, UserCheck, UserX, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ChevronRight } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,16 +13,19 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  changerStatutCompte,
-  changerSuperAdmin,
-  effacerDonneesCompteAdmin,
-  supprimerCompteAdmin,
-} from "@/lib/api/profil";
+import { Button } from "@/components/ui/button";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SearchField } from "@/components/ui/search-field";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Spinner } from "@/components/ui/spinner";
+import { Statut } from "@/components/ui/statut";
 import { DialogEffacementCompte } from "@/components/admin/DialogEffacementCompte";
+import { changerStatutCompte, changerSuperAdmin, effacerDonneesCompteAdmin, supprimerCompteAdmin } from "@/lib/api/profil";
+import { messageErreur } from "@/lib/erreurs";
 import { libelleRole } from "@/lib/roles";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 
@@ -42,596 +36,260 @@ interface Props {
   currentPage: number;
 }
 
-type DialogType = "actif" | "admin" | "supprimer" | "effacer" | null;
+type Filtre = "tous" | "desactives" | "admins";
+type Confirmation = "actif" | "admin" | "supprimer" | "effacer" | null;
 
-function getInitiales(prenom: string, nom: string): string {
-  return `${prenom[0] ?? ""}${nom[0] ?? ""}`.toUpperCase();
-}
+const DATE = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+const nomComplet = (c: CompteAdminResponse) => `${c.prenom} ${c.nom}`;
 
-// --- Carte mobile ---
+const CONFIRMATIONS: Record<Exclude<Confirmation, "effacer" | null>, (c: CompteAdminResponse) => { titre: string; texte: string; action: string; destructive?: boolean }> = {
+  actif: (c) =>
+    c.actif
+      ? { titre: "Désactiver le compte", texte: `${nomComplet(c)} ne pourra plus se connecter.`, action: "Désactiver" }
+      : { titre: "Réactiver le compte", texte: `${nomComplet(c)} pourra de nouveau se connecter.`, action: "Réactiver" },
+  admin: (c) =>
+    c.superAdmin
+      ? { titre: "Retirer les droits super admin", texte: `${nomComplet(c)} perdra l'accès à l'administration de Solivio.`, action: "Retirer" }
+      : { titre: "Accorder les droits super admin", texte: `${nomComplet(c)} aura accès à l'administration de Solivio.`, action: "Accorder" },
+  supprimer: (c) => ({
+    titre: "Supprimer le compte",
+    texte: `Le compte de ${nomComplet(c)} (${c.email}) sera supprimé définitivement. Cette action est irréversible.`,
+    action: "Supprimer définitivement",
+    destructive: true,
+  }),
+};
 
-function CarteCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
+/* Les actions sur un compte, dans une fiche : rien de destructeur dans la liste. */
+function FicheCompte({ compte, estSoi, onFermer }: { compte: CompteAdminResponse; estSoi: boolean; onFermer: () => void }) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
+  const [confirmation, setConfirmation] = useState<Confirmation>(null);
+  const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [dialogOuvert, setDialogOuvert] = useState<DialogType>(null);
 
-  const initiales = getInitiales(compte.prenom, compte.nom);
-
-  async function executer(fn: () => Promise<void>) {
-    setDialogOuvert(null);
-    setPending(true);
+  async function executer(appel: () => Promise<unknown>, succes: string, fermer = false) {
+    setConfirmation(null);
+    setEnCours(true);
     setErreur(null);
     try {
-      await fn();
+      await appel();
+      toast.success(succes);
       router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur.");
+      if (fermer) onFermer();
+    } catch (e) {
+      setErreur(messageErreur(e, "L'action n'a pas abouti. Réessayez dans un instant."));
     } finally {
-      setPending(false);
+      setEnCours(false);
     }
   }
 
-  return (
-    <>
-      <div
-        className={[
-          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
-          !compte.actif ? "opacity-50" : "",
-        ].join(" ")}
-      >
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
-            {initiales}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {compte.prenom} {compte.nom}
-              {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{compte.email}</p>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <Badge variant={compte.actif ? "default" : "destructive"} className="text-xs">
-                {compte.actif ? "Actif" : "Inactif"}
-              </Badge>
-              {compte.superAdmin && (
-                <Badge variant="secondary" className="text-xs">Super admin</Badge>
-              )}
-              {!compte.emailVerifie && (
-                <Badge variant="outline" className="text-xs text-warning border-warning/30">
-                  Email non vérifié
-                </Badge>
-              )}
-            </div>
-            {compte.role && (
-              <p className="text-xs text-muted-foreground mt-1.5">
-                {libelleRole(compte.role, compte.statutMembre)}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {erreur && <p className="text-xs text-destructive">{erreur}</p>}
-
-        <div className="pt-3 border-t border-border/60 flex flex-wrap gap-1">
-          {estSoi ? (
-            <p className="text-xs text-muted-foreground">Votre compte : aucune action possible ici.</p>
-          ) : pending ? (
-            <Spinner size="sm" />
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDialogOuvert("actif")}
-                className={compte.actif
-                  ? "text-warning hover:text-warning hover:bg-warning/10"
-                  : "text-primary hover:text-primary hover:bg-primary/10"
-                }
-              >
-                {compte.actif ? (
-                  <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
-                ) : (
-                  <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDialogOuvert("admin")}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {compte.superAdmin ? (
-                  <><ShieldOff className="h-3.5 w-3.5 mr-1" />Retirer admin</>
-                ) : (
-                  <><ShieldCheck className="h-3.5 w-3.5 mr-1" />Super admin</>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDialogOuvert("supprimer")}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Supprimer
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDialogOuvert("effacer")}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Eraser className="h-3.5 w-3.5 mr-1" />
-                Effacer les données
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <AlertDialog
-        open={dialogOuvert === "actif"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-warning/15">
-              <AlertTriangle className="text-warning" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              variant={compte.actif ? "outline" : "default"}
-              onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
-            >
-              {compte.actif ? "Désactiver" : "Réactiver"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "admin"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
-              {compte.superAdmin
-                ? <ShieldOff className="text-warning" />
-                : <ShieldCheck className="text-primary" />}
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {compte.superAdmin ? "Retirer les droits super admin" : "Accorder les droits super admin"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => executer(async () => { await changerSuperAdmin(compte.id, !compte.superAdmin); })}
-            >
-              Confirmer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "supprimer"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
-            <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
-              définitivement. Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
-            >
-              Supprimer définitivement
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <DialogEffacementCompte
-        compte={compte}
-        open={dialogOuvert === "effacer"}
-        onFermer={() => setDialogOuvert(null)}
-        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
-      />
-    </>
-  );
-}
-
-// --- Ligne desktop ---
-
-function LigneCompte({ compte, estSoi }: { compte: CompteAdminResponse; estSoi: boolean }) {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [dialogOuvert, setDialogOuvert] = useState<DialogType>(null);
-
-  const initiales = getInitiales(compte.prenom, compte.nom);
-
-  async function executer(fn: () => Promise<void>) {
-    setDialogOuvert(null);
-    setPending(true);
-    setErreur(null);
-    try {
-      await fn();
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur.");
-    } finally {
-      setPending(false);
-    }
-  }
+  const appels: Record<Exclude<Confirmation, "effacer" | null>, () => void> = {
+    actif: () => executer(() => changerStatutCompte(compte.id, !compte.actif), compte.actif ? "Compte désactivé." : "Compte réactivé."),
+    admin: () => executer(() => changerSuperAdmin(compte.id, !compte.superAdmin), "Droits mis à jour."),
+    supprimer: () => executer(() => supprimerCompteAdmin(compte.id), "Compte supprimé.", true),
+  };
+  const texte = confirmation && confirmation !== "effacer" ? CONFIRMATIONS[confirmation](compte) : null;
 
   return (
     <>
-      <tr className={`border-b border-border/60 last:border-0 transition-opacity ${!compte.actif ? "opacity-50" : ""}`}>
-        <td className="py-3.5 pr-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
-              {initiales}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{compte.prenom} {compte.nom}</p>
-              <p className="text-xs text-muted-foreground truncate">{compte.email}</p>
-            </div>
-          </div>
-          {erreur && <p className="text-xs text-destructive mt-1.5 ml-11">{erreur}</p>}
-        </td>
-
-        <td className="py-3.5 pr-4">
-          <div className="flex flex-wrap gap-1">
-            <Badge variant={compte.actif ? "default" : "destructive"}>
-              {compte.actif ? "Actif" : "Inactif"}
-            </Badge>
-            {compte.superAdmin && <Badge variant="secondary">Super admin</Badge>}
-            {!compte.emailVerifie && (
-              <Badge variant="outline" className="text-warning border-warning/30">
-                Email non vérifié
-              </Badge>
-            )}
-          </div>
-        </td>
-
-        <td className="py-3.5 pr-4 text-xs text-muted-foreground max-w-[160px]">
-          {compte.role
-            ? libelleRole(compte.role, compte.statutMembre)
-            : <span className="text-border">-</span>}
-        </td>
-
-        <td className="py-3.5">
-          <div className="flex items-center gap-1">
-            {estSoi ? (
-              <span className="text-xs text-muted-foreground px-2">Votre compte</span>
-            ) : pending ? (
-              <Spinner size="sm" className="mx-2" />
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDialogOuvert("actif")}
-                  className={compte.actif
-                    ? "text-warning hover:text-warning hover:bg-warning/10"
-                    : "text-primary hover:text-primary hover:bg-primary/10"
-                  }
-                >
-                  {compte.actif ? (
-                    <><UserX className="h-3.5 w-3.5 mr-1" />Désactiver</>
-                  ) : (
-                    <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDialogOuvert("admin")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  {compte.superAdmin ? (
-                    <><ShieldOff className="h-3.5 w-3.5 mr-1" />Retirer admin</>
-                  ) : (
-                    <><ShieldCheck className="h-3.5 w-3.5 mr-1" />Super admin</>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDialogOuvert("supprimer")}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1" />
-                  Supprimer
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDialogOuvert("effacer")}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Eraser className="h-3.5 w-3.5 mr-1" />
-                  Effacer les données
-                </Button>
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-
-      <AlertDialog
-        open={dialogOuvert === "actif"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-warning/15">
-              <AlertTriangle className="text-warning" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {compte.actif
-                ? `Le compte de ${compte.prenom} ${compte.nom} sera désactivé. L'utilisateur ne pourra plus se connecter.`
-                : `Le compte de ${compte.prenom} ${compte.nom} sera réactivé. L'utilisateur pourra à nouveau se connecter.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              variant={compte.actif ? "outline" : "default"}
-              onClick={() => executer(async () => { await changerStatutCompte(compte.id, !compte.actif); })}
-            >
-              {compte.actif ? "Désactiver" : "Réactiver"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "admin"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className={compte.superAdmin ? "bg-warning/15" : "bg-primary/10"}>
-              {compte.superAdmin
-                ? <ShieldOff className="text-warning" />
-                : <ShieldCheck className="text-primary" />}
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {compte.superAdmin ? "Retirer les droits super admin" : "Accorder les droits super admin"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {compte.superAdmin
-                ? `${compte.prenom} ${compte.nom} perdra l'accès à l'administration globale de la plateforme.`
-                : `${compte.prenom} ${compte.nom} aura accès à l'administration globale de Solivio.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => executer(async () => { await changerSuperAdmin(compte.id, !compte.superAdmin); })}
-            >
-              Confirmer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "supprimer"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer le compte</AlertDialogTitle>
-            <AlertDialogDescription>
-              Le compte de {compte.prenom} {compte.nom} ({compte.email}) sera supprimé
-              définitivement. Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => executer(() => supprimerCompteAdmin(compte.id))}
-            >
-              Supprimer définitivement
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <DialogEffacementCompte
-        compte={compte}
-        open={dialogOuvert === "effacer"}
-        onFermer={() => setDialogOuvert(null)}
-        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id))}
-      />
-    </>
-  );
-}
-
-// --- Composant principal ---
-
-export function GestionComptes({ page, currentUserId, recherche: rechercheInitiale, currentPage }: Props) {
-  const router = useRouter();
-  const [recherche, setRecherche] = useState(rechercheInitiale);
-  const [filtreStatut, setFiltreStatut] = useState("tous");
-  const [filtreAdmin, setFiltreAdmin] = useState("tous");
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (recherche) params.set("q", recherche);
-    params.set("page", "0");
-    router.push(`/admin/utilisateurs?${params}`);
-  }
-
-  function naviguerPage(p: number) {
-    const params = new URLSearchParams();
-    if (rechercheInitiale) params.set("q", rechercheInitiale);
-    params.set("page", String(p));
-    router.push(`/admin/utilisateurs?${params}`);
-  }
-
-  const filtres = useMemo(() => {
-    return page.content.filter((c) => {
-      if (filtreStatut === "actif" && !c.actif) return false;
-      if (filtreStatut === "inactif" && c.actif) return false;
-      if (filtreAdmin === "admin" && !c.superAdmin) return false;
-      if (filtreAdmin === "non-admin" && c.superAdmin) return false;
-      return true;
-    });
-  }, [page.content, filtreStatut, filtreAdmin]);
-
-  return (
-    <div className="space-y-4">
-      {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <form onSubmit={handleSearch} className="flex gap-2 w-full sm:max-w-sm">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Nom, prénom ou email..."
-                className="pl-8"
-              />
-            </div>
-            <Button type="submit" variant="outline">Rechercher</Button>
-          </form>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select items={{ tous: "Tous", actif: "Actif", inactif: "Inactif" }} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
-                <SelectTrigger className="flex-1 sm:w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="actif">Actif</SelectItem>
-                  <SelectItem value="inactif">Inactif</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Type</span>
-              <Select items={{ tous: "Tous", admin: "Super admin", "non-admin": "Non admin" }} value={filtreAdmin} onValueChange={(v) => { if (v) setFiltreAdmin(v); }}>
-                <SelectTrigger className="flex-1 sm:w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="admin">Super admin</SelectItem>
-                  <SelectItem value="non-admin">Non admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        {filtres.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {filtres.length} compte{filtres.length !== 1 ? "s" : ""}
-            {filtres.length !== page.content.length && ` sur ${page.content.length} sur cette page`}
-          </p>
-        )}
+      <SheetHeader>
+        <SheetTitle>{nomComplet(compte)}</SheetTitle>
+        <SheetDescription>
+          {compte.email}. Compte créé le {DATE.format(new Date(compte.dateCreation))}.
+        </SheetDescription>
+      </SheetHeader>
+      <div className="flex flex-wrap gap-2">
+        <Statut libelle={compte.actif ? { texte: "Actif", ton: "ouvert" } : { texte: "Désactivé", ton: "passe" }} />
+        {compte.superAdmin && <Statut libelle={{ texte: "Super admin", ton: "info" }} />}
+        {!compte.emailVerifie && <Statut libelle={{ texte: "Email non vérifié", ton: "attente" }} />}
       </div>
+      <p className="text-base text-foreground">{compte.role ? libelleRole(compte.role, compte.statutMembre) : "Aucun rôle dans l'association."}</p>
 
-      {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-muted px-6 py-12 text-center">
-          <p className="text-sm text-muted-foreground">Aucun compte trouvé.</p>
-        </div>
+      {estSoi ? (
+        <p className="text-base text-muted-foreground">C&apos;est votre compte : aucune action possible ici.</p>
       ) : (
         <>
-          {/* Vue mobile : cartes */}
-          <div className="space-y-3 lg:hidden">
-            {filtres.map((c) => (
-              <CarteCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
-            ))}
+          <div className="flex flex-col items-start gap-2">
+            <Button variant="outline" disabled={enCours} onClick={() => setConfirmation("actif")}>
+              {enCours && <Spinner size="sm" />}
+              {compte.actif ? "Désactiver le compte" : "Réactiver le compte"}
+            </Button>
+            <Button variant="outline" disabled={enCours} onClick={() => setConfirmation("admin")}>
+              {compte.superAdmin ? "Retirer les droits super admin" : "Accorder les droits super admin"}
+            </Button>
           </div>
-
-          {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60 bg-muted/80">
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Utilisateur</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Associations</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtres.map((c) => (
-                  <LigneCompte key={c.id} compte={c} estSoi={c.id === currentUserId} />
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-2 flex flex-col items-start gap-2 border-t border-border pt-4">
+            <p className="text-base text-muted-foreground">Pour une demande d&apos;effacement reçue hors de Solivio (RGPD), effacez les données plutôt que le seul compte.</p>
+            <Button variant="destructive" disabled={enCours} onClick={() => setConfirmation("effacer")}>
+              Effacer les données personnelles
+            </Button>
+            <Button variant="destructive" disabled={enCours} onClick={() => setConfirmation("supprimer")}>
+              Supprimer le compte
+            </Button>
           </div>
         </>
       )}
+      {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
-      {/* Pagination */}
-      {page.totalPages > 1 && (
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => naviguerPage(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            Précédent
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {currentPage + 1} / {page.totalPages}
+      <AlertDialog open={texte !== null} onOpenChange={(o) => !o && setConfirmation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{texte?.titre}</AlertDialogTitle>
+            <AlertDialogDescription>{texte?.texte}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
+            <AlertDialogAction
+              variant={texte?.destructive ? "destructive-solid" : "default"}
+              onClick={() => confirmation && confirmation !== "effacer" && appels[confirmation]()}
+            >
+              {texte?.action}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <DialogEffacementCompte
+        compte={compte}
+        open={confirmation === "effacer"}
+        onFermer={() => setConfirmation(null)}
+        onConfirmer={() => executer(() => effacerDonneesCompteAdmin(compte.id), "Données effacées.", true)}
+      />
+    </>
+  );
+}
+
+/* Tous les comptes de la plateforme, sur le motif des membres : liste, filtre, fiche. */
+export function GestionComptes({ page, currentUserId, recherche: rechercheInitiale, currentPage }: Props) {
+  const router = useRouter();
+  const chemin = usePathname();
+  const [recherche, setRecherche] = useState(rechercheInitiale);
+  const [filtre, setFiltre] = useState<Filtre>("tous");
+  const [ouvertId, setOuvertId] = useState<string | null>(null);
+
+  function aller(q: string, p: number) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (p > 0) params.set("page", String(p));
+    router.push(params.size ? `${chemin}?${params}` : chemin);
+  }
+
+  const comptes = page.content.filter((c) => (filtre === "desactives" ? !c.actif : filtre === "admins" ? c.superAdmin : true));
+  const ouvert = page.content.find((c) => c.id === ouvertId) ?? null;
+
+  const colonnes: ColumnDef<CompteAdminResponse>[] = [
+    {
+      key: "nom",
+      header: "Utilisateur",
+      sortable: true,
+      cell: (c) => (
+        <button type="button" onClick={() => setOuvertId(c.id)} className="flex flex-col text-left hover:underline">
+          <span className="font-semibold text-foreground">
+            {c.nom} {c.prenom}
+            {c.id === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => naviguerPage(currentPage + 1)}
-            disabled={currentPage >= page.totalPages - 1}
-          >
-            Suivant
+          <span className="text-sm text-muted-foreground">{c.email}</span>
+        </button>
+      ),
+    },
+    { key: "role", header: "Rôle", cell: (c) => (c.role ? libelleRole(c.role, c.statutMembre) : "-") },
+    {
+      key: "etat",
+      header: "État",
+      cell: (c) => (
+        <span className="flex flex-wrap gap-1.5">
+          {!c.actif && <Statut libelle={{ texte: "Désactivé", ton: "passe" }} />}
+          {c.superAdmin && <Statut libelle={{ texte: "Super admin", ton: "info" }} />}
+          {!c.emailVerifie && <Statut libelle={{ texte: "Email non vérifié", ton: "attente" }} />}
+        </span>
+      ),
+    },
+    {
+      key: "gerer",
+      header: "",
+      className: "text-right",
+      cell: (c) => (
+        <Button variant="ghost" size="sm" onClick={() => setOuvertId(c.id)} aria-label={`Gérer ${nomComplet(c)}`}>
+          Gérer
+        </Button>
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <SegmentedControl
+          label="Comptes à afficher"
+          value={filtre}
+          onValueChange={setFiltre}
+          options={[
+            { value: "tous", label: "Tous" },
+            { value: "desactives", label: "Désactivés" },
+            { value: "admins", label: "Super admins" },
+          ]}
+        />
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            aller(recherche.trim(), 0);
+          }}
+          className="flex gap-2 lg:w-96"
+        >
+          <SearchField label="Chercher un compte" placeholder="Nom, prénom ou email" value={recherche} onValueChange={setRecherche} className="flex-1" />
+          <Button type="submit" variant="outline">
+            Chercher
           </Button>
-        </div>
+        </form>
+      </div>
+
+      {comptes.length === 0 ? (
+        <EmptyState size="sm" title="Aucun compte trouvé" />
+      ) : (
+        <>
+          <DataTable
+            className="hidden md:block"
+            data={comptes}
+            columns={colonnes}
+            pageSize={50}
+            getRowKey={(c) => c.id}
+            sortKey={(c) => `${c.nom} ${c.prenom}`}
+          />
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card md:hidden">
+            {comptes.map((c) => (
+              <li key={c.id}>
+                <button type="button" onClick={() => setOuvertId(c.id)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold text-foreground">
+                      {c.nom} {c.prenom}
+                    </span>
+                    <span className="truncate text-sm text-muted-foreground">{c.email}</span>
+                  </span>
+                  {!c.actif && <Statut libelle={{ texte: "Désactivé", ton: "passe" }} />}
+                  <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
+
+      {page.totalPages > 1 && (
+        <nav aria-label="Pages" className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => aller(rechercheInitiale, currentPage - 1)} disabled={currentPage === 0}>
+            Précédente
+          </Button>
+          <span className="text-base text-muted-foreground tabular-nums">
+            Page {currentPage + 1} sur {page.totalPages}
+          </span>
+          <Button variant="outline" onClick={() => aller(rechercheInitiale, currentPage + 1)} disabled={currentPage >= page.totalPages - 1}>
+            Suivante
+          </Button>
+        </nav>
+      )}
+
+      <Sheet open={ouvert !== null} onOpenChange={(o) => !o && setOuvertId(null)}>
+        <SheetContent>{ouvert && <FicheCompte key={ouvert.id} compte={ouvert} estSoi={ouvert.id === currentUserId} onFermer={() => setOuvertId(null)} />}</SheetContent>
+      </Sheet>
     </div>
   );
 }
