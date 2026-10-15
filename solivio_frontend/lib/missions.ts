@@ -31,3 +31,17 @@ export function actionsMission({ statut, assigneAuLecteur, estGestionnaire, estB
   if ((estGestionnaire || assigneAuLecteur) && EN_COURS.includes(statut)) autres.push("annuler");
   return { principale, autres };
 }
+
+const FENETRE_MISSIONS_JOURS = 7;
+
+/* Missions encore libres dans la semaine qui vient : a signaler aux gestionnaires. */
+export function missionsNonPrises<T extends { statut: StatutMission; dateHeure: string }>(missions: T[], maintenant: Date): T[] {
+  const limite = maintenant.getTime() + FENETRE_MISSIONS_JOURS * 86_400_000;
+  return missions
+    .filter((m) => m.statut === "DISPONIBLE")
+    .filter((m) => {
+      const quand = Date.parse(m.dateHeure);
+      return quand >= maintenant.getTime() && quand <= limite;
+    })
+    .sort((a, b) => a.dateHeure.localeCompare(b.dateHeure));
+}
