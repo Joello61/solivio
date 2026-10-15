@@ -11,6 +11,13 @@ const isDev = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.1.162'],
   output: "standalone",
+  // Anciennes pages reunies dans Mes engagements : les liens et favoris restent valides.
+  async redirects() {
+    return [
+      { source: "/mes-evenements", destination: "/mes-inscriptions", permanent: true },
+      { source: "/mes-missions-collecte", destination: "/mes-inscriptions", permanent: true },
+    ];
+  },
   images: {
     unoptimized: isDev,
     remotePatterns: apiUrl
