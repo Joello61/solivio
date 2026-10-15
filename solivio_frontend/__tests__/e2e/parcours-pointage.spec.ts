@@ -37,8 +37,8 @@ test.describe("Parcours pointage", () => {
       const pageBeneficiaire = await contexteBeneficiaire.newPage();
       await seConnecter(pageBeneficiaire, BENEFICIAIRE);
       await pageBeneficiaire.goto(`/distributions/${id}`);
-      await pageBeneficiaire.getByRole("button", { name: "S'inscrire" }).click();
-      await expect(pageBeneficiaire.getByRole("button", { name: "Se désinscrire" })).toBeVisible();
+      await pageBeneficiaire.getByRole("button", { name: "Réserver ma place" }).click();
+      await expect(pageBeneficiaire.getByRole("button", { name: "Je ne peux plus venir" })).toBeVisible();
       await contexteBeneficiaire.close();
 
       // Le benevole s'inscrit, puis le coordinateur demarre la distribution.
