@@ -53,6 +53,7 @@ describe("ActionsCycle", () => {
     expect(screen.getByRole("dialog")).toHaveTextContent(/comptées absentes/);
     await userEvent.click(screen.getByRole("button", { name: "Clore la distribution" }));
     expect(api.terminerDistribution).toHaveBeenCalledWith("d1");
+    await waitFor(() => expect(routeur.push).toHaveBeenCalledWith("/distributions/d1?onglet=bilan"));
   });
 
   it("annule avec un motif obligatoire et rappelle que les inscrits sont prevenus", async () => {
