@@ -247,6 +247,10 @@ class SessionReconditionnementControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"motif\":\"Entrepot indisponible\"}"))
             .andExpect(status().isOk());
+        mockMvc.perform(get("/api/sessions-reconditionnement/mes-inscriptions")
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].sessionStatut").value("ANNULEE"));
 
         // Type de 36 caracteres : la trace echouait avant l'elargissement de la colonne (V13).
         await().atMost(15, TimeUnit.SECONDS).until(() -> jdbcTemplate.queryForObject(
