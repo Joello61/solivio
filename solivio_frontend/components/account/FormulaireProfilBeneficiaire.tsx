@@ -64,7 +64,7 @@ function SelectField({ id, label, value, onChange, options, placeholder = "Chois
 
 function Rubrique({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <fieldset className="flex flex-col gap-4 border-t border-border pt-5 first:border-t-0 first:pt-0">
+    <fieldset className="flex min-w-0 flex-col gap-4 border-t border-border pt-5 first:border-t-0 first:pt-0">
       <legend className="float-left mb-4 w-full font-display text-lg font-bold text-foreground">{titre}</legend>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
