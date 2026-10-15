@@ -13,6 +13,9 @@ import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./b
 // la base de donnees de test. Le rechargement SSR apres router.refresh() utilisera
 // la vraie base, mais on ne verifie pas l'etat persiste ici.
 
+// Libelles du bouton selon le role et l'horaire choisi.
+const RESERVER = /réserver|je viens aider|venir à|liste d'attente/i;
+
 test.describe("Parcours inscription beneficiaire", () => {
   // La base de test n'a pas de distribution : on en cree une, sinon les tests
   // qui partent de la liste seraient sautes, y compris en CI.
@@ -75,9 +78,9 @@ test.describe("Parcours inscription beneficiaire", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
-    // Le bouton S'inscrire est present pour tout membre qui peut s'inscrire (le
+    // Le bouton de reservation est present pour tout membre qui peut s'inscrire (le
     // coordinateur du test s'inscrit en benevole) sur une distribution publiee.
-    const boutonInscrire = page.getByRole("button", { name: /s'inscrire/i });
+    const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!visible) {
@@ -86,8 +89,11 @@ test.describe("Parcours inscription beneficiaire", () => {
     }
 
     // Inscription reelle sur la distribution creee pour le test (base de test).
-    await boutonInscrire.click();
-    await expect(page.getByRole("button", { name: /se désinscrire/i })).toBeVisible();
+    // Distribution decoupee : choisir le premier horaire.
+    const horaire = page.getByRole("radio").first();
+    if ((await horaire.count()) > 0) await horaire.check({ force: true });
+    await page.getByRole("button", { name: RESERVER }).click();
+    await expect(page.getByRole("button", { name: /je ne peux plus venir|quitter la liste/i })).toBeVisible();
   });
 
   test("erreur affichee si l'inscription echoue (distribution pleine)", async ({ page }) => {
@@ -109,7 +115,7 @@ test.describe("Parcours inscription beneficiaire", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
-    const boutonInscrire = page.getByRole("button", { name: /s'inscrire/i });
+    const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
     if (!visible) {
@@ -130,9 +136,11 @@ test.describe("Parcours inscription beneficiaire", () => {
       }
     });
 
-    await boutonInscrire.click();
+    const horaire = page.getByRole("radio").first();
+    if ((await horaire.count()) > 0) await horaire.check({ force: true });
+    await page.getByRole("button", { name: RESERVER }).click();
 
-    await expect(page.getByText(/liste d'attente|complete|impossible/i)).toBeVisible({
+    await expect(page.getByRole("alert").filter({ hasText: /liste d'attente|complete|impossible/i })).toBeVisible({
       timeout: 5_000,
     });
   });

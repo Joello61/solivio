@@ -18,10 +18,11 @@ interface PageHeaderProps {
 export function PageHeader({ titre, description, surtitre, retour, actions, className }: PageHeaderProps) {
   return (
     <header className={cn("mb-6 flex flex-col gap-4 sm:mb-8", className)}>
+      {/* Sur mobile, la barre du haut porte deja le retour. */}
       {retour && (
         <Link
           href={retour.href}
-          className="-ml-1 inline-flex w-fit items-center gap-1 rounded-md text-base font-semibold text-primary hover:underline"
+          className="-ml-1 hidden w-fit lg:inline-flex items-center gap-1 rounded-md text-base font-semibold text-primary hover:underline"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
           {retour.libelle}
