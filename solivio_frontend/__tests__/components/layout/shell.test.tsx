@@ -72,6 +72,12 @@ describe("TopBar", () => {
     render(<TopBar user={membre(["beneficiaire"])} />);
     expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute("href", "/distributions");
   });
+
+  it("ramene au compte depuis le dossier, hors du menu", () => {
+    chemin = "/mon-compte/profil-beneficiaire";
+    render(<TopBar user={membre(["beneficiaire"])} />);
+    expect(screen.getByText("Mon compte").closest("a")).toHaveAttribute("href", "/mon-compte");
+  });
 });
 
 describe("BottomNav", () => {
