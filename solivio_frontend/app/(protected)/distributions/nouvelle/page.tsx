@@ -1,44 +1,29 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import { CreateDistributionForm } from "@/components/distributions/CreateDistributionForm";
-import { FormInfoPanel } from "@/components/layout/FormInfoPanel";
+import { lireServeur } from "@/lib/api/serveur";
+import { dateLongue } from "@/lib/agenda";
+import { jourAssociation } from "@/lib/distribution-du-jour";
+import type { DistributionResponse } from "@/types/distribution";
 
 export const metadata: Metadata = { title: "Nouvelle distribution" };
 
-export default function NouvellePage() {
+export default async function NouvellePage({ searchParams }: { searchParams: Promise<{ depuis?: string }> }) {
+  const { depuis } = await searchParams;
+  const modele = depuis ? await lireServeur<DistributionResponse>(`/api/distributions/${depuis}`) : null;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">
-          Nouvelle distribution
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Remplissez les informations pour créer une nouvelle distribution.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
-        {/* Formulaire multi-step */}
-        <div>
-          <CreateDistributionForm />
-        </div>
-
-        {/* Panneau info - masqué sur mobile */}
-        <div className="hidden lg:block">
-          <FormInfoPanel
-            imageSrc="/images/forms/distribution.jpg"
-            imageAlt="Distribution alimentaire"
-            titre="Distribution alimentaire"
-            description="Une distribution est un événement planifié où des denrées ou articles sont remis aux bénéficiaires selon des créneaux horaires définis."
-            points={[
-              "Définissez la date et le lieu de la distribution",
-              "Fixez la capacité bénéficiaires et bénévoles",
-              "Créez un ou plusieurs créneaux horaires",
-              "Les bénéficiaires peuvent s'inscrire sur un créneau",
-              "Le pointage est disponible le jour J",
-            ]}
-          />
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        retour={{ href: "/distributions", libelle: "Planning" }}
+        titre={modele ? "Dupliquer une distribution" : "Nouvelle distribution"}
+        description={
+          modele
+            ? `Reprise de celle du ${dateLongue(modele.date)} : lieu, créneaux et capacités. Vérifiez la date.`
+            : "Date, lieu et créneaux : le reste se règle sur la feuille de la distribution."
+        }
+      />
+      <CreateDistributionForm modele={modele ?? undefined} aujourdhui={jourAssociation(new Date())} />
     </div>
   );
 }
