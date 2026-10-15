@@ -84,7 +84,7 @@ flowchart TD
 
 ### 4.2 Les étapes en détail
 
-**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, aux couleurs de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
+**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, au nom et au logo de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
 
 **Étape 2 - Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
 
@@ -150,6 +150,8 @@ Le coordinateur peut basculer la base de calcul des inscrits vers les présents,
 
 Avant la distribution, le coordinateur voit en temps réel le remplissage : inscrits confirmés, places restantes, liste d'attente. Il peut inscrire ou désinscrire quelqu'un manuellement si besoin. Cette vue est sa source de vérité, celle qui remplace les multiples onglets de tableur.
 
+Son accueil tient une liste "À faire" : une distribution restée en cours après sa date (à clore), un brouillon à venir (à publier), une distribution publiée à 7 jours ou moins remplie à moins de la moitié de ses places bénéficiaires ("Peu d'inscrits"), et une distribution publiée à 14 jours ou moins à laquelle il manque des bénévoles.
+
 ### 6.4 Le jour J
 
 Le coordinateur supervise le pointage (qu'il fait lui-même ou délègue aux bénévoles), suit en direct qui est présent, et dispose de la répartition à jour. Tout est sur un seul écran, pensé pour l'action sous pression.
@@ -167,7 +169,7 @@ Après la distribution, le coordinateur la clôt. Il dispose alors d'un bilan : 
 
 ### 7.1 Configurer l'association
 
-À la mise en place, le responsable renseigne l'identité de l'association : nom, logo, couleurs. Ce paramétrage donne à l'espace son apparence propre. Il définit aussi les paramètres de base (contact, fuseau, langue).
+À la mise en place, le responsable renseigne l'identité de l'association : nom et logo. Il définit aussi les paramètres de base : contact et fréquence d'inscription. Les couleurs suivent le système de design et le fuseau est celui de Toulouse ; ni l'un ni l'autre ne se règle.
 
 ### 7.2 Gérer les membres et les rôles
 

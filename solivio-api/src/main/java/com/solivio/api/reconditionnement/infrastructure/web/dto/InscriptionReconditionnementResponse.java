@@ -9,6 +9,7 @@ public record InscriptionReconditionnementResponse(
     String sessionTitre,
     java.time.ZonedDateTime sessionDate,
     String sessionLieu,
+    String sessionStatut,
     UUID personneId,
     String nomComplet,
     String statut,

@@ -274,6 +274,7 @@ public class SessionReconditionnementService {
             s != null ? s.getTitre() : null,
             s != null ? s.getDateHeureDebut() : null,
             s != null && s.getLieu() != null ? s.getLieu().getAdresseFormatee() : null,
+            s != null ? s.getStatut().name() : null,
             i.getPersonneId(),
             nomComplet,
             i.getStatut(),

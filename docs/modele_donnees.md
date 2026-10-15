@@ -59,7 +59,7 @@ L'ancien découpage entre un registre global et des données par association est
 
 | Entité | Attributs principaux | Rôle |
 |---|---|---|
-| `association` | identifiant, nom, logo, couleurs primaire et secondaire, fuseau horaire, fréquence maximale d'inscription par semaine, email et téléphone de contact, date de création | La configuration de Linkee Toulouse. Une seule ligne, créée par la migration et garantie par une contrainte d'unicité ; l'application la modifie mais ne la crée jamais. |
+| `association` | identifiant, nom, logo, couleurs primaire et secondaire, fuseau horaire, fréquence maximale d'inscription par semaine, email et téléphone de contact, date de création | La configuration de Linkee Toulouse. Une seule ligne, créée par la migration et garantie par une contrainte d'unicité ; l'application la modifie mais ne la crée jamais. Les couleurs et le fuseau gardent leur valeur initiale : l'interface ne les règle pas (spécifications 4.3). |
 
 > Non-enfermement : l'association peut exporter l'ensemble de ses données métier (un fichier par table), sans les tables techniques d'authentification qui portent des empreintes de secrets.
 

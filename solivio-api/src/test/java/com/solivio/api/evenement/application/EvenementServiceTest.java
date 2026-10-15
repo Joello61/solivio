@@ -167,7 +167,7 @@ class EvenementServiceTest {
     void detail_retourneLEvenement() {
         when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenement));
 
-        EvenementResponse response = service.detail(evenementId);
+        EvenementResponse response = service.detail(evenementId, true);
 
         assertThat(response.id()).isEqualTo(evenementId);
         assertThat(response.modeInscription()).isEqualTo("OBLIGATOIRE");
@@ -178,7 +178,7 @@ class EvenementServiceTest {
     void detail_echoueSiInexistant() {
         when(evenementRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.detail(UUID.randomUUID()))
+        assertThatThrownBy(() -> service.detail(UUID.randomUUID(), true))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -189,8 +189,31 @@ class EvenementServiceTest {
             .thenReturn(List.of(evenement));
         evenement.transitionnerVers(StatutEvenement.PUBLIE, null);
 
-        List<EvenementResponse> liste = service.lister("PUBLIE", "FETE");
+        List<EvenementResponse> liste = service.lister("PUBLIE", "FETE", false);
 
         assertThat(liste).hasSize(1);
+    }
+
+    @Test
+    void detail_brouillonIntrouvablePourQuiNeGerePas() {
+        when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenement));
+
+        assertThatThrownBy(() -> service.detail(evenementId, false))
+            .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void lister_masqueLesBrouillonsAQuiNeGerePas() {
+        Evenement publie = new Evenement(
+            "Stand", null, TypeEvenement.STAND, null, "Capitole", null, null,
+            ZonedDateTime.now().plusDays(3), ZonedDateTime.now().plusDays(3).plusHours(2),
+            true, false, null, ModeInscription.LIBRE, null, null, creeParId
+        );
+        publie.setId(UUID.randomUUID());
+        publie.transitionnerVers(StatutEvenement.PUBLIE, null);
+        when(evenementRepository.findAllByOrderByDateHeureDebutAsc()).thenReturn(List.of(evenement, publie));
+
+        assertThat(service.lister(null, null, false)).extracting(EvenementResponse::titre).containsExactly("Stand");
+        assertThat(service.lister(null, null, true)).hasSize(2);
     }
 }

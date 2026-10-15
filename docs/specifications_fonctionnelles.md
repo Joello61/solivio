@@ -111,8 +111,9 @@ Cette section décrivait à l'origine un socle multi-association (isolation de p
 
 **Fonctions indispensables (V1) :**
 
-- Renseigner le nom de l'association, son logo, ses couleurs principales.
-- Définir les paramètres de base : fuseau horaire, langue (français en V1), coordonnées de contact.
+- Renseigner le nom de l'association et son logo.
+- Définir les paramètres de base : langue (français en V1), coordonnées de contact, fréquence d'inscription (RG1).
+- Précisions retenues en octobre 2026 : les couleurs de l'interface sont celles du système de design (`DESIGN.md`) et ne se règlent pas, car une couleur libre romprait les contrastes vérifiés en mode clair et sombre ; le fuseau horaire est Europe/Paris, puisque Solivio sert une seule association toulousaine (ADR-001). Les deux valeurs restent en base sans réglage dans l'interface.
 - Gérer la liste des membres et leurs rôles.
 
 **Repoussé (V2 et au-delà) :** la personnalisation poussée (types de ressources sur mesure, champs de profil personnalisés, modèles de messages éditables) relève de la configurabilité étendue, traitée plus loin.
@@ -248,8 +249,8 @@ Chaque création, modification, changement d'état, inscription et pointage est 
 - Il précise si l'événement **a besoin d'une équipe bénévole** (staff) et s'il est **ouvert à des participants**, et dans ce cas à quel public : bénévoles, bénéficiaires ou tous.
 - Il choisit le **mode d'inscription** : obligatoire (inscription et pointage), libre (inscription facultative), ou sans inscription.
 - Il peut fixer une capacité pour l'équipe et une capacité pour les participants ; une fois une capacité atteinte, les inscriptions sont refusées (pas de liste d'attente).
-- Cycle de vie fixe : brouillon, publié, en cours, terminé, annulé. Un événement n'est modifiable qu'en brouillon ; il s'annule avec une raison.
-- Une personne s'inscrit à un événement publié ou en cours, dans l'équipe (bénévoles seulement, et seulement si l'événement a besoin d'une équipe) ou comme participant (si son rôle correspond au public visé). Elle se désinscrit elle-même et retrouve ses événements dans "Mes événements".
+- Cycle de vie fixe : brouillon, publié, en cours, terminé, annulé. Un événement n'est modifiable qu'en brouillon ; il s'annule avec une raison. Un brouillon n'est visible que du coordinateur, du responsable et du super admin.
+- Une personne s'inscrit à un événement publié ou en cours, dans l'équipe (bénévoles seulement, et seulement si l'événement a besoin d'une équipe) ou comme participant (si son rôle correspond au public visé). Un événement sans inscription n'en accepte aucune. Elle se désinscrit elle-même et retrouve ses événements dans "Mes événements".
 - Le coordinateur et le responsable consultent la liste des inscrits et pointent la présence (présent, absent), en mode d'inscription obligatoire seulement.
 
 **Emails.** À la publication, les bénévoles sont prévenus si une équipe est recherchée, et le public visé si l'événement est ouvert aux participants. À l'annulation, les inscrits sont prévenus (et l'adresse générale de l'association en mode libre) ; sans inscription, tous les bénévoles et bénéficiaires le sont.
@@ -387,7 +388,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 **La V1 de Solivio permet à une association :**
 
 1. de gérer ses membres et leurs rôles, avec un accès restreint à ce qui les concerne ;
-2. de configurer son identité de base (nom, logo, couleurs) ;
+2. de configurer son identité de base (nom, logo) ;
 3. de créer, publier, gérer et annuler des distributions avec créneaux et capacités ;
 4. d'inscrire des bénéficiaires et des bénévoles, avec liste d'attente et règles de fréquence ;
 5. de pointer les présences le jour de la distribution, dans le respect de la confidentialité ;

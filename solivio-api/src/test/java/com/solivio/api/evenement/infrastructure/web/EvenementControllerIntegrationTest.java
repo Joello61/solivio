@@ -289,4 +289,31 @@ class EvenementControllerIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].titre").value("Evenement liste"));
     }
+
+    @Test
+    void brouillon_invisibleSaufPourLesGestionnaires() throws Exception {
+        String body = mockMvc.perform(post("/api/evenements")
+                .cookie(new Cookie("access_token", tokenAdmin))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "titre": "Brouillon cache",
+                      "type": "AUTRE",
+                      "dateHeureDebut": "2026-11-02T10:00:00+02:00",
+                      "dateHeureFin": "2026-11-02T12:00:00+02:00"
+                    }
+                    """))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        String id = com.fasterxml.jackson.databind.json.JsonMapper
+            .builder().build().readTree(body).get("id").asText();
+
+        mockMvc.perform(get("/api/evenements/" + id).cookie(new Cookie("access_token", tokenAdmin)))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/evenements/" + id).cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/evenements").cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.id == '" + id + "')]").isEmpty());
+    }
 }

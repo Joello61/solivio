@@ -92,7 +92,8 @@ export function depuisParticipation(
 
 export function depuisSession(i: InscriptionReconditionnementResponse, maintenant: Date): Engagement | null {
   if (!i.sessionDate) return null;
-  const annulee = i.statut === "ANNULEE";
+  const sessionAnnulee = i.sessionStatut === "ANNULEE";
+  const annulee = i.statut === "ANNULEE" || sessionAnnulee;
   const aVenir = !annulee && new Date(i.sessionDate) >= maintenant;
   return {
     cle: `session-${i.id}`,
@@ -100,7 +101,7 @@ export function depuisSession(i: InscriptionReconditionnementResponse, maintenan
     ...jourEtHeure(i.sessionDate),
     titre: i.sessionTitre ?? "Session de reconditionnement",
     lieu: i.sessionLieu,
-    detail: annulee ? "inscription annulée" : ((!aVenir && presence(i.presence)) || "inscription confirmée"),
+    detail: sessionAnnulee ? "session annulée" : annulee ? "inscription annulée" : ((!aVenir && presence(i.presence)) || "inscription confirmée"),
     href: `/reconditionnement/${i.sessionId}`,
     aVenir,
   };

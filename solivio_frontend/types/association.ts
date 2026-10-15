@@ -14,9 +14,6 @@ export interface AssociationResponse {
 export interface UpdateAssociationPayload {
   nom?: string;
   logoUrl?: string;
-  couleurPrimaire?: string;
-  couleurSecondaire?: string;
-  fuseauHoraire?: string;
   frequenceMaxParSemaine?: number | null;
   contactEmail?: string;
   contactTelephone?: string;
