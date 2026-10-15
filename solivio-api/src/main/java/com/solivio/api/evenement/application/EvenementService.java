@@ -157,7 +157,7 @@ public class EvenementService {
     }
 
     @Transactional(readOnly = true)
-    public List<EvenementResponse> lister(String statut, String type) {
+    public List<EvenementResponse> lister(String statut, String type, boolean gestionnaire) {
         StatutEvenement statutEnum = statut != null ? StatutEvenement.valueOf(statut.toUpperCase()) : null;
         TypeEvenement typeEnum = type != null ? TypeEvenement.valueOf(type.toUpperCase()) : null;
 
@@ -171,12 +171,20 @@ public class EvenementService {
         } else {
             evenements = evenementRepository.findAllByOrderByDateHeureDebutAsc();
         }
-        return evenements.stream().map(this::toResponse).toList();
+        return evenements.stream()
+            .filter(e -> gestionnaire || e.getStatut() != StatutEvenement.BROUILLON)
+            .map(this::toResponse)
+            .toList();
     }
 
     @Transactional(readOnly = true)
-    public EvenementResponse detail(UUID evenementId) {
-        return toResponse(trouverOuEchouer(evenementId));
+    public EvenementResponse detail(UUID evenementId, boolean gestionnaire) {
+        Evenement evenement = trouverOuEchouer(evenementId);
+        // Un brouillon n'existe pas pour qui ne gere pas les evenements (404, pas 403).
+        if (!gestionnaire && evenement.getStatut() == StatutEvenement.BROUILLON) {
+            throw new NotFoundException("Evenement introuvable : " + evenementId);
+        }
+        return toResponse(evenement);
     }
 
     Evenement trouverOuEchouer(UUID evenementId) {
