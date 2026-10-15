@@ -92,6 +92,8 @@ Primitives dans `components/ui/` (fondées sur `@base-ui/react`).
 | `dialog`, `alert-dialog` | Confirmations |
 | `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tabs`, `tooltip`, `separator`, `sonner`, `theme-toggle` | Structure et états |
 
+États de page (`components/layout/EtatPage.tsx`, `PageErreur.tsx`) : page introuvable et erreur inattendue disent ce qui se passe puis quoi faire, sans message technique (l'erreur affiche seulement sa référence pour les journaux). Le chargement des pages protégées est un squelette commun (`app/(protected)/loading.tsx`).
+
 Règles :
 
 - **Icônes** : `lucide-react` uniquement ; jamais d'emoji.

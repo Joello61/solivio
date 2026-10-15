@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageIntrouvable } from "@/components/layout/PageIntrouvable";
+import { PageIntrouvable } from "@/components/layout/EtatPage";
 
 export const metadata: Metadata = { title: "Page introuvable" };
 

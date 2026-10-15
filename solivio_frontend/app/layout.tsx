@@ -7,6 +7,7 @@ import {
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { NOM_ASSOCIATION } from "@/lib/marque";
 import "./globals.css";
 
 /*
@@ -41,10 +42,10 @@ const atkinsonMono = Atkinson_Hyperlegible_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Solivio",
-    template: "%s | Solivio",
+    default: NOM_ASSOCIATION,
+    template: `%s | ${NOM_ASSOCIATION}`,
   },
-  description: "Plateforme de gestion opérationnelle pour les associations de solidarité",
+  description: `Distributions alimentaires de ${NOM_ASSOCIATION}, association de solidarité étudiante, sur inscription.`,
 };
 
 export default function RootLayout({

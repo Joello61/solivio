@@ -22,10 +22,9 @@ describe("AuthLayout", () => {
     expect(screen.queryByText("Entrez vos identifiants")).not.toBeInTheDocument();
   });
 
-  it("affiche le branding Solivio", () => {
+  it("ramene a l'accueil par le nom de l'association", () => {
     render(<AuthLayout title="Connexion"><p>contenu</p></AuthLayout>);
-    const elements = screen.getAllByText("Solivio");
-    expect(elements.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole("link", { name: "Linkee Toulouse" })).toHaveAttribute("href", "/");
   });
 
   it("rend les enfants dans l'encart", () => {
