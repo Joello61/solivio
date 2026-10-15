@@ -205,7 +205,7 @@ Pour rester cohérent avec le périmètre, ces parcours n'existent pas en V1 :
 - enregistrer des dons ou gérer des donateurs ;
 - créer des campagnes ;
 - gérer des antennes et une hiérarchie ;
-- composer des messages groupés libres ou des modèles personnalisés ;
+- composer des modèles de messages personnalisés ou des messages ciblés plus finement que par rôle ;
 - s'inscrire en tant que nouvelle association en autonomie.
 
 Ces absences sont des choix, pas des oublis.

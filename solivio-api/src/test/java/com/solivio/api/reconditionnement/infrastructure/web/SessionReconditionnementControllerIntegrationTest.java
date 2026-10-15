@@ -197,6 +197,16 @@ class SessionReconditionnementControllerIntegrationTest {
     }
 
     @Test
+    void inscrire_refuseAuBeneficiaire() throws Exception {
+        String tokenBeneficiaire = jwtService.genererAccessToken(
+            UUID.randomUUID(), "benef@reco.com", "Benef", "Test", List.of("beneficiaire"), null, false
+        );
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + UUID.randomUUID() + "/inscrire")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void inscription_confirmeeParEmail_etReinscriptionConfirmeeANouveau() throws Exception {
         String corps = "{\"titre\":\"Session confirmation\","
             + "\"dateHeureDebut\":\"2026-12-16T09:00:00Z\","

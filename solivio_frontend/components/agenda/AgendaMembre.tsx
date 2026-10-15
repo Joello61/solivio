@@ -55,12 +55,14 @@ function ligneActivite(cle: string, href: string, debut: string, fin: string, ti
 export async function AgendaMembre({ distributions, type, roles, filtre }: Props) {
   const aujourdhui = jourAssociation(new Date());
   const maintenant = new Date();
+  const benevole = roles.includes("benevole");
   const [inscriptions, evenements, participations, sessions, inscriptionsSessions] = await Promise.all([
     lireServeur<InscriptionPersonnelle[]>("/api/inscriptions/mes"),
     lireServeur<EvenementResponse[]>("/api/evenements"),
     lireServeur<ParticipationEvenementResponse[]>("/api/evenements/mes-evenements"),
-    lireServeur<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement"),
-    lireServeur<InscriptionReconditionnementResponse[]>("/api/sessions-reconditionnement/mes-inscriptions"),
+    // Le reconditionnement est reserve aux benevoles.
+    benevole ? lireServeur<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement") : null,
+    benevole ? lireServeur<InscriptionReconditionnementResponse[]>("/api/sessions-reconditionnement/mes-inscriptions") : null,
   ]);
   const mesStatuts = new Map(
     (inscriptions ?? []).filter((i) => i.statut !== "ANNULEE").map((i) => [i.distributionId, i.statut]),
