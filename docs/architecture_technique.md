@@ -198,6 +198,7 @@ L'application s'intègre à la stack d'observabilité commune du VPS (dépôt `i
 - Secrets injectés par Infisical, jamais versionnés.
 - Jetons en cookies `HttpOnly`/`Secure`/`SameSite=Strict` ; la protection CSRF repose sur `SameSite=Strict` et un CORS strict (décision documentée, ADR-004).
 - Limitation de débit et verrouillage temporaire sur la connexion, la vérification d'email et la réinitialisation du mot de passe.
+- Lectures publiques sans authentification limitées au strict nécessaire, sous `/api/public/` : logo de l'association, et prochaines distributions de la page d'accueil (au plus six, avec date, horaires, lieu et un indicateur "complet", sans effectif ni donnée personnelle). Ces dernières ont leur propre limitation de débit par adresse IP (30 requêtes par minute) et une réponse mise en cache cinq minutes.
 - Contrôle d'accès côté backend uniquement ; validation et assainissement de toutes les entrées côté serveur.
 - `profil_beneficiaire` à accès restreint, jamais exposé au pointage ni aux statistiques ; statistiques agrégées et pseudonymisées.
 - Journal d'audit des actions sensibles ; hébergement en Union européenne ; dépendances surveillées en intégration continue.

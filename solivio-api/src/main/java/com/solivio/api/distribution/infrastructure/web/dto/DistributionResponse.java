@@ -19,5 +19,6 @@ public record DistributionResponse(
     String baseRepartition,
     String motifAnnulation,
     Instant dateCreation,
-    List<CreneauResponse> creneaux
+    List<CreneauResponse> creneaux,
+    RemplissageResponse remplissage
 ) {}

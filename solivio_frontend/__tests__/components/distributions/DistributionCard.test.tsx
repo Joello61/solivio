@@ -34,6 +34,14 @@ const distributionMock: DistributionResponse = {
   motifAnnulation: null,
   dateCreation: "2026-06-01T10:00:00Z",
   creneaux: [],
+  remplissage: {
+    placesRestantesBeneficiaires: 50,
+    placesRestantesBenevoles: 10,
+    beneficiairesConfirmes: null,
+    beneficiairesEnAttente: null,
+    benevolesConfirmes: null,
+    benevolesEnAttente: null,
+  },
 };
 
 describe("DistributionCard", () => {

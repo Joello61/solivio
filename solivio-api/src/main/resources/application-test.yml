@@ -47,6 +47,8 @@ solivio:
     limite-debit-auth:
       # Les tests partagent un contexte et une IP : la limite est testee unitairement.
       requetes-par-minute: 100000
+    limite-debit-public:
+      requetes-par-minute: 100000
   auth:
     jwt-secret: test-jwt-secret-key-must-be-at-least-32-bytes-long-for-testing
     access-token-expiration-minutes: 15

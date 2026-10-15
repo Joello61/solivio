@@ -11,20 +11,21 @@ import com.solivio.api.distribution.infrastructure.persistence.CreneauRepository
 import com.solivio.api.distribution.infrastructure.persistence.DistributionRepository;
 import com.solivio.api.distribution.infrastructure.web.dto.AjouterCreneauRequest;
 import com.solivio.api.distribution.infrastructure.web.dto.CreateDistributionRequest;
-import com.solivio.api.distribution.infrastructure.web.dto.CreneauResponse;
+import com.solivio.api.distribution.infrastructure.web.dto.DistributionPubliqueResponse;
 import com.solivio.api.distribution.infrastructure.web.dto.DistributionResponse;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.inscription.InscriptionQueryPort.Remplissage;
 import com.solivio.api.shared.lieu.Lieu;
 import com.solivio.api.shared.lieu.LieuRequest;
-import com.solivio.api.shared.lieu.LieuResponse;
 import com.solivio.api.shared.temps.HorlogeAssociation;
 import com.solivio.api.shared.web.Assainissement;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class DistributionService {
 
+    private static final int NOMBRE_DISTRIBUTIONS_PUBLIQUES = 6;
     private static final List<StatutDistribution> STATUTS_OUVERTS =
         List.of(StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS);
 
@@ -43,6 +45,7 @@ public class DistributionService {
     private final PersonneQueryPort personneQueryPort;
     private final HorlogeAssociation horloge;
     private final AuditService auditService;
+    private final ReponseDistribution reponses;
 
     public DistributionService(
         DistributionRepository distributionRepository,
@@ -50,7 +53,8 @@ public class DistributionService {
         DistributionEventPublisher eventPublisher,
         PersonneQueryPort personneQueryPort,
         HorlogeAssociation horloge,
-        AuditService auditService
+        AuditService auditService,
+        ReponseDistribution reponses
     ) {
         this.distributionRepository = distributionRepository;
         this.creneauRepository = creneauRepository;
@@ -58,6 +62,7 @@ public class DistributionService {
         this.personneQueryPort = personneQueryPort;
         this.horloge = horloge;
         this.auditService = auditService;
+        this.reponses = reponses;
     }
 
     public DistributionResponse creer(CreateDistributionRequest request, String emailCreateur) {
@@ -87,7 +92,7 @@ public class DistributionService {
             .toList();
 
         auditService.tracer("DISTRIBUTION_CREEE", "distribution", distribution.getId());
-        return toResponse(distribution, creneaux);
+        return reponses.une(distribution, creneaux, true);
     }
 
     public DistributionResponse publier(UUID distributionId) {
@@ -95,7 +100,7 @@ public class DistributionService {
         d.transitionnerVers(StatutDistribution.PUBLIEE, null);
         distributionRepository.save(d);
         auditService.tracer("DISTRIBUTION_PUBLIEE", "distribution", distributionId);
-        return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     public DistributionResponse demarrer(UUID distributionId) {
@@ -107,8 +112,8 @@ public class DistributionService {
         }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
         auditService.tracer("DISTRIBUTION_DEMARREE", "distribution", distributionId);
-        return toResponse(distributionRepository.save(d),
-            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(distributionRepository.save(d),
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     /** RG8 : nombre de beneficiaires retenu pour la repartition, choisi par le coordinateur. */
@@ -119,8 +124,8 @@ public class DistributionService {
         }
         d.setBaseRepartition(BaseRepartition.valueOf(base));
         auditService.tracer("DISTRIBUTION_BASE_REPARTITION", "distribution", distributionId);
-        return toResponse(distributionRepository.save(d),
-            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(distributionRepository.save(d),
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     public DistributionResponse terminer(UUID distributionId) {
@@ -129,7 +134,7 @@ public class DistributionService {
         distributionRepository.save(d);
         eventPublisher.publierTerminee(distributionId, d.getDate());
         auditService.tracer("DISTRIBUTION_TERMINEE", "distribution", distributionId);
-        return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     public DistributionResponse annuler(UUID distributionId, String motif) {
@@ -139,12 +144,12 @@ public class DistributionService {
         distributionRepository.save(d);
         eventPublisher.publierAnnulee(distributionId, d.getDate());
         auditService.tracer("DISTRIBUTION_ANNULEE", "distribution", distributionId);
-        return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     @Transactional(readOnly = true)
     public List<DistributionResponse> lister() {
-        return avecCreneaux(distributionRepository.findAllByOrderByDateDesc());
+        return avecCreneaux(distributionRepository.findAllByOrderByDateDesc(), true);
     }
 
     @Transactional(readOnly = true)
@@ -152,19 +157,56 @@ public class DistributionService {
     // comprises, de la plus proche a la plus lointaine. L'historique passe par
     // "Mes inscriptions".
     public List<DistributionResponse> listerPubliees() {
-        return avecCreneaux(distributionRepository.findByStatutInAndDateGreaterThanEqualOrderByDateAsc(
-            STATUTS_OUVERTS, horloge.aujourdhui()));
+        return avecCreneaux(distributionsOuvertesAVenir(), false);
+    }
+
+    private List<DistributionResponse> avecCreneaux(List<Distribution> distributions, boolean vueGestion) {
+        return reponses.plusieurs(distributions, creneauxParDistribution(distributions), vueGestion);
+    }
+
+    /**
+     * Page publique : les prochaines distributions ouvertes, reduites a la date, aux
+     * horaires, au lieu et a un indicateur "complet". Aucun effectif n'est expose.
+     */
+    @Transactional(readOnly = true)
+    public List<DistributionPubliqueResponse> prochainesPubliques() {
+        List<Distribution> distributions = distributionsOuvertesAVenir().stream()
+            .limit(NOMBRE_DISTRIBUTIONS_PUBLIQUES)
+            .toList();
+        Map<UUID, List<Creneau>> creneaux = creneauxParDistribution(distributions);
+        Map<UUID, Remplissage> remplissages = reponses.remplissages(
+            distributions.stream().map(Distribution::getId).toList());
+        return distributions.stream()
+            .map(d -> versPublique(d, creneaux.getOrDefault(d.getId(), List.of()),
+                remplissages.getOrDefault(d.getId(), Remplissage.VIDE)))
+            .toList();
+    }
+
+    private List<Distribution> distributionsOuvertesAVenir() {
+        return distributionRepository.findByStatutInAndDateGreaterThanEqualOrderByDateAsc(
+            STATUTS_OUVERTS, horloge.aujourdhui());
     }
 
     // Une requete pour les creneaux de toute la liste, au lieu d'une par distribution.
-    private List<DistributionResponse> avecCreneaux(List<Distribution> distributions) {
-        Map<UUID, List<Creneau>> creneauxParDistribution = creneauRepository
+    private Map<UUID, List<Creneau>> creneauxParDistribution(List<Distribution> distributions) {
+        return creneauRepository
             .findByDistributionIdInOrderByHeureDebut(distributions.stream().map(Distribution::getId).toList())
             .stream()
             .collect(Collectors.groupingBy(Creneau::getDistributionId));
-        return distributions.stream()
-            .map(d -> toResponse(d, creneauxParDistribution.getOrDefault(d.getId(), List.of())))
-            .toList();
+    }
+
+    private static DistributionPubliqueResponse versPublique(Distribution d, List<Creneau> creneaux, Remplissage r) {
+        LocalTime debut = creneaux.stream().map(Creneau::getHeureDebut).min(Comparator.naturalOrder()).orElse(null);
+        LocalTime fin = creneaux.stream().map(Creneau::getHeureFin).max(Comparator.naturalOrder()).orElse(null);
+        Lieu lieu = d.getLieu();
+        return new DistributionPubliqueResponse(
+            d.getDate(),
+            debut,
+            fin,
+            lieu == null ? null : lieu.getNom(),
+            lieu == null ? null : lieu.getAdresseFormatee(),
+            ReponseDistribution.placesRestantesBeneficiaires(d, r) == 0
+        );
     }
 
     @Transactional(readOnly = true)
@@ -174,7 +216,8 @@ public class DistributionService {
         if (!gestionnaire && d.getStatut() == StatutDistribution.BROUILLON) {
             throw new NotFoundException("Distribution introuvable : " + distributionId);
         }
-        return toResponse(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(d, creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId),
+            gestionnaire);
     }
 
     @Transactional(readOnly = true)
@@ -212,41 +255,11 @@ public class DistributionService {
         }
     }
 
-    static DistributionResponse toResponse(Distribution d, List<Creneau> creneaux) {
-        List<CreneauResponse> creneauxReponse = creneaux.stream()
-            .map(c -> new CreneauResponse(c.getId(), c.getHeureDebut(), c.getHeureFin(), c.getCapacite()))
-            .toList();
-        return new DistributionResponse(
-            d.getId(),
-            d.getTitre(),
-            d.getDescription(),
-            toLieuResponse(d.getLieu()),
-            d.getDate(),
-            d.getStatut().name(),
-            d.getCapaciteBeneficiaires(),
-            d.getCapaciteBenevoles(),
-            d.getModeCreneau().name(),
-            d.getBaseRepartition().name(),
-            d.getMotifAnnulation(),
-            d.getDateCreation(),
-            creneauxReponse
-        );
-    }
-
     static Lieu toLieu(LieuRequest r) {
         if (r == null) {
             return null;
         }
         return new Lieu(r.placeId(), r.nom(), r.adresseFormatee(), r.latitude(), r.longitude(),
             r.numeroRue(), r.voie(), r.codePostal(), r.ville());
-    }
-
-    private static LieuResponse toLieuResponse(Lieu l) {
-        if (l == null) {
-            return null;
-        }
-        return new LieuResponse(l.getPlaceId(), l.getNom(), l.getAdresseFormatee(),
-            l.getLatitude(), l.getLongitude(), l.getNumeroRue(), l.getVoie(),
-            l.getCodePostal(), l.getVille());
     }
 }

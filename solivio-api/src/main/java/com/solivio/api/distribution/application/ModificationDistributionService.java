@@ -53,6 +53,7 @@ public class ModificationDistributionService {
     private final VerrouDistribution verrou;
     private final HorlogeAssociation horloge;
     private final AuditService auditService;
+    private final ReponseDistribution reponses;
 
     public ModificationDistributionService(
         DistributionRepository distributionRepository,
@@ -61,7 +62,8 @@ public class ModificationDistributionService {
         InscriptionQueryPort inscriptionQueryPort,
         VerrouDistribution verrou,
         HorlogeAssociation horloge,
-        AuditService auditService
+        AuditService auditService,
+        ReponseDistribution reponses
     ) {
         this.distributionRepository = distributionRepository;
         this.creneauRepository = creneauRepository;
@@ -70,6 +72,7 @@ public class ModificationDistributionService {
         this.verrou = verrou;
         this.horloge = horloge;
         this.auditService = auditService;
+        this.reponses = reponses;
     }
 
     public DistributionResponse modifier(UUID distributionId, UpdateDistributionRequest request) {
@@ -118,7 +121,7 @@ public class ModificationDistributionService {
             eventPublisher.publierModifiee(distributionId, changementPratique, capaciteAugmentee);
         }
         auditService.tracer("DISTRIBUTION_MODIFIEE", "distribution", distributionId);
-        return DistributionService.toResponse(distribution, creneaux);
+        return reponses.une(distribution, creneaux, true);
     }
 
     public void supprimer(UUID distributionId) {
@@ -146,8 +149,8 @@ public class ModificationDistributionService {
         distribution.annulerDemarrage();
         distributionRepository.save(distribution);
         auditService.tracer("DISTRIBUTION_DEMARRAGE_ANNULE", "distribution", distributionId);
-        return DistributionService.toResponse(distribution,
-            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(distribution,
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     /**
@@ -169,8 +172,8 @@ public class ModificationDistributionService {
             eventPublisher.publierReactivee(distributionId);
         }
         auditService.tracer("DISTRIBUTION_REACTIVEE", "distribution", distributionId);
-        return DistributionService.toResponse(distribution,
-            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId));
+        return reponses.une(distribution,
+            creneauRepository.findByDistributionIdOrderByHeureDebut(distributionId), true);
     }
 
     private void verifierCapacites(UUID distributionId, UpdateDistributionRequest request) {
