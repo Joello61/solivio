@@ -206,3 +206,23 @@ export interface PointageAdHocResponse {
   invitationEnvoyee: boolean;
   datePointage: string;
 }
+
+/** Inscription vue par son titulaire (/api/inscriptions/mes). */
+export interface InscriptionPersonnelle {
+  id: string;
+  distributionId: string;
+  distributionTitre: string | null;
+  distributionDate: string | null;
+  distributionLieu: string | null;
+  distributionLieuNom: string | null;
+  distributionStatut: StatutDistribution | null;
+  // Creneau choisi, sinon plage de la distribution.
+  heureDebut: string | null;
+  heureFin: string | null;
+  type: TypeInscription;
+  statut: StatutInscription;
+  rangListeAttente: number | null;
+  presence: StatutPresence;
+  absenceDeduite: boolean;
+  dateInscription: string;
+}

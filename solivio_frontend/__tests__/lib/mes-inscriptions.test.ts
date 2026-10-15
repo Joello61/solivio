@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { estAVenir } from "@/lib/mes-inscriptions";
+import { estAVenir, inscriptionsAVenir, versBillet } from "@/lib/mes-inscriptions";
+import type { InscriptionPersonnelle } from "@/types/distribution";
 
 const jour = "2026-10-13";
 const base = { statut: "CONFIRMEE", distributionDate: jour, distributionStatut: "PUBLIEE" };
@@ -19,5 +20,47 @@ describe("estAVenir", () => {
     expect(estAVenir({ ...base, statut: "ANNULEE" }, jour)).toBe(false);
     expect(estAVenir({ ...base, distributionDate: "2026-10-12" }, jour)).toBe(false);
     expect(estAVenir({ ...base, distributionDate: null }, jour)).toBe(false);
+  });
+});
+
+describe("billets", () => {
+  const inscription = (partiel: Partial<InscriptionPersonnelle>): InscriptionPersonnelle => ({
+    id: "i1",
+    distributionId: "d1",
+    distributionTitre: "Distribution",
+    distributionDate: "2026-10-22",
+    distributionLieu: "135 avenue de Rangueil",
+    distributionLieuNom: "Campus Rangueil",
+    distributionStatut: "PUBLIEE",
+    heureDebut: "18:00:00",
+    heureFin: "18:30:00",
+    type: "BENEFICIAIRE",
+    statut: "CONFIRMEE",
+    rangListeAttente: null,
+    presence: "NON_POINTE",
+    absenceDeduite: false,
+    dateInscription: "2026-10-10T10:00:00Z",
+    ...partiel,
+  });
+
+  it("garde les inscriptions a venir, la plus proche d'abord", () => {
+    const liste = [
+      inscription({ id: "tard", distributionDate: "2026-10-29" }),
+      inscription({ id: "passee", distributionDate: "2026-10-01" }),
+      inscription({ id: "proche", distributionDate: "2026-10-22" }),
+    ];
+    expect(inscriptionsAVenir(liste, "2026-10-15").map((i) => i.id)).toEqual(["proche", "tard"]);
+  });
+
+  it("prepare le billet et ferme la desinscription apres pointage", () => {
+    expect(versBillet(inscription({}))).toMatchObject({
+      date: "2026-10-22",
+      lieuNom: "Campus Rangueil",
+      statut: "CONFIRMEE",
+      benevole: false,
+      desinscriptionPossible: true,
+    });
+    const pointee = versBillet(inscription({ type: "BENEVOLE", presence: "PRESENT", statut: "LISTE_ATTENTE", rangListeAttente: 2 }));
+    expect(pointee).toMatchObject({ benevole: true, desinscriptionPossible: false, statut: "LISTE_ATTENTE", rangListeAttente: 2 });
   });
 });
