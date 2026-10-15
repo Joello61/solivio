@@ -131,7 +131,7 @@ public class MissionCollecteService {
         PersonneInfo benevole = personneQueryPort.trouverPersonne(emailBenevole);
         long actives = missionRepository.countByBenevoleIdAndStatutIn(benevole.id(), STATUTS_ACTIFS);
         if (actives > 0) {
-            throw new ConflictException("Vous avez deja une mission en cours");
+            throw new ConflictException("Vous avez déjà une mission en cours");
         }
         mission.prendreEnCharge(benevole.id());
         missionRepository.save(mission);
@@ -143,11 +143,11 @@ public class MissionCollecteService {
     public MissionCollecteResponse liberer(UUID missionId, String emailBenevole) {
         MissionCollecte mission = trouverOuEchouer(missionId);
         if (mission.getStatut() != StatutMission.PRISE_EN_CHARGE) {
-            throw new ConflictException("Liberation impossible : la mission n'est pas en cours de prise en charge");
+            throw new ConflictException("Libération impossible : la mission n'est pas en cours de prise en charge");
         }
         PersonneInfo benevole = personneQueryPort.trouverPersonne(emailBenevole);
         if (!benevole.id().equals(mission.getBenevoleId())) {
-            throw new ConflictException("Vous n'etes pas le benevole assigne a cette mission");
+            throw new ConflictException("Vous n'êtes pas le bénévole assigné à cette mission");
         }
         mission.liberer();
         missionRepository.save(mission);

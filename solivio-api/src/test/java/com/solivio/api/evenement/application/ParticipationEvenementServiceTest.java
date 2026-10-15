@@ -96,7 +96,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("beneficiaire")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("benevoles");
+            .hasMessageContaining("bénévoles");
     }
 
     @Test
@@ -195,7 +195,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("capacite");
+            .hasMessageContaining("capacité");
     }
 
     @Test
@@ -209,7 +209,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("deja inscrit");
+            .hasMessageContaining("déjà inscrit");
     }
 
     @Test

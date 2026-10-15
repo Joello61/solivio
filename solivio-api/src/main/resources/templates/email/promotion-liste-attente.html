@@ -23,10 +23,10 @@
                 Une place est disponible pour vous
               </h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
-                Bonjour <span th:text="${prenom}">Prenom</span>,
+                Bonjour <span th:text="${prenom}">Prénom</span>,
               </p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
-                Une place s'est liberee <th:block th:if="${estBenevole}">sur le creneau benevole </th:block>. Vous etes maintenant inscrit(e) et confirme(e) pour la distribution suivante.
+                Une place s'est libérée <th:block th:if="${estBenevole}">sur le créneau bénévole </th:block>. Vous êtes maintenant inscrit(e) et confirmé(e) pour la distribution suivante.
               </p>
               <div style="background:#f0faf6;border:1px solid #b0dcca;border-radius:8px;padding:20px 24px;margin:16px 0 24px;">
                 <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#16513F;"
@@ -45,12 +45,12 @@
               </div>
               <div th:if="${estBenevole}" style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px 20px;margin:0 0 32px;">
                 <p th:if="${heureArriveeBenevole != null}" style="margin:0;font-size:14px;color:#92400e;">
-                  En tant que benevole, merci d'arriver a
+                  En tant que bénévole, merci d'arriver à
                   <strong th:text="${#temporals.format(heureArriveeBenevole, 'HH:mm')}">07:30</strong>
-                  (1h30 avant le debut de votre creneau).
+                  (1h30 avant le début de votre créneau).
                 </p>
                 <p th:if="${heureArriveeBenevole == null}" style="margin:0;font-size:14px;color:#92400e;">
-                  En tant que benevole, merci d'arriver <strong>1h30 avant le debut</strong> de la distribution.
+                  En tant que bénévole, merci d'arriver <strong>1h30 avant le début</strong> de la distribution.
                 </p>
               </div>
               <table th:if="${!estBenevole}" role="presentation" cellspacing="0" cellpadding="0">
@@ -68,7 +68,7 @@
                   <td style="border-radius:6px;background:#16513F;">
                     <a th:href="${appUrl}" href="#"
                        style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
-                      Voir mes benevoles
+                      Voir mes bénévoles
                     </a>
                   </td>
                 </tr>

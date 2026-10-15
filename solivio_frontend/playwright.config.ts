@@ -38,6 +38,12 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
       testMatch: /parcours-pointage\.spec\.ts/,
     },
+    // Audit axe des ecrans principaux : chaque test ouvre ses propres sessions.
+    {
+      name: "accessibilite",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /accessibilite\.spec\.ts/,
+    },
     // Tests des parcours proteges. Depend du projet "setup" pour les cookies.
     {
       name: "chromium",
@@ -46,7 +52,7 @@ export default defineConfig({
         storageState: AUTH_STATE_FILE,
       },
       dependencies: ["setup"],
-      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/, /creation-compte\.spec\.ts/, /parcours-pointage\.spec\.ts/],
+      testIgnore: [/auth\.setup\.ts/, /public\.spec\.ts/, /creation-compte\.spec\.ts/, /parcours-pointage\.spec\.ts/, /accessibilite\.spec\.ts/],
     },
   ],
 });

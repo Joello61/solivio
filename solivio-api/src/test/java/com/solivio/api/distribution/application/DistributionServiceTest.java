@@ -109,7 +109,7 @@ class DistributionServiceTest {
         );
         assertThatThrownBy(() -> service.creer(request, "user@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("creneau");
+            .hasMessageContaining("créneau");
     }
 
     @Test
@@ -284,7 +284,7 @@ class DistributionServiceTest {
 
         assertThatThrownBy(() -> service.creer(hier, "coord@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("deja passee");
+            .hasMessageContaining("déjà passée");
         verifyNoInteractions(distributionRepository);
     }
 
@@ -297,7 +297,7 @@ class DistributionServiceTest {
 
         assertThatThrownBy(() -> service.creer(deuxCreneaux, "coord@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("un seul creneau");
+            .hasMessageContaining("un seul créneau");
     }
 
     private DistributionService serviceA(Clock clock) {

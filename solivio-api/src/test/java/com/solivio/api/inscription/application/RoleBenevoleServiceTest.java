@@ -100,7 +100,7 @@ class RoleBenevoleServiceTest {
 
         assertThatThrownBy(() -> service.assigner(inscriptionId, typeRoleId, null))
             .isInstanceOf(NotFoundException.class)
-            .hasMessageContaining("Type de role introuvable");
+            .hasMessageContaining("Type de rôle introuvable");
     }
 
     @Test
@@ -114,7 +114,7 @@ class RoleBenevoleServiceTest {
 
         assertThatThrownBy(() -> service.assigner(inscriptionId, typeRoleId, null))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("archive");
+            .hasMessageContaining("archivé");
         verify(roleRepository, never()).save(any());
     }
 

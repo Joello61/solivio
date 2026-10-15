@@ -54,7 +54,7 @@ public class RegisterService {
     @Transactional
     public Compte inscrireBeneficiaire(String email, String motDePasse, String nom, String prenom) {
         if (compteRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Un compte existe deja avec cet email");
+            throw new IllegalArgumentException("Un compte existe déjà avec cet email");
         }
 
         Compte compte = compteRepository.save(new Compte(email, passwordEncoder.encode(motDePasse), nom, prenom));
@@ -70,7 +70,7 @@ public class RegisterService {
                                         UUID tokenInvitation) {
         Invitation invitation = invitationValide(tokenInvitation, email);
         if (compteRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Un compte existe deja avec cet email");
+            throw new IllegalArgumentException("Un compte existe déjà avec cet email");
         }
 
         Compte compte = compteRepository.save(new Compte(email, passwordEncoder.encode(motDePasse), nom, prenom));
@@ -108,7 +108,7 @@ public class RegisterService {
     }
 
     private static IllegalArgumentException codeInvalide() {
-        return new IllegalArgumentException("Code de verification invalide ou expire");
+        return new IllegalArgumentException("Code de vérification invalide ou expiré");
     }
 
     /**
@@ -125,7 +125,7 @@ public class RegisterService {
             throw new IllegalArgumentException("Ce compte n'est pas un compte Google");
         }
         if (membreRepo.findByCompteId(compte.getId()).isPresent()) {
-            throw new IllegalArgumentException("Ce compte est deja membre de l'association");
+            throw new IllegalArgumentException("Ce compte est déjà membre de l'association");
         }
 
         if (nom != null && !nom.isBlank()) {
@@ -148,9 +148,9 @@ public class RegisterService {
     private Invitation invitationValide(UUID token, String email) {
         Invitation invitation = invitationRepository.findByTokenWithDetails(token)
             .filter(Invitation::estValide)
-            .orElseThrow(() -> new IllegalArgumentException("Invitation invalide ou expiree"));
+            .orElseThrow(() -> new IllegalArgumentException("Invitation invalide ou expirée"));
         if (!invitation.getEmail().equalsIgnoreCase(email)) {
-            throw new IllegalArgumentException("L'email ne correspond pas a l'invitation");
+            throw new IllegalArgumentException("L'email ne correspond pas à l'invitation");
         }
         return invitation;
     }

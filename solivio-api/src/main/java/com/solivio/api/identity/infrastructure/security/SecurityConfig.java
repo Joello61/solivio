@@ -132,7 +132,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) ->
                     ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
                 .accessDeniedHandler((request, response, accessDeniedException) ->
-                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Acces refuse."))
+                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Accès refusé."))
             )
             .addFilterBefore(new MetricsScrapeTokenFilter(jetonScrape), UsernamePasswordAuthenticationFilter.class)
             .build();
@@ -184,7 +184,7 @@ public class SecurityConfig {
                     ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
                 .accessDeniedHandler((request, response, accessDeniedException) ->
                     ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN",
-                        "Vous n'avez pas les droits necessaires pour cette operation."))
+                        "Vous n'avez pas les droits nécessaires pour cette opération."))
             )
             .addFilterBefore(limiteDebitAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(limiteDebitPublicFilter, UsernamePasswordAuthenticationFilter.class)

@@ -80,7 +80,7 @@ public class NotificationService {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
         ContexteEmail contexte = construireContexte(
             personne.prenom(), typeInscription, creneauId, distributionId, distribution);
-        String sujet = "Votre inscription est confirmee - " + distribution.titre();
+        String sujet = "Votre inscription est confirmée - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.CONFIRMATION_INSCRIPTION;
         boolean envoye = envoyer(cle(type, occurrenceId), personne.id(), distributionId, type, sujet,
             () -> emailService.envoyerConfirmationInscription(personne.email(), contexte));
@@ -106,7 +106,7 @@ public class NotificationService {
     public void notifierAnnulationDistribution(UUID distributionId, List<InscriptionAnnulee> inscriptions,
                                                UUID occurrenceId) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
-        String sujet = "Distribution annulee - " + distribution.titre();
+        String sujet = "Distribution annulée - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.ANNULATION_DISTRIBUTION;
         int echecs = 0;
         for (InscriptionAnnulee inscription : inscriptions) {
@@ -130,7 +130,7 @@ public class NotificationService {
     public void notifierReactivationDistribution(UUID distributionId, List<InscriptionConcernee> retablies,
                                                  List<InscriptionConcernee> nonRetablies, UUID occurrenceId) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
-        String sujet = "Distribution retablie - " + distribution.titre();
+        String sujet = "Distribution rétablie - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.REACTIVATION_DISTRIBUTION;
         int echecs = 0;
         for (List<InscriptionConcernee> groupe : List.of(retablies, nonRetablies)) {
@@ -153,7 +153,7 @@ public class NotificationService {
     @Transactional
     public void notifierModificationDistribution(UUID distributionId, UUID occurrenceId) {
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
-        String sujet = "Distribution modifiee - " + distribution.titre();
+        String sujet = "Distribution modifiée - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.MODIFICATION_DISTRIBUTION;
         int echecs = 0;
         for (DestinataireMail dest : inscriptionQueryPort.trouverInscritsActifs(distributionId)) {
@@ -171,7 +171,7 @@ public class NotificationService {
     public void notifierDesistementTardifBenevole(UUID personneBenevoleId, UUID distributionId, UUID occurrenceId) {
         PersonneContactInfo benevole = personneQueryPort.trouverPersonneParId(personneBenevoleId);
         DistributionDetailInfo distribution = distributionQueryPort.trouverDistributionDetails(distributionId);
-        String sujet = "Desistement tardif benevole - " + distribution.titre();
+        String sujet = "Désistement tardif bénévole - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.DESISTEMENT_TARDIF_BENEVOLE;
         int echecs = 0;
         for (PersonneContactInfo coord : personneQueryPort.trouverContactsParRole("coordinateur")) {
@@ -224,7 +224,7 @@ public class NotificationService {
         ContexteReconditionnementEmail contexte = new ContexteReconditionnementEmail(
             personne.prenom(), session.titre(), session.dateHeureDebut(),
             session.dateHeureFin(), session.lieu(), null);
-        String sujet = "Inscription confirmee - " + session.titre();
+        String sujet = "Inscription confirmée - " + session.titre();
         TypeEvenementNotification type = TypeEvenementNotification.CONFIRMATION_INSCRIPTION_RECONDITIONNEMENT;
         // Cle par occurrence : une reinscription apres desistement recoit sa propre confirmation.
         boolean envoye = envoyer(cle(type, occurrenceId), personne.id(), sessionId, type, sujet,
@@ -235,7 +235,7 @@ public class NotificationService {
     @Transactional
     public void notifierAnnulationSessionReconditionnement(UUID sessionId) {
         SessionInfo session = sessionReconditionnementQueryPort.trouverSessionDetails(sessionId);
-        String sujet = "Session annulee - " + session.titre();
+        String sujet = "Session annulée - " + session.titre();
         TypeEvenementNotification type = TypeEvenementNotification.ANNULATION_SESSION_RECONDITIONNEMENT;
         int echecs = 0;
         for (UUID personneId : sessionReconditionnementQueryPort.trouverPersonnesInscritesConfirmees(sessionId)) {
@@ -276,7 +276,7 @@ public class NotificationService {
         }
         MissionInfo mission = missionCollecteQueryPort.trouverMissionDetails(missionId);
         PersonneContactInfo benevole = personneQueryPort.trouverPersonneParId(benevoleAssigneId);
-        String sujet = "Mission annulee - " + mission.titre();
+        String sujet = "Mission annulée - " + mission.titre();
         ContexteCollecteEmail contexte = new ContexteCollecteEmail(
             benevole.prenom(), mission.titre(), mission.dateHeure(),
             mission.lieuCollecteAdresse(), mission.lieuDepotAdresse(), null);

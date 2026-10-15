@@ -47,7 +47,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ApiError> reponse = handler.handleDisabled(new DisabledException("disabled"));
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(reponse.getBody().error().message()).contains("desactive");
+        assertThat(reponse.getBody().error().message()).contains("désactivé");
     }
 
     @Test

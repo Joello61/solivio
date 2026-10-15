@@ -16,8 +16,8 @@ export default async function PointageSessionPage({ params }: { params: Promise<
   if (!session || !inscrits || (session.statut !== "EN_COURS" && session.statut !== "TERMINEE")) notFound();
 
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background">
+    <main className="min-h-dvh bg-background">
       <PointageSession sessionId={id} intitule={session.titre} inscrits={inscrits.filter((i) => i.statut === "CONFIRMEE")} />
-    </div>
+    </main>
   );
 }

@@ -32,7 +32,7 @@ public class TypeRoleService {
         TypeRole parent = null;
         if (parentId != null) {
             parent = typeRoleRepository.findById(parentId)
-                .orElseThrow(() -> new NotFoundException("Type de role parent introuvable : " + parentId));
+                .orElseThrow(() -> new NotFoundException("Type de rôle parent introuvable : " + parentId));
         }
         TypeRole typeRole = new TypeRole(parent, libelle);
         return toResponse(typeRoleRepository.save(typeRole));
@@ -52,7 +52,7 @@ public class TypeRoleService {
 
     private TypeRole trouverOuEchouer(UUID id) {
         return typeRoleRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Type de role introuvable : " + id));
+            .orElseThrow(() -> new NotFoundException("Type de rôle introuvable : " + id));
     }
 
     TypeRoleResponse toResponse(TypeRole t) {

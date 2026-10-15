@@ -67,7 +67,7 @@ public class DistributionService {
 
     public DistributionResponse creer(CreateDistributionRequest request, String emailCreateur) {
         if (request.date().isBefore(horloge.aujourdhui())) {
-            throw new IllegalArgumentException("La date de la distribution est deja passee.");
+            throw new IllegalArgumentException("La date de la distribution est déjà passée.");
         }
         ModeCreneauDistribution mode = parseModeCreneauDistribution(request.modeCreneau());
         validerCreneaux(request.creneaux(), mode);
@@ -107,7 +107,7 @@ public class DistributionService {
         Distribution d = trouverOuEchouer(distributionId);
         if (d.getDate().isAfter(horloge.aujourdhui())) {
             throw new ConflictException(
-                "La distribution ne peut pas etre demarree avant sa date : " + d.getDate()
+                "La distribution ne peut pas être démarrée avant sa date : " + d.getDate()
             );
         }
         d.transitionnerVers(StatutDistribution.EN_COURS, null);
@@ -120,7 +120,7 @@ public class DistributionService {
     public DistributionResponse changerBaseRepartition(UUID distributionId, String base) {
         Distribution d = trouverOuEchouer(distributionId);
         if (d.getStatut() == StatutDistribution.ANNULEE) {
-            throw new ConflictException("La repartition d'une distribution annulee ne se modifie plus.");
+            throw new ConflictException("La répartition d'une distribution annulée ne se modifie plus.");
         }
         d.setBaseRepartition(BaseRepartition.valueOf(base));
         auditService.tracer("DISTRIBUTION_BASE_REPARTITION", "distribution", distributionId);
@@ -228,17 +228,17 @@ public class DistributionService {
 
     static void validerCreneaux(List<AjouterCreneauRequest> creneaux, ModeCreneauDistribution mode) {
         if (creneaux == null || creneaux.isEmpty()) {
-            throw new IllegalArgumentException("Au moins un creneau est requis.");
+            throw new IllegalArgumentException("Au moins un créneau est requis.");
         }
         if (mode == ModeCreneauDistribution.CRENEAU_UNIQUE && creneaux.size() > 1) {
-            throw new IllegalArgumentException("Une distribution en creneau unique n'a qu'un seul creneau.");
+            throw new IllegalArgumentException("Une distribution en créneau unique n'a qu'un seul créneau.");
         }
         for (AjouterCreneauRequest c : creneaux) {
             LocalTime debut = c.heureDebut();
             LocalTime fin = c.heureFin();
             if (debut == null || fin == null || !fin.isAfter(debut)) {
                 throw new IllegalArgumentException(
-                    "heure_fin doit etre apres heure_debut pour chaque creneau."
+                    "heure_fin doit être après heure_debut pour chaque créneau."
                 );
             }
         }
@@ -251,7 +251,7 @@ public class DistributionService {
         try {
             return ModeCreneauDistribution.valueOf(modeCreneau.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Mode de creneau invalide : " + modeCreneau);
+            throw new IllegalArgumentException("Mode de créneau invalide : " + modeCreneau);
         }
     }
 

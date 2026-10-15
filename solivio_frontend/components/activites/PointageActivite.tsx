@@ -95,12 +95,13 @@ export function PointageActivite({ quitter, intitule, personnes: initiales, poin
                   .map((p) => (
                     <LignePointable
                       key={p.id}
+                      id={p.id}
                       titre={p.nomComplet}
                       nom={p.nomComplet}
                       presence={p.presence}
                       etat={etats[p.id]?.etat ?? null}
-                      onPointer={(presence) => pointerPersonne(p, presence)}
-                      onReessayer={() => etats[p.id] && pointerPersonne(p, etats[p.id].demande)}
+                      derniereDemande={etats[p.id]?.demande ?? null}
+                      onPointer={(_, presence) => pointerPersonne(p, presence)}
                     />
                   ))}
               </ul>

@@ -133,7 +133,7 @@ C'est le cœur du produit. Il doit être la partie la plus soignée de la V1.
 - Publier une distribution (la rendre visible pour les inscriptions) et l'annuler (avec notification automatique des inscrits).
 - Modifier une distribution tant qu'elle n'a pas démarré (brouillon ou publiée) : intitulé, description, date, lieu, capacités, créneaux. Les places déjà attribuées sont protégées : une capacité ne descend jamais sous le nombre d'inscrits confirmés, et un créneau qui a reçu des inscriptions ne peut pas être supprimé. Le mode de créneau ne change plus une fois la distribution publiée. Un changement de date, de lieu ou d'horaires prévient par email les inscrits confirmés et en liste d'attente (comme RG6) ; une capacité augmentée fait avancer la liste d'attente (RG3).
 - Supprimer une distribution restée en brouillon (jamais publiée, donc sans inscrit) ; une distribution publiée s'annule.
-- Revenir à « publiée » après un démarrage accidentel, tant qu'aucune présence n'a été pointée.
+- Revenir à "publiée" après un démarrage accidentel, tant qu'aucune présence n'a été pointée.
 - Réactiver une distribution annulée par erreur, tant que sa date n'est pas passée : elle retrouve son état d'avant (un brouillon reste brouillon, sinon publiée). Les inscriptions supprimées par l'annulation sont rétablies avec leur statut et leur rang, sauf celle d'une personne inscrite entre-temps à une autre distribution de la même semaine (RG1), qui est invitée à se réinscrire ; une place ainsi libérée fait avancer la liste d'attente. Chaque personne concernée est prévenue par email. Une désinscription personnelle n'est jamais rétablie.
 - Consulter la liste des inscrits (bénéficiaires et bénévoles) d'une distribution.
 

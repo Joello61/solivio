@@ -2,11 +2,13 @@
 
 > Quoi construire, dans quel ordre, et pourquoi : le plan d'exécution qui ordonne toutes les décisions de la série.
 
-**Document de pilotage - version 1.3**
+**Document de pilotage - version 1.4**
 **Statut : référence de travail**
 **Dernière mise à jour : octobre 2026**
 
-> Changement depuis la version 1.2 : la phase 5 bis (refonte du socle) est terminée ; Solivio tourne en préproduction et en production sur le VPS, observé et sauvegardé. Prochaine étape : la phase 6, mise en conditions réelles.
+> Changement depuis la version 1.3 : la refonte de l'interface web (section 8 ter) est terminée ; tous les écrans suivent le nouveau système de design (`DESIGN.md`), par rôle. Prochaine étape inchangée : la phase 6.
+>
+> Rappel de la version 1.3 : la phase 5 bis (refonte du socle) est terminée ; Solivio tourne en préproduction et en production sur le VPS, observé et sauvegardé. Prochaine étape : la phase 6, mise en conditions réelles.
 >
 > Rappel de la version 1.2 : les phases 2 à 5 sont livrées (juin 2026) et Solivio sert uniquement Linkee Toulouse. Les descriptions des phases 1 et 4 restent comme historique : Keycloak, Kafka, OpenBao et le multi-association qu'elles mentionnent sont retirés (`architecture_technique.md`, section 14).
 
@@ -187,6 +189,30 @@ La clé Google Maps et le secret client Google publiés dans l'historique du dé
 - ajouter une distribution aux données de test, pour que le parcours Playwright de répartition s'exécute en intégration continue.
 
 **Décision (9 octobre 2026) : le web d'abord.** L'application mobile reste en suspens (ADR-007), avec ses ruptures d'API connues. L'effort porte sur le frontend web, rendu pleinement responsive pour servir aussi sur téléphone, en priorité l'inscription et le pointage (exigence mobile d'abord des spécifications).
+
+## 8 ter. Refonte de l'interface web (octobre 2026) - COMPLETE
+
+**Objectif.** Un frontend plus simple et plus agréable que le tableur, pensé par rôle, sans retirer de fonction : l'audit du 14 octobre montrait un écran par entité de l'API plutôt que par tâche.
+
+**Contenu.** Une maquette validée, puis une PR par lot vers `dev` :
+
+| Lot | Contenu | PR |
+|---|---|---|
+| 0 | Maquette et direction visuelle, `DESIGN.md` réécrit | |
+| 1 | Fondations : tokens, typographie, primitives (jauge, rail, billet, tableau, feuille, menu "Plus") | #107 |
+| 2 | Cadre et navigation par rôle, redirections des anciennes adresses | #116 |
+| API | Lectures complémentaires : remplissage, prochaines distributions publiques | #117 |
+| 3 | Page d'accueil de Linkee Toulouse, écrans d'accès, états système | #118 |
+| 4 | Parcours bénéficiaire : billet, agenda, réservation, mes inscriptions, compte | #119 |
+| 5 | Parcours bénévole : engagements, missions de collecte | #120 |
+| 6 | Coordinateur : Aujourd'hui et sa liste "À faire", planning, feuille de distribution, duplication | #121 |
+| 7 | Jour J en plein écran (pointage hors ligne) et répartition en sac, fiche stand imprimable | #122 |
+| 8 | Événements, sessions de reconditionnement et missions sur un seul modèle d'activité | #123 |
+| 9 | Responsable et administration : membres, réglages, catalogue, statistiques, message aux membres | #124 |
+| | Correctifs : brouillons d'événements, couleurs et fuseau retirés, reconditionnement réservé aux bénévoles | #125, #126 |
+| 10 | Finitions : audit d'accessibilité axe en CI, pointage plein écran hors navigation, performance du pointage, textes accentués de l'API et des emails | |
+
+**Critère de sortie atteint (15 octobre 2026).** Tous les écrans sont repris, vérifiés en capture sur téléphone et ordinateur, en clair et en sombre ; l'audit axe (WCAG 2.2 AA) passe sur les pages publiques et les écrans principaux de chaque rôle ; le pointage d'une personne reste sous la seconde avec 360 inscrits sur un processeur ralenti quatre fois.
 
 ## 9. Phase 6 - Mise en conditions réelles
 

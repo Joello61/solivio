@@ -57,7 +57,7 @@ public class SessionReconditionnementService {
     ) {
         if (!request.dateHeureFin().isAfter(request.dateHeureDebut())) {
             throw new IllegalArgumentException(
-                "date_heure_fin doit etre apres date_heure_debut"
+                "date_heure_fin doit être après date_heure_debut"
             );
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
@@ -133,17 +133,17 @@ public class SessionReconditionnementService {
     public InscriptionReconditionnementResponse inscrire(UUID sessionId, String emailPersonne) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         if (session.getStatut() != StatutSessionReconditionnement.PUBLIEE) {
-            throw new ConflictException("Inscription impossible : la session n'est pas publiee");
+            throw new ConflictException("Inscription impossible : la session n'est pas publiée");
         }
         if (session.getCapacite() != null
             && compterInscrits(sessionId) >= session.getCapacite()) {
-            throw new ConflictException("Inscription impossible : la capacite maximale est atteinte");
+            throw new ConflictException("Inscription impossible : la capacité maximale est atteinte");
         }
         PersonneInfo personne = personneQueryPort.trouverPersonne(emailPersonne);
         inscriptionRepository.findBySessionIdAndPersonneId(sessionId, personne.id())
             .ifPresent(i -> {
                 if (i.estConfirmee()) {
-                    throw new ConflictException("Vous etes deja inscrit(e) a cette session");
+                    throw new ConflictException("Vous êtes déjà inscrit(e) à cette session");
                 }
             });
         InscriptionReconditionnement inscription = inscriptionRepository.findBySessionIdAndPersonneId(
@@ -163,7 +163,7 @@ public class SessionReconditionnementService {
         if (session.getStatut() == StatutSessionReconditionnement.EN_COURS
             || session.getStatut() == StatutSessionReconditionnement.TERMINEE
             || session.getStatut() == StatutSessionReconditionnement.ANNULEE) {
-            throw new ConflictException("Desinscription impossible a ce stade de la session");
+            throw new ConflictException("Désinscription impossible à ce stade de la session");
         }
         PersonneInfo personne = personneQueryPort.trouverPersonne(emailPersonne);
         InscriptionReconditionnement inscription = inscriptionRepository
@@ -191,13 +191,13 @@ public class SessionReconditionnementService {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
         if (session.getStatut() != StatutSessionReconditionnement.EN_COURS
             && session.getStatut() != StatutSessionReconditionnement.TERMINEE) {
-            throw new ConflictException("Pointage impossible : la session doit etre en cours ou terminee");
+            throw new ConflictException("Pointage impossible : la session doit être en cours ou terminée");
         }
         StatutPresenceReconditionnement presence;
         try {
             presence = StatutPresenceReconditionnement.valueOf(request.presence().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Valeur de presence invalide : " + request.presence());
+            throw new IllegalArgumentException("Valeur de présence invalide : " + request.presence());
         }
         InscriptionReconditionnement inscription = inscriptionRepository
             .findBySessionIdAndPersonneId(sessionId, request.personneId())

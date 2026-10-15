@@ -136,10 +136,10 @@ public class PointageAdHocService {
             .orElseThrow(() -> new NotFoundException("Visiteur introuvable : " + adHocId));
 
         if (adHoc.getEmail() == null || adHoc.getEmail().isBlank()) {
-            throw new IllegalArgumentException("Aucun email renseigne pour ce visiteur.");
+            throw new IllegalArgumentException("Aucun email renseigné pour ce visiteur.");
         }
         if (adHoc.isInvitationEnvoyee()) {
-            throw new ConflictException("Une invitation a deja ete envoyee a ce visiteur.");
+            throw new ConflictException("Une invitation a déjà été envoyée à ce visiteur.");
         }
 
         invitationPort.inviterBenevole(adHoc.getEmail(), compteIdInvitant);

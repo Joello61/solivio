@@ -62,7 +62,7 @@ class InvitationServiceTest {
 
         assertThatThrownBy(() -> service.inviter(invitantDetails, "guest@example.com", "benevole", null))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("deja en attente");
+            .hasMessageContaining("déjà en attente");
         verify(emailService, never()).envoyerInvitation(any());
     }
 

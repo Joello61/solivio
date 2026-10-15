@@ -49,7 +49,7 @@ Règles :
 - La couleur ne porte jamais seule une information : couleur, libellé, et parfois une forme (point du statut en cours, hachures de la liste d'attente, pointillés du brouillon).
 - Le citron est réservé à ce qui se passe maintenant. Le passé s'efface en gris.
 - L'association personnalise l'espace par son nom et son logo, jamais par ses couleurs : une couleur libre romprait les contrastes vérifiés.
-- Contrastes vérifiés au calcul pour le texte (AA) ; audit automatisé `@axe-core/playwright` prévu au lot 10 de la refonte.
+- Contrastes vérifiés au calcul pour le texte (AA) et par l'audit axe en intégration continue, dans les deux modes.
 
 ## 3. Typographie
 
@@ -91,7 +91,7 @@ Primitives dans `components/ui/` (fondées sur `@base-ui/react`).
 | `action-menu` | Menu "Plus" ; les actions destructrices sont séparées en bas |
 | `sheet` | Panneau qui monte du bas sur téléphone, latéral sur ordinateur |
 | `dialog`, `alert-dialog` | Confirmations |
-| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tabs`, `tooltip`, `separator`, `sonner`, `theme-toggle` | Structure et états |
+| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tooltip`, `sonner`, `theme-toggle` | Structure et états |
 
 États de page (`components/layout/EtatPage.tsx`, `PageErreur.tsx`) : page introuvable et erreur inattendue disent ce qui se passe puis quoi faire, sans message technique (l'erreur affiche seulement sa référence pour les journaux). Le chargement des pages protégées est un squelette commun (`app/(protected)/loading.tsx`).
 
@@ -121,7 +121,11 @@ Cible WCAG 2.2 AA :
 - `aria-live` pour les notifications ;
 - jauges exposées en `meter`, étape courante du rail en `aria-current="step"` ;
 - cibles tactiles de 44 px ;
-- animations réduites sur demande du système.
+- animations réduites sur demande du système ;
+- écrans plein écran (pointage) hors du cadre de navigation (groupe de routes `(plein-ecran)`) : rien de caché dessous ne prend le focus ;
+- un contrôle segmenté passe à la ligne plutôt que de cacher des options hors de l'écran.
+
+Vérification : `__tests__/e2e/accessibilite.spec.ts` lance axe (`@axe-core/playwright`, règles WCAG 2.2 A et AA) sur les pages publiques et les écrans principaux de chaque rôle, en clair et en sombre. Il ne remplace pas un passage au clavier et au lecteur d'écran sur les parcours critiques.
 
 ## 8. Faire évoluer le système
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { MutationObserver, useMutationState, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CloudOff } from "lucide-react";
@@ -147,14 +147,24 @@ export function JourJ({ distributionId, jour, fuseau = "Europe/Paris", peutGerer
   const visibles = source.filter((l) => correspond(l, recherche));
   const groupes = grouperParCreneau(visibles, heure);
 
-  function pointerLigne(ligne: LignePointage, presence: PresencePointee) {
-    envoyerPointage(client, distributionId, ligne.inscriptionId, presence);
-    if (presence !== "PRESENT") return;
-    const precedente = ligne.presence as PresencePointee;
-    toast(`Présence notée : ${ligne.prenom} ${ligne.nom}`, {
-      action: { label: "Annuler", onClick: () => envoyerPointage(client, distributionId, ligne.inscriptionId, precedente) },
-    });
-  }
+  // Lu au geste seulement : le rappel reste stable et les lignes non touchees ne se redessinent pas.
+  const lignesParId = useRef(new Map<string, LignePointage>());
+  useEffect(() => {
+    lignesParId.current = new Map(lignes.map((l) => [l.inscriptionId, l]));
+  }, [lignes]);
+
+  const pointerLigne = useCallback(
+    (inscriptionId: string, presence: PresencePointee) => {
+      const ligne = lignesParId.current.get(inscriptionId);
+      envoyerPointage(client, distributionId, inscriptionId, presence);
+      if (presence !== "PRESENT" || !ligne) return;
+      const precedente = ligne.presence as PresencePointee;
+      toast(`Présence notée : ${ligne.prenom} ${ligne.nom}`, {
+        action: { label: "Annuler", onClick: () => envoyerPointage(client, distributionId, inscriptionId, precedente) },
+      });
+    },
+    [client, distributionId],
+  );
 
   return (
     <div className="flex min-h-full flex-col">
@@ -246,12 +256,13 @@ export function JourJ({ distributionId, jour, fuseau = "Europe/Paris", peutGerer
                 {g.lignes.map((l) => (
                   <LignePointable
                     key={l.inscriptionId}
+                    id={l.inscriptionId}
                     titre={`${l.nom} ${l.prenom}`}
                     nom={`${l.prenom} ${l.nom}`}
                     presence={l.presence as PresencePointee}
                     etat={l.etat}
-                    onPointer={(p) => pointerLigne(l, p)}
-                    onReessayer={() => l.derniereDemande && pointerLigne(l, l.derniereDemande)}
+                    derniereDemande={l.derniereDemande}
+                    onPointer={pointerLigne}
                   />
                 ))}
               </ul>

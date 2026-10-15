@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Distribution retablie</title>
+  <title>Distribution rétablie</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,-apple-system,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -20,13 +20,13 @@
           <tr>
             <td style="padding:40px 40px 24px;">
               <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">
-                Distribution retablie
+                Distribution rétablie
               </h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
-                Bonjour <span th:text="${prenom}">Prenom</span>,
+                Bonjour <span th:text="${prenom}">Prénom</span>,
               </p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
-                La distribution annoncee comme annulee a finalement bien lieu :
+                La distribution annoncée comme annulée a finalement bien lieu :
               </p>
               <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:20px 24px;margin:16px 0 24px;">
                 <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#16513F;"
@@ -45,13 +45,13 @@
               </div>
               <p th:if="${inscriptionRetablie}" style="margin:0;font-size:15px;line-height:1.6;color:#374151;">
                 Votre inscription
-                <th:block th:if="${estBenevole}">en tant que <strong>benevole</strong> </th:block>
-                est retablie, sans rien a faire de votre part. Si vous ne pouvez plus venir, pensez a vous
-                desinscrire pour liberer votre place.
+                <th:block th:if="${estBenevole}">en tant que <strong>bénévole</strong> </th:block>
+                est rétablie, sans rien à faire de votre part. Si vous ne pouvez plus venir, pensez à vous
+                désinscrire pour libérer votre place.
               </p>
               <p th:unless="${inscriptionRetablie}" style="margin:0;font-size:15px;line-height:1.6;color:#374151;">
-                Vous etes inscrit(e) a une autre distribution cette semaine : votre inscription n'a donc pas
-                ete retablie. Vous pouvez vous reinscrire si votre situation le permet.
+                Vous êtes inscrit(e) à une autre distribution cette semaine : votre inscription n'a donc pas
+                été rétablie. Vous pouvez vous réinscrire si votre situation le permet.
               </p>
             </td>
           </tr>

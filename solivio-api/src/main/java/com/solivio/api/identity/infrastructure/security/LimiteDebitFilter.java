@@ -67,12 +67,12 @@ public final class LimiteDebitFilter extends OncePerRequestFilter {
 
     public static LimiteDebitFilter authentification(Clock clock, int requetesMaxParMinute) {
         return new LimiteDebitFilter(clock, requetesMaxParMinute, "POST", CHEMINS_AUTH,
-            "TOO_MANY_ATTEMPTS", "Trop de tentatives. Reessayez dans une minute.");
+            "TOO_MANY_ATTEMPTS", "Trop de tentatives. Réessayez dans une minute.");
     }
 
     public static LimiteDebitFilter lecturePublique(Clock clock, int requetesMaxParMinute) {
         return new LimiteDebitFilter(clock, requetesMaxParMinute, "GET", CHEMINS_LECTURE_PUBLIQUE,
-            "TOO_MANY_REQUESTS", "Trop de requetes. Reessayez dans une minute.");
+            "TOO_MANY_REQUESTS", "Trop de requêtes. Réessayez dans une minute.");
     }
 
     private record Fenetre(long debutMillis, int compte) {}

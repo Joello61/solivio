@@ -81,14 +81,14 @@ public class ModificationDistributionService {
         Distribution distribution = trouverOuEchouer(distributionId);
         boolean publiee = distribution.getStatut() == StatutDistribution.PUBLIEE;
         if (!publiee && distribution.getStatut() != StatutDistribution.BROUILLON) {
-            throw new ConflictException("Une distribution demarree, terminee ou annulee ne peut plus etre modifiee.");
+            throw new ConflictException("Une distribution démarrée, terminée ou annulée ne peut plus être modifiée.");
         }
         if (request.date().isBefore(horloge.aujourdhui())) {
-            throw new IllegalArgumentException("La date de la distribution est deja passee.");
+            throw new IllegalArgumentException("La date de la distribution est déjà passée.");
         }
         ModeCreneauDistribution mode = DistributionService.parseModeCreneauDistribution(request.modeCreneau());
         if (publiee && mode != distribution.getModeCreneau()) {
-            throw new ConflictException("Le mode de creneau ne peut plus changer une fois la distribution publiee.");
+            throw new ConflictException("Le mode de créneau ne peut plus changer une fois la distribution publiée.");
         }
         DistributionService.validerCreneaux(request.creneaux().stream()
             .map(c -> new AjouterCreneauRequest(c.heureDebut(), c.heureFin(), c.capacite()))
@@ -127,7 +127,7 @@ public class ModificationDistributionService {
     public void supprimer(UUID distributionId) {
         Distribution distribution = trouverOuEchouer(distributionId);
         if (distribution.getStatut() != StatutDistribution.BROUILLON) {
-            throw new ConflictException("Seul un brouillon peut etre supprime ; une distribution publiee s'annule.");
+            throw new ConflictException("Seul un brouillon peut être supprimé ; une distribution publiée s'annule.");
         }
         // Les creneaux et d'eventuelles denrees saisies partent en cascade (contraintes
         // ON DELETE CASCADE) ; un brouillon ne peut pas avoir d'inscription.
@@ -140,11 +140,11 @@ public class ModificationDistributionService {
         verrou.verrouiller(distributionId);
         Distribution distribution = trouverOuEchouer(distributionId);
         if (distribution.getStatut() != StatutDistribution.EN_COURS) {
-            throw new ConflictException("Seule une distribution en cours peut revenir a l'etat publiee.");
+            throw new ConflictException("Seule une distribution en cours peut revenir à l'état publiée.");
         }
         if (inscriptionQueryPort.compterPointages(distributionId) > 0) {
             throw new ConflictException(
-                "Des presences ont deja ete pointees : la distribution ne peut plus revenir a l'etat publiee.");
+                "Des présences ont déjà été pointées : la distribution ne peut plus revenir à l'état publiée.");
         }
         distribution.annulerDemarrage();
         distributionRepository.save(distribution);
@@ -161,10 +161,10 @@ public class ModificationDistributionService {
         verrou.verrouiller(distributionId);
         Distribution distribution = trouverOuEchouer(distributionId);
         if (distribution.getStatut() != StatutDistribution.ANNULEE) {
-            throw new ConflictException("Seule une distribution annulee peut etre reactivee.");
+            throw new ConflictException("Seule une distribution annulée peut être réactivée.");
         }
         if (distribution.getDate().isBefore(horloge.aujourdhui())) {
-            throw new ConflictException("La date de cette distribution est passee : elle ne peut plus etre reactivee.");
+            throw new ConflictException("La date de cette distribution est passée : elle ne peut plus être réactivée.");
         }
         StatutDistribution retrouve = distribution.reactiver();
         distributionRepository.save(distribution);
@@ -179,13 +179,13 @@ public class ModificationDistributionService {
     private void verifierCapacites(UUID distributionId, UpdateDistributionRequest request) {
         int beneficiaires = inscriptionQueryPort.compterConfirmes(distributionId, BENEFICIAIRE);
         if (request.capaciteBeneficiaires() < beneficiaires) {
-            throw new ConflictException("La capacite beneficiaires ne peut pas etre inferieure aux "
-                + beneficiaires + " inscrits confirmes.");
+            throw new ConflictException("La capacité bénéficiaires ne peut pas être inférieure aux "
+                + beneficiaires + " inscrits confirmés.");
         }
         int benevoles = inscriptionQueryPort.compterConfirmes(distributionId, BENEVOLE);
         if (request.capaciteBenevoles() != null && request.capaciteBenevoles() < benevoles) {
-            throw new ConflictException("La capacite benevoles ne peut pas etre inferieure aux "
-                + benevoles + " benevoles confirmes.");
+            throw new ConflictException("La capacité bénévoles ne peut pas être inférieure aux "
+                + benevoles + " bénévoles confirmés.");
         }
     }
 
@@ -195,20 +195,20 @@ public class ModificationDistributionService {
         Set<UUID> gardes = demandes.stream().map(CreneauModifieRequest::id).filter(Objects::nonNull)
             .collect(Collectors.toSet());
         if (!existantsParId.keySet().containsAll(gardes)) {
-            throw new IllegalArgumentException("Un creneau ne fait pas partie de cette distribution.");
+            throw new IllegalArgumentException("Un créneau ne fait pas partie de cette distribution.");
         }
         for (Creneau existant : existants) {
             ComptesCreneau compte = comptes.get(existant.getId());
             if (!gardes.contains(existant.getId()) && compte != null && compte.total() > 0) {
-                throw new ConflictException("Le creneau de " + existant.getHeureDebut().format(HEURE)
-                    + " a deja recu des inscriptions et ne peut pas etre supprime.");
+                throw new ConflictException("Le créneau de " + existant.getHeureDebut().format(HEURE)
+                    + " a déjà reçu des inscriptions et ne peut pas être supprimé.");
             }
         }
         for (CreneauModifieRequest demande : demandes) {
             ComptesCreneau compte = demande.id() == null ? null : comptes.get(demande.id());
             if (compte != null && demande.capacite() < compte.confirmes()) {
-                throw new ConflictException("Le creneau de " + demande.heureDebut().format(HEURE) + " compte "
-                    + compte.confirmes() + " inscrits confirmes : sa capacite ne peut pas etre inferieure.");
+                throw new ConflictException("Le créneau de " + demande.heureDebut().format(HEURE) + " compte "
+                    + compte.confirmes() + " inscrits confirmés : sa capacité ne peut pas être inférieure.");
             }
         }
     }

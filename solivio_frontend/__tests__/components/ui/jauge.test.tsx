@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { Jauge } from "@/components/ui/jauge";
 
 describe("Jauge", () => {
-  it("expose le remplissage aux lecteurs d'ecran", () => {
+  it("expose le remplissage, nomme, aux lecteurs d'ecran", () => {
     render(<Jauge valeur={48} capacite={80} libelle="48 inscrits sur 80" detail="32 places" />);
-    const jauge = screen.getByRole("meter");
+    const jauge = screen.getByRole("meter", { name: "48 inscrits sur 80" });
     expect(jauge).toHaveAttribute("aria-valuenow", "48");
     expect(jauge).toHaveAttribute("aria-valuemax", "80");
     expect(jauge).toHaveAttribute("aria-valuetext", "48 inscrits sur 80, 32 places");

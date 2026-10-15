@@ -23,7 +23,7 @@
                 Nouvelle mission de collecte disponible
               </h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
-                Bonjour <span th:text="${prenom}">Prenom</span>,
+                Bonjour <span th:text="${prenom}">Prénom</span>,
               </p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
                 Une nouvelle mission de collecte est disponible. Prenez-la en charge depuis l'application :
@@ -40,7 +40,7 @@
                 </p>
                 <p th:if="${lieuDepotAdresse != null and !#strings.isEmpty(lieuDepotAdresse)}"
                    style="margin:0 0 4px;font-size:14px;color:#374151;">
-                  Depot : <span th:text="${lieuDepotAdresse}">Adresse depot</span>
+                  Dépôt : <span th:text="${lieuDepotAdresse}">Adresse dépôt</span>
                 </p>
               </div>
               <p style="margin:0;font-size:15px;line-height:1.6;color:#374151;">
