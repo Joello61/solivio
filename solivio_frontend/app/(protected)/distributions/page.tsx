@@ -8,8 +8,8 @@ import type { DistributionResponse } from "@/types/distribution";
 
 export const metadata: Metadata = { title: "Agenda" };
 
-export default async function DistributionsPage({ searchParams }: { searchParams: Promise<{ section?: string }> }) {
-  const [{ section }, me, distributions] = await Promise.all([
+export default async function DistributionsPage({ searchParams }: { searchParams: Promise<{ section?: string; type?: string }> }) {
+  const [{ section, type: filtre }, me, distributions] = await Promise.all([
     searchParams,
     lireMoi(),
     lireServeur<DistributionResponse[]>("/api/distributions"),
@@ -17,7 +17,7 @@ export default async function DistributionsPage({ searchParams }: { searchParams
   const roles = me?.roles ?? [];
   const type = typeInscriptionPossible(roles);
   if (!estGestionnaireDistribution(roles) && type) {
-    return <AgendaMembre distributions={distributions ?? []} type={type} />;
+    return <AgendaMembre distributions={distributions ?? []} type={type} roles={roles} filtre={filtre} />;
   }
   return <PlanningGestion distributions={distributions ?? []} section={section} aujourdhui={jourAssociation(new Date())} />;
 }
