@@ -95,7 +95,7 @@ function DataTable<T>({
                     {col.sortable ? (
                       <button
                         onClick={() => handleSort(col.key)}
-                        className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-1.5 uppercase hover:text-foreground transition-colors"
                       >
                         {col.header}
                         <SortIcon columnKey={col.key} sort={sort} />
