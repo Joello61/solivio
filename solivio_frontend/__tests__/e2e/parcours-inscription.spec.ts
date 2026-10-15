@@ -31,7 +31,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    await expect(page.getByRole("heading", { name: /distributions/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /planning|agenda/i })).toBeVisible();
   });
 
   test("navigation vers le detail d'une distribution", async ({ page }) => {
@@ -80,6 +80,9 @@ test.describe("Parcours inscription beneficiaire", () => {
 
     // Le bouton de reservation est present pour tout membre qui peut s'inscrire (le
     // coordinateur du test s'inscrit en benevole) sur une distribution publiee.
+    // Sur la feuille d'un gestionnaire, l'inscription comme benevole est repliee.
+    const venirAider = page.getByText("Venir aider sur cette distribution");
+    if (await venirAider.isVisible().catch(() => false)) await venirAider.click();
     const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
@@ -115,6 +118,9 @@ test.describe("Parcours inscription beneficiaire", () => {
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
 
+    // Sur la feuille d'un gestionnaire, l'inscription comme benevole est repliee.
+    const venirAider = page.getByText("Venir aider sur cette distribution");
+    if (await venirAider.isVisible().catch(() => false)) await venirAider.click();
     const boutonInscrire = page.getByRole("button", { name: RESERVER });
     const visible = await boutonInscrire.isVisible({ timeout: 2_000 }).catch(() => false);
 
