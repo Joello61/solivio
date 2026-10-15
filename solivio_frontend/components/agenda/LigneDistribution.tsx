@@ -49,13 +49,13 @@ export function LigneDistribution({ distribution: d, type, monStatut }: Props) {
               <Jauge
                 valeur={places.capacite - places.restantes}
                 capacite={places.capacite}
-                libelle={libellePlaces(places.restantes)}
+                libelle={libellePlaces(places.restantes, type)}
                 taille="sm"
                 sansTexte
                 className="max-w-56"
               />
               <span className={places.restantes <= 0 ? "text-warning" : undefined}>
-                {libellePlaces(places.restantes)}
+                {libellePlaces(places.restantes, type)}
               </span>
             </span>
           )}
