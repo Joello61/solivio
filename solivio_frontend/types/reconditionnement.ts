@@ -20,6 +20,7 @@ export interface InscriptionReconditionnementResponse {
   sessionTitre: string | null;
   sessionDate: string | null;
   sessionLieu: string | null;
+  sessionStatut: string | null;
   personneId: string;
   nomComplet: string;
   statut: string;

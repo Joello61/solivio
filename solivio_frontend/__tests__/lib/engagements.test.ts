@@ -79,6 +79,7 @@ const session: InscriptionReconditionnementResponse = {
   sessionTitre: "Tri des vêtements",
   sessionDate: "2026-10-12T08:00:00Z",
   sessionLieu: "Local",
+  sessionStatut: "TERMINEE",
   personneId: "x",
   nomComplet: "Moi",
   statut: "CONFIRMEE",
@@ -110,6 +111,10 @@ describe("engagements", () => {
     expect(depuisSession(session, maintenant)).toMatchObject({ aVenir: false, detail: "présence notée" });
     expect(depuisSession({ ...session, sessionDate: "2026-10-22T08:00:00Z" }, maintenant)?.aVenir).toBe(true);
     expect(depuisSession({ ...session, sessionDate: "2026-10-22T08:00:00Z", statut: "ANNULEE" }, maintenant)?.aVenir).toBe(false);
+    expect(depuisSession({ ...session, sessionDate: "2026-10-22T08:00:00Z", sessionStatut: "ANNULEE" }, maintenant)).toMatchObject({
+      aVenir: false,
+      detail: "session annulée",
+    });
     expect(depuisSession({ ...session, sessionDate: null }, maintenant)).toBeNull();
   });
 
