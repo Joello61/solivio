@@ -56,12 +56,12 @@ describe("FormulaireConfiguration", () => {
 
   it("affiche une erreur en cas d'echec API", async () => {
     const { mettreAJourAssociation } = await import("@/lib/api/association");
-    vi.mocked(mettreAJourAssociation).mockRejectedValueOnce({ detail: "Acces refuse." });
+    vi.mocked(mettreAJourAssociation).mockRejectedValueOnce({ detail: "Accès refusé." });
 
     render(<FormulaireConfiguration association={associationMock} />);
     fireEvent.submit(screen.getByRole("button", { name: /enregistrer/i }).closest("form")!);
     await waitFor(() => {
-      expect(screen.getByText("Acces refuse.")).toBeInTheDocument();
+      expect(screen.getByText("Accès refusé.")).toBeInTheDocument();
     });
   });
 
