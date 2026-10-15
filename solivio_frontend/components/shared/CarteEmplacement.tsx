@@ -4,22 +4,9 @@ import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { ExternalLink } from "lucide-react";
+import { lienItineraire, type PositionLieu } from "@/lib/lieu";
 
-export interface LieuDto {
-  latitude: number | null;
-  longitude: number | null;
-  adresseFormatee: string | null;
-}
-
-function buildGoogleMapsUrl(lieu: LieuDto): string {
-  if (lieu.latitude != null && lieu.longitude != null) {
-    return `https://www.google.com/maps/search/?api=1&query=${lieu.latitude},${lieu.longitude}`;
-  }
-  if (lieu.adresseFormatee) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lieu.adresseFormatee)}`;
-  }
-  return "https://maps.google.com";
-}
+export type LieuDto = PositionLieu;
 
 interface Props {
   lieu: LieuDto;
@@ -66,7 +53,7 @@ export function CarteEmplacement({ lieu, hauteur = "300px", interactive = false 
         )}
       </div>
       <a
-        href={buildGoogleMapsUrl(lieu)}
+        href={lienItineraire(lieu) ?? "https://maps.google.com"}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"

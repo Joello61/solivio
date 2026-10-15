@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { NOM_ASSOCIATION } from "@/lib/marque";
 import type { MeResponse } from "@/types/auth";
 import { AvatarMembre, Logo } from "./identite";
-import { itemActif, libelleNav, sectionsPourRoles } from "./navigation";
+import { COMPTE, itemActif, libelleNav, sectionsPourRoles } from "./navigation";
 
 /*
  * Barre du haut mobile : la rubrique courante, et un retour vers elle depuis une
@@ -14,7 +14,7 @@ import { itemActif, libelleNav, sectionsPourRoles } from "./navigation";
  */
 export function TopBar({ user }: { user: MeResponse }) {
   const pathname = usePathname();
-  const items = sectionsPourRoles(user.roles).flatMap((s) => s.items);
+  const items = [...sectionsPourRoles(user.roles).flatMap((s) => s.items), COMPTE];
   const rubrique = itemActif(items, pathname);
   const surRubrique = !rubrique || rubrique.href === pathname;
 

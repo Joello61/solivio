@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const desinscrire = vi.fn();
 vi.mock("@/lib/api/distributions", () => ({ desinscrire: (...a: unknown[]) => desinscrire(...a) }));
 
-const props = { distributionId: "d1", inscriptionId: "i1", titre: "Distribution du jeudi", benevole: false, enAttente: false };
+const props = { distributionId: "d1", inscriptionId: "i1", titre: "la distribution du jeudi", benevole: false, enAttente: false };
 
 describe("BoutonDesinscription", () => {
   beforeEach(() => {
@@ -16,23 +16,23 @@ describe("BoutonDesinscription", () => {
     refresh.mockReset();
   });
 
-  it("desinscrit apres confirmation puis rafraichit la page", async () => {
+  it("libere la place apres confirmation puis rafraichit la page", async () => {
     desinscrire.mockResolvedValue(undefined);
     render(<BoutonDesinscription {...props} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Me désinscrire" }));
+    await userEvent.click(screen.getByRole("button", { name: "Je ne peux plus venir" }));
     const boite = screen.getByRole("dialog");
     expect(boite).toHaveTextContent(/proposée à la personne suivante/);
-    await userEvent.click(within(boite).getByRole("button", { name: "Me désinscrire" }));
+    await userEvent.click(within(boite).getByRole("button", { name: "Libérer ma place" }));
 
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(desinscrire).toHaveBeenCalledWith("d1", "i1");
   });
 
-  it("ne fait rien si la personne garde son inscription", async () => {
-    render(<BoutonDesinscription {...props} />);
-    await userEvent.click(screen.getByRole("button", { name: "Me désinscrire" }));
-    await userEvent.click(screen.getByRole("button", { name: "Garder mon inscription" }));
+  it("ne fait rien si la personne garde sa place", async () => {
+    render(<BoutonDesinscription {...props} apparence="billet" />);
+    await userEvent.click(screen.getByRole("button", { name: "Je ne peux plus venir" }));
+    await userEvent.click(screen.getByRole("button", { name: "Garder ma place" }));
     expect(desinscrire).not.toHaveBeenCalled();
   });
 
@@ -40,11 +40,11 @@ describe("BoutonDesinscription", () => {
     desinscrire.mockRejectedValue(new Error("Desinscription impossible : la distribution est terminee"));
     render(<BoutonDesinscription {...props} benevole enAttente />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Me désinscrire" }));
+    await userEvent.click(screen.getByRole("button", { name: "Quitter la liste d'attente" }));
     const boite = screen.getByRole("dialog");
     expect(boite).toHaveTextContent(/quitterez la liste d'attente/);
     expect(boite).toHaveTextContent(/coordinateurs sont prévenus/);
-    await userEvent.click(within(boite).getByRole("button", { name: "Me désinscrire" }));
+    await userEvent.click(within(boite).getByRole("button", { name: "Quitter la liste" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("terminee");
     expect(refresh).not.toHaveBeenCalled();

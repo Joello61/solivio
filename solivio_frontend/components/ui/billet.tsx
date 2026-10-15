@@ -70,4 +70,4 @@ export function Billet({ date, horaire, lieu, statut, note, actions, className }
 
 /* Bouton ou lien de pied de billet. */
 export const actionBillet =
-  "flex min-h-12 items-center justify-center gap-2 px-3 text-base font-semibold text-on-brand hover:bg-on-brand/10 focus-visible:outline-on-brand";
+  "flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-semibold whitespace-nowrap sm:text-base text-on-brand hover:bg-on-brand/10 focus-visible:outline-on-brand";

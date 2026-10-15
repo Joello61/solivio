@@ -2,6 +2,7 @@ package com.solivio.api.shared.distribution;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public interface DistributionQueryPort {
     /** Distributions ouvertes ou passees (publiee, en cours, terminee) entre deux dates incluses. */
     List<UUID> trouverIdsNonAnnuleesEntre(LocalDate debut, LocalDate fin);
 
+    /** Creneaux de plusieurs distributions, tries par heure de debut, en une requete. */
+    List<HoraireCreneau> trouverHorairesCreneaux(Collection<UUID> distributionIds);
+
     record DistributionInfo(
         UUID id,
         String statut,
@@ -40,6 +44,9 @@ public interface DistributionQueryPort {
         LocalDate date,
         String lieu,
         String motifAnnulation,
-        String statut
+        String statut,
+        String lieuNom
     ) {}
+
+    record HoraireCreneau(UUID distributionId, UUID creneauId, LocalTime heureDebut, LocalTime heureFin) {}
 }

@@ -37,8 +37,8 @@ test.describe("Parcours pointage", () => {
       const pageBeneficiaire = await contexteBeneficiaire.newPage();
       await seConnecter(pageBeneficiaire, BENEFICIAIRE);
       await pageBeneficiaire.goto(`/distributions/${id}`);
-      await pageBeneficiaire.getByRole("button", { name: "S'inscrire" }).click();
-      await expect(pageBeneficiaire.getByRole("button", { name: "Se désinscrire" })).toBeVisible();
+      await pageBeneficiaire.getByRole("button", { name: "Réserver ma place" }).click();
+      await expect(pageBeneficiaire.getByRole("button", { name: "Je ne peux plus venir" })).toBeVisible();
       await contexteBeneficiaire.close();
 
       // Le benevole s'inscrit, puis le coordinateur demarre la distribution.
@@ -53,7 +53,7 @@ test.describe("Parcours pointage", () => {
       const page = await contexteBenevole.newPage();
       await seConnecter(page, BENEVOLE);
       await page.goto(`/distributions/${id}`);
-      await page.getByRole("link", { name: /Pointage/ }).click();
+      await page.getByRole("link", { name: /ouvrir le pointage/i }).click();
       // La liste complete est chargee d'emblee : le filtre est local.
       await page.getByLabel("Rechercher un inscrit").fill(NOM_BENEFICIAIRE);
       await page.getByRole("button", { name: `Marquer Linkee ${NOM_BENEFICIAIRE} présent` }).click();

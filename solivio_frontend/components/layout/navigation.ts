@@ -13,6 +13,7 @@ import {
   Tags,
   Truck,
   UserCog,
+  UserRound,
   Users,
 } from "lucide-react";
 import { estGestionnaireDistribution } from "@/lib/droits-distribution";
@@ -44,6 +45,9 @@ const MISSIONS: NavItem = {
   roles: ["benevole", ...GESTION],
 };
 const STATISTIQUES: NavItem = { href: "/statistiques", label: "Statistiques", icon: BarChart3, roles: GESTION };
+
+/* Rubrique hors menu (on y accede par l'avatar), utile pour le retour depuis ses sous-pages. */
+export const COMPTE: NavItem = { href: "/mon-compte", label: "Mon compte", icon: UserRound };
 
 /* Navigation groupee par intention : ce que je fais, les autres activites, le pilotage. */
 export const NAV_SECTIONS: NavSection[] = [

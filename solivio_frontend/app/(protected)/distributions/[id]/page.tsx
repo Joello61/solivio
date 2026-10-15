@@ -19,7 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Statut } from "@/components/ui/statut";
 import { STATUT_DISTRIBUTION } from "@/lib/libelles";
 import { DistributionActions } from "@/components/distributions/DistributionActions";
-import { InscriptionButton } from "@/components/distributions/InscriptionButton";
+import { ReservationDistribution } from "@/components/distributions/ReservationDistribution";
+import { FicheMembre } from "@/components/distributions/FicheMembre";
+import { BoutonDesinscription } from "@/components/inscriptions/BoutonDesinscription";
 import { ActionPrincipaleMobile, actionPrincipale } from "@/components/distributions/ActionPrincipaleMobile";
 import { RoleBenevolePanel } from "@/components/distributions/RoleBenevolePanel";
 import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
@@ -34,7 +36,7 @@ import {
 import type { MeResponse } from "@/types/auth";
 import type { StatistiqueDistributionResponse } from "@/types/association";
 
-export const metadata: Metadata = { title: "Détail distribution" };
+export const metadata: Metadata = { title: "Distribution" };
 
 async function fetchData(id: string): Promise<{
   distribution: DistributionResponse | null;
@@ -110,6 +112,17 @@ export default async function DistributionDetailPage({ params }: PageProps) {
   const actionsPossibles =
     distribution.statut !== "TERMINEE" &&
     !(distribution.statut === "ANNULEE" && distribution.date < jourAssociation(new Date()));
+  if (!estGestionnaire) {
+    return (
+      <FicheMembre
+        distribution={distribution}
+        monInscription={monInscription}
+        type={typeInscription}
+        pointageBenevole={pointageBenevole}
+      />
+    );
+  }
+
   const action = actionPrincipale({
     statut: distribution.statut,
     estGestionnaire,
@@ -417,12 +430,30 @@ export default async function DistributionDetailPage({ params }: PageProps) {
               <p className="text-sm font-semibold text-foreground font-display">
                 Mon inscription
               </p>
-              <InscriptionButton
-                distributionId={id}
-                creneaux={distribution.creneaux}
-                inscriptionExistante={monInscription ?? null}
-                typeParDefaut={typeInscription}
-              />
+              {monInscription ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    {monInscription.statut === "LISTE_ATTENTE"
+                      ? `Liste d'attente, rang ${monInscription.rangListeAttente ?? "?"}.`
+                      : "Votre place est réservée."}
+                  </p>
+                  <BoutonDesinscription
+                    distributionId={id}
+                    inscriptionId={monInscription.id}
+                    titre="cette distribution"
+                    benevole={monInscription.type === "BENEVOLE"}
+                    enAttente={monInscription.statut === "LISTE_ATTENTE"}
+                  />
+                </div>
+              ) : (
+                <ReservationDistribution
+                  distributionId={id}
+                  creneaux={distribution.creneaux}
+                  modeCreneau={distribution.modeCreneau}
+                  type={typeInscription}
+                  placesRestantes={distribution.remplissage.placesRestantesBenevoles}
+                />
+              )}
             </div>
           )}
 

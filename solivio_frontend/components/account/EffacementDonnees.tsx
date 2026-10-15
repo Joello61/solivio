@@ -44,14 +44,13 @@ export function EffacementDonnees() {
   }
 
   return (
-    <section className="rounded-2xl border border-destructive/30 bg-card p-5 space-y-3">
-      <h2 className="text-sm font-semibold text-foreground">Supprimer mes données</h2>
-      <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-base text-muted-foreground">
         Votre compte, votre dossier et vos coordonnées seront supprimés définitivement. Votre nom
         disparaîtra de l&apos;historique des distributions, qui ne gardera que des chiffres anonymes.
       </p>
-      <Button variant="destructive" size="sm" onClick={() => setOuvert(true)}>
-        <Trash2 className="h-3.5 w-3.5 mr-1" />
+      <Button variant="destructive" onClick={() => setOuvert(true)}>
+        <Trash2 aria-hidden="true" />
         Supprimer mes données
       </Button>
 
@@ -88,7 +87,7 @@ export function EffacementDonnees() {
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <Button
-              variant="destructive"
+              variant="destructive-solid"
               disabled={saisie !== CONFIRMATION || enCours}
               onClick={confirmer}
             >
@@ -97,6 +96,6 @@ export function EffacementDonnees() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </div>
   );
 }

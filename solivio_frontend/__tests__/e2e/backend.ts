@@ -4,6 +4,10 @@ import { request, type APIRequestContext, type Page, type TestType } from "@play
 export const API_URL = process.env.E2E_API_URL ?? "http://localhost:8080";
 // Comptes du profil seed (DataSeeder), sans valeur hors developpement.
 export const MOT_DE_PASSE_SEED = process.env.E2E_PASSWORD ?? "Solivio2026!";
+// Lien vers la fiche d'une distribution, hors creation, duplication et jour J
+// (la barre laterale propose le jour J les jours de distribution).
+export const CARTE_DISTRIBUTION =
+  "main a[href^='/distributions/']:not([href^='/distributions/nouvelle']):not([href$='/pointage'])";
 
 export async function backendDisponible(): Promise<boolean> {
   try {

@@ -1,5 +1,6 @@
 package com.solivio.api.shared.infrastructure.web;
 
+import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.web.ApiError;
 import com.solivio.api.shared.web.ContexteRequete;
 
@@ -47,6 +48,16 @@ class GlobalExceptionHandlerTest {
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(reponse.getBody().error().message()).contains("desactive");
+    }
+
+    @Test
+    void handleConflict_reprendLeCodeDuConflit() {
+        assertThat(handler.handleConflict(new ConflictException("Deja fait")).getBody().error().code())
+            .isEqualTo("CONFLICT");
+        ResponseEntity<ApiError> reponse = handler.handleConflict(new ConflictException("FREQUENCY_LIMIT", "Limite"));
+
+        assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(reponse.getBody().error().code()).isEqualTo("FREQUENCY_LIMIT");
     }
 
     @Test

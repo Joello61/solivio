@@ -169,7 +169,8 @@ class InscriptionServiceTest {
             distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("cette semaine");
+            .hasMessageContaining("cette semaine")
+            .extracting("code").isEqualTo("FREQUENCY_LIMIT");
     }
 
     @Test

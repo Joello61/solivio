@@ -1,5 +1,16 @@
 import { test, expect } from "@playwright/test";
-import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+import type { Page } from "@playwright/test";
+import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+
+// Sur la feuille d'une distribution, la repartition est rangee dans l'onglet Denrees.
+async function ouvrirOngletDenrees(page: Page): Promise<void> {
+  const sections = page.getByRole("navigation", { name: "Sections de la distribution" });
+  const onglet = sections.getByRole("link", { name: /denrées/i });
+  if (await onglet.isVisible().catch(() => false)) {
+    await onglet.click();
+    await page.waitForURL(/onglet=denrees/);
+  }
+}
 
 // Tests E2E du parcours repartition coordinateur.
 // Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
@@ -29,7 +40,7 @@ test.describe("Parcours repartition coordinateur", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -39,6 +50,7 @@ test.describe("Parcours repartition coordinateur", () => {
 
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
+    await ouvrirOngletDenrees(page);
 
     // Le bouton Repartition n'est visible que pour les gestionnaires
     const lienRepartition = page.getByRole("link", { name: /répartition/i });
@@ -62,7 +74,7 @@ test.describe("Parcours repartition coordinateur", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -72,6 +84,7 @@ test.describe("Parcours repartition coordinateur", () => {
 
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
+    await ouvrirOngletDenrees(page);
 
     const lienRepartition = page.getByRole("link", { name: /répartition/i });
     const repartitionVisible = await lienRepartition.isVisible({ timeout: 2_000 }).catch(() => false);
@@ -101,7 +114,7 @@ test.describe("Parcours repartition coordinateur", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -111,6 +124,7 @@ test.describe("Parcours repartition coordinateur", () => {
 
     await premiereDistribCard.click();
     await page.waitForLoadState("networkidle");
+    await ouvrirOngletDenrees(page);
 
     const lienRepartition = page.getByRole("link", { name: /répartition/i });
     const repartitionVisible = await lienRepartition.isVisible({ timeout: 2_000 }).catch(() => false);

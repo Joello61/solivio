@@ -9,8 +9,10 @@ import type { StatistiquePeriodeResponse } from "@/types/association";
 import type { DistributionResponse } from "@/types/distribution";
 import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
 import { NOM_ASSOCIATION } from "@/lib/marque";
+import { AccueilMembre } from "@/components/accueil/AccueilMembre";
+import { typeInscriptionPossible } from "@/lib/droits-distribution";
 
-export const metadata: Metadata = { title: "Tableau de bord" };
+export const metadata: Metadata = { title: "Accueil" };
 
 async function fetchDashboardData(): Promise<{
   me: MeResponse | null;
@@ -100,6 +102,10 @@ export default async function DashboardPage() {
     ["coordinateur", "responsable", "super_admin"].includes(r),
   );
   const estResponsable = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
+  const type = typeInscriptionPossible(me?.roles ?? []);
+  if (me && !estGestionnaire && type) {
+    return <AccueilMembre prenom={me.prenom} type={type} duJour={duJour} />;
+  }
 
   const moisCourant = new Date().toLocaleString("fr-FR", { month: "long", year: "numeric" });
 

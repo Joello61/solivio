@@ -5,10 +5,12 @@ import { Plus, CalendarX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DistributionCard } from "@/components/distributions/DistributionCard";
+import { AgendaMembre } from "@/components/agenda/AgendaMembre";
+import { typeInscriptionPossible } from "@/lib/droits-distribution";
 import type { DistributionResponse } from "@/types/distribution";
 import type { MeResponse } from "@/types/auth";
 
-export const metadata: Metadata = { title: "Distributions" };
+export const metadata: Metadata = { title: "Agenda" };
 
 async function fetchMeEtDistributions(): Promise<{
   me: MeResponse | null;
@@ -27,6 +29,8 @@ export default async function DistributionsPage() {
   const estGestionnaire = me?.roles.some((r) =>
     ["coordinateur", "responsable", "super_admin"].includes(r),
   );
+  const type = typeInscriptionPossible(me?.roles ?? []);
+  if (!estGestionnaire && type) return <AgendaMembre distributions={distributions} type={type} />;
 
   const nbParStatut = distributions.reduce<Record<string, number>>((acc, d) => {
     acc[d.statut] = (acc[d.statut] ?? 0) + 1;
