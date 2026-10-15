@@ -6,8 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MissionCollecteCard } from "@/components/collecte/MissionCollecteCard";
 import type { MissionCollecteResponse, StatutMission } from "@/types/collecte";
-import { ListeMissionsBenevole } from "@/components/collecte/ListeMissionsBenevole";
-import type { VueMissions } from "@/components/collecte/FiltreMissions";
+import { ListeMissionsBenevole, type VueMissions } from "@/components/collecte/ListeMissionsBenevole";
 
 const VUES: VueMissions[] = ["disponibles", "miennes", "passees"];
 

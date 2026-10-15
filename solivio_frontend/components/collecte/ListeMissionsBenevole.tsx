@@ -4,12 +4,14 @@ import { List, ListRow } from "@/components/ui/list-row";
 import { PageHeader } from "@/components/ui/page-header";
 import { Statut } from "@/components/ui/statut";
 import { DateBloc } from "@/components/agenda/DateBloc";
-import { FiltreMissions, type VueMissions } from "@/components/collecte/FiltreMissions";
+import { FiltreUrl } from "@/components/shared/FiltreUrl";
 import { lireServeur } from "@/lib/api/serveur";
 import { dateLongue } from "@/lib/agenda";
 import { jourEtHeure } from "@/lib/engagements";
 import { STATUT_MISSION } from "@/lib/libelles";
 import type { MissionCollecteResponse } from "@/types/collecte";
+
+export type VueMissions = "disponibles" | "miennes" | "passees";
 
 const ACTIVES = ["PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"];
 
@@ -61,8 +63,11 @@ export async function ListeMissionsBenevole({ vue }: { vue: VueMissions }) {
     <div className="max-w-2xl">
       <PageHeader titre="Missions de collecte" description="Récupérer des dons et les déposer au local." />
       <div className="flex flex-col gap-4">
-        <FiltreMissions
-          vue={vue}
+        <FiltreUrl
+          label="Missions à afficher"
+          parametre="vue"
+          valeur={vue}
+          defaut="disponibles"
           options={[
             { value: "disponibles", label: "À prendre", count: listes.disponibles.length },
             { value: "miennes", label: "Les miennes", count: listes.miennes.length },
