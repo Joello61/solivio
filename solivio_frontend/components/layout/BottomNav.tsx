@@ -30,7 +30,7 @@ export function BottomNav({ user, jourJ }: { user: MeResponse; jourJ?: string })
   return (
     <nav
       aria-label="Navigation mobile"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden"
     >
       <div className="flex items-stretch">
         {items.map((item) => {

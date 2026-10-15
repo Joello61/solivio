@@ -1,6 +1,7 @@
 import type { PointageInfoResponse, StatutPresence } from "@/types/distribution";
 
-export type PresencePointee = "PRESENT" | "ABSENT";
+// NON_POINTE sert a annuler un pointage fait par erreur.
+export type PresencePointee = "PRESENT" | "ABSENT" | "NON_POINTE";
 
 export interface EnvoiPointage {
   inscriptionId: string;
@@ -70,4 +71,48 @@ export function doitReessayer(tentatives: number, erreur: unknown): boolean {
 
 export function delaiNouvelEssai(tentative: number): number {
   return Math.min(1000 * 2 ** tentative, 15_000);
+}
+
+export interface GroupeCreneau {
+  cle: string;
+  debut: string | null;
+  fin: string | null;
+  courant: boolean;
+  lignes: LignePointage[];
+}
+
+const RANG_COURANT = 0;
+const RANG_A_VENIR = 1;
+const RANG_PASSE = 2;
+const RANG_SANS_HORAIRE = 3;
+
+/*
+ * Lignes groupees par creneau, le creneau en cours d'abord, puis ceux a venir,
+ * puis ceux deja passes, du plus recent au plus ancien, pour les retardataires. `maintenant`
+ * est l'heure locale "HH:MM", null tant qu'elle n'est pas connue.
+ */
+export function grouperParCreneau(lignes: LignePointage[], maintenant: string | null): GroupeCreneau[] {
+  const groupes = new Map<string, GroupeCreneau>();
+  for (const ligne of lignes) {
+    const debut = ligne.heureCreneauDebut?.slice(0, 5) ?? null;
+    const fin = ligne.heureCreneauFin?.slice(0, 5) ?? null;
+    const cle = debut ? `${debut}-${fin ?? ""}` : "sans-horaire";
+    const groupe = groupes.get(cle);
+    if (groupe) groupe.lignes.push(ligne);
+    else groupes.set(cle, { cle, debut, fin, courant: false, lignes: [ligne] });
+  }
+  const rang = (g: GroupeCreneau) => {
+    if (!g.debut) return RANG_SANS_HORAIRE;
+    if (!maintenant || g.debut > maintenant) return RANG_A_VENIR;
+    return g.fin && maintenant < g.fin ? RANG_COURANT : RANG_PASSE;
+  };
+  return [...groupes.values()]
+    .map((g) => ({ ...g, courant: rang(g) === RANG_COURANT }))
+    .sort((a, b) => {
+      const ecart = rang(a) - rang(b);
+      if (ecart !== 0) return ecart;
+      // Parmi les creneaux passes, le plus recent d'abord.
+      const ordre = (a.debut ?? "").localeCompare(b.debut ?? "");
+      return rang(a) === RANG_PASSE ? -ordre : ordre;
+    });
 }

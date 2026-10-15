@@ -1,11 +1,11 @@
 "use client";
 
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
@@ -15,25 +15,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreatableCombobox } from "./CreatableCombobox";
+import { quantite } from "@/lib/repartition";
 import type { DenreeResponse } from "@/types/distribution";
 
-// valueAsNumber: true dans register() fournit des nombres directement au store interne.
-// z.number() (sans coerce) permet a z.infer<schema> d'avoir le bon type numerique,
-// ce qui evite le conflit de types entre zodResolver et useForm<FormValues>.
+// valueAsNumber dans register() fournit des nombres : z.number() sans coerce
+// garde un type numerique coherent entre zodResolver et useForm.
 const schema = z.object({
-  libelle: z.string().min(1, "Le libelle est requis").max(200),
+  libelle: z.string().trim().min(1, "Indiquez la denrée.").max(200),
   unite: z.enum(["UNITE", "KILOGRAMME", "LITRE", "PIECE"]),
-  nombreContenants: z.number().int().positive("Doit être positif"),
-  quantiteParContenant: z.number().positive("Doit être positif"),
+  nombreContenants: z.number({ error: "Indiquez un nombre." }).int("Un nombre entier.").positive("Au moins 1."),
+  quantiteParContenant: z.number({ error: "Indiquez une quantité." }).positive("Une quantité positive."),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 const UNITES: { value: FormValues["unite"]; label: string }[] = [
-  { value: "KILOGRAMME", label: "Kilogramme (kg)" },
-  { value: "LITRE", label: "Litre (L)" },
-  { value: "PIECE", label: "Piece" },
-  { value: "UNITE", label: "Unité générique" },
+  { value: "KILOGRAMME", label: "kg" },
+  { value: "LITRE", label: "litres" },
+  { value: "PIECE", label: "pièces" },
+  { value: "UNITE", label: "unités" },
 ];
 
 interface Props {
@@ -42,6 +42,7 @@ interface Props {
   onAnnuler: () => void;
 }
 
+/* Saisie d'un arrivage tel qu'il se compte : "12 sacs de 5 kg". */
 export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
   const {
     control,
@@ -50,6 +51,7 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: "onBlur",
     defaultValues: initiales
       ? {
           libelle: initiales.libelle,
@@ -57,93 +59,71 @@ export function FormulaireDenree({ initiales, onSubmit, onAnnuler }: Props) {
           nombreContenants: initiales.nombreContenants,
           quantiteParContenant: initiales.quantiteParContenant,
         }
-      : { unite: "KILOGRAMME" },
+      : { libelle: "", unite: "KILOGRAMME" },
   });
+  const [nombre, contenu, unite] = useWatch({ control, name: ["nombreContenants", "quantiteParContenant", "unite"] });
+  const total = Number.isFinite(nombre) && Number.isFinite(contenu) && nombre > 0 && contenu > 0 ? nombre * contenu : null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid gap-1.5">
-        <Label htmlFor="libelle">Libelle</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
+      <FormField label="Nom de la denrée" htmlFor="libelle" error={errors.libelle?.message} hint="Choisissez dans le catalogue ou tapez un nouveau nom.">
         <Controller
           name="libelle"
           control={control}
           render={({ field }) => (
-            <CreatableCombobox
-              id="libelle"
-              value={field.value}
-              onChange={field.onChange}
-              placeholder="Ex : Pommes de terre"
-            />
+            <CreatableCombobox id="libelle" value={field.value} onChange={field.onChange} placeholder="Pâtes, yaourts, huile" />
           )}
         />
-        {errors.libelle && (
-          <p className="text-xs text-destructive">{errors.libelle.message}</p>
-        )}
-      </div>
+      </FormField>
 
-      <div className="grid gap-1.5">
-        <Label htmlFor="unite">Unité</Label>
-        <Controller
-          name="unite"
-          control={control}
-          render={({ field }) => (
-            <Select items={UNITES} value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="unite" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {UNITES.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>
-                    {u.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.unite && <p className="text-xs text-destructive">{errors.unite.message}</p>}
-      </div>
+      <FormField label="Nombre de contenants" htmlFor="nombreContenants" error={errors.nombreContenants?.message} hint="Sacs, cartons, packs : ce que vous comptez.">
+        <Input id="nombreContenants" type="number" inputMode="numeric" min="1" step="1" {...register("nombreContenants", { valueAsNumber: true })} />
+      </FormField>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-1.5">
-          <Label htmlFor="nombreContenants">Nombre de contenants</Label>
-          <Input
-            id="nombreContenants"
-            type="number"
-            inputMode="numeric"
-            min="1"
-            step="1"
-            {...register("nombreContenants", { valueAsNumber: true })}
-          />
-          {errors.nombreContenants && (
-            <p className="text-xs text-destructive">{errors.nombreContenants.message}</p>
-          )}
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="quantiteParContenant">Quantité par contenant</Label>
+      <div className="grid grid-cols-[1fr_auto] items-start gap-3">
+        <FormField label="Quantité dans chacun" htmlFor="quantiteParContenant" error={errors.quantiteParContenant?.message}>
           <Input
             id="quantiteParContenant"
             type="number"
             inputMode="decimal"
             min="0.001"
-            step="0.001"
+            step="any"
             {...register("quantiteParContenant", { valueAsNumber: true })}
           />
-          {errors.quantiteParContenant && (
-            <p className="text-xs text-destructive">{errors.quantiteParContenant.message}</p>
-          )}
-        </div>
+        </FormField>
+        <FormField label="Unité" htmlFor="unite">
+          <Controller
+            name="unite"
+            control={control}
+            render={({ field }) => (
+              <Select items={UNITES} value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="unite" className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNITES.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
       </div>
 
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="outline" onClick={onAnnuler} disabled={isSubmitting}>
+      <p className="text-base text-muted-foreground" aria-live="polite">
+        {total !== null ? `En tout : ${quantite(total, unite)}.` : "Le total s'affiche ici."}
+      </p>
+
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button type="button" variant="ghost" onClick={onAnnuler} disabled={isSubmitting}>
           Annuler
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <><Spinner size="sm" /> Enregistrement...</>
-          ) : initiales ? "Modifier" : "Ajouter"}
+          {isSubmitting && <Spinner size="sm" />}
+          {initiales ? "Enregistrer" : "Ajouter"}
         </Button>
       </div>
     </form>

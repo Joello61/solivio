@@ -188,7 +188,13 @@ export function ActionsCycle({ distributionId, statut, date, aujourdhui, nbInscr
               Retour
             </Button>
             {confirmation === "terminer" && (
-              <Button disabled={enCours !== null} onClick={() => executer("terminer", () => terminerDistribution(distributionId))}>
+              <Button disabled={enCours !== null} onClick={() =>
+                  executer("terminer", () => terminerDistribution(distributionId), () => {
+                    router.push(`/distributions/${distributionId}?onglet=bilan`);
+                    router.refresh();
+                  })
+                }
+              >
                 {enCours === "terminer" && <Spinner size="sm" />}
                 Clore la distribution
               </Button>
