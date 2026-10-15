@@ -2,6 +2,7 @@ package com.solivio.api.inscription.infrastructure.web.dto;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 /**
@@ -14,8 +15,12 @@ public record InscriptionPersonnelleResponse(
     String distributionTitre,
     LocalDate distributionDate,
     String distributionLieu,
+    String distributionLieuNom,
     // Une distribution terminee ou annulee le jour meme n'est plus "a venir".
     String distributionStatut,
+    // Horaire du rendez-vous : celui du creneau choisi, sinon la plage de la distribution.
+    LocalTime heureDebut,
+    LocalTime heureFin,
     String type,
     String statut,
     Integer rangListeAttente,

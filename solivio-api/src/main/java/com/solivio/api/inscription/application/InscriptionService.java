@@ -25,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -337,29 +339,49 @@ public class InscriptionService {
                 .trouverDetailsParIds(distributionIds)
                 .stream()
                 .collect(Collectors.toMap(DistributionDetailInfo::id, Function.identity()));
+            Map<UUID, List<HoraireCreneau>> horaires = distributionQueryPort
+                .trouverHorairesCreneaux(distributionIds)
+                .stream()
+                .collect(Collectors.groupingBy(HoraireCreneau::distributionId));
 
             return inscriptions.stream()
-                .map(i -> {
-                    DistributionDetailInfo dist = detailsParId.get(i.getDistributionId());
-                    return new InscriptionPersonnelleResponse(
-                        i.getId(),
-                        i.getDistributionId(),
-                        dist != null ? dist.titre() : null,
-                        dist != null ? dist.date() : null,
-                        dist != null ? dist.lieu() : null,
-                        dist != null ? dist.statut() : null,
-                        i.getType().name(),
-                        i.getStatut().name(),
-                        i.getRangListeAttente(),
-                        i.getPresence().name(),
-                        i.isAbsenceDeduite(),
-                        i.getDateInscription()
-                    );
-                })
+                .map(i -> versPersonnelle(i, detailsParId.get(i.getDistributionId()),
+                    horaires.getOrDefault(i.getDistributionId(), List.of())))
                 .toList();
         } catch (com.solivio.api.shared.exception.NotFoundException e) {
             return List.of();
         }
+    }
+
+    private static InscriptionPersonnelleResponse versPersonnelle(
+        Inscription i, DistributionDetailInfo dist, List<HoraireCreneau> creneaux
+    ) {
+        List<HoraireCreneau> retenus = creneaux.stream()
+            .filter(c -> c.creneauId().equals(i.getCreneauId()))
+            .findFirst()
+            .map(List::of)
+            .orElse(creneaux);
+        LocalTime debut = retenus.stream().map(HoraireCreneau::heureDebut)
+            .min(Comparator.naturalOrder()).orElse(null);
+        LocalTime fin = retenus.stream().map(HoraireCreneau::heureFin)
+            .max(Comparator.naturalOrder()).orElse(null);
+        return new InscriptionPersonnelleResponse(
+            i.getId(),
+            i.getDistributionId(),
+            dist != null ? dist.titre() : null,
+            dist != null ? dist.date() : null,
+            dist != null ? dist.lieu() : null,
+            dist != null ? dist.lieuNom() : null,
+            dist != null ? dist.statut() : null,
+            debut,
+            fin,
+            i.getType().name(),
+            i.getStatut().name(),
+            i.getRangListeAttente(),
+            i.getPresence().name(),
+            i.isAbsenceDeduite(),
+            i.getDateInscription()
+        );
     }
 
     @Transactional(readOnly = true)
