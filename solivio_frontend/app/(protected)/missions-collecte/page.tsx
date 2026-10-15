@@ -6,9 +6,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MissionCollecteCard } from "@/components/collecte/MissionCollecteCard";
 import type { MissionCollecteResponse, StatutMission } from "@/types/collecte";
-import type { MeResponse } from "@/types/auth";
+import { ListeMissionsBenevole } from "@/components/collecte/ListeMissionsBenevole";
+import type { VueMissions } from "@/components/collecte/FiltreMissions";
 
-export const metadata: Metadata = { title: "Missions collecte" };
+const VUES: VueMissions[] = ["disponibles", "miennes", "passees"];
+
+export const metadata: Metadata = { title: "Missions de collecte" };
 
 const ONGLETS: { statut: StatutMission | null; label: string }[] = [
   { statut: null, label: "Toutes" },
@@ -19,27 +22,25 @@ const ONGLETS: { statut: StatutMission | null; label: string }[] = [
   { statut: "ANNULEE", label: "Annulées" },
 ];
 
-async function fetchData(statut?: string): Promise<{
-  me: MeResponse | null;
-  missions: MissionCollecteResponse[];
-}> {
+async function fetchData(statut?: string): Promise<{ missions: MissionCollecteResponse[] }> {
   const qs = statut ? `?statut=${encodeURIComponent(statut)}` : "";
-  const [me, missions] = await Promise.all([
-    lireMoi(),
-    lireServeur<MissionCollecteResponse[]>(`/api/missions-collecte${qs}`),
-  ]);
-  return { me, missions: missions ?? [] };
+  const missions = await lireServeur<MissionCollecteResponse[]>(`/api/missions-collecte${qs}`);
+  return { missions: missions ?? [] };
 }
 
 interface Props {
-  searchParams: Promise<{ statut?: string }>;
+  searchParams: Promise<{ statut?: string; vue?: string }>;
 }
 
 export default async function MissionsCollectePage({ searchParams }: Props) {
-  const { statut } = await searchParams;
-  const { me, missions } = await fetchData(statut);
-
+  const { statut, vue } = await searchParams;
+  const me = await lireMoi();
   const estGestionnaire = me?.roles.some((r) => ["responsable", "super_admin"].includes(r));
+  // La vue de gestion des responsables est reprise au lot 8.
+  if (!estGestionnaire) {
+    return <ListeMissionsBenevole vue={VUES.find((v) => v === vue) ?? "disponibles"} />;
+  }
+  const { missions } = await fetchData(statut);
 
   return (
     <div className="space-y-8">

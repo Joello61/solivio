@@ -2,173 +2,148 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Undo2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu";
+import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import {
-  prendreEnCharge,
-  libererMission,
-  validerCollecte,
-  validerDepot,
-  annulerMission,
-} from "@/lib/api/collecte";
-import { cn } from "@/lib/utils";
-import type { StatutMission } from "@/types/collecte";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FormField } from "@/components/ui/form-field";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { annulerMission, libererMission, prendreEnCharge, validerCollecte, validerDepot } from "@/lib/api/collecte";
+import { messageErreur } from "@/lib/erreurs";
+import { actionsMission, type Action, type ActionPrincipale, type DroitsMission } from "@/lib/missions";
 
-interface Props {
+const LIBELLE_PRINCIPALE: Record<ActionPrincipale, string> = {
+  prendre: "Prendre la mission",
+  "valider-collecte": "Valider la collecte",
+  "valider-depot": "J'ai déposé les denrées",
+};
+
+const CONFIRMATION: Partial<Record<Action, string>> = {
+  prendre: "Mission prise. Elle apparaît dans vos engagements.",
+  "valider-collecte": "Collecte validée.",
+  "valider-depot": "Dépôt noté. Merci !",
+  liberer: "Mission rendue : elle est de nouveau disponible.",
+  annuler: "Mission annulée.",
+};
+
+interface Props extends DroitsMission {
   missionId: string;
-  statut: StatutMission;
-  assigneAuLecteur: boolean;
-  estGestionnaire: boolean;
-  estBenevole: boolean;
 }
 
-export function MissionActions({ missionId, statut, assigneAuLecteur, estGestionnaire, estBenevole }: Props) {
+export function MissionActions({ missionId, ...droits }: Props) {
   const router = useRouter();
-  const [pending, setPending] = useState<string | null>(null);
+  const { principale, autres } = actionsMission(droits);
+  const [enCours, setEnCours] = useState<Action | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [raisonAnnulation, setRaisonAnnulation] = useState("");
-  const [showAnnulationForm, setShowAnnulationForm] = useState(false);
+  const [annulation, setAnnulation] = useState(false);
+  const [raison, setRaison] = useState("");
 
-  // Le backend compare a la personne : l'id du compte ne correspond jamais a benevoleId.
-  const estAssigne = assigneAuLecteur;
+  if (!principale && autres.length === 0) return null;
 
-  async function executer(action: string, fn: () => Promise<unknown>) {
-    setPending(action);
+  async function executer(action: Action, appel: () => Promise<unknown>) {
+    setEnCours(action);
     setErreur(null);
     try {
-      await fn();
+      await appel();
+      setAnnulation(false);
+      const message = CONFIRMATION[action];
+      if (message) toast.success(message);
       router.refresh();
-    } catch (e: unknown) {
-      const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
+    } catch (e) {
+      setErreur(messageErreur(e, "L'action n'a pas pu aboutir. Réessayez dans un instant."));
     } finally {
-      setPending(null);
+      setEnCours(null);
     }
   }
 
-  const peutModifier = estGestionnaire && statut === "DISPONIBLE";
-  const peutPrendre = estBenevole && statut === "DISPONIBLE";
-  const peutLiberer = estBenevole && estAssigne && statut === "PRISE_EN_CHARGE";
-  const peutValiderCollecte = estGestionnaire && statut === "PRISE_EN_CHARGE";
-  const peutValiderDepot = estBenevole && estAssigne && statut === "COLLECTE_EFFECTUEE";
-  const peutAnnuler = (estGestionnaire || estAssigne) && ["DISPONIBLE", "PRISE_EN_CHARGE", "COLLECTE_EFFECTUEE"].includes(statut);
+  const APPELS: Record<ActionPrincipale, () => Promise<unknown>> = {
+    prendre: () => prendreEnCharge(missionId),
+    "valider-collecte": () => validerCollecte(missionId),
+    "valider-depot": () => validerDepot(missionId),
+  };
 
-  if (!peutModifier && !peutPrendre && !peutLiberer && !peutValiderCollecte && !peutValiderDepot && !peutAnnuler) {
-    return null;
-  }
+  const menu: ActionMenuItem[] = autres.map((action) => {
+    if (action === "modifier") return { label: "Modifier", icon: Pencil, href: `/missions-collecte/${missionId}/modifier` };
+    if (action === "liberer") {
+      return { label: "Rendre la mission", icon: Undo2, onClick: () => executer("liberer", () => libererMission(missionId)) };
+    }
+    return { label: "Annuler la mission", icon: XCircle, destructive: true, onClick: () => setAnnulation(true) };
+  });
+
+  // Sans etape a franchir, les actions courantes restent visibles ; seule l'annulation passe au menu.
+  const visibles = principale ? [] : menu.filter((item) => !item.destructive);
+  const dansMenu = principale ? menu : menu.filter((item) => item.destructive);
 
   return (
-    <div className="space-y-3">
-      {erreur && (
-        <p className="text-sm text-destructive bg-destructive/8 border border-destructive/20 rounded-xl px-4 py-2">
-          {erreur}
-        </p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {peutPrendre && (
+    <div className="flex flex-col gap-3">
+      {erreur && !annulation && <Alert variant="destructive">{erreur}</Alert>}
+      <div className="flex items-center gap-2">
+        {principale && (
           <Button
-            onClick={() => executer("prendre", () => prendreEnCharge(missionId))}
-            disabled={pending !== null}
-            size="sm"
+            size="lg"
+            className="flex-1 sm:flex-none"
+            disabled={enCours !== null}
+            onClick={() => executer(principale, APPELS[principale])}
           >
-            {pending === "prendre" ? <Spinner className="mr-2 size-4" /> : null}
-            Prendre en charge
+            {enCours === principale && <Spinner size="sm" />}
+            {LIBELLE_PRINCIPALE[principale]}
           </Button>
         )}
-
-        {peutModifier && (
-          <Link
-            href={`/missions-collecte/${missionId}/modifier`}
-            className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-          >
-            <Pencil className="mr-2 size-4" />
-            Modifier
-          </Link>
+        {visibles.map((item) =>
+          item.href ? (
+            <Link key={item.label} href={item.href} className={buttonVariants({ variant: "outline" })}>
+              {item.icon && <item.icon aria-hidden="true" />}
+              {item.label}
+            </Link>
+          ) : (
+            <Button key={item.label} variant="outline" disabled={enCours !== null} onClick={item.onClick}>
+              {item.icon && <item.icon aria-hidden="true" />}
+              {item.label}
+            </Button>
+          ),
         )}
-
-        {peutLiberer && (
-          <Button
-            variant="outline"
-            onClick={() => executer("liberer", () => libererMission(missionId))}
-            disabled={pending !== null}
-            size="sm"
-          >
-            {pending === "liberer" ? <Spinner className="mr-2 size-4" /> : null}
-            Se désister
-          </Button>
-        )}
-
-        {peutValiderCollecte && (
-          <Button
-            onClick={() => executer("valider-collecte", () => validerCollecte(missionId))}
-            disabled={pending !== null}
-            size="sm"
-          >
-            {pending === "valider-collecte" ? <Spinner className="mr-2 size-4" /> : null}
-            Valider la collecte
-          </Button>
-        )}
-
-        {peutValiderDepot && (
-          <Button
-            onClick={() => executer("valider-depot", () => validerDepot(missionId))}
-            disabled={pending !== null}
-            size="sm"
-          >
-            {pending === "valider-depot" ? <Spinner className="mr-2 size-4" /> : null}
-            Valider le dépôt
-          </Button>
-        )}
-
-        {peutAnnuler && !showAnnulationForm && (
-          <Button
-            variant="destructive"
-            onClick={() => setShowAnnulationForm(true)}
-            disabled={pending !== null}
-            size="sm"
-          >
-            Annuler la mission
-          </Button>
-        )}
+        {dansMenu.length > 0 && <ActionMenu items={dansMenu} label="Plus d'actions sur la mission" />}
       </div>
 
-      {showAnnulationForm && (
-        <div className="space-y-2">
-          <input
-            type="text"
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-            placeholder="Raison de l'annulation..."
-            value={raisonAnnulation}
-            onChange={(e) => setRaisonAnnulation(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={!raisonAnnulation.trim() || pending !== null}
-              onClick={() =>
-                executer("annuler", () => annulerMission(missionId, raisonAnnulation))
-              }
-            >
-              {pending === "annuler" ? <Spinner className="mr-2 size-4" /> : null}
-              Confirmer l&apos;annulation
+      <Dialog open={annulation} onOpenChange={setAnnulation}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Annuler la mission</DialogTitle>
+            <DialogDescription>
+              La mission ne pourra plus être prise. Dites en quelques mots pourquoi : le motif reste visible sur la
+              mission.
+            </DialogDescription>
+          </DialogHeader>
+          <FormField label="Motif" htmlFor="raison-annulation" required>
+            <Textarea id="raison-annulation" value={raison} onChange={(e) => setRaison(e.target.value)} rows={3} />
+          </FormField>
+          {erreur && <Alert variant="destructive">{erreur}</Alert>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAnnulation(false)}>
+              Garder la mission
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setShowAnnulationForm(false);
-                setRaisonAnnulation("");
-              }}
+              variant="destructive-solid"
+              disabled={!raison.trim() || enCours !== null}
+              onClick={() => executer("annuler", () => annulerMission(missionId, raison.trim()))}
             >
-              Annuler
+              {enCours === "annuler" && <Spinner size="sm" />}
+              Annuler la mission
             </Button>
-          </div>
-        </div>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
