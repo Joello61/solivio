@@ -154,6 +154,8 @@ jobs:
           SPRING_PROFILES_ACTIVE: dev,seed
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/solivio
           SPRING_DATASOURCE_PASSWORD: solivio_ci
+          # Toute la suite se connecte depuis une seule IP ; la limite est testee unitairement.
+          SOLIVIO_SECURITE_LIMITEDEBITAUTH_REQUETESPARMINUTE: "1000"
         run: |
           ./mvnw -B -q package -DskipTests
           nohup java -jar target/solivio-api-*.jar > ../backend.log 2>&1 &

@@ -46,9 +46,23 @@ function pagesParRole(distribution: string): Record<string, string[]> {
 }
 
 type Theme = "light" | "dark";
+type Session = Awaited<ReturnType<Awaited<ReturnType<typeof sessionApi>>["storageState"]>>;
+
+// Une connexion par compte pour les deux themes : la connexion est limitee en debit.
+const sessions = new Map<string, Session>();
+let distribution: string | undefined;
+
+async function session(email: string): Promise<Session> {
+  if (!sessions.has(email)) {
+    const api = await sessionApi(email);
+    sessions.set(email, await api.storageState());
+    await api.dispose();
+  }
+  return sessions.get(email)!;
+}
 
 async function ouvrir(browser: Browser, theme: Theme, email?: string): Promise<Page> {
-  const storageState = email ? await (await sessionApi(email)).storageState() : undefined;
+  const storageState = email ? await session(email) : undefined;
   const contexte = await browser.newContext({ storageState, colorScheme: theme });
   await contexte.addInitScript((t) => {
     try {
@@ -81,7 +95,7 @@ for (const theme of ["light", "dark"] as const) {
       test.setTimeout(240_000);
       await exigerBackend(test);
       // En local, une distribution existante evite d'ecrire dans la base de demo.
-      const distribution = process.env.A11Y_DISTRIBUTION ?? (await assurerDistributionPubliee());
+      distribution ??= process.env.A11Y_DISTRIBUTION ?? (await assurerDistributionPubliee());
       for (const [role, pages] of Object.entries(pagesParRole(distribution))) {
         if (!COMPTES[role]) continue;
         const page = await ouvrir(browser, theme, COMPTES[role]);
