@@ -195,21 +195,22 @@ public class RepartitionService {
         String statut = distrib.statut();
         if ("TERMINEE".equals(statut) || "ANNULEE".equals(statut)) {
             throw new ConflictException(
-                "Modification impossible : la distribution est " + statut.toLowerCase()
+                "Modification impossible : la distribution est "
+                    + ("TERMINEE".equals(statut) ? "terminée." : "annulée.")
             );
         }
     }
 
     private DenreeDistribution trouverOuEchouer(UUID denreeId, UUID distributionId) {
         return denreeRepository.findByIdAndDistributionId(denreeId, distributionId)
-            .orElseThrow(() -> new NotFoundException("Denree introuvable : " + denreeId));
+            .orElseThrow(() -> new NotFoundException("Denrée introuvable : " + denreeId));
     }
 
     private UniteConditionnement parseUnite(String unite) {
         try {
             return UniteConditionnement.valueOf(unite.toUpperCase());
         } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("Unite invalide : " + unite);
+            throw new IllegalArgumentException("Unité invalide : " + unite);
         }
     }
 

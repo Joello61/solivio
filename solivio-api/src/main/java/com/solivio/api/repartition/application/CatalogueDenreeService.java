@@ -64,7 +64,7 @@ public class CatalogueDenreeService {
     public CatalogueDenreeResponse creer(String libelle, UUID acteurId) {
         String libelleSain = Assainissement.nettoyer(libelle);
         if (catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
-            throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);
+            throw new ConflictException("Une denrée avec ce libellé existe déjà : " + libelleSain);
         }
         CatalogueDenree denree = catalogueRepository.save(new CatalogueDenree(libelleSain));
         auditService.tracer(acteurId, "CREATION", "CATALOGUE_DENREE", denree.getId());
@@ -74,12 +74,12 @@ public class CatalogueDenreeService {
     @Transactional
     public CatalogueDenreeResponse modifier(UUID id, String newLibelle, UUID acteurId) {
         CatalogueDenree denree = catalogueRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Denree catalogue introuvable : " + id));
+            .orElseThrow(() -> new NotFoundException("Denrée catalogue introuvable : " + id));
 
         String libelleSain = Assainissement.nettoyer(newLibelle);
         boolean libelleChange = !denree.getLibelle().equalsIgnoreCase(libelleSain);
         if (libelleChange && catalogueRepository.existsByLibelleIgnoreCase(libelleSain)) {
-            throw new ConflictException("Une denree avec ce libelle existe deja : " + libelleSain);
+            throw new ConflictException("Une denrée avec ce libellé existe déjà : " + libelleSain);
         }
 
         denree.setLibelle(libelleSain);
@@ -92,7 +92,7 @@ public class CatalogueDenreeService {
     @Transactional
     public void supprimer(UUID id, UUID acteurId) {
         CatalogueDenree denree = catalogueRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Denree catalogue introuvable : " + id));
+            .orElseThrow(() -> new NotFoundException("Denrée catalogue introuvable : " + id));
         auditService.tracer(acteurId, "SUPPRESSION", "CATALOGUE_DENREE", denree.getId());
         catalogueRepository.delete(denree);
     }

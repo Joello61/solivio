@@ -104,7 +104,7 @@ class RegisterControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error.message").value("Code de verification invalide ou expire"));
+            .andExpect(jsonPath("$.error.message").value("Code de vérification invalide ou expiré"));
     }
 
     @Test

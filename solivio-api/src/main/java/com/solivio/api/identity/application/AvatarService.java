@@ -58,7 +58,7 @@ public class AvatarService {
         try {
             Files.createDirectories(this.avatarsDir);
         } catch (IOException e) {
-            throw new UncheckedIOException("Impossible de creer le repertoire avatars : " + avatarsDirPath, e);
+            throw new UncheckedIOException("Impossible de créer le répertoire avatars : " + avatarsDirPath, e);
         }
     }
 
@@ -73,7 +73,7 @@ public class AvatarService {
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new UncheckedIOException("Echec de l'enregistrement de l'avatar", e);
+            throw new UncheckedIOException("Échec de l'enregistrement de l'avatar", e);
         }
 
         String photoUrl = URL_TEMPLATE + compteId;
@@ -120,7 +120,7 @@ public class AvatarService {
 
     private void validerFichier(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Le fichier avatar ne peut pas etre vide.");
+            throw new IllegalArgumentException("Le fichier avatar ne peut pas être vide.");
         }
         if (file.getSize() > 5 * 1024 * 1024) {
             throw new IllegalArgumentException("L'avatar ne peut pas depasser 5 Mo.");
@@ -128,7 +128,7 @@ public class AvatarService {
         String mime = file.getContentType();
         if (mime == null || !MIMES_AUTORISES.contains(mime)) {
             throw new IllegalArgumentException(
-                "Format non supporte. Formats acceptes : JPG, PNG, WEBP.");
+                "Format non supporté. Formats acceptés : JPG, PNG, WEBP.");
         }
     }
 

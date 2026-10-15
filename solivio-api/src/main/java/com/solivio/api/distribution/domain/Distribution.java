@@ -112,7 +112,7 @@ public class Distribution {
     /** Demarrage accidentel : retour a publiee (le service verifie qu'aucun pointage n'a eu lieu). */
     public void annulerDemarrage() {
         if (statut != StatutDistribution.EN_COURS) {
-            throw new IllegalStateException("Seule une distribution en cours peut revenir a publiee");
+            throw new IllegalStateException("Seule une distribution en cours peut revenir à publiée");
         }
         this.statut = StatutDistribution.PUBLIEE;
     }
@@ -123,7 +123,7 @@ public class Distribution {
      */
     public StatutDistribution reactiver() {
         if (statut != StatutDistribution.ANNULEE) {
-            throw new IllegalStateException("Seule une distribution annulee peut etre reactivee");
+            throw new IllegalStateException("Seule une distribution annulée peut être réactivée");
         }
         this.statut = statutAvantAnnulation == StatutDistribution.BROUILLON
             ? StatutDistribution.BROUILLON

@@ -46,13 +46,13 @@ public class PasswordService {
     @Transactional
     public void resetMotDePasse(String email, String code, String nouveauMotDePasse) {
         Compte compte = compteRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("Code invalide ou expire"));
+            .orElseThrow(() -> new IllegalArgumentException("Code invalide ou expiré"));
 
         boolean valide = verificationCodeService.valider(
             compte, code, VerificationCode.TYPE_PASSWORD_RESET);
 
         if (!valide) {
-            throw new IllegalArgumentException("Code invalide ou expire");
+            throw new IllegalArgumentException("Code invalide ou expiré");
         }
 
         compte.setPasswordHash(passwordEncoder.encode(nouveauMotDePasse));

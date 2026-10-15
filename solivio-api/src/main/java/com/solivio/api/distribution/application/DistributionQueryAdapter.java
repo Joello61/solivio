@@ -49,7 +49,7 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
     public CreneauInfo trouverCreneau(UUID creneauId, UUID distributionId) {
         Creneau c = creneauRepository.findByIdAndDistributionId(creneauId, distributionId)
             .orElseThrow(() -> new NotFoundException(
-                "Creneau " + creneauId + " introuvable pour distribution " + distributionId
+                "Créneau " + creneauId + " introuvable pour distribution " + distributionId
             ));
         return new CreneauInfo(c.getId(), c.getCapacite(), c.getHeureDebut(), c.getHeureFin());
     }

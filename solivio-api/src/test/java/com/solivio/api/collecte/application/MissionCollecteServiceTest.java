@@ -147,7 +147,7 @@ class MissionCollecteServiceTest {
 
         assertThatThrownBy(() -> service.liberer(missionId, "ben@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("n'etes pas le benevole assigne");
+            .hasMessageContaining("n'êtes pas le bénévole assigné");
     }
 
     @Test
@@ -192,7 +192,7 @@ class MissionCollecteServiceTest {
 
         assertThatThrownBy(() -> service.validerDepot(missionId, "ben@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("benevole assigne");
+            .hasMessageContaining("bénévole assigné");
     }
 
     @Test

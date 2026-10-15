@@ -50,7 +50,7 @@ public class EvenementService {
 
     public EvenementResponse creer(CreateEvenementRequest request, String emailCreateur) {
         if (!request.dateHeureFin().isAfter(request.dateHeureDebut())) {
-            throw new IllegalArgumentException("date_heure_fin doit etre apres date_heure_debut");
+            throw new IllegalArgumentException("date_heure_fin doit être après date_heure_debut");
         }
         PersonneInfo createur = personneQueryPort.trouverPersonne(emailCreateur);
         Evenement evenement = new Evenement(
@@ -80,7 +80,7 @@ public class EvenementService {
         Evenement evenement = trouverOuEchouer(evenementId);
         if (evenement.getStatut() != StatutEvenement.BROUILLON) {
             throw new com.solivio.api.shared.exception.ConflictException(
-                "Modification impossible : seul un evenement en BROUILLON peut etre modifie");
+                "Modification impossible : seul un événement en BROUILLON peut être modifié");
         }
         if (request.titre() != null) {
             evenement.setTitre(Assainissement.nettoyer(request.titre()));
@@ -131,7 +131,7 @@ public class EvenementService {
         ZonedDateTime debut = evenement.getDateHeureDebut();
         ZonedDateTime fin = evenement.getDateHeureFin();
         if (debut != null && fin != null && !fin.isAfter(debut)) {
-            throw new IllegalArgumentException("date_heure_fin doit etre apres date_heure_debut");
+            throw new IllegalArgumentException("date_heure_fin doit être après date_heure_debut");
         }
         auditService.tracer("EVENEMENT_MODIFIE", "evenement", evenementId);
         return toResponse(evenementRepository.save(evenement));
@@ -182,14 +182,14 @@ public class EvenementService {
         Evenement evenement = trouverOuEchouer(evenementId);
         // Un brouillon n'existe pas pour qui ne gere pas les evenements (404, pas 403).
         if (!gestionnaire && evenement.getStatut() == StatutEvenement.BROUILLON) {
-            throw new NotFoundException("Evenement introuvable : " + evenementId);
+            throw new NotFoundException("Événement introuvable : " + evenementId);
         }
         return toResponse(evenement);
     }
 
     Evenement trouverOuEchouer(UUID evenementId) {
         return evenementRepository.findById(evenementId)
-            .orElseThrow(() -> new NotFoundException("Evenement introuvable : " + evenementId));
+            .orElseThrow(() -> new NotFoundException("Événement introuvable : " + evenementId));
     }
 
     EvenementResponse toResponse(Evenement e) {

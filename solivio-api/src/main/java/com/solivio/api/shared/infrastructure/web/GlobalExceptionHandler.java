@@ -153,10 +153,10 @@ public class GlobalExceptionHandler {
     private static String messagePourStatut(HttpStatusCode statut) {
         return switch (statut.value()) {
             case 404 -> "Ressource introuvable.";
-            case 405 -> "Methode non autorisee pour cette ressource.";
-            case 413 -> "Fichier ou requete trop volumineux.";
-            case 415 -> "Type de contenu non supporte.";
-            default -> "Requete invalide.";
+            case 405 -> "Méthode non autorisée pour cette ressource.";
+            case 413 -> "Fichier ou requête trop volumineux.";
+            case 415 -> "Type de contenu non supporté.";
+            default -> "Requête invalide.";
         };
     }
 }

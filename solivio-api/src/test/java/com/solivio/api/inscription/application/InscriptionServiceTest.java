@@ -100,7 +100,7 @@ class InscriptionServiceTest {
             distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("deja inscrit");
+            .hasMessageContaining("déjà inscrit");
     }
 
     @Test
@@ -117,7 +117,7 @@ class InscriptionServiceTest {
             distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("deja inscrit");
+            .hasMessageContaining("déjà inscrit");
     }
 
     @Test
@@ -272,7 +272,7 @@ class InscriptionServiceTest {
         assertThatThrownBy(() -> service.desinscrire(
             distributionId, inscriptionId, "marie@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("deja annulee");
+            .hasMessageContaining("déjà annulée");
     }
 
     // --- Pointage ---
@@ -343,7 +343,7 @@ class InscriptionServiceTest {
             distributionId, "marie@example.com", "BENEFICIAIRE", null, ROLES_BENEFICIAIRE
         ))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("publiee");
+            .hasMessageContaining("publiée");
     }
 
     @Test
@@ -706,7 +706,7 @@ class InscriptionServiceTest {
 
         assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("terminee");
+            .hasMessageContaining("terminée");
     }
 
     @Test
@@ -719,7 +719,7 @@ class InscriptionServiceTest {
 
         assertThatThrownBy(() -> service.desinscrire(distributionId, inscriptionId, "marie@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("pointee");
+            .hasMessageContaining("pointée");
     }
 
     // --- C2 : role requis selon le type d'inscription ---

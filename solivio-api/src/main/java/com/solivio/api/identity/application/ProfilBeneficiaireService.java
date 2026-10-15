@@ -56,7 +56,7 @@ public class ProfilBeneficiaireService {
             .map(m -> "beneficiaire".equals(m.getRole()))
             .orElse(false);
         if (!beneficiaire) {
-            throw new NotFoundException("Dossier beneficiaire introuvable : " + compteId);
+            throw new NotFoundException("Dossier bénéficiaire introuvable : " + compteId);
         }
         ProfilBeneficiaireResponse dossier = lire(compteId);
         auditService.tracer("PROFIL_BENEFICIAIRE_CONSULTE", "compte", compteId);

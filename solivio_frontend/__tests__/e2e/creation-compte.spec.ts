@@ -14,7 +14,7 @@ const MOT_DE_PASSE = "Solivio-E2E-2026!";
 type MessageMailpit = { ID: string; Created: string };
 
 async function messagesDeVerification(request: APIRequestContext, email: string) {
-  const query = encodeURIComponent(`to:"${email}" subject:"Verifiez votre email"`);
+  const query = encodeURIComponent(`to:"${email}" subject:"votre email - Solivio"`);
   const reponse = await request.get(`${MAILPIT_URL}/api/v1/search?query=${query}`);
   expect(reponse.ok()).toBeTruthy();
   const corps = (await reponse.json()) as { messages: MessageMailpit[] };

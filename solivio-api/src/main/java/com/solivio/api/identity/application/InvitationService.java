@@ -41,7 +41,7 @@ public class InvitationService {
     @Transactional
     public Invitation inviterParCompteId(UUID compteId, String email, String role, String coordoType) {
         if (invitationRepository.existsByEmailAndStatut(email, "pending")) {
-            throw new IllegalArgumentException("Une invitation est deja en attente pour cet email");
+            throw new IllegalArgumentException("Une invitation est déjà en attente pour cet email");
         }
 
         Compte inviteur = compteRepository.findById(compteId).orElseThrow();
@@ -61,6 +61,6 @@ public class InvitationService {
     public Invitation consulterInvitation(UUID token) {
         return invitationRepository.findByTokenWithDetails(token)
             .filter(Invitation::estValide)
-            .orElseThrow(() -> new IllegalArgumentException("Invitation invalide ou expiree"));
+            .orElseThrow(() -> new IllegalArgumentException("Invitation invalide ou expirée"));
     }
 }

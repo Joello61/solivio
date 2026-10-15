@@ -8,6 +8,6 @@ package com.solivio.api.shared.exception;
 public class EmailNonVerifieException extends RuntimeException {
 
     public EmailNonVerifieException() {
-        super("Votre adresse email n'a pas encore ete verifiee.");
+        super("Votre adresse email n'a pas encore été vérifiée.");
     }
 }

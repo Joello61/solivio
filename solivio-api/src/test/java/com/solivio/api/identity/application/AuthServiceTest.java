@@ -175,7 +175,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> service.refreshToken(tokenBrut, request, response))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("expire ou revoque");
+            .hasMessageContaining("expiré ou révoqué");
     }
 
     @Test
@@ -217,13 +217,13 @@ class AuthServiceTest {
     @Test
     void completerInscriptionGoogle_propageLExceptionDeRegisterService() {
         when(registerService.finaliserCompteGoogle(any(), any(), any(), any()))
-            .thenThrow(new IllegalArgumentException("Ce compte est deja membre de l'association"));
+            .thenThrow(new IllegalArgumentException("Ce compte est déjà membre de l'association"));
 
         assertThatThrownBy(() -> service.completerInscriptionGoogle(
             "google@example.com", "Dupont", "Alice", null, mock(HttpServletRequest.class),
             mock(HttpServletResponse.class)))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("deja membre");
+            .hasMessageContaining("déjà membre");
     }
 
     @Test

@@ -36,7 +36,7 @@ public class TentativesConnexionService {
             .filter(compte -> compte.estVerrouille(Instant.now()))
             .ifPresent(compte -> {
                 throw new TropDeTentativesException(
-                    "Trop de tentatives de connexion. Reessayez dans quelques minutes.");
+                    "Trop de tentatives de connexion. Réessayez dans quelques minutes.");
             });
     }
 
