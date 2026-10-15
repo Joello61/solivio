@@ -57,7 +57,7 @@ test.describe("Parcours pointage", () => {
       // La liste complete est chargee d'emblee : le filtre est local.
       await page.getByLabel("Rechercher un inscrit").fill(NOM_BENEFICIAIRE);
       await page.getByRole("button", { name: `Marquer Linkee ${NOM_BENEFICIAIRE} présent` }).click();
-      await expect(page.getByRole("tab", { name: /Pointés/ })).toContainText("1");
+      await expect(page.getByRole("button", { name: /Pointés/ })).toContainText("1");
       await contexteBenevole.close();
 
       await expect
