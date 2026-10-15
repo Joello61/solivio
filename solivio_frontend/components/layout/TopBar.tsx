@@ -19,7 +19,7 @@ export function TopBar({ user }: { user: MeResponse }) {
   const surRubrique = !rubrique || rubrique.href === pathname;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 backdrop-blur-md lg:hidden">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 backdrop-blur-md lg:hidden print:hidden">
       {surRubrique ? (
         <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 px-2">
           <Logo />

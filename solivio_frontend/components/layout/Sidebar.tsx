@@ -27,7 +27,7 @@ export function Sidebar({ user, jourJ }: SidebarProps) {
   const actif = itemActif(sections.flatMap((s) => s.items), pathname);
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card lg:flex print:hidden">
       <Link href="/dashboard" className="flex h-16 shrink-0 items-center gap-2.5 px-5">
         <Logo />
         <span className="truncate font-display text-lg font-bold text-foreground">{NOM_ASSOCIATION}</span>
