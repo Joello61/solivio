@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
 
 // Tests E2E du parcours inscription beneficiaire.
 // Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
