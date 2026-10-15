@@ -59,7 +59,7 @@ describe("LigneDistribution", () => {
 
   it("montre les places benevoles a un benevole", () => {
     afficher({ type: "BENEVOLE" });
-    expect(screen.getByText("5 places restantes")).toBeInTheDocument();
+    expect(screen.getByText("5 places dans l'équipe")).toBeInTheDocument();
   });
 
   it("remplace les places par le statut de l'inscription du membre", () => {

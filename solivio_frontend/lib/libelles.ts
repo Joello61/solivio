@@ -49,8 +49,8 @@ export const STATUT_EVENEMENT: Record<StatutEvenement, LibelleStatut> = {
 export const STATUT_MISSION: Record<StatutMission, LibelleStatut> = {
   DISPONIBLE: { texte: "Disponible", ton: "ouvert" },
   PRISE_EN_CHARGE: { texte: "Prise en charge", ton: "maintenant" },
-  COLLECTE_EFFECTUEE: { texte: "Collecte effectuée", ton: "info" },
-  DEPOT_VALIDE: { texte: "Dépôt validé", ton: "passe" },
+  COLLECTE_EFFECTUEE: { texte: "Collectée", ton: "info" },
+  DEPOT_VALIDE: { texte: "Déposée", ton: "passe" },
   ANNULEE: { texte: "Annulée", ton: "annule" },
 };
 

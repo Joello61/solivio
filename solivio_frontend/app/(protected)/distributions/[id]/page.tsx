@@ -28,6 +28,7 @@ import { CarteEmplacement } from "@/components/shared/CarteEmplacement";
 import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
 import { rolesAttribuables } from "@/lib/roles-benevoles";
 import { jourAssociation } from "@/lib/distribution-du-jour";
+import { estDesistementTardif } from "@/lib/mes-inscriptions";
 import {
   estGestionnaireDistribution,
   peutPointer,
@@ -441,8 +442,8 @@ export default async function DistributionDetailPage({ params }: PageProps) {
                     distributionId={id}
                     inscriptionId={monInscription.id}
                     titre="cette distribution"
-                    benevole={monInscription.type === "BENEVOLE"}
                     enAttente={monInscription.statut === "LISTE_ATTENTE"}
+                    tardif={estDesistementTardif(monInscription, distribution.date, jourAssociation(new Date()))}
                   />
                 </div>
               ) : (

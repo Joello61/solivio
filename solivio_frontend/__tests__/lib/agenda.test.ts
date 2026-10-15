@@ -66,6 +66,8 @@ describe("agenda", () => {
     expect(libellePlaces(0)).toBe("Complet, liste d'attente possible");
     expect(libellePlaces(1)).toBe("1 place restante");
     expect(libellePlaces(12)).toBe("12 places restantes");
+    expect(libellePlaces(3, "BENEVOLE")).toBe("3 places dans l'équipe");
+    expect(libellePlaces(0, "BENEVOLE")).toBe("Équipe complète, liste d'attente possible");
   });
 
   it("regroupe par semaine du lundi au dimanche", () => {

@@ -23,6 +23,8 @@ export interface NavItem {
   label: string;
   /* Libelle pour un gestionnaire, quand l'intention differe ("Planning" plutot qu'"Agenda"). */
   labelGestion?: string;
+  /* Libelle pour l'equipe (tout membre non beneficiaire). */
+  labelEquipe?: string;
   icon: LucideIcon;
   roles?: string[];
 }
@@ -37,7 +39,13 @@ const RESPONSABLES = ["responsable", "super_admin"];
 
 const ACCUEIL: NavItem = { href: "/dashboard", label: "Accueil", labelGestion: "Aujourd'hui", icon: House };
 const AGENDA: NavItem = { href: "/distributions", label: "Agenda", labelGestion: "Planning", icon: CalendarDays };
-const INSCRIPTIONS: NavItem = { href: "/mes-inscriptions", label: "Mes inscriptions", icon: ClipboardList };
+// Distributions, evenements, missions et sessions reunis.
+const INSCRIPTIONS: NavItem = {
+  href: "/mes-inscriptions",
+  label: "Mes inscriptions",
+  labelEquipe: "Mes engagements",
+  icon: ClipboardList,
+};
 const MISSIONS: NavItem = {
   href: "/missions-collecte",
   label: "Missions de collecte",
@@ -56,14 +64,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Activités",
     items: [
       { href: "/evenements", label: "Événements", icon: PartyPopper },
-      { href: "/mes-evenements", label: "Mes événements", icon: PartyPopper, roles: ["benevole", "beneficiaire"] },
       MISSIONS,
-      {
-        href: "/mes-missions-collecte",
-        label: "Mes missions",
-        icon: Truck,
-        roles: ["benevole", "coordinateur", "responsable"],
-      },
       { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
     ],
   },
@@ -101,7 +102,9 @@ export function sectionsPourRoles(roles: string[]): NavSection[] {
 }
 
 export function libelleNav(item: NavItem, roles: string[]): string {
-  return item.labelGestion && estGestionnaireDistribution(roles) ? item.labelGestion : item.label;
+  if (item.labelGestion && estGestionnaireDistribution(roles)) return item.labelGestion;
+  if (item.labelEquipe && !roles.includes("beneficiaire")) return item.labelEquipe;
+  return item.label;
 }
 
 /**

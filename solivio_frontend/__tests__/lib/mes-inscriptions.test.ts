@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estAVenir, inscriptionsAVenir, versBillet } from "@/lib/mes-inscriptions";
+import { estAVenir, estDesistementTardif, inscriptionsAVenir, versBillet } from "@/lib/mes-inscriptions";
 import type { InscriptionPersonnelle } from "@/types/distribution";
 
 const jour = "2026-10-13";
@@ -53,14 +53,28 @@ describe("billets", () => {
   });
 
   it("prepare le billet et ferme la desinscription apres pointage", () => {
-    expect(versBillet(inscription({}))).toMatchObject({
+    expect(versBillet(inscription({}), "2026-10-15")).toMatchObject({
       date: "2026-10-22",
       lieuNom: "Campus Rangueil",
       statut: "CONFIRMEE",
       benevole: false,
       desinscriptionPossible: true,
+      desistementTardif: false,
     });
-    const pointee = versBillet(inscription({ type: "BENEVOLE", presence: "PRESENT", statut: "LISTE_ATTENTE", rangListeAttente: 2 }));
-    expect(pointee).toMatchObject({ benevole: true, desinscriptionPossible: false, statut: "LISTE_ATTENTE", rangListeAttente: 2 });
+    const pointee = versBillet(
+      inscription({ type: "BENEVOLE", presence: "PRESENT", statut: "LISTE_ATTENTE", rangListeAttente: 2 }),
+      "2026-10-15",
+      ["Accueil"],
+    );
+    expect(pointee).toMatchObject({ benevole: true, roles: ["Accueil"], desinscriptionPossible: false, statut: "LISTE_ATTENTE", rangListeAttente: 2 });
+  });
+
+  it("reconnait le desistement tardif d'un benevole confirme, comme le backend", () => {
+    const benevole = { type: "BENEVOLE", statut: "CONFIRMEE" };
+    expect(estDesistementTardif(benevole, "2026-10-15", "2026-10-15")).toBe(true);
+    expect(estDesistementTardif(benevole, "2026-10-16", "2026-10-15")).toBe(true);
+    expect(estDesistementTardif(benevole, "2026-10-17", "2026-10-15")).toBe(false);
+    expect(estDesistementTardif({ ...benevole, statut: "LISTE_ATTENTE" }, "2026-10-15", "2026-10-15")).toBe(false);
+    expect(estDesistementTardif({ ...benevole, type: "BENEFICIAIRE" }, "2026-10-15", "2026-10-15")).toBe(false);
   });
 });

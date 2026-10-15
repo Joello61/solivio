@@ -36,7 +36,11 @@ export function placesPour(d: DistributionResponse, type: TypeInscription): Plac
   return { restantes: d.remplissage.placesRestantesBeneficiaires, capacite: d.capaciteBeneficiaires };
 }
 
-export function libellePlaces(restantes: number): string {
+export function libellePlaces(restantes: number, type: TypeInscription = "BENEFICIAIRE"): string {
+  if (type === "BENEVOLE") {
+    if (restantes <= 0) return "Équipe complète, liste d'attente possible";
+    return restantes === 1 ? "1 place dans l'équipe" : `${restantes} places dans l'équipe`;
+  }
   if (restantes <= 0) return "Complet, liste d'attente possible";
   return restantes === 1 ? "1 place restante" : `${restantes} places restantes`;
 }

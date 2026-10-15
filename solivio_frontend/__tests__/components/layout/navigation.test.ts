@@ -114,7 +114,6 @@ describe("NAV_SECTIONS", () => {
   it("ne propose pas les missions de collecte au beneficiaire", () => {
     const hrefs = NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, ["beneficiaire"])).map((i) => i.href);
     expect(hrefs).not.toContain("/missions-collecte");
-    expect(hrefs).not.toContain("/mes-missions-collecte");
   });
 
   it("ne reference plus le role admin supprime", () => {
@@ -143,6 +142,19 @@ describe("libelleNav", () => {
     expect(libelleNav(agenda, ["coordinateur"])).toBe("Planning");
     expect(libelleNav(agenda, ["beneficiaire"])).toBe("Agenda");
   });
+
+  it("parle d'engagements a l'equipe et d'inscriptions aux beneficiaires", () => {
+    const inscriptions = NAV_SECTIONS[0].items.find((i) => i.href === "/mes-inscriptions")!;
+    expect(libelleNav(inscriptions, ["beneficiaire"])).toBe("Mes inscriptions");
+    expect(libelleNav(inscriptions, ["benevole"])).toBe("Mes engagements");
+    expect(libelleNav(inscriptions, ["coordinateur"])).toBe("Mes engagements");
+  });
+
+  it("regroupe mes evenements et mes missions dans les engagements", () => {
+    const hrefs = NAV_SECTIONS.flatMap((s) => s.items).map((i) => i.href);
+    expect(hrefs).not.toContain("/mes-evenements");
+    expect(hrefs).not.toContain("/mes-missions-collecte");
+  });
 });
 
 describe("sectionsPourRoles", () => {
@@ -156,7 +168,7 @@ describe("itemActif", () => {
   it("choisit l'entree la plus precise", () => {
     const items = sectionsPourRoles(["benevole"]).flatMap((s) => s.items);
     expect(itemActif(items, "/missions-collecte/m1")?.href).toBe("/missions-collecte");
-    expect(itemActif(items, "/mes-missions-collecte")?.href).toBe("/mes-missions-collecte");
+    expect(itemActif(items, "/missions-collecte")?.href).toBe("/missions-collecte");
     expect(itemActif(items, "/inconnu")).toBeUndefined();
   });
 });

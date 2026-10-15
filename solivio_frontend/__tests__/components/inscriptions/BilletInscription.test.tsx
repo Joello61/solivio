@@ -17,6 +17,7 @@ const billet: DonneesBillet = {
   rangListeAttente: null,
   benevole: false,
   desinscriptionPossible: true,
+  desistementTardif: false,
 };
 
 describe("BilletInscription", () => {
@@ -36,11 +37,11 @@ describe("BilletInscription", () => {
   it("donne le rang en liste d'attente et masque la desinscription apres pointage", () => {
     render(
       <BilletInscription
-        billet={{ ...billet, statut: "LISTE_ATTENTE", rangListeAttente: 2, desinscriptionPossible: false, benevole: true }}
+        billet={{ ...billet, statut: "LISTE_ATTENTE", rangListeAttente: 2, desinscriptionPossible: false, benevole: true, roles: ["Accueil", "Pointage"] }}
       />,
     );
     expect(screen.getByText("Liste d'attente, rang 2")).toBeInTheDocument();
-    expect(screen.getByText("Bénévole")).toBeInTheDocument();
+    expect(screen.getByText("Bénévole : Accueil, Pointage")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
