@@ -10,7 +10,7 @@
 
 ## Avertissement de lecture
 
-Ce document décrit l'expérience concrète des utilisateurs de la V1 : ce qu'ils voient, ce qu'ils font, dans quel ordre, et où se jouent les moments décisifs. Il ne décrit pas la charte graphique précise (couleurs, typographie, composants), qui relèvera d'une phase de design au moment du développement frontend.
+Ce document décrit l'expérience concrète des utilisateurs de la V1 : ce qu'ils voient, ce qu'ils font, dans quel ordre, et où se jouent les moments décisifs. Il ne décrit pas la charte graphique (couleurs, typographie, composants), qui vit dans `DESIGN.md` ; la section 12 relie chaque parcours à ses écrans.
 
 Il se limite strictement aux parcours de la V1. Les fonctions repoussées (dons, campagnes, stocks permanents, multi-antennes) n'apparaissent pas, car elles ne font pas partie de l'expérience à concevoir maintenant.
 
@@ -229,5 +229,20 @@ Ces absences sont des choix, pas des oublis.
 **Le responsable.** Configurer l'association, gérer membres et rôles, suivre des statistiques agrégées, et exporter ou supprimer les données - le non-enfermement rendu concret.
 
 **Les moments de vérité.** Première inscription, pointage, calcul de répartition, annulation, reprise par un nouveau bureau. C'est là que se joue l'adoption, et c'est là que la simplicité doit être irréprochable.
+
+## 12. Écrans de la V1 (refonte d'octobre 2026)
+
+La navigation compte quatre entrées au plus sur téléphone (barre basse) et se groupe par intention sur ordinateur. Chaque objet a une seule page qui suit son cycle de vie, avec une action principale et les actions rares dans un menu "Plus".
+
+| Rôle | Écrans | Adresses |
+|---|---|---|
+| Visiteur | Accueil de Linkee Toulouse avec les prochaines distributions, création de compte, connexion, mot de passe oublié | `/`, `/register`, `/login`, `/forgot-password` |
+| Bénéficiaire | Accueil (billet du prochain rendez-vous), Agenda par semaine, fiche d'une distribution avec choix du créneau, Mes inscriptions, Compte et dossier social | `/dashboard`, `/distributions`, `/distributions/{id}`, `/mes-inscriptions`, `/mon-compte` |
+| Bénévole | Les mêmes, plus "On a besoin de vous", Mes engagements (distributions, missions, événements, sessions), missions de collecte, événements et reconditionnement | `/missions-collecte`, `/evenements`, `/reconditionnement` |
+| Coordinateur | Aujourd'hui et sa liste "À faire", Planning, feuille d'une distribution (vue d'ensemble, inscrits, équipe, denrées, bilan), création et duplication, Jour J en plein écran, répartition et fiche stand, statistiques, rôles bénévoles | `/distributions/nouvelle`, `/distributions/{id}/pointage`, `/distributions/{id}/repartition`, `/statistiques`, `/association/roles-benevoles` |
+| Responsable | Les mêmes, plus membres, réglages et export, catalogue des denrées, message aux membres, création des activités | `/association/membres`, `/association/configuration`, `/association/catalogue-denrees`, `/notifications/email-libre` |
+| Super admin | Administration des comptes | `/admin/utilisateurs` |
+
+Seuils de la liste "À faire" : voir la section 6.3.
 
 *Fin des parcours utilisateurs. Document suivant : `roadmap.md`.*
