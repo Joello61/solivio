@@ -232,6 +232,17 @@ class ParticipationEvenementServiceTest {
     }
 
     @Test
+    void inscrire_echoueSiSansInscription() {
+        evenementPublie.setModeInscription(ModeInscription.SANS_INSCRIPTION);
+        when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenementPublie));
+
+        assertThatThrownBy(() ->
+            service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("sans inscription");
+    }
+
+    @Test
     void seDesinscrire_supprimeLaParticipation() {
         when(personneQueryPort.trouverPersonne("benevole@test.com"))
             .thenReturn(new PersonneInfo(personneId, "Benevole", "Test"));

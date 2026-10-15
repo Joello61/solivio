@@ -56,6 +56,9 @@ public class ParticipationEvenementService {
             && evenement.getStatut() != StatutEvenement.EN_COURS) {
             throw new ConflictException("Inscription impossible : l'evenement n'est pas ouvert");
         }
+        if (evenement.getModeInscription() == ModeInscription.SANS_INSCRIPTION) {
+            throw new ConflictException("Inscription impossible : cet evenement se fait sans inscription");
+        }
 
         PersonneInfo personne = personneQueryPort.trouverPersonne(emailUser);
 
