@@ -116,6 +116,13 @@ describe("NAV_SECTIONS", () => {
     expect(hrefs).not.toContain("/missions-collecte");
   });
 
+  it("reserve le reconditionnement aux benevoles et aux gestionnaires", () => {
+    const pour = (role: string) => NAV_SECTIONS.flatMap((s) => filterNavItems(s.items, [role])).map((i) => i.href);
+    expect(pour("beneficiaire")).not.toContain("/reconditionnement");
+    expect(pour("benevole")).toContain("/reconditionnement");
+    expect(pour("coordinateur")).toContain("/reconditionnement");
+  });
+
   it("ne reference plus le role admin supprime", () => {
     NAV_SECTIONS.flatMap((s) => s.items).forEach((item) => {
       expect(item.roles ?? []).not.toContain("admin");

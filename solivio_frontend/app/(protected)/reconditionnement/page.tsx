@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -38,6 +39,8 @@ export default async function ReconditionnementPage({ searchParams }: { searchPa
   ]);
   const roles = me?.roles ?? [];
   const gestion = estGestionnaireDistribution(roles);
+  // Le reconditionnement des denrees est un travail benevole.
+  if (!gestion && !roles.includes("benevole")) notFound();
   const maintenant = new Date();
   const sections = SECTIONS_ACTIVITE.filter((s) => gestion || s.valeur === "a-venir" || s.valeur === "passees").map((s) => ({
     ...s,

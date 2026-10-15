@@ -65,7 +65,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/evenements", label: "Événements", icon: PartyPopper },
       MISSIONS,
-      { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle },
+      { href: "/reconditionnement", label: "Reconditionnement", icon: Recycle, roles: ["benevole", ...GESTION] },
     ],
   },
   { title: "Pilotage", items: [STATISTIQUES] },

@@ -35,6 +35,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   if (!session) notFound();
   const roles = me?.roles ?? [];
   const gestion = estGestionnaireDistribution(roles);
+  if (!gestion && !roles.includes("benevole")) notFound();
   const [inscrits, miennes] = await Promise.all([
     gestion ? lireServeur<InscriptionReconditionnementResponse[]>(`/api/sessions-reconditionnement/${id}/inscrits`) : null,
     lireServeur<InscriptionReconditionnementResponse[]>(`/api/sessions-reconditionnement/${id}/inscriptions/mes`),
