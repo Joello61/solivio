@@ -10,7 +10,7 @@ interface RailProps {
 
 /*
  * Cycle de vie rendu comme un trajet : le statut est une position, pas un badge.
- * L'etape en cours prend le citron.
+ * L'etape en cours prend le jaune.
  */
 export function Rail({ etapes, courante, libelle, className }: RailProps) {
   return (

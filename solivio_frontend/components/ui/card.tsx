@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /* Variants de card : a plat par defaut (bordure seule). "elevated" pour ce qui
-   doit se detacher, "tinted" pour un encart pin pale. */
+   doit se detacher, "tinted" pour un encart bleu pale. */
 type CardVariant = "default" | "elevated" | "flat" | "tinted"
 type CardSize = "default" | "sm" | "lg"
 

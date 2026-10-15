@@ -25,7 +25,7 @@ const buttonVariants = cva(
         /* Action principale : une seule par ecran */
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
 
-        /* Action d'appoint mise en avant : pin pale */
+        /* Action d'appoint mise en avant : bleu pale */
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
 
         /* Action courante : bordure lisible sur papier comme sur carte */
