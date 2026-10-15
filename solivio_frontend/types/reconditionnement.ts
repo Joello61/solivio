@@ -17,6 +17,9 @@ export interface SessionReconditionnementResponse {
 export interface InscriptionReconditionnementResponse {
   id: string;
   sessionId: string;
+  sessionTitre: string | null;
+  sessionDate: string | null;
+  sessionLieu: string | null;
   personneId: string;
   nomComplet: string;
   statut: string;
