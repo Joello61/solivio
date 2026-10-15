@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { AlertTriangle, Check, CloudOff, RotateCcw, Undo2, UserX } from "lucide-react";
 import { ActionMenu } from "@/components/ui/action-menu";
 import { Spinner } from "@/components/ui/spinner";
@@ -7,14 +8,17 @@ import type { EtatEnvoi, PresencePointee } from "@/lib/pointage";
 import { cn } from "@/lib/utils";
 
 interface Props {
+  id: string;
   /* Nom affiche, dans l'ordre de la liste ("Dupont Marie"). */
   titre: string;
   /* Nom dit aux lecteurs d'ecran ("Marie Dupont"). */
   nom: string;
   presence: PresencePointee;
   etat?: EtatEnvoi;
-  onPointer: (presence: PresencePointee) => void;
-  onReessayer?: () => void;
+  /* Presence du dernier envoi, renvoyee par "Reessayer". */
+  derniereDemande?: PresencePointee | null;
+  /* Stable d'un rendu a l'autre : seule la ligne qui change se redessine. */
+  onPointer: (id: string, presence: PresencePointee) => void;
 }
 
 function Envoi({ etat, onReessayer }: { etat: EtatEnvoi; onReessayer?: () => void }) {
@@ -52,12 +56,12 @@ function Envoi({ etat, onReessayer }: { etat: EtatEnvoi; onReessayer?: () => voi
  * retour a "a pointer" passent par le menu, puisque les non-pointes deviennent
  * absents a la cloture (RG4).
  */
-export function LignePointable({ titre, nom, presence, etat = null, onPointer, onReessayer }: Props) {
+export const LignePointable = memo(function LignePointable({ id, titre, nom, presence, etat = null, derniereDemande = null, onPointer }: Props) {
   const present = presence === "PRESENT";
   const absent = presence === "ABSENT";
   const actions = [
-    ...(absent ? [] : [{ label: "Marquer absent", icon: UserX, onClick: () => onPointer("ABSENT") }]),
-    ...(presence === "NON_POINTE" ? [] : [{ label: "Remettre à pointer", icon: Undo2, onClick: () => onPointer("NON_POINTE") }]),
+    ...(absent ? [] : [{ label: "Marquer absent", icon: UserX, onClick: () => onPointer(id, "ABSENT") }]),
+    ...(presence === "NON_POINTE" ? [] : [{ label: "Remettre à pointer", icon: Undo2, onClick: () => onPointer(id, "NON_POINTE") }]),
   ];
 
   return (
@@ -66,7 +70,7 @@ export function LignePointable({ titre, nom, presence, etat = null, onPointer, o
         type="button"
         aria-pressed={present}
         aria-label={`Marquer ${nom} présent`}
-        onClick={() => !present && onPointer("PRESENT")}
+        onClick={() => !present && onPointer(id, "PRESENT")}
         className="flex min-h-15 min-w-0 flex-1 items-center gap-3 py-2 pr-2 pl-4 text-left focus-visible:-outline-offset-2"
       >
         <span
@@ -84,9 +88,9 @@ export function LignePointable({ titre, nom, presence, etat = null, onPointer, o
         </span>
       </button>
       <div className="flex shrink-0 items-center gap-1 pr-2">
-        <Envoi etat={etat} onReessayer={onReessayer} />
+        <Envoi etat={etat} onReessayer={() => derniereDemande && onPointer(id, derniereDemande)} />
         <ActionMenu items={actions} label={`Plus d'actions pour ${nom}`} className="border-transparent bg-transparent text-muted-foreground" />
       </div>
     </li>
   );
-}
+});
