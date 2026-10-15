@@ -64,4 +64,18 @@ describe("FormulaireConfiguration", () => {
       expect(screen.getByText("Acces refuse.")).toBeInTheDocument();
     });
   });
+
+  it("ne propose ni couleurs ni fuseau horaire", () => {
+    render(<FormulaireConfiguration association={associationMock} />);
+    expect(screen.queryByLabelText(/couleur/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/fuseau/i)).not.toBeInTheDocument();
+  });
+
+  it("remet la frequence par defaut quand le champ est vide", async () => {
+    const { mettreAJourAssociation } = await import("@/lib/api/association");
+    render(<FormulaireConfiguration association={{ ...associationMock, frequenceMaxParSemaine: 2 }} />);
+    fireEvent.change(screen.getByLabelText(/distributions par semaine/i), { target: { value: "" } });
+    fireEvent.submit(screen.getByRole("button", { name: /enregistrer/i }).closest("form")!);
+    await waitFor(() => expect(mettreAJourAssociation).toHaveBeenCalledWith(expect.objectContaining({ frequenceMaxParSemaine: 0 })));
+  });
 });

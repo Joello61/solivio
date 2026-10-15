@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { SectionFormulaire } from "@/components/shared/SectionFormulaire";
 import { mettreAJourAssociation, uploadLogo } from "@/lib/api/association";
@@ -17,31 +16,6 @@ import type { AssociationResponse } from "@/types/association";
 interface Props {
   association: AssociationResponse;
 }
-
-// Fuseaux de la France metropolitaine et d'outre-mer : l'association est toulousaine.
-const FUSEAUX = [
-  "Europe/Paris",
-  "America/Guadeloupe",
-  "America/Martinique",
-  "America/Cayenne",
-  "Indian/Reunion",
-  "Indian/Mayotte",
-  "Pacific/Noumea",
-  "Pacific/Tahiti",
-];
-
-const NOMS_FUSEAUX: Record<string, string> = {
-  "Europe/Paris": "France métropolitaine",
-  "America/Guadeloupe": "Guadeloupe",
-  "America/Martinique": "Martinique",
-  "America/Cayenne": "Guyane",
-  "Indian/Reunion": "La Réunion",
-  "Indian/Mayotte": "Mayotte",
-  "Pacific/Noumea": "Nouvelle-Calédonie",
-  "Pacific/Tahiti": "Polynésie française",
-};
-
-const libelleFuseau = (f: string) => NOMS_FUSEAUX[f] ?? f;
 
 export function FormulaireConfiguration({ association }: Props) {
   const router = useRouter();
@@ -54,9 +28,6 @@ export function FormulaireConfiguration({ association }: Props) {
 
   const [nom, setNom] = useState(association.nom);
   const [logoUrl, setLogoUrl] = useState(association.logoUrl ?? "");
-  const [couleurPrimaire, setCouleurPrimaire] = useState(association.couleurPrimaire ?? "#16513F");
-  const [couleurSecondaire, setCouleurSecondaire] = useState(association.couleurSecondaire ?? "#1E6B52");
-  const [fuseauHoraire, setFuseauHoraire] = useState(association.fuseauHoraire ?? "Europe/Paris");
   const [frequenceMax, setFrequenceMax] = useState<string>(
     association.frequenceMaxParSemaine?.toString() ?? "",
   );
@@ -90,10 +61,8 @@ export function FormulaireConfiguration({ association }: Props) {
       await mettreAJourAssociation({
         nom: nom.trim() || undefined,
         logoUrl: logoUrl || undefined,
-        couleurPrimaire,
-        couleurSecondaire,
-        fuseauHoraire: fuseauHoraire || undefined,
-        frequenceMaxParSemaine: frequenceMax ? parseInt(frequenceMax, 10) : null,
+        // 0 remet la limite par defaut : l'API ignore une valeur absente.
+        frequenceMaxParSemaine: frequenceMax ? parseInt(frequenceMax, 10) : 0,
         contactEmail: contactEmail || undefined,
         contactTelephone: contactTelephone || undefined,
       });
@@ -106,22 +75,6 @@ export function FormulaireConfiguration({ association }: Props) {
       setPending(false);
     }
   }
-
-  const champCouleur = (id: string, label: string, valeur: string, changer: (v: string) => void) => (
-    <FormField label={label} htmlFor={id}>
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={valeur}
-          onChange={(e) => changer(e.target.value)}
-          className="size-11 shrink-0 cursor-pointer rounded-lg border border-input bg-card p-1"
-          aria-label={`${label}, nuancier`}
-        />
-        <Input id={id} value={valeur} onChange={(e) => changer(e.target.value)} pattern="^#[0-9A-Fa-f]{6}$" className="font-mono" />
-      </div>
-    </FormField>
-  );
-  const fuseaux = FUSEAUX.includes(fuseauHoraire) ? FUSEAUX : [fuseauHoraire, ...FUSEAUX];
 
   return (
     <form onSubmit={soumettre} className="flex max-w-2xl flex-col gap-6">
@@ -154,17 +107,13 @@ export function FormulaireConfiguration({ association }: Props) {
             </Button>
           </div>
         </FormField>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {champCouleur("couleurPrimaire", "Couleur principale", couleurPrimaire, setCouleurPrimaire)}
-          {champCouleur("couleurSecondaire", "Couleur secondaire", couleurSecondaire, setCouleurSecondaire)}
-        </div>
       </SectionFormulaire>
 
       <SectionFormulaire titre="Règles">
         <FormField
           label="Distributions par semaine et par bénéficiaire"
           htmlFor="frequenceMax"
-          hint="Les inscriptions confirmées et en liste d'attente comptent. Sans valeur fixée, la limite est d'une par semaine."
+          hint="Les inscriptions confirmées et en liste d'attente comptent. Laissez vide pour la limite par défaut : une par semaine."
         >
           <Input
             id="frequenceMax"
@@ -177,20 +126,6 @@ export function FormulaireConfiguration({ association }: Props) {
             placeholder="1"
             className="w-40"
           />
-        </FormField>
-        <FormField label="Fuseau horaire" htmlFor="fuseauHoraire" hint="Il fixe le jour et l'heure de référence de l'association, par exemple pour savoir quelle distribution a lieu aujourd'hui.">
-          <Select items={Object.fromEntries(fuseaux.map((f) => [f, libelleFuseau(f)]))} value={fuseauHoraire} onValueChange={(v) => v && setFuseauHoraire(v)}>
-            <SelectTrigger id="fuseauHoraire" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {fuseaux.map((f) => (
-                <SelectItem key={f} value={f}>
-                  {libelleFuseau(f)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </FormField>
       </SectionFormulaire>
 
