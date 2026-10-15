@@ -108,7 +108,9 @@ public class SessionReconditionnementController {
         return ResponseEntity.ok(response);
     }
 
+    // Le reconditionnement des denrees est un travail benevole.
     @PostMapping("/{id}/inscrire")
+    @PreAuthorize("hasRole('BENEVOLE')")
     public ResponseEntity<InscriptionReconditionnementResponse> inscrire(
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user
