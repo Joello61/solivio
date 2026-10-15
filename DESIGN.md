@@ -91,7 +91,7 @@ Primitives dans `components/ui/` (fondées sur `@base-ui/react`).
 | `action-menu` | Menu "Plus" ; les actions destructrices sont séparées en bas |
 | `sheet` | Panneau qui monte du bas sur téléphone, latéral sur ordinateur |
 | `dialog`, `alert-dialog` | Confirmations |
-| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tabs`, `tooltip`, `separator`, `sonner`, `theme-toggle` | Structure et états |
+| `card`, `empty-state`, `skeleton`, `spinner`, `alert`, `tooltip`, `sonner`, `theme-toggle` | Structure et états |
 
 États de page (`components/layout/EtatPage.tsx`, `PageErreur.tsx`) : page introuvable et erreur inattendue disent ce qui se passe puis quoi faire, sans message technique (l'erreur affiche seulement sa référence pour les journaux). Le chargement des pages protégées est un squelette commun (`app/(protected)/loading.tsx`).
 
