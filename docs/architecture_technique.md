@@ -61,7 +61,7 @@ Chaque module est un sous-package direct de `com.solivio.api` :
 
 > Règle de conception : aucun module n'accède aux tables, repositories ou entités d'un autre module. Le test de modularité Spring Modulith en est le garant.
 
-**Date du jour.** Le conteneur tourne en UTC. Les règles métier qui dépendent de la date (démarrage d'une distribution, date passée à la création, désistement tardif, rappel de la veille) utilisent `shared.temps.HorlogeAssociation`, qui calcule « aujourd'hui » dans le fuseau configuré par l'association (Europe/Paris par défaut). Les tâches planifiées gardent un cron en Europe/Paris, car un cron ne peut pas suivre une configuration modifiable.
+**Date du jour.** Le conteneur tourne en UTC. Les règles métier qui dépendent de la date (démarrage d'une distribution, date passée à la création, désistement tardif, rappel de la veille) utilisent `shared.temps.HorlogeAssociation`, qui calcule "aujourd'hui" dans le fuseau de l'association (Europe/Paris, non réglable depuis l'interface). Les tâches planifiées gardent un cron en Europe/Paris, car un cron ne peut pas suivre une configuration modifiable.
 
 ### 2.4 Structure interne d'un module
 
@@ -301,7 +301,7 @@ Chaque décision est numérotée. Une décision n'est jamais modifiée silencieu
 - **Statut** : acceptée (octobre 2026).
 - **Contexte** : le rôle `admin` n'était défini dans aucun document et donnait des droits disparates (inviter, email libre, événements, collectes, mais ni distributions, ni membres, ni configuration, ni statistiques). Avec une seule association (ADR-001), il doublait `responsable` pour la direction de l'association et le drapeau `super_admin` pour l'administration technique. Sans hiérarchie, chaque `@PreAuthorize` devait aussi recopier la liste complète des rôles autorisés.
 - **Décision** : `admin` est supprimé (migration V12 : les éventuels admins deviennent responsables, contraintes `CHECK` resserrées). Un bean `RoleHierarchy` déclare `responsable` > `coordinateur` > `benevole`, pris en compte par la sécurité des méthodes.
-- **Conséquences** : coordinateurs et responsables passent les contrôles « bénévole » (par exemple prendre une mission de collecte) ; un jeton émis avant la migration avec le rôle `admin` ne donne plus aucun droit ; la V12 resserre une contrainte, contrairement à la règle additive de l'ADR-010, sans risque tant qu'aucune invitation `admin` n'est créée pendant la bascule (aucun écran ne le propose).
+- **Conséquences** : coordinateurs et responsables passent les contrôles "bénévole" (par exemple prendre une mission de collecte) ; un jeton émis avant la migration avec le rôle `admin` ne donne plus aucun droit ; la V12 resserre une contrainte, contrairement à la règle additive de l'ADR-010, sans risque tant qu'aucune invitation `admin` n'est créée pendant la bascule (aucun écran ne le propose).
 
 ## 15. Synthèse
 
