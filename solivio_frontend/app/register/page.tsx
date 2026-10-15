@@ -14,6 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { register } from "@/lib/auth";
 import { messageErreur } from "@/lib/erreurs";
 import { NOM_ASSOCIATION } from "@/lib/marque";
+import { PHOTOS } from "@/lib/photos";
 
 function RegisterForm() {
   const router = useRouter();
@@ -58,6 +59,8 @@ function RegisterForm() {
           ? `Complétez votre profil pour accepter l'invitation de ${NOM_ASSOCIATION}.`
           : "Pour vous inscrire aux distributions. Vous recevrez un code par email pour confirmer votre adresse."
       }
+      photo={PHOTOS.equipeBanderole}
+      accroche={isInvitation ? "Bienvenue dans l'équipe." : "Une place vous attend à la prochaine distribution."}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <FormField label="Prénom" htmlFor="prenom">
