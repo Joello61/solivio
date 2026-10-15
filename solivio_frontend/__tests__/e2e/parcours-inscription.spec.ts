@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
 
 // Tests E2E du parcours inscription beneficiaire.
 // Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
@@ -44,7 +44,7 @@ test.describe("Parcours inscription beneficiaire", () => {
 
     // Si aucune distribution, le message "Aucune distribution" est affiche
     const aucuneDistrib = page.getByText(/aucune distribution/i);
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
 
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
@@ -67,7 +67,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
@@ -104,7 +104,7 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    const premiereDistribCard = page.locator("a[href^='/distributions/']:not([href='/distributions/nouvelle'])").first();
+    const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
     const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
 
     if (!hasDistributions) {
