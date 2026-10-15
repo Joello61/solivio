@@ -63,7 +63,7 @@ public class AssociationLogoService {
         try {
             Files.createDirectories(this.logosDir);
         } catch (IOException e) {
-            throw new UncheckedIOException("Impossible de creer le repertoire logos : " + logosDirPath, e);
+            throw new UncheckedIOException("Impossible de créer le répertoire logos : " + logosDirPath, e);
         }
         this.auditService = auditService;
     }
@@ -79,7 +79,7 @@ public class AssociationLogoService {
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new UncheckedIOException("Echec de l'enregistrement du logo", e);
+            throw new UncheckedIOException("Échec de l'enregistrement du logo", e);
         }
 
         Association asso = configService.charger();
@@ -125,12 +125,12 @@ public class AssociationLogoService {
 
     private void validerFichier(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Le fichier logo ne peut pas etre vide.");
+            throw new IllegalArgumentException("Le fichier logo ne peut pas être vide.");
         }
         String mime = file.getContentType();
         if (mime == null || !MIMES_AUTORISES.contains(mime)) {
             throw new IllegalArgumentException(
-                "Format non supporte. Formats acceptes : JPG, PNG, GIF, WEBP.");
+                "Format non supporté. Formats acceptés : JPG, PNG, GIF, WEBP.");
         }
     }
 

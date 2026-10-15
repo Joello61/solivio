@@ -43,9 +43,10 @@ public class EvenementController {
     @GetMapping
     public ResponseEntity<List<EvenementResponse>> lister(
         @RequestParam(required = false) String statut,
-        @RequestParam(required = false) String type
+        @RequestParam(required = false) String type,
+        @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        return ResponseEntity.ok(evenementService.lister(statut, type));
+        return ResponseEntity.ok(evenementService.lister(statut, type, estGestionnaire(user)));
     }
 
     @PostMapping
@@ -59,8 +60,11 @@ public class EvenementController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EvenementResponse> detail(@PathVariable UUID id) {
-        return ResponseEntity.ok(evenementService.detail(id));
+    public ResponseEntity<EvenementResponse> detail(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(evenementService.detail(id, estGestionnaire(user)));
     }
 
     @PutMapping("/{id}")
@@ -97,5 +101,9 @@ public class EvenementController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         return ResponseEntity.ok(participationService.mesEvenementsParticipations(user.getUsername()));
+    }
+
+    private static boolean estGestionnaire(SolivioUserDetails user) {
+        return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }
 }

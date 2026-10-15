@@ -114,7 +114,7 @@ public class AuthService {
             if (token.isRevoque()) {
                 refreshTokenRepo.revoquerTousParCompte(token.getCompte().getId());
             }
-            throw new IllegalArgumentException("Refresh token expire ou revoque");
+            throw new IllegalArgumentException("Refresh token expiré ou révoqué");
         }
 
         // Rotation : on revoque l'ancien et on emet un nouveau, en propageant la

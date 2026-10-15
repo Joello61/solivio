@@ -73,9 +73,10 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Pommes de terre")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Dans chaque sac" })).toBeInTheDocument();
+    expect(screen.getAllByText("Pommes de terre")).toHaveLength(2);
     expect(screen.getByText("5 kg")).toBeInTheDocument();
-    expect(screen.getByText("par personne")).toBeInTheDocument();
+    expect(screen.getByText("2 contenants de 25 kg, soit 50 kg")).toBeInTheDocument();
   });
 
   it("affiche le message de penurie si dotation insuffisante", () => {
@@ -88,8 +89,8 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/Stock insuffisant/)).toBeInTheDocument();
-    expect(screen.getByText(/3 personne/)).toBeInTheDocument();
+    expect(screen.getByText("Pas assez pour tout le monde")).toBeInTheDocument();
+    expect(screen.getByText(/1 kg par personne, pour 3 bénéficiaires sur 10/)).toBeInTheDocument();
   });
 
   it("sans beneficiaire, attend les inscriptions au lieu d'annoncer une penurie", () => {
@@ -108,7 +109,7 @@ describe("RepartitionPanel", () => {
     );
 
     expect(screen.getByText(/Aucun bénéficiaire inscrit/)).toBeInTheDocument();
-    expect(screen.queryByText(/Stock insuffisant/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Pas assez pour tout le monde")).not.toBeInTheDocument();
   });
 
   it("affiche le nombre de beneficiaires dans la base de calcul", () => {
@@ -121,9 +122,8 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    // Le chiffre et le libelle sont dans des <span> distincts
-    expect(screen.getByText("10")).toBeInTheDocument();
-    expect(screen.getByText(/bénéficiaire/)).toBeInTheDocument();
+    expect(screen.getByText(/Calculé pour les 10 bénéficiaires inscrits/)).toBeInTheDocument();
+    expect(screen.getByText("Pour 10 bénéficiaires inscrits.")).toBeInTheDocument();
   });
 
   it("affiche le bouton d'ajout de denree si modifiable", () => {
@@ -153,7 +153,7 @@ describe("RepartitionPanel", () => {
       fireEvent.click(screen.getByRole("button", { name: /Ajouter une denrée/ }));
     });
 
-    expect(screen.getByLabelText("Libelle")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nom de la denrée")).toBeInTheDocument();
   });
 
   it("affiche le bouton bascule inscrits / presents", () => {
@@ -166,8 +166,8 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Inscrits")).toBeInTheDocument();
-    expect(screen.getByText("Présents réels")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Inscrits" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Présents" })).toBeInTheDocument();
   });
 
   it("appelle calculerDotation avec PRESENTS au clic sur la bascule", async () => {
@@ -187,12 +187,12 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Présents réels"));
+      fireEvent.click(screen.getByRole("button", { name: "Présents" }));
     });
 
     expect(distributionsApi.changerBaseRepartition).toHaveBeenCalledWith("dist-1", "PRESENTS");
     expect(distributionsApi.calculerDotation).toHaveBeenCalledWith("dist-1", "PRESENTS");
-    expect(await screen.findByText("7")).toBeInTheDocument();
+    expect(await screen.findByText(/Calculé pour les 7 bénéficiaires pointés présents/)).toBeInTheDocument();
   });
 
   it("garde la base precedente si son enregistrement echoue", async () => {
@@ -207,7 +207,7 @@ describe("RepartitionPanel", () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Présents réels"));
+      fireEvent.click(screen.getByRole("button", { name: "Présents" }));
     });
 
     expect(screen.getByText(/n'a pas pu être enregistré/)).toBeInTheDocument();
@@ -255,7 +255,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/Reste : 3 kg/)).toBeInTheDocument();
+    expect(screen.getByText("Il restera : 3 kg de pommes de terre.")).toBeInTheDocument();
   });
 
   it("affiche le message si aucune denree", () => {
@@ -309,8 +309,7 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.queryByLabelText("Modifier")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Supprimer")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Plus d'actions/ })).not.toBeInTheDocument();
   });
 
   it("affiche les denrees et la dotation en lecture seule", () => {
@@ -323,8 +322,28 @@ describe("RepartitionPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Pommes de terre")).toBeInTheDocument();
     expect(screen.getByText("5 kg")).toBeInTheDocument();
-    expect(screen.getByText("par personne")).toBeInTheDocument();
+  });
+
+  it("retire une denree apres confirmation et recalcule le sac", async () => {
+    vi.mocked(distributionsApi.supprimerDenree).mockResolvedValue(undefined);
+    vi.mocked(distributionsApi.listerDenrees).mockResolvedValue([]);
+    vi.mocked(distributionsApi.calculerDotation).mockResolvedValue({ ...dotationNormale, denrees: [] });
+    render(
+      <RepartitionPanel distributionId="dist-1" denreesInitiales={[denreeMock]} dotationInitiale={dotationNormale} modifiable={true} />,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Plus d'actions sur Pommes de terre" }));
+    });
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("menuitem", { name: "Retirer" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+    });
+
+    expect(distributionsApi.supprimerDenree).toHaveBeenCalledWith("dist-1", "denree-1");
+    expect(await screen.findByText(/Aucune denrée saisie/)).toBeInTheDocument();
   });
 });

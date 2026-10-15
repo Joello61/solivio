@@ -1,39 +1,51 @@
 import type { Metadata } from "next";
-import { DM_Sans, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import {
+  Atkinson_Hyperlegible_Mono,
+  Atkinson_Hyperlegible_Next,
+  Bricolage_Grotesque,
+} from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { NOM_ASSOCIATION } from "@/lib/marque";
 import "./globals.css";
 
-/* DM Sans - corps de texte : moderne, lisible, premium SaaS */
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-  axes: ["opsz"],
+/*
+ * Texte : dessinee pour la lisibilite, utile a un public large et divers.
+ * Next ne connait pas ses metriques : pas de repli ajuste, repli systeme explicite.
+ */
+const atkinsonNext = Atkinson_Hyperlegible_Next({
+  variable: "--font-atkinson-next",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  adjustFontFallback: false,
+  fallback: ["system-ui", "Arial", "sans-serif"],
+});
+
+/* Titres : un grotesque de caractere, reserve aux titres et aux grands chiffres. */
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  subsets: ["latin", "latin-ext"],
+  weight: ["600", "700", "800"],
   display: "swap",
 });
 
-/* Plus Jakarta Sans - titres et display : personnalite forte */
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta-sans",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+/* Chiffres et codes : dates du billet, compteurs, en-tetes de tableau. */
+const atkinsonMono = Atkinson_Hyperlegible_Mono({
+  variable: "--font-atkinson-mono",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600"],
   display: "swap",
-});
-
-/* Geist Mono - code uniquement */
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "monospace"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Solivio",
-    template: "%s | Solivio",
+    default: NOM_ASSOCIATION,
+    template: `%s | ${NOM_ASSOCIATION}`,
   },
-  description: "Plateforme de gestion opérationnelle pour les associations de solidarité",
+  description: `Distributions alimentaires de ${NOM_ASSOCIATION}, association de solidarité étudiante, sur inscription.`,
 };
 
 export default function RootLayout({
@@ -42,19 +54,14 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${dmSans.variable} ${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${atkinsonNext.variable} ${bricolage.variable} ${atkinsonMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           <TooltipProvider delay={300}>
             {children}
-            <Toaster
-              richColors
-              position="bottom-right"
-              closeButton
-              toastOptions={{ duration: 4000 }}
-            />
+            <Toaster position="bottom-center" mobileOffset={{ bottom: 88 }} />
           </TooltipProvider>
         </ThemeProvider>
       </body>

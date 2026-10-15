@@ -21,9 +21,9 @@ describe("ExportDonnees", () => {
   });
 
   it("signale un export refuse", async () => {
-    exporterDonnees.mockRejectedValue(new Error("Acces refuse"));
+    exporterDonnees.mockRejectedValue(new Error("Accès refusé"));
     render(<ExportDonnees />);
     await userEvent.click(screen.getByRole("button", { name: /Exporter les données/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Acces refuse");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Accès refusé");
   });
 });

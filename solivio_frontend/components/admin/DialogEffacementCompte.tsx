@@ -39,7 +39,7 @@ export function DialogEffacementCompte({ compte, open, onFermer, onConfirmer }: 
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onFermer}>Annuler</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirmer}>
+          <AlertDialogAction variant="destructive-solid" onClick={onConfirmer}>
             Effacer définitivement
           </AlertDialogAction>
         </AlertDialogFooter>

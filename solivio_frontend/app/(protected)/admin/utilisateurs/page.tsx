@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
 import type { MeResponse } from "@/types/auth";
 import { GestionComptes } from "@/components/admin/GestionComptes";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = { title: "Gestion des utilisateurs" };
 
@@ -35,20 +36,9 @@ export default async function AdminUtilisateursPage({ searchParams }: PageProps)
   if (!comptes) redirect("/dashboard");
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">Utilisateurs</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {comptes.totalElements} compte{comptes.totalElements !== 1 ? "s" : ""} au total.
-        </p>
-      </div>
-
-      <GestionComptes
-        page={comptes}
-        currentUserId={me.id}
-        recherche={q ?? ""}
-        currentPage={page}
-      />
-    </div>
+    <>
+      <PageHeader titre="Utilisateurs" description={`${comptes.totalElements} compte${comptes.totalElements > 1 ? "s" : ""} sur la plateforme.`} />
+      <GestionComptes page={comptes} currentUserId={me.id} recherche={q ?? ""} currentPage={page} />
+    </>
   );
 }

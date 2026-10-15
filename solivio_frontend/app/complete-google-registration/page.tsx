@@ -6,10 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { completerInscriptionGoogle } from "@/lib/auth";
+import { messageErreur } from "@/lib/erreurs";
+import { NOM_ASSOCIATION } from "@/lib/marque";
 
 function CompleteGoogleRegistrationForm() {
   const router = useRouter();
@@ -38,11 +40,7 @@ function CompleteGoogleRegistrationForm() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? (err as { detail?: string }).detail ?? err.message
-          : "Erreur lors de la finalisation de l'inscription";
-      setError(msg);
+      setError(messageErreur(err, "Erreur lors de la finalisation de l'inscription"));
     } finally {
       setPending(false);
     }
@@ -54,38 +52,32 @@ function CompleteGoogleRegistrationForm() {
       description={
         isInvitation
           ? "Vérifiez vos informations pour accepter l'invitation."
-          : "Vérifiez vos informations pour rejoindre Linkee Toulouse."
+          : `Vérifiez vos informations pour rejoindre ${NOM_ASSOCIATION}.`
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label>Adresse email</Label>
-          <Input value={email} disabled className="bg-muted/50 cursor-not-allowed" />
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <FormField label="Adresse email" htmlFor="email" hint="Celle de votre compte Google.">
+          <Input id="email" value={email} disabled />
+        </FormField>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="prenom">Prénom</Label>
-            <Input
-              id="prenom"
-              required
-              autoComplete="given-name"
-              value={prenom}
-              onChange={(e) => setPrenom(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="nom">Nom</Label>
-            <Input
-              id="nom"
-              required
-              autoComplete="family-name"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-            />
-          </div>
-        </div>
-
+        <FormField label="Prénom" htmlFor="prenom">
+          <Input
+            id="prenom"
+            required
+            autoComplete="given-name"
+            value={prenom}
+            onChange={(e) => setPrenom(e.target.value)}
+          />
+        </FormField>
+        <FormField label="Nom" htmlFor="nom">
+          <Input
+            id="nom"
+            required
+            autoComplete="family-name"
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+          />
+        </FormField>
 
         <FormError message={error} />
 
@@ -100,9 +92,9 @@ function CompleteGoogleRegistrationForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-base text-muted-foreground">
         Déjà inscrit ?{" "}
-        <Link href="/login" className="text-primary font-medium hover:underline">
+        <Link href="/login" className="font-semibold text-primary hover:underline">
           Se connecter
         </Link>
       </p>

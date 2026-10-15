@@ -23,6 +23,7 @@ test.describe("Liste des distributions", () => {
       return;
     }
 
-    await expect(page.getByRole("heading", { name: /distributions/i })).toBeVisible();
+    // Planning pour un gestionnaire, Agenda pour un membre.
+    await expect(page.getByRole("heading", { level: 1, name: /planning|agenda/i })).toBeVisible();
   });
 });

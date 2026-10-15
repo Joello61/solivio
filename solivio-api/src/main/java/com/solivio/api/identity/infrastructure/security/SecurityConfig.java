@@ -81,17 +81,33 @@ public class SecurityConfig {
     }
 
     @Bean
-    public LimiteDebitAuthFilter limiteDebitAuthFilter(
+    public LimiteDebitFilter limiteDebitAuthFilter(
             @Value("${solivio.securite.limite-debit-auth.requetes-par-minute:10}") int requetesParMinute) {
-        return new LimiteDebitAuthFilter(Clock.systemUTC(), requetesParMinute);
+        return LimiteDebitFilter.authentification(Clock.systemUTC(), requetesParMinute);
     }
 
-    // Le filtre n'est execute que dans la chaine de securite, pas une seconde
-    // fois comme filtre servlet enregistre automatiquement par Spring Boot.
     @Bean
-    public FilterRegistrationBean<LimiteDebitAuthFilter> limiteDebitAuthFilterRegistration(
-            LimiteDebitAuthFilter filter) {
-        FilterRegistrationBean<LimiteDebitAuthFilter> registration = new FilterRegistrationBean<>(filter);
+    public LimiteDebitFilter limiteDebitPublicFilter(
+            @Value("${solivio.securite.limite-debit-public.requetes-par-minute:30}") int requetesParMinute) {
+        return LimiteDebitFilter.lecturePublique(Clock.systemUTC(), requetesParMinute);
+    }
+
+    // Les filtres ne sont executes que dans la chaine de securite, pas une seconde
+    // fois comme filtres servlet enregistres automatiquement par Spring Boot.
+    @Bean
+    public FilterRegistrationBean<LimiteDebitFilter> limiteDebitAuthFilterRegistration(
+            LimiteDebitFilter limiteDebitAuthFilter) {
+        return desactiverEnregistrement(limiteDebitAuthFilter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<LimiteDebitFilter> limiteDebitPublicFilterRegistration(
+            LimiteDebitFilter limiteDebitPublicFilter) {
+        return desactiverEnregistrement(limiteDebitPublicFilter);
+    }
+
+    private static FilterRegistrationBean<LimiteDebitFilter> desactiverEnregistrement(LimiteDebitFilter filter) {
+        FilterRegistrationBean<LimiteDebitFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }
@@ -116,7 +132,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) ->
                     ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
                 .accessDeniedHandler((request, response, accessDeniedException) ->
-                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Acces refuse."))
+                    ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN", "Accès refusé."))
             )
             .addFilterBefore(new MetricsScrapeTokenFilter(jetonScrape), UsernamePasswordAuthenticationFilter.class)
             .build();
@@ -124,7 +140,8 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain filterChain(HttpSecurity http, LimiteDebitAuthFilter limiteDebitAuthFilter)
+    public SecurityFilterChain filterChain(HttpSecurity http, LimiteDebitFilter limiteDebitAuthFilter,
+                                           LimiteDebitFilter limiteDebitPublicFilter)
             throws Exception {
         return http
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -167,9 +184,10 @@ public class SecurityConfig {
                     ApiError.ecrire(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentification requise."))
                 .accessDeniedHandler((request, response, accessDeniedException) ->
                     ApiError.ecrire(response, HttpStatus.FORBIDDEN, "FORBIDDEN",
-                        "Vous n'avez pas les droits necessaires pour cette operation."))
+                        "Vous n'avez pas les droits nécessaires pour cette opération."))
             )
             .addFilterBefore(limiteDebitAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(limiteDebitPublicFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }

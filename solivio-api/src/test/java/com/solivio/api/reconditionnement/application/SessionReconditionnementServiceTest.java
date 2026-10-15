@@ -138,7 +138,7 @@ class SessionReconditionnementServiceTest {
         // session en BROUILLON, exception levee avant d'appeler personneQueryPort
         assertThatThrownBy(() -> service.inscrire(sessionId, "benevole@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("publiee");
+            .hasMessageContaining("publiée");
     }
 
     @Test
@@ -150,7 +150,7 @@ class SessionReconditionnementServiceTest {
 
         assertThatThrownBy(() -> service.inscrire(sessionId, "benevole@example.com"))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("capacite");
+            .hasMessageContaining("capacité");
     }
 
     @Test

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Session annulee</title>
+  <title>Session annulée</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,-apple-system,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -20,19 +20,19 @@
           <tr>
             <td style="padding:40px 40px 24px;">
               <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">
-                Session annulee
+                Session annulée
               </h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
-                Bonjour <span th:text="${prenom}">Prenom</span>,
+                Bonjour <span th:text="${prenom}">Prénom</span>,
               </p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
-                Nous vous informons que la session de reconditionnement pour laquelle vous etiez inscrit(e) a ete annulee.
+                Nous vous informons que la session de reconditionnement pour laquelle vous étiez inscrit(e) a été annulée.
               </p>
               <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:20px 24px;margin:16px 0 24px;">
                 <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#dc2626;"
                    th:text="${sessionTitre}">Titre de la session</p>
                 <p style="margin:0 0 4px;font-size:14px;color:#374151;">
-                  Debut : <span th:text="${#temporals.format(dateHeureDebut, 'EEEE d MMMM yyyy HH:mm', #locale)}">lundi 1 janvier 2025 10:00</span>
+                  Début : <span th:text="${#temporals.format(dateHeureDebut, 'EEEE d MMMM yyyy HH:mm', #locale)}">lundi 1 janvier 2025 10:00</span>
                 </p>
                 <p style="margin:0 0 4px;font-size:14px;color:#374151;">
                   Fin : <span th:text="${#temporals.format(dateHeureFin, 'HH:mm')}">12:00</span>
@@ -49,7 +49,7 @@
                    th:text="${motifAnnulation}">Motif de l'annulation</p>
               </div>
               <p style="margin:0;font-size:15px;line-height:1.6;color:#374151;">
-                Nous vous tiendrons informes des prochaines sessions.
+                Nous vous tiendrons informés des prochaines sessions.
               </p>
             </td>
           </tr>

@@ -33,7 +33,7 @@ interface DataTableProps<T> {
 
 function SortIcon({ columnKey, sort }: { columnKey: string; sort: SortState | null }) {
   if (!sort || sort.key !== columnKey) {
-    return <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground/40" />;
+    return <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />;
   }
   return sort.direction === "asc"
     ? <ChevronUp className="h-3.5 w-3.5 text-primary" />
@@ -79,23 +79,23 @@ function DataTable<T>({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="overflow-hidden rounded-2xl border border-border/60 shadow-sm bg-card">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead>
-              <tr className="border-b border-border/60 bg-muted/80">
+              <tr className="border-b border-border">
                 {columns.map((col) => (
                   <th
                     key={col.key}
                     className={cn(
-                      "h-10 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+                      "h-11 px-4 text-left font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground",
                       col.headerClassName,
                     )}
                   >
                     {col.sortable ? (
                       <button
                         onClick={() => handleSort(col.key)}
-                        className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-1.5 uppercase hover:text-foreground transition-colors"
                       >
                         {col.header}
                         <SortIcon columnKey={col.key} sort={sort} />
@@ -122,12 +122,12 @@ function DataTable<T>({
                 paginated.map((row, i) => (
                   <tr
                     key={getRowKey ? getRowKey(row, i) : i}
-                    className="border-b border-border/40 last:border-0 hover:bg-primary/5 transition-colors duration-100"
+                    className="border-b border-border last:border-0 hover:bg-muted/60"
                   >
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className={cn("px-4 py-3 text-foreground", col.className)}
+                        className={cn("h-14 px-4 py-2 text-foreground", col.className)}
                       >
                         {col.cell(row, i)}
                       </td>
@@ -143,7 +143,7 @@ function DataTable<T>({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between gap-4 px-1">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {sorted.length} élément{sorted.length !== 1 ? "s" : ""} -{" "}
             page {safePage} sur {totalPages}
           </p>

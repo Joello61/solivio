@@ -4,16 +4,10 @@ import { useState } from "react";
 import { CheckCircle2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { FormField } from "@/components/ui/form-field";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -22,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { inviterMembre } from "@/lib/api/association";
+import { messageErreur } from "@/lib/erreurs";
 import type { InviterMembrePayload } from "@/types/association";
 
 type Role = InviterMembrePayload["role"];
@@ -73,7 +68,7 @@ export function InviterMembre() {
       });
       setEnvoyeA(email.trim());
     } catch (err) {
-      setErreur(err instanceof Error ? err.message : "L'invitation n'a pas pu être envoyée.");
+      setErreur(messageErreur(err, "L'invitation n'a pas pu être envoyée."));
     } finally {
       setEnCours(false);
     }
@@ -81,29 +76,28 @@ export function InviterMembre() {
 
   return (
     <>
-      <Button size="sm" onClick={ouvrir}>
-        <UserPlus className="mr-2 size-4" />
+      <Button onClick={ouvrir}>
+        <UserPlus aria-hidden="true" />
         Inviter un membre
       </Button>
 
-      <Dialog open={ouvert} onOpenChange={setOuvert}>
-        <DialogContent showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Inviter un membre</DialogTitle>
-            <DialogDescription>
+      <Sheet open={ouvert} onOpenChange={setOuvert}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Inviter un membre</SheetTitle>
+            <SheetDescription>
               La personne reçoit un lien par email pour créer son compte. Il reste valable 7 jours.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
           {envoyeA ? (
-            <div role="status" className="flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-primary">
-              <CheckCircle2 className="size-4 shrink-0 mt-0.5" />
-              <span>Invitation envoyée à {envoyeA}.</span>
-            </div>
+            <Alert role="status">
+              <CheckCircle2 aria-hidden="true" />
+              Invitation envoyée à {envoyeA}.
+            </Alert>
           ) : (
-            <form onSubmit={envoyer} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="invitation-email">Email</Label>
+            <form onSubmit={envoyer} className="flex flex-col gap-4">
+              <FormField label="Email" htmlFor="invitation-email">
                 <Input
                   id="invitation-email"
                   type="email"
@@ -112,10 +106,9 @@ export function InviterMembre() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-              </div>
+              </FormField>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="invitation-role">Rôle</Label>
+              <FormField label="Rôle" htmlFor="invitation-role">
                 <Select items={ROLES} value={role} onValueChange={(v) => v && setRole(v as Role)}>
                   <SelectTrigger id="invitation-role" className="w-full">
                     <SelectValue />
@@ -128,11 +121,10 @@ export function InviterMembre() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </FormField>
 
               {role === "coordinateur" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="invitation-coordination">Type de coordination</Label>
+                <FormField label="Type de coordination" htmlFor="invitation-coordination">
                   <Select
                     items={TYPES_COORDINATION}
                     value={coordoType}
@@ -149,16 +141,14 @@ export function InviterMembre() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </FormField>
               )}
 
               {erreur && (
-                <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
-                  {erreur}
-                </p>
+                <Alert variant="destructive">{erreur}</Alert>
               )}
 
-              <DialogFooter>
+              <SheetFooter>
                 <Button type="button" variant="outline" onClick={() => setOuvert(false)}>
                   Annuler
                 </Button>
@@ -166,20 +156,20 @@ export function InviterMembre() {
                   {enCours && <Spinner size="sm" className="mr-2" />}
                   Envoyer l&apos;invitation
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </form>
           )}
 
           {envoyeA && (
-            <DialogFooter>
+            <SheetFooter>
               <Button variant="outline" onClick={ouvrir}>
                 Inviter une autre personne
               </Button>
               <Button onClick={() => setOuvert(false)}>Fermer</Button>
-            </DialogFooter>
+            </SheetFooter>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

@@ -1,15 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Pencil, Trash2, Plus, AlertTriangle, Users, Scale } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Pencil, Plus, Printer, Trash2 } from "lucide-react";
+import { ActionMenu } from "@/components/ui/action-menu";
+import { Alert } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,350 +12,273 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { List, ListRow } from "@/components/ui/list-row";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FormulaireDenree } from "./FormulaireDenree";
 import {
-  listerDenrees,
-  saisirDenree,
-  modifierDenree,
-  supprimerDenree,
   calculerDotation,
   changerBaseRepartition,
+  listerDenrees,
+  modifierDenree,
+  saisirDenree,
+  supprimerDenree,
 } from "@/lib/api/distributions";
+import { messageErreur } from "@/lib/erreurs";
+import { arrivage, phrasePenurie, quantite } from "@/lib/repartition";
 import type { DenreeResponse, DotationResponse, SaisirDenreePayload } from "@/types/distribution";
 
-function formatQte(valeur: number, unite: string): string {
-  const suffixes: Record<string, string> = {
-    KILOGRAMME: "kg",
-    LITRE: "L",
-    PIECE: "pièce(s)",
-    UNITE: "unité(s)",
-  };
-  const suffix = suffixes[unite] ?? unite.toLowerCase();
-  return `${valeur.toLocaleString("fr-FR", { maximumFractionDigits: 3 })} ${suffix}`;
-}
+type Base = DotationResponse["base"];
 
 interface Props {
   distributionId: string;
   denreesInitiales: DenreeResponse[];
   dotationInitiale: DotationResponse;
   modifiable: boolean;
+  /* Intitule imprime en tete de la fiche stand ("Jeudi 15 octobre"). */
+  intitule?: string;
 }
 
-export function RepartitionPanel({
-  distributionId,
-  denreesInitiales,
-  dotationInitiale,
-  modifiable,
-}: Props) {
+function explicationBase(base: Base, nb: number): string {
+  const personnes = `${nb} bénéficiaire${nb > 1 ? "s" : ""}`;
+  return base === "INSCRITS"
+    ? `Calculé pour les ${personnes} inscrits. Le jour J, passez sur les présents pour partager entre ceux qui sont venus.`
+    : `Calculé pour les ${personnes} pointés présents.`;
+}
+
+/*
+ * La repartition lue comme le contenu d'un sac : ce que chacun emporte, puis
+ * ce qui ne suffit pas pour tous et ce qui restera. La carte du sac sert aussi
+ * de fiche stand a l'impression.
+ */
+export function RepartitionPanel({ distributionId, denreesInitiales, dotationInitiale, modifiable, intitule }: Props) {
   const [denrees, setDenrees] = useState<DenreeResponse[]>(denreesInitiales);
   const [dotation, setDotation] = useState<DotationResponse>(dotationInitiale);
-  const [base, setBase] = useState<"INSCRITS" | "PRESENTS">(dotationInitiale.base);
-  const [modalMode, setModalMode] = useState<"creer" | "modifier" | null>(null);
-  const [denreeEnEdition, setDenreeEnEdition] = useState<DenreeResponse | null>(null);
-  const [suppressionCible, setSuppressionCible] = useState<{ id: string; libelle: string } | null>(null);
+  const [base, setBase] = useState<Base>(dotationInitiale.base);
+  const [saisie, setSaisie] = useState<{ denree: DenreeResponse | null } | null>(null);
+  const [suppression, setSuppression] = useState<DenreeResponse | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  const rafraichirDotation = useCallback(
-    async (nouvelleBase: "INSCRITS" | "PRESENTS") => {
-      try {
-        const d = await calculerDotation(distributionId, nouvelleBase);
-        setDotation(d);
-      } catch {
-        setErreur("Erreur lors du calcul de la dotation.");
-      }
-    },
-    [distributionId],
-  );
+  async function recharger() {
+    const [nouvelles, nouvelleDotation] = await Promise.all([listerDenrees(distributionId), calculerDotation(distributionId, base)]);
+    setDenrees(nouvelles);
+    setDotation(nouvelleDotation);
+  }
 
-  async function handleAjout(values: SaisirDenreePayload) {
+  async function enregistrer(values: SaisirDenreePayload) {
     setErreur(null);
     try {
-      await saisirDenree(distributionId, values);
-      const [nouvelles, nouvelDotation] = await Promise.all([
-        listerDenrees(distributionId),
-        calculerDotation(distributionId, base),
-      ]);
-      setDenrees(nouvelles);
-      setDotation(nouvelDotation);
-      setModalMode(null);
-    } catch {
-      setErreur("Erreur lors de l'ajout de la denrée.");
+      if (saisie?.denree) await modifierDenree(distributionId, saisie.denree.id, values);
+      else await saisirDenree(distributionId, values);
+      await recharger();
+      setSaisie(null);
+    } catch (e) {
+      setErreur(messageErreur(e, "La denrée n'a pas pu être enregistrée. Réessayez dans un instant."));
     }
   }
 
-  async function handleModification(denreeId: string, values: SaisirDenreePayload) {
+  async function supprimer() {
+    if (!suppression) return;
     setErreur(null);
     try {
-      await modifierDenree(distributionId, denreeId, values);
-      const [nouvelles, nouvelDotation] = await Promise.all([
-        listerDenrees(distributionId),
-        calculerDotation(distributionId, base),
-      ]);
-      setDenrees(nouvelles);
-      setDotation(nouvelDotation);
-      setModalMode(null);
-      setDenreeEnEdition(null);
-    } catch {
-      setErreur("Erreur lors de la modification.");
-    }
-  }
-
-  async function confirmerSuppression() {
-    if (!suppressionCible) return;
-    setErreur(null);
-    try {
-      await supprimerDenree(distributionId, suppressionCible.id);
-      const [nouvelles, nouvelDotation] = await Promise.all([
-        listerDenrees(distributionId),
-        calculerDotation(distributionId, base),
-      ]);
-      setDenrees(nouvelles);
-      setDotation(nouvelDotation);
-    } catch {
-      setErreur("Erreur lors de la suppression.");
+      await supprimerDenree(distributionId, suppression.id);
+      await recharger();
+    } catch (e) {
+      setErreur(messageErreur(e, "La denrée n'a pas pu être retirée."));
     } finally {
-      setSuppressionCible(null);
+      setSuppression(null);
     }
   }
 
-  async function handleBasculeBase(nouvelleBase: "INSCRITS" | "PRESENTS") {
+  async function changerBase(nouvelle: Base) {
     const precedente = base;
-    setBase(nouvelleBase);
+    setBase(nouvelle);
     setErreur(null);
     try {
       // Le choix est enregistre sur la distribution : il est repris au prochain affichage.
-      await changerBaseRepartition(distributionId, nouvelleBase);
+      await changerBaseRepartition(distributionId, nouvelle);
     } catch {
       setBase(precedente);
       setErreur("Le choix de la base n'a pas pu être enregistré.");
       return;
     }
-    await rafraichirDotation(nouvelleBase);
+    try {
+      setDotation(await calculerDotation(distributionId, nouvelle));
+    } catch {
+      setErreur("Le calcul n'a pas pu être refait. Rechargez la page.");
+    }
   }
 
-  function ouvrirCreation() {
-    setDenreeEnEdition(null);
-    setModalMode("creer");
-  }
-
-  function ouvrirModification(denree: DenreeResponse) {
-    setDenreeEnEdition(denree);
-    setModalMode("modifier");
-  }
-
-  function fermerModal() {
-    setModalMode(null);
-    setDenreeEnEdition(null);
-  }
-
-  const dotationParId = Object.fromEntries(dotation.denrees.map((d) => [d.id, d]));
+  const nb = dotation.nbBeneficiaires;
+  const parId = new Map(dotation.denrees.map((d) => [d.id, d]));
+  const calculees = denrees.map((d) => parId.get(d.id)).filter((d) => d !== undefined);
+  const dansLeSac = calculees.filter((d) => !d.penurie && d.dotation > 0);
+  const penuries = calculees.filter((d) => d.penurie);
+  const restes = calculees.filter((d) => d.reste > 0);
 
   return (
-    <>
-      <div className="space-y-6">
-        {!modifiable && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted px-4 py-3 text-sm text-muted-foreground">
-            <Scale className="h-4 w-4 shrink-0" />
-            Cette distribution est clôturée. Les denrées sont en lecture seule.
-          </div>
-        )}
+    <div className="flex flex-col gap-8">
+      {!modifiable && (
+        <Alert variant="info" className="print:hidden">
+          Distribution clôturée : la répartition se consulte, elle ne se modifie plus.
+        </Alert>
+      )}
+      {erreur && saisie === null && <Alert variant="destructive" className="print:hidden">{erreur}</Alert>}
 
-        {/* Bascule inscrits / presents */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-              <Users className="size-4 text-primary" />
-            </div>
-            <span className="text-sm font-semibold text-foreground tabular-nums">
-              {dotation.nbBeneficiaires}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              bénéficiaire{dotation.nbBeneficiaires > 1 ? "s" : ""}
-            </span>
-          </div>
-          <div
-            role="group"
-            aria-label="Base de calcul"
-            className="inline-flex gap-0.5 rounded-xl border border-border/60 bg-muted/80 p-1"
-          >
-            {(["INSCRITS", "PRESENTS"] as const).map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => handleBasculeBase(b)}
-                className={[
-                  "rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
-                  base === b
-                    ? "bg-card text-primary font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                ].join(" ")}
-              >
-                {b === "INSCRITS" ? "Inscrits" : "Présents réels"}
-              </button>
-            ))}
-          </div>
-        </div>
+      <section aria-labelledby="titre-base" className="flex flex-col gap-3 print:hidden">
+        <h2 id="titre-base" className="font-display text-xl font-bold text-foreground">
+          Pour qui
+        </h2>
+        <SegmentedControl
+          label="Base de calcul"
+          value={base}
+          onValueChange={changerBase}
+          options={[
+            { value: "INSCRITS", label: "Inscrits" },
+            { value: "PRESENTS", label: "Présents" },
+          ]}
+        />
+        <p className="text-base text-muted-foreground">{explicationBase(base, nb)}</p>
+      </section>
 
-        {erreur && <p className="text-sm text-destructive">{erreur}</p>}
-
-        {/* Liste des denrees */}
-        <div className="space-y-3">
-          {denrees.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border/60 bg-muted/80 px-6 py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                Aucune denrée saisie pour cette distribution.
+      {denrees.length > 0 && (
+        <section
+          aria-labelledby="titre-sac"
+          className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 sm:p-6 print:border-0 print:p-0"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              {intitule && <p className="hidden text-lg print:block">Fiche stand, {intitule}</p>}
+              <h2 id="titre-sac" className="font-display text-2xl font-bold text-foreground print:text-4xl">
+                Dans chaque sac
+              </h2>
+              <p className="text-base text-muted-foreground print:text-lg">
+                Pour {nb} bénéficiaire{nb > 1 ? "s" : ""} {base === "INSCRITS" ? "inscrits" : "présents"}.
               </p>
-              {modifiable && (
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  Cliquez sur &quot;Ajouter une denrée&quot; pour commencer.
+            </div>
+            {nb > 0 && (
+              <Button variant="outline" onClick={() => window.print()} className="print:hidden">
+                <Printer aria-hidden="true" />
+                Imprimer la fiche stand
+              </Button>
+            )}
+          </div>
+
+          {nb === 0 ? (
+            <p className="text-base text-muted-foreground">
+              {base === "PRESENTS"
+                ? "Aucun présent pointé : le sac se calcule dès les premiers pointages."
+                : "Aucun bénéficiaire inscrit : le sac se calcule dès les premières inscriptions."}
+            </p>
+          ) : (
+            <>
+              {dansLeSac.length > 0 && (
+                <ul className="flex flex-col divide-y divide-border">
+                  {dansLeSac.map((d) => (
+                    <li key={d.id} className="flex items-baseline justify-between gap-4 py-2.5 print:py-4">
+                      <span className="text-lg text-foreground print:text-3xl">{d.libelle}</span>
+                      <span className="font-display text-2xl font-bold whitespace-nowrap text-foreground tabular-nums print:text-4xl">
+                        {quantite(d.dotation, d.unite)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {penuries.length > 0 && (
+                <div className="flex flex-col gap-2 rounded-xl bg-accent/15 p-4 print:border print:border-foreground">
+                  <h3 className="text-base font-bold text-foreground print:text-2xl">Pas assez pour tout le monde</h3>
+                  <ul className="flex flex-col gap-1.5">
+                    {penuries.map((d) => (
+                      <li key={d.id} className="text-base text-foreground print:text-xl">
+                        <span className="font-semibold">{d.libelle}</span> : {phrasePenurie(d, nb)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {restes.length > 0 && (
+                <p className="text-base text-muted-foreground print:text-lg">
+                  Il restera : {restes.map((d) => `${quantite(d.reste, d.unite)} de ${d.libelle.toLowerCase()}`).join(", ")}.
                 </p>
               )}
-            </div>
-          ) : (
-            denrees.map((denree) => {
-              const d = dotationParId[denree.id];
+            </>
+          )}
+        </section>
+      )}
 
-              return (
-                <div
-                  key={denree.id}
-                  className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-sm">{denree.libelle}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {denree.nombreContenants} contenant(s) x{" "}
-                        {formatQte(denree.quantiteParContenant, denree.unite)} ={" "}
-                        <span className="font-medium text-foreground">
-                          {formatQte(denree.quantiteTotale, denree.unite)} total
-                        </span>
-                      </p>
-                    </div>
-                    {modifiable && (
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => ouvrirModification(denree)}
-                          aria-label="Modifier"
-                          className="size-11 p-0 sm:size-8"
-                        >
-                          <Pencil className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSuppressionCible({ id: denree.id, libelle: denree.libelle })}
-                          aria-label="Supprimer"
-                          className="size-11 p-0 sm:size-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {d && (
-                    <div className="pt-3 border-t border-border">
-                      {dotation.nbBeneficiaires === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          {base === "PRESENTS"
-                            ? "Aucun présent pointé : la dotation sera calculée dès les premiers pointages."
-                            : "Aucun bénéficiaire inscrit : la dotation sera calculée dès les premières inscriptions."}
-                        </p>
-                      ) : d.penurie ? (
-                        <div className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm">
-                          <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
-                          <span className="text-warning">
-                            Stock insuffisant : {d.nbPeutRecevoir} personne
-                            {d.nbPeutRecevoir > 1 ? "s" : ""} sur{" "}
-                            {dotation.nbBeneficiaires} peuvent recevoir{" "}
-                            <span className="font-semibold">{formatQte(d.dotation, d.unite)}</span>
-                            {d.reste > 0 && (
-                              <span> (reste {formatQte(d.reste, d.unite)})</span>
-                            )}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-xl bg-primary/10 border border-primary/20 px-4 py-2">
-                            <p className="text-xl font-bold text-primary leading-none tabular-nums">
-                              {formatQte(d.dotation, d.unite)}
-                            </p>
-                            <p className="text-xs text-primary/70 mt-0.5">par personne</p>
-                          </div>
-                          {d.reste > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              Reste : {formatQte(d.reste, d.unite)}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
+      <section aria-labelledby="titre-recu" className="flex flex-col gap-3 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="titre-recu" className="font-display text-xl font-bold text-foreground">
+            Ce qui a été reçu
+          </h2>
+          {modifiable && (
+            <Button variant={denrees.length === 0 ? "default" : "outline"} onClick={() => setSaisie({ denree: null })}>
+              <Plus aria-hidden="true" />
+              Ajouter une denrée
+            </Button>
           )}
         </div>
-
-        {modifiable && (
-          <Button variant="outline" size="sm" onClick={ouvrirCreation} className="w-full">
-            <Plus className="mr-2 size-4" />
-            Ajouter une denrée
-          </Button>
+        {denrees.length === 0 ? (
+          <p className="rounded-xl bg-muted px-5 py-8 text-center text-base text-muted-foreground">
+            Aucune denrée saisie. Notez ce qui est arrivé : Solivio calcule ce que chacun emporte.
+          </p>
+        ) : (
+          <List>
+            {denrees.map((d) => (
+              <ListRow
+                key={d.id}
+                titre={d.libelle}
+                sousTitre={arrivage(d)}
+                fin={
+                  modifiable && (
+                    <ActionMenu
+                      label={`Plus d'actions sur ${d.libelle}`}
+                      items={[
+                        { label: "Modifier", icon: Pencil, onClick: () => setSaisie({ denree: d }) },
+                        { label: "Retirer", icon: Trash2, destructive: true, onClick: () => setSuppression(d) },
+                      ]}
+                    />
+                  )
+                }
+              />
+            ))}
+          </List>
         )}
-      </div>
+      </section>
 
-      {/* Modal creation / modification */}
-      <Dialog open={modalMode !== null} onOpenChange={(open) => { if (!open) fermerModal(); }}>
-        <DialogContent showCloseButton>
-          <DialogHeader>
-            <DialogTitle>
-              {modalMode === "modifier" ? "Modifier la denrée" : "Nouvelle denrée"}
-            </DialogTitle>
-          </DialogHeader>
+      <Sheet open={saisie !== null} onOpenChange={(ouvert) => !ouvert && setSaisie(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{saisie?.denree ? "Modifier la denrée" : "Ajouter une denrée"}</SheetTitle>
+            <SheetDescription>Comptez les contenants tels qu&apos;ils sont arrivés.</SheetDescription>
+          </SheetHeader>
+          {erreur && <Alert variant="destructive">{erreur}</Alert>}
           <FormulaireDenree
-            initiales={denreeEnEdition ?? undefined}
-            onSubmit={(values) =>
-              modalMode === "modifier" && denreeEnEdition
-                ? handleModification(denreeEnEdition.id, values)
-                : handleAjout(values)
-            }
-            onAnnuler={fermerModal}
+            key={saisie?.denree?.id ?? "nouvelle"}
+            initiales={saisie?.denree ?? undefined}
+            onSubmit={enregistrer}
+            onAnnuler={() => setSaisie(null)}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
-      {/* Modal confirmation suppression */}
-      <AlertDialog
-        open={suppressionCible !== null}
-        onOpenChange={(open) => { if (!open) setSuppressionCible(null); }}
-      >
+      <AlertDialog open={suppression !== null} onOpenChange={(ouvert) => !ouvert && setSuppression(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer la denrée</AlertDialogTitle>
-            <AlertDialogDescription>
-              &quot;{suppressionCible?.libelle}&quot; sera supprimée de cette distribution.
-              La dotation sera recalculee automatiquement.
-            </AlertDialogDescription>
+            <AlertDialogTitle>Retirer {suppression?.libelle}</AlertDialogTitle>
+            <AlertDialogDescription>La denrée sort de cette distribution et le sac est recalculé.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSuppressionCible(null)}>
-              Annuler
-            </AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmerSuppression}>
-              Supprimer
+            <AlertDialogCancel>Garder</AlertDialogCancel>
+            <AlertDialogAction variant="destructive-solid" onClick={supprimer}>
+              Retirer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

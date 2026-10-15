@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscription confirmee</title>
+  <title>Inscription confirmée</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,-apple-system,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -20,13 +20,13 @@
           <tr>
             <td style="padding:40px 40px 24px;">
               <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">
-                Inscription confirmee
+                Inscription confirmée
               </h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">
-                Bonjour <span th:text="${prenom}">Prenom</span>,
+                Bonjour <span th:text="${prenom}">Prénom</span>,
               </p>
               <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#374151;">
-                Votre inscription <th:block th:if="${estBenevole}">en tant que <strong>benevole</strong> </th:block>a la distribution suivante a bien ete enregistree.
+                Votre inscription <th:block th:if="${estBenevole}">en tant que <strong>bénévole</strong> </th:block>à la distribution suivante a bien été enregistrée.
               </p>
               <div style="background:#f0faf6;border:1px solid #b0dcca;border-radius:8px;padding:20px 24px;margin:16px 0 24px;">
                 <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#16513F;"
@@ -45,11 +45,11 @@
               </div>
               <div th:if="${estBenevole}" style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px 20px;margin:0 0 32px;">
                 <p th:if="${heureArriveeBenevole != null}" style="margin:0;font-size:14px;color:#92400e;">
-                  Merci d'arriver a <strong th:text="${#temporals.format(heureArriveeBenevole, 'HH:mm')}">07:30</strong>
-                  (1h30 avant le debut de votre creneau).
+                  Merci d'arriver à <strong th:text="${#temporals.format(heureArriveeBenevole, 'HH:mm')}">07:30</strong>
+                  (1h30 avant le début de votre créneau).
                 </p>
                 <p th:if="${heureArriveeBenevole == null}" style="margin:0;font-size:14px;color:#92400e;">
-                  Merci d'arriver <strong>1h30 avant le debut</strong> de la distribution.
+                  Merci d'arriver <strong>1h30 avant le début</strong> de la distribution.
                 </p>
               </div>
               <table role="presentation" cellspacing="0" cellpadding="0">
@@ -69,7 +69,7 @@
             <td style="padding:0 40px 40px;">
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 24px;">
               <p style="margin:0;font-size:13px;color:#9ca3af;">
-                Si vous n'etes pas a l'origine de cette inscription, contactez-nous :
+                Si vous n'êtes pas à l'origine de cette inscription, contactez-nous :
                 <a href="mailto:contact@solivio.app" style="color:#16513F;">contact@solivio.app</a>
               </p>
             </td>

@@ -48,8 +48,7 @@ describe("FormulaireEvenement en modification", () => {
     // Libelle du type choisi, pas la valeur brute STAND.
     expect(screen.getByRole("combobox", { name: /Type/i })).toHaveTextContent("Stand");
     expect(screen.queryByText("STAND")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /suivant/i }));
-    expect(screen.getByLabelText(/Nombre de staff/i)).toHaveValue(6);
+    expect(screen.getByLabelText(/Taille de l'équipe/i)).toHaveValue(6);
     await userEvent.click(screen.getByRole("button", { name: /enregistrer les modifications/i }));
 
     await waitFor(() => expect(modifierEvenement).toHaveBeenCalledTimes(1));
@@ -63,5 +62,13 @@ describe("FormulaireEvenement en modification", () => {
       lieuAdresseFormatee: "Place du Capitole, Toulouse",
       capaciteStaff: 6,
     });
+  });
+
+  it("refuse un evenement sans equipe ni participants", async () => {
+    modifierEvenement.mockClear();
+    render(<FormulaireEvenement evenement={{ ...evenement, aBesoiNStaff: false }} />);
+    await userEvent.click(await screen.findByRole("button", { name: /enregistrer les modifications/i }));
+    expect(screen.getByText("Cherchez une équipe, des participants, ou les deux.")).toBeInTheDocument();
+    expect(modifierEvenement).not.toHaveBeenCalled();
   });
 });

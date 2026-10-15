@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { UserX, UserCheck, UserMinus, AlertTriangle, Search, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ChevronRight, FileText } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,471 +14,175 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { mettreAJourRoleMembre, supprimerMembre, changerStatutMembre } from "@/lib/api/association";
-import type { MembreResponse } from "@/types/association";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FormField } from "@/components/ui/form-field";
+import { SearchField } from "@/components/ui/search-field";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Spinner } from "@/components/ui/spinner";
+import { Statut } from "@/components/ui/statut";
+import { changerStatutMembre, mettreAJourRoleMembre, supprimerMembre } from "@/lib/api/association";
+import { messageErreur } from "@/lib/erreurs";
+import type { LibelleStatut } from "@/lib/libelles";
 import { ROLE_LABELS } from "@/lib/roles";
+import type { MembreResponse } from "@/types/association";
 
-const ROLES = ["benevole", "coordinateur", "responsable", "super_admin"] as const;
-type RoleValue = (typeof ROLES)[number];
+const ROLES_ATTRIBUABLES = ["benevole", "coordinateur", "responsable", "super_admin"];
 
-// Base UI n'affiche le libelle de la valeur choisie que si la racine recoit les items.
-const FILTRES_STATUT = { tous: "Tous", actif: "Actif", suspendu: "Suspendu", invite_en_attente: "En attente" };
-const FILTRES_ROLE = { tous: "Tous", benevole: "Bénévole", coordinateur: "Coordinateur", responsable: "Responsable" };
+type FiltreRole = "tous" | "beneficiaire" | "benevole" | "encadrement";
+type FiltreStatut = "actifs" | "en_attente" | "suspendus";
 
-function labelRole(role: string): string {
-  return ROLE_LABELS[role] ?? role;
+const STATUT_MEMBRE: Record<string, LibelleStatut> = {
+  actif: { texte: "Actif", ton: "ouvert" },
+  suspendu: { texte: "Suspendu", ton: "passe" },
+  invite_en_attente: { texte: "Invitation envoyée", ton: "brouillon" },
+};
+
+const DATE = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+const normaliser = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("fr");
+
+function correspondRole(m: MembreResponse, filtre: FiltreRole): boolean {
+  if (filtre === "tous") return true;
+  if (filtre === "encadrement") return m.role === "coordinateur" || m.role === "responsable" || m.role === "super_admin";
+  return m.role === filtre;
 }
 
-function labelStatut(statut: string): string {
-  if (statut === "actif") return "Actif";
-  if (statut === "suspendu") return "Suspendu";
-  if (statut === "invite_en_attente") return "En attente";
-  return statut;
+function correspondStatut(m: MembreResponse, filtre: FiltreStatut): boolean {
+  if (filtre === "actifs") return m.statut === "actif";
+  if (filtre === "suspendus") return m.statut === "suspendu";
+  return m.statut === "invite_en_attente";
 }
 
-function variantStatut(statut: string): "default" | "secondary" | "destructive" {
-  if (statut === "actif") return "default";
-  if (statut === "suspendu") return "destructive";
-  return "secondary";
+const arrivee = (m: MembreResponse) => (m.dateDebut ? DATE.format(new Date(m.dateDebut)) : "-");
+
+interface FicheProps {
+  membre: MembreResponse | null;
+  estSoi: boolean;
+  peutVoirDossier: boolean;
+  onFermer: () => void;
 }
 
-function getInitiales(prenom: string, nom: string): string {
-  return `${prenom[0] ?? ""}${nom[0] ?? ""}`.toUpperCase();
-}
-
-type DialogType = "statut" | "retirer" | null;
-
-// --- Carte mobile ---
-
-function CarteMembre({
-  membre,
-  currentUserId,
-  peutVoirDossier = false,
-}: {
-  membre: MembreResponse;
-  currentUserId: string;
-  peutVoirDossier?: boolean;
-}) {
+/* Les actions sur un membre, a l'ecart de la liste : role, suspension, retrait. */
+function FicheMembre({ membre, estSoi, peutVoirDossier, onFermer }: FicheProps) {
   const router = useRouter();
-  const [role, setRole] = useState(membre.role);
-  const [statut, setStatut] = useState(membre.statut);
-  const [pending, setPending] = useState(false);
+  const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [dialogOuvert, setDialogOuvert] = useState<DialogType>(null);
+  const [retrait, setRetrait] = useState(false);
 
-  const estSoi = membre.compteId === currentUserId;
-  const estSuspendu = statut === "suspendu";
-  const initiales = getInitiales(membre.prenom, membre.nom);
-
-  async function changerRole(nouveauRole: string) {
-    if (nouveauRole === role) return;
-    setRole(nouveauRole);
-    setPending(true);
+  async function executer(appel: () => Promise<unknown>, succes: string, fermer = false) {
+    setEnCours(true);
     setErreur(null);
     try {
-      await mettreAJourRoleMembre(membre.compteId, { role: nouveauRole });
+      await appel();
+      toast.success(succes);
       router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
-      setRole(membre.role);
+      if (fermer) onFermer();
+    } catch (e) {
+      setErreur(messageErreur(e, "L'action n'a pas abouti. Réessayez dans un instant."));
     } finally {
-      setPending(false);
+      setEnCours(false);
     }
   }
 
-  async function confirmerToggleStatut() {
-    const nouveauStatut = estSuspendu ? "actif" : "suspendu";
-    setDialogOuvert(null);
-    setPending(true);
-    setErreur(null);
-    try {
-      await changerStatutMembre(membre.compteId, nouveauStatut);
-      setStatut(nouveauStatut);
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de statut.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function confirmerRetirer() {
-    setDialogOuvert(null);
-    setPending(true);
-    setErreur(null);
-    try {
-      await supprimerMembre(membre.compteId);
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la suppression.");
-      setPending(false);
-    }
-  }
+  if (!membre) return null;
+  const nom = `${membre.prenom} ${membre.nom}`;
+  const suspendu = membre.statut === "suspendu";
+  const roles = ROLES_ATTRIBUABLES.includes(membre.role) ? ROLES_ATTRIBUABLES : [membre.role, ...ROLES_ATTRIBUABLES];
 
   return (
     <>
-      <div
-        className={[
-          "rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3 transition-opacity",
-          estSuspendu ? "opacity-50" : "",
-        ].join(" ")}
-      >
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
-            {initiales}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              {membre.prenom} {membre.nom}
-              {estSoi && (
-                <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{membre.email}</p>
-            {peutVoirDossier && membre.role === "beneficiaire" && (
-              <Link
-                href={`/association/membres/${membre.compteId}/dossier`}
-                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                <FileText className="size-3.5" />
-                Voir le dossier
-              </Link>
-            )}
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <Badge variant={variantStatut(statut)} className="text-[11px]">
-                {labelStatut(statut)}
-              </Badge>
-              <Badge variant="secondary" className="text-[11px]">
-                {labelRole(role)}
-              </Badge>
-            </div>
-          </div>
-        </div>
+      <SheetHeader>
+        <SheetTitle>{nom}</SheetTitle>
+        <SheetDescription>
+          {membre.email}. Membre depuis le {arrivee(membre)}.
+        </SheetDescription>
+      </SheetHeader>
+      <Statut libelle={STATUT_MEMBRE[membre.statut] ?? { texte: membre.statut, ton: "passe" }} className="w-fit" />
 
-        {erreur && <p className="text-xs text-destructive">{erreur}</p>}
+      {peutVoirDossier && membre.role === "beneficiaire" && (
+        <Link href={`/association/membres/${membre.compteId}/dossier`} className={buttonVariants({ variant: "outline", className: "self-start" })}>
+          <FileText aria-hidden="true" />
+          Voir le dossier social
+        </Link>
+      )}
 
-        {!estSoi && (
-          <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
+      {estSoi ? (
+        <p className="text-base text-muted-foreground">C&apos;est votre compte : un autre responsable peut changer votre rôle.</p>
+      ) : (
+        <>
+          <FormField label="Rôle" htmlFor="role-membre" hint={suspendu ? "Réactivez le membre pour changer son rôle." : undefined}>
             <Select
               items={ROLE_LABELS}
-              value={role as RoleValue}
-              onValueChange={(v) => { if (v) changerRole(v); }}
-              disabled={pending || estSuspendu}
+              value={membre.role}
+              disabled={enCours || suspendu}
+              onValueChange={(v) => v && v !== membre.role && executer(() => mettreAJourRoleMembre(membre.compteId, { role: v }), `${nom} est maintenant ${ROLE_LABELS[v]?.toLowerCase() ?? v}.`)}
             >
-              <SelectTrigger size="sm" className="w-[140px]">
+              <SelectTrigger id="role-membre" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>{labelRole(r)}</SelectItem>
+                {roles.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {ROLE_LABELS[r] ?? r}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </FormField>
 
-            <div className="flex gap-1">
-              {pending ? (
-                <Spinner size="sm" />
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDialogOuvert("statut")}
-                    className={estSuspendu
-                      ? "text-primary hover:text-primary hover:bg-primary/10"
-                      : "text-warning hover:text-warning hover:bg-warning/10"
-                    }
-                  >
-                    {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
-                    ) : (
-                      <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDialogOuvert("retirer")}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <UserMinus className="h-3.5 w-3.5 mr-1" />
-                    Retirer
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <AlertDialog
-        open={dialogOuvert === "statut"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Réactiver" : "Suspendre"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "retirer"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
-            <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer définitivement
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
-// --- Ligne desktop ---
-
-function LigneMembreRow({
-  membre,
-  currentUserId,
-  peutVoirDossier = false,
-}: {
-  membre: MembreResponse;
-  currentUserId: string;
-  peutVoirDossier?: boolean;
-}) {
-  const router = useRouter();
-  const [role, setRole] = useState(membre.role);
-  const [statut, setStatut] = useState(membre.statut);
-  const [pending, setPending] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [dialogOuvert, setDialogOuvert] = useState<DialogType>(null);
-
-  const estSoi = membre.compteId === currentUserId;
-  const estSuspendu = statut === "suspendu";
-  const initiales = getInitiales(membre.prenom, membre.nom);
-
-  async function changerRole(nouveauRole: string) {
-    if (nouveauRole === role) return;
-    setRole(nouveauRole);
-    setPending(true);
-    setErreur(null);
-    try {
-      await mettreAJourRoleMembre(membre.compteId, { role: nouveauRole });
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de rôle.");
-      setRole(membre.role);
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function confirmerToggleStatut() {
-    const nouveauStatut = estSuspendu ? "actif" : "suspendu";
-    setDialogOuvert(null);
-    setPending(true);
-    setErreur(null);
-    try {
-      await changerStatutMembre(membre.compteId, nouveauStatut);
-      setStatut(nouveauStatut);
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors du changement de statut.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function confirmerRetirer() {
-    setDialogOuvert(null);
-    setPending(true);
-    setErreur(null);
-    try {
-      await supprimerMembre(membre.compteId);
-      router.refresh();
-    } catch (err) {
-      const e = err as { detail?: string; message?: string };
-      setErreur(e.detail ?? e.message ?? "Erreur lors de la suppression.");
-      setPending(false);
-    }
-  }
-
-  return (
-    <>
-      <tr className={`border-b border-border/60 last:border-0 transition-opacity ${estSuspendu ? "opacity-50" : ""}`}>
-        <td className="py-3.5 px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-semibold">
-              {initiales}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate">
-                {membre.prenom} {membre.nom}
-                {estSoi && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(vous)</span>}
+          {membre.statut !== "invite_en_attente" && (
+            <div className="flex flex-col gap-2">
+              <p className="text-base text-muted-foreground">
+                {suspendu
+                  ? "Réactivé, le membre pourra de nouveau participer aux activités de l'association."
+                  : "Suspendu, le membre ne pourra plus participer aux activités de l'association."}
               </p>
-              <p className="text-xs text-muted-foreground truncate">{membre.email}</p>
-              {peutVoirDossier && membre.role === "beneficiaire" && (
-                <Link
-                  href={`/association/membres/${membre.compteId}/dossier`}
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  <FileText className="size-3.5" />
-                  Voir le dossier
-                </Link>
-              )}
+              <Button
+                variant="outline"
+                className="self-start"
+                disabled={enCours}
+                onClick={() =>
+                  executer(
+                    () => changerStatutMembre(membre.compteId, suspendu ? "actif" : "suspendu"),
+                    suspendu ? `${nom} est de nouveau actif.` : `${nom} est suspendu.`,
+                  )
+                }
+              >
+                {enCours && <Spinner size="sm" />}
+                {suspendu ? "Réactiver" : "Suspendre"}
+              </Button>
             </div>
+          )}
+
+          <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
+            <Button variant="destructive" className="self-start" disabled={enCours} onClick={() => setRetrait(true)}>
+              Retirer de l&apos;association
+            </Button>
           </div>
-          {erreur && <p className="text-xs text-destructive mt-1.5 ml-11">{erreur}</p>}
-        </td>
+        </>
+      )}
+      {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
-        <td className="py-3.5 px-4">
-          <Badge variant={variantStatut(statut)}>{labelStatut(statut)}</Badge>
-        </td>
-
-        <td className="py-3.5 px-4">
-          {estSoi ? (
-            <span className="text-sm text-muted-foreground">{labelRole(role)}</span>
-          ) : (
-            <Select
-              items={ROLE_LABELS}
-              value={role as RoleValue}
-              onValueChange={(v) => { if (v) changerRole(v); }}
-              disabled={pending || estSuspendu}
+      <AlertDialog open={retrait} onOpenChange={setRetrait}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Retirer {nom}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le membre est retiré définitivement de l&apos;association. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Garder</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive-solid"
+              onClick={() => executer(() => supprimerMembre(membre.compteId), `${nom} a été retiré de l'association.`, true)}
             >
-              <SelectTrigger size="sm" className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>{labelRole(r)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </td>
-
-        <td className="py-3.5 px-4">
-          {!estSoi && (
-            <div className="flex items-center gap-1">
-              {pending ? (
-                <Spinner size="sm" />
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDialogOuvert("statut")}
-                    className={estSuspendu
-                      ? "text-primary hover:text-primary hover:bg-primary/10"
-                      : "text-warning hover:text-warning hover:bg-warning/10"
-                    }
-                  >
-                    {estSuspendu ? (
-                      <><UserCheck className="h-3.5 w-3.5 mr-1" />Réactiver</>
-                    ) : (
-                      <><UserX className="h-3.5 w-3.5 mr-1" />Suspendre</>
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDialogOuvert("retirer")}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <UserMinus className="h-3.5 w-3.5 mr-1" />
-                    Retirer
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </td>
-      </tr>
-
-      <AlertDialog
-        open={dialogOuvert === "statut"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className={estSuspendu ? "bg-primary/10" : "bg-warning/15"}>
-              {estSuspendu ? <UserCheck className="text-primary" /> : <UserX className="text-warning" />}
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {estSuspendu ? "Réactiver le membre" : "Suspendre le membre"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {estSuspendu
-                ? `${membre.prenom} ${membre.nom} pourra à nouveau participer aux activités de l'association.`
-                : `${membre.prenom} ${membre.nom} ne pourra plus participer aux activités de l'association.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmerToggleStatut}>
-              {estSuspendu ? "Réactiver" : "Suspendre"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={dialogOuvert === "retirer"}
-        onOpenChange={(open) => { if (!open) setDialogOuvert(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Retirer le membre</AlertDialogTitle>
-            <AlertDialogDescription>
-              {membre.prenom} {membre.nom} sera retire définitivement de l&apos;association.
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOuvert(null)}>Annuler</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmerRetirer}>
-              Retirer définitivement
+              Retirer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -495,8 +190,6 @@ function LigneMembreRow({
     </>
   );
 }
-
-// --- Composant principal ---
 
 interface Props {
   membres: MembreResponse[];
@@ -505,107 +198,116 @@ interface Props {
   peutVoirDossiers?: boolean;
 }
 
+/* Les membres comme dans un tableur : filtres, recherche, tri ; les actions dans une fiche. */
 export function GestionMembres({ membres, currentUserId, peutVoirDossiers = false }: Props) {
   const [recherche, setRecherche] = useState("");
-  const [filtreStatut, setFiltreStatut] = useState("tous");
-  const [filtreRole, setFiltreRole] = useState("tous");
+  const [role, setRole] = useState<FiltreRole>("tous");
+  const [statut, setStatut] = useState<FiltreStatut>("actifs");
+  const [ouvertId, setOuvertId] = useState<string | null>(null);
 
-  const filtres = useMemo(() => {
-    const q = recherche.toLowerCase().trim();
-    return membres.filter((m) => {
-      if (q && !`${m.prenom} ${m.nom} ${m.email}`.toLowerCase().includes(q)) return false;
-      if (filtreStatut !== "tous" && m.statut !== filtreStatut) return false;
-      if (filtreRole !== "tous" && m.role !== filtreRole) return false;
-      return true;
-    });
-  }, [membres, recherche, filtreStatut, filtreRole]);
+  const terme = normaliser(recherche.trim());
+  const parRole = useMemo(() => membres.filter((m) => correspondRole(m, role)), [membres, role]);
+  const lignes = parRole
+    .filter((m) => correspondStatut(m, statut))
+    .filter((m) => !terme || normaliser(`${m.prenom} ${m.nom} ${m.email}`).includes(terme));
+  const compte = (f: FiltreRole) => membres.filter((m) => correspondRole(m, f) && correspondStatut(m, statut)).length;
+  const ouvert = membres.find((m) => m.compteId === ouvertId) ?? null;
+
+  const nomCellule = (m: MembreResponse) => (
+    <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex flex-col text-left hover:underline focus-visible:underline">
+      <span className="font-semibold text-foreground">
+        {m.nom} {m.prenom}
+        {m.compteId === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+      </span>
+      <span className="text-sm text-muted-foreground">{m.email}</span>
+    </button>
+  );
+
+  const colonnes: ColumnDef<MembreResponse>[] = [
+    { key: "nom", header: "Membre", sortable: true, cell: nomCellule },
+    { key: "role", header: "Rôle", sortable: true, cell: (m) => ROLE_LABELS[m.role] ?? m.role },
+    { key: "arrivee", header: "Arrivée", sortable: true, className: "tabular-nums text-muted-foreground", cell: arrivee },
+    {
+      key: "gerer",
+      header: "",
+      className: "text-right",
+      cell: (m) => (
+        <Button variant="ghost" size="sm" onClick={() => setOuvertId(m.compteId)} aria-label={`Gérer ${m.prenom} ${m.nom}`}>
+          Gérer
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* Carte toolbar */}
-      <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Rechercher par nom ou email..."
-              className="pl-8"
-            />
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Statut</span>
-              <Select items={FILTRES_STATUT} value={filtreStatut} onValueChange={(v) => { if (v) setFiltreStatut(v); }}>
-                <SelectTrigger className="flex-1 sm:w-[130px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="actif">Actif</SelectItem>
-                  <SelectItem value="suspendu">Suspendu</SelectItem>
-                  <SelectItem value="invite_en_attente">En attente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Rôle</span>
-              <Select items={FILTRES_ROLE} value={filtreRole} onValueChange={(v) => { if (v) setFiltreRole(v); }}>
-                <SelectTrigger className="flex-1 sm:w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tous">Tous</SelectItem>
-                  <SelectItem value="benevole">Bénévole</SelectItem>
-                  <SelectItem value="coordinateur">Coordinateur</SelectItem>
-                  <SelectItem value="responsable">Responsable</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {filtres.length} membre{filtres.length !== 1 ? "s" : ""}
-          {filtres.length !== membres.length && ` sur ${membres.length}`}
-        </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <SegmentedControl
+          label="Rôle"
+          value={role}
+          onValueChange={setRole}
+          options={[
+            { value: "tous", label: "Tous", count: compte("tous") },
+            { value: "beneficiaire", label: "Bénéficiaires", count: compte("beneficiaire") },
+            { value: "benevole", label: "Bénévoles", count: compte("benevole") },
+            { value: "encadrement", label: "Encadrement", count: compte("encadrement") },
+          ]}
+        />
+        <SearchField label="Chercher un membre" placeholder="Nom, prénom ou email" value={recherche} onValueChange={setRecherche} className="lg:w-80" />
       </div>
+      <SegmentedControl
+        label="Statut"
+        size="sm"
+        value={statut}
+        onValueChange={setStatut}
+        options={[
+          { value: "actifs", label: "Actifs", count: parRole.filter((m) => m.statut === "actif").length },
+          { value: "en_attente", label: "Invitations", count: parRole.filter((m) => m.statut === "invite_en_attente").length },
+          { value: "suspendus", label: "Suspendus", count: parRole.filter((m) => m.statut === "suspendu").length },
+        ]}
+      />
 
-      {filtres.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-muted/80 px-6 py-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            {membres.length === 0 ? "Aucun membre dans cette association." : "Aucun membre ne correspond aux filtres."}
-          </p>
-        </div>
+      {lignes.length === 0 ? (
+        <EmptyState size="sm" title={terme ? "Personne ne correspond" : "Personne dans cette sélection"} />
       ) : (
         <>
-          {/* Vue mobile : cartes */}
-          <div className="space-y-3 lg:hidden">
-            {filtres.map((m) => (
-              <CarteMembre key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
+          <DataTable
+            className="hidden md:block"
+            data={lignes}
+            columns={colonnes}
+            pageSize={50}
+            getRowKey={(m) => m.compteId}
+            sortKey={(m, cle) => (cle === "role" ? (ROLE_LABELS[m.role] ?? m.role) : cle === "arrivee" ? m.dateDebut : `${m.nom} ${m.prenom}`)}
+          />
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card md:hidden">
+            {lignes.map((m) => (
+              <li key={m.compteId}>
+                <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold text-foreground">
+                      {m.nom} {m.prenom}
+                    </span>
+                    <span className="truncate text-sm text-muted-foreground">{ROLE_LABELS[m.role] ?? m.role}</span>
+                  </span>
+                  <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+                </button>
+              </li>
             ))}
-          </div>
-
-          {/* Vue desktop : tableau */}
-          <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60 bg-muted/80">
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Membre</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rôle</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtres.map((m) => (
-                  <LigneMembreRow key={m.compteId} membre={m} currentUserId={currentUserId} peutVoirDossier={peutVoirDossiers} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          </ul>
         </>
       )}
+
+      <Sheet open={ouvert !== null} onOpenChange={(o) => !o && setOuvertId(null)}>
+        <SheetContent>
+          <FicheMembre
+            key={ouvert?.compteId}
+            membre={ouvert}
+            estSoi={ouvert?.compteId === currentUserId}
+            peutVoirDossier={peutVoirDossiers}
+            onFermer={() => setOuvertId(null)}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

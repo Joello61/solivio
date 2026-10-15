@@ -1,90 +1,46 @@
 "use client";
 
-import { lireCleGoogleMaps } from "@/lib/api/config";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { APIProvider } from "@vis.gl/react-google-maps";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
+import { Textarea } from "@/components/ui/textarea";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
 import { GenerateurCreneaux } from "@/components/distributions/GenerateurCreneaux";
+import { SectionFormulaire } from "@/components/shared/SectionFormulaire";
+import { creerDistribution, modifierDistribution } from "@/lib/api/distributions";
+import { lireCleGoogleMaps } from "@/lib/api/config";
+import { dateLongue, horaire, libellePlaces } from "@/lib/agenda";
+import { dateDupliquee, titrePropose } from "@/lib/cycle-distribution";
+import { messageErreur } from "@/lib/erreurs";
 import type { DistributionResponse, LieuRequest, LieuResponse } from "@/types/distribution";
 
-// Schéma
 const creneauSchema = z.object({
   // Identifiant d'un creneau existant (modification) ; absent pour un nouveau creneau.
   id: z.string().optional(),
-  heureDebut: z.string().min(1, "Heure de début requise"),
-  heureFin: z.string().min(1, "Heure de fin requise"),
-  capacite: z.number().int().positive("La capacite doit être positive"),
+  heureDebut: z.string().min(1, "Indiquez l'heure de début."),
+  heureFin: z.string().min(1, "Indiquez l'heure de fin."),
+  capacite: z.number({ error: "Indiquez un nombre de places." }).int().positive("Au moins une place."),
 });
 
 const schema = z.object({
-  titre: z.string().min(1, "Le titre est requis").max(200),
+  titre: z.string().trim().min(1, "Donnez un titre.").max(200),
   description: z.string().optional(),
-  date: z.string().min(1, "La date est requise"),
-  capaciteBeneficiaires: z.number().int().positive("La capacite doit être positive"),
-  capaciteBenevoles: z.number().int().positive().optional(),
-  modeCreneau: z.enum(["CRENEAU_UNIQUE", "CRENEAUX_DECOUPES"]),
-  creneaux: z.array(creneauSchema).min(1, "Au moins un créneau est requis"),
+  date: z.string().min(1, "Choisissez une date."),
+  capaciteBeneficiaires: z.number({ error: "Indiquez un nombre de places." }).int().positive("Au moins une place."),
+  capaciteBenevoles: z.number().int().positive("Au moins une place, ou laissez vide.").optional(),
+  creneaux: z.array(creneauSchema).min(1, "Ajoutez au moins un créneau."),
 });
 
 type FormValues = z.infer<typeof schema>;
-
-// Barre de progression
-const STEPS = ["Informations & lieu", "Créneaux horaires"];
-
-function StepBar({ current }: { current: number }) {
-  return (
-    <div className="flex items-center gap-0 mb-6">
-      {STEPS.map((label, i) => {
-        const done = i < current;
-        const active = i === current;
-        return (
-          <div key={i} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className={[
-                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold font-display transition-colors",
-                  done
-                    ? "bg-primary text-primary-foreground"
-                    : active
-                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                    : "bg-muted text-muted-foreground",
-                ].join(" ")}
-              >
-                {done ? <Check className="w-4 h-4" /> : i + 1}
-              </div>
-              <span
-                className={[
-                  "text-xs font-medium whitespace-nowrap",
-                  active ? "text-foreground" : "text-muted-foreground",
-                ].join(" ")}
-              >
-                {label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div
-                className={[
-                  "flex-1 h-0.5 mx-2 mb-4 rounded-full transition-colors",
-                  done ? "bg-primary" : "bg-border",
-                ].join(" ")}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 function versLieuRequest(lieu: LieuResponse | null): LieuRequest | undefined {
   if (!lieu?.adresseFormatee) return undefined;
@@ -96,17 +52,37 @@ function modePour(creneaux: unknown[]): "CRENEAU_UNIQUE" | "CRENEAUX_DECOUPES" {
   return creneaux.length > 1 ? "CRENEAUX_DECOUPES" : "CRENEAU_UNIQUE";
 }
 
+function valeursDepuis(d: DistributionResponse, copie: { date: string } | null): FormValues {
+  const date = copie?.date ?? d.date;
+  return {
+    titre: copie ? titrePropose(date) : d.titre,
+    description: d.description ?? "",
+    date,
+    capaciteBeneficiaires: d.capaciteBeneficiaires,
+    capaciteBenevoles: d.capaciteBenevoles ?? undefined,
+    creneaux: d.creneaux.map((c) => ({
+      // Une copie cree de nouveaux creneaux.
+      id: copie ? undefined : c.id,
+      heureDebut: c.heureDebut.slice(0, 5),
+      heureFin: c.heureFin.slice(0, 5),
+      capacite: c.capacite,
+    })),
+  };
+}
+
 interface Props {
   /** Distribution a modifier ; absente pour une creation. */
   distribution?: DistributionResponse;
+  /** Distribution a dupliquer : tout est repris, la date avance d'une semaine. */
+  modele?: DistributionResponse;
+  aujourdhui: string;
 }
 
-// Composant principal
-export function CreateDistributionForm({ distribution }: Props = {}) {
+export function CreateDistributionForm({ distribution, modele, aujourdhui }: Props) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [lieu, setLieu] = useState<LieuRequest | undefined>(versLieuRequest(distribution?.lieu ?? null));
+  const source = distribution ?? modele;
+  const [lieu, setLieu] = useState<LieuRequest | undefined>(versLieuRequest(source?.lieu ?? null));
   const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
@@ -116,50 +92,49 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
     lireCleGoogleMaps().then(setMapsApiKey);
   }, []);
 
+  const valeursInitiales: Partial<FormValues> = distribution
+    ? valeursDepuis(distribution, null)
+    : modele
+      ? valeursDepuis(modele, { date: dateDupliquee(modele.date, aujourdhui) })
+      : { titre: "", creneaux: [{ heureDebut: "17:30", heureFin: "19:30", capacite: 50 }] };
+
   const {
     register,
     control,
     handleSubmit,
-    trigger,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: distribution
-      ? {
-          titre: distribution.titre,
-          description: distribution.description ?? "",
-          date: distribution.date,
-          capaciteBeneficiaires: distribution.capaciteBeneficiaires,
-          capaciteBenevoles: distribution.capaciteBenevoles ?? undefined,
-          modeCreneau: distribution.modeCreneau,
-          creneaux: distribution.creneaux.map((c) => ({
-            id: c.id,
-            heureDebut: c.heureDebut.slice(0, 5),
-            heureFin: c.heureFin.slice(0, 5),
-            capacite: c.capacite,
-          })),
-        }
-      : {
-          modeCreneau: "CRENEAU_UNIQUE",
-          creneaux: [{ heureDebut: "10:00", heureFin: "12:00", capacite: 50 }],
-        },
-  });
-
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: valeursInitiales });
   const { fields, append, remove, replace } = useFieldArray({ control, name: "creneaux" });
-  // Generer remplace la liste : jamais sur une distribution publiee, dont les creneaux ont pu recevoir des inscrits.
-  const peutGenerer = !distribution?.creneaux.length || distribution.statut === "BROUILLON";
+  const [date, creneaux, capacite] = useWatch({ control, name: ["date", "creneaux", "capaciteBeneficiaires"] });
 
-  /* Validation de l'étape 1 avant de passer à l'étape 2 */
-  async function allerEtape2() {
-    const ok = await trigger(["titre", "date", "capaciteBeneficiaires"]);
-    if (ok) setStep(1);
-  }
+  // Le titre suit la date tant qu'on ne l'a pas reecrit a la main.
+  const titreAuto = useRef(distribution ? null : (valeursInitiales.titre ?? ""));
+  useEffect(() => {
+    if (!date || titreAuto.current === null) return;
+    if (getValues("titre") !== titreAuto.current) {
+      titreAuto.current = null;
+      return;
+    }
+    titreAuto.current = titrePropose(date);
+    setValue("titre", titreAuto.current);
+  }, [date, getValues, setValue]);
+
+  const publiee = distribution?.statut === "PUBLIEE";
+  const r = distribution?.remplissage;
+  const comptes = new Map(distribution?.creneaux.map((c) => [c.id, (c.confirmes ?? 0) + (c.enAttente ?? 0)]) ?? []);
+  const confirmesCreneau = new Map(distribution?.creneaux.map((c) => [c.id, c.confirmes ?? 0]) ?? []);
+  // Le backend fige le mode (unique ou decoupe) une fois la distribution publiee.
+  const modeFige = publiee ? distribution.modeCreneau : null;
+  // Generer remplace la liste : jamais sur une distribution publiee, dont les creneaux ont pu recevoir des inscrits.
+  const peutGenerer = !publiee;
 
   async function onSubmit(values: FormValues) {
     setErreur(null);
     const commun = {
-      titre: values.titre,
-      description: values.description || undefined,
+      titre: values.titre.trim(),
+      description: values.description?.trim() || undefined,
       lieu: lieu || undefined,
       date: values.date,
       capaciteBeneficiaires: values.capaciteBeneficiaires,
@@ -174,13 +149,12 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
       } else {
         const creee = await creerDistribution({
           ...commun,
-          creneaux: values.creneaux.map(({ heureDebut, heureFin, capacite }) => ({ heureDebut, heureFin, capacite })),
+          creneaux: values.creneaux.map(({ heureDebut, heureFin, capacite: places }) => ({ heureDebut, heureFin, capacite: places })),
         });
         router.push(`/distributions/${creee.id}`);
       }
-    } catch (e: unknown) {
-      const err = e as { detail?: string; message?: string };
-      setErreur(err.detail ?? err.message ?? "Une erreur est survenue.");
+    } catch (e) {
+      setErreur(messageErreur(e, "L'enregistrement n'a pas pu aboutir. Réessayez dans un instant."));
     }
   }
 
@@ -192,237 +166,179 @@ export function CreateDistributionForm({ distribution }: Props = {}) {
     );
   }
 
+  const debuts = (creneaux ?? []).map((c) => c.heureDebut).filter(Boolean).sort();
+  const fins = (creneaux ?? []).map((c) => c.heureFin).filter(Boolean).sort();
+  const plage = horaire(debuts[0] ?? null, fins.at(-1) ?? null);
+
   return (
     <APIProvider apiKey={mapsApiKey} libraries={["places"]}>
-      <div>
-        <StepBar current={step} />
+      <form onSubmit={handleSubmit(onSubmit)} className="flex max-w-2xl flex-col gap-6" noValidate>
+        <SectionFormulaire titre="Quand et où">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Date" htmlFor="date" required error={errors.date?.message}>
+              <Input id="date" type="date" min={distribution ? undefined : aujourdhui} {...register("date")} />
+            </FormField>
+            <FormField label="Lieu" htmlFor="lieu" hint="Le nom du lieu et l'itinéraire s'affichent sur les billets.">
+              <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} />
+            </FormField>
+          </div>
+          <FormField
+            label="Titre"
+            htmlFor="titre"
+            required
+            error={errors.titre?.message}
+            hint="Proposé à partir de la date ; visible des gestionnaires et dans les emails."
+          >
+            <Input id="titre" {...register("titre")} />
+          </FormField>
+        </SectionFormulaire>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {erreur && (
-            <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {erreur}
-            </div>
-          )}
+        <SectionFormulaire titre="Créneaux">
+          <p className="text-base text-muted-foreground">
+            {modeFige === "CRENEAU_UNIQUE"
+              ? "Distribution publiée avec un seul créneau : on ne peut plus la découper."
+              : "Un seul créneau, ou des horaires échelonnés que chacun choisit en s'inscrivant."}
+          </p>
+          {peutGenerer && <GenerateurCreneaux nbExistants={fields.length} onGenerer={(liste) => replace(liste)} />}
 
-          {/* ÉTAPE 1 : Informations et lieu */}
-          {step === 0 && (
-            <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
-              {/* Section : Informations générales */}
-              <div className="p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-foreground font-display">
-                  Informations générales
-                </h3>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="titre">
-                    Titre <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="titre"
-                    {...register("titre")}
-                    placeholder="Distribution du 15 janvier"
-                  />
-                  {errors.titre && (
-                    <p className="text-xs text-destructive">{errors.titre.message}</p>
-                  )}
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="date">
-                      Date <span className="text-destructive">*</span>
-                    </Label>
-                    <Input id="date" type="date" {...register("date")} />
-                    {errors.date && (
-                      <p className="text-xs text-destructive">{errors.date.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Lieu</Label>
-                    <AdresseAutocomplete
-                      value={lieu?.adresseFormatee}
-                      onSelect={setLieu}
-                      onClear={() => setLieu(undefined)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    {...register("description")}
-                    placeholder="Informations complémentaires..."
-                  />
-                </div>
-              </div>
-
-              <hr className="border-border/60" />
-
-              {/* Section : Capacités */}
-              <div className="p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-foreground font-display">
-                  Capacités
-                </h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="capaciteBeneficiaires">
-                      Bénéficiaires <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="capaciteBeneficiaires"
-                      type="number"
-                      min={1}
-                      {...register("capaciteBeneficiaires", { valueAsNumber: true })}
-                    />
-                    {errors.capaciteBeneficiaires && (
-                      <p className="text-xs text-destructive">
-                        {errors.capaciteBeneficiaires.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="capaciteBenevoles">Bénévoles</Label>
-                    <Input
-                      id="capaciteBenevoles"
-                      type="number"
-                      min={1}
-                      placeholder="Illimité"
-                      {...register("capaciteBenevoles", {
-                        // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
-                        setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
-                      })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <hr className="border-border/60" />
-
-              {/* Boutons */}
-              <div className="px-5 py-4 flex justify-end">
-                <Button type="button" onClick={allerEtape2} className="gap-1.5">
-                  Suivant <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* ÉTAPE 2 : Créneaux horaires */}
-          {step === 1 && (
-            <div className="rounded-2xl border border-border/60 bg-card shadow-sm animate-fade-in">
-              {/* Section : Créneaux horaires */}
-              <div className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground font-display">
-                    Créneaux horaires
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => append({ heureDebut: "", heureFin: "", capacite: 50 })}
-                  >
-                    <Plus className="mr-1 size-3.5" />
-                    Ajouter
-                  </Button>
-                </div>
-
-                {peutGenerer && (
-                  <GenerateurCreneaux nbExistants={fields.length} onGenerer={(creneaux) => replace(creneaux)} />
-                )}
-
-                <div className="space-y-3">
-                  {fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid grid-cols-2 items-end gap-2 rounded-xl border border-border/60 bg-muted/40 p-3 sm:flex"
-                    >
-                      <div className="space-y-1 sm:flex-1">
-                        <Label htmlFor={`creneaux.${index}.heureDebut`} className="text-xs">
-                          Début
-                        </Label>
-                        <Input
-                          id={`creneaux.${index}.heureDebut`}
-                          type="time"
-                          {...register(`creneaux.${index}.heureDebut`)}
-                          className="h-11 sm:h-8 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1 sm:flex-1">
-                        <Label htmlFor={`creneaux.${index}.heureFin`} className="text-xs">
-                          Fin
-                        </Label>
-                        <Input
-                          id={`creneaux.${index}.heureFin`}
-                          type="time"
-                          {...register(`creneaux.${index}.heureFin`)}
-                          className="h-11 sm:h-8 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1 sm:w-24">
-                        <Label htmlFor={`creneaux.${index}.capacite`} className="text-xs">
-                          Places
-                        </Label>
+          <ul className="flex flex-col gap-3">
+            {fields.map((field, index) => {
+              const id = getValues(`creneaux.${index}.id`);
+              const occupes = id ? (comptes.get(id) ?? 0) : 0;
+              const confirmes = id ? (confirmesCreneau.get(id) ?? 0) : 0;
+              const dernierDecoupe = modeFige === "CRENEAUX_DECOUPES" && fields.length <= 2;
+              const erreurs = errors.creneaux?.[index];
+              return (
+                <li key={field.id} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+                  <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                    <FormField label="Début" htmlFor={`creneaux.${index}.heureDebut`} error={erreurs?.heureDebut?.message}>
+                      <Input id={`creneaux.${index}.heureDebut`} type="time" {...register(`creneaux.${index}.heureDebut`)} />
+                    </FormField>
+                    <FormField label="Fin" htmlFor={`creneaux.${index}.heureFin`} error={erreurs?.heureFin?.message}>
+                      <Input id={`creneaux.${index}.heureFin`} type="time" {...register(`creneaux.${index}.heureFin`)} />
+                    </FormField>
+                    <div className="col-span-2 flex items-end gap-2 sm:col-span-1">
+                      <FormField className="w-24" label="Places" htmlFor={`creneaux.${index}.capacite`} error={erreurs?.capacite?.message}>
                         <Input
                           id={`creneaux.${index}.capacite`}
                           type="number"
                           inputMode="numeric"
-                          min={1}
+                          min={Math.max(1, confirmes)}
                           {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
-                          className="h-11 sm:h-8 text-sm"
                         />
-                      </div>
-                      {fields.length > 1 && (
+                      </FormField>
+                      {fields.length > 1 && occupes === 0 && !dernierDecoupe ? (
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
-                          className="size-11 sm:size-8 p-0 justify-self-end text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          size="icon"
                           onClick={() => remove(index)}
-                          aria-label="Supprimer le créneau"
+                          aria-label={`Supprimer le créneau ${index + 1}`}
                         >
-                          <Trash2 className="size-4" />
+                          <Trash2 aria-hidden="true" />
                         </Button>
+                      ) : (
+                        <span className="size-11" aria-hidden="true" />
                       )}
                     </div>
-                  ))}
-                </div>
-
-                {errors.creneaux?.root && (
-                  <p className="text-xs text-destructive">{errors.creneaux.root.message}</p>
-                )}
-              </div>
-
-              <hr className="border-border/60" />
-
-              {/* Boutons */}
-              <div className="px-5 py-4 flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(0)}
-                  className="gap-1.5"
-                >
-                  <ChevronLeft className="size-4" /> Retour
-                </Button>
-                <Button type="submit" disabled={isSubmitting} className="flex-1">
-                  {isSubmitting ? (
-                    <>
-                      <Spinner size="sm" className="mr-2" />
-                      {distribution ? "Enregistrement..." : "Création en cours..."}
-                    </>
-                  ) : distribution ? (
-                    "Enregistrer les modifications"
-                  ) : (
-                    "Créer la distribution"
+                  </div>
+                  {occupes > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {occupes} inscription{occupes > 1 ? "s" : ""} sur ce créneau : il ne peut pas être supprimé
+                      {confirmes > 0 ? `, ni passer sous ${confirmes} place${confirmes > 1 ? "s" : ""}` : ""}.
+                    </p>
                   )}
-                </Button>
-              </div>
-            </div>
+                </li>
+              );
+            })}
+          </ul>
+          {errors.creneaux?.root && <Alert variant="destructive">{errors.creneaux.root.message}</Alert>}
+          {modeFige !== "CRENEAU_UNIQUE" && (
+            <Button
+              type="button"
+              variant="outline"
+              className="self-start"
+              onClick={() => append({ heureDebut: "", heureFin: "", capacite: getValues("creneaux.0.capacite") || 10 })}
+            >
+              <Plus aria-hidden="true" />
+              Ajouter un créneau
+            </Button>
           )}
-        </form>
-      </div>
+        </SectionFormulaire>
+
+        <SectionFormulaire titre="Capacités">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label="Bénéficiaires"
+              htmlFor="capaciteBeneficiaires"
+              required
+              error={errors.capaciteBeneficiaires?.message}
+              hint={r?.beneficiairesConfirmes ? `Au moins ${r.beneficiairesConfirmes} : déjà inscrits.` : "Au-delà, liste d'attente."}
+            >
+              <Input
+                id="capaciteBeneficiaires"
+                type="number"
+                inputMode="numeric"
+                min={Math.max(1, r?.beneficiairesConfirmes ?? 0)}
+                {...register("capaciteBeneficiaires", { valueAsNumber: true })}
+              />
+            </FormField>
+            <FormField
+              label="Bénévoles"
+              htmlFor="capaciteBenevoles"
+              error={errors.capaciteBenevoles?.message}
+              hint={r?.benevolesConfirmes ? `Au moins ${r.benevolesConfirmes} : déjà inscrits. Vide : sans limite.` : "Vide : sans limite."}
+            >
+              <Input
+                id="capaciteBenevoles"
+                type="number"
+                inputMode="numeric"
+                min={Math.max(1, r?.benevolesConfirmes ?? 0)}
+                {...register("capaciteBenevoles", {
+                  // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
+                  setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
+                })}
+              />
+            </FormField>
+          </div>
+        </SectionFormulaire>
+
+        <SectionFormulaire titre="Description">
+          <FormField label="À savoir" htmlFor="description" hint="Ce qu'il faut apporter, comment trouver l'entrée. Facultatif.">
+            <Textarea id="description" rows={3} {...register("description")} />
+          </FormField>
+        </SectionFormulaire>
+
+        <section aria-labelledby="apercu" className="flex flex-col gap-2">
+          <h2 id="apercu" className="font-display text-lg font-bold text-foreground">
+            Ce que verront les bénéficiaires
+          </h2>
+          <div className="flex flex-col gap-1 rounded-xl border border-dashed border-border bg-card p-4">
+            <span className="font-mono text-sm font-semibold tracking-wider text-primary uppercase">
+              {date ? dateLongue(date) : "Date à choisir"}
+            </span>
+            <span className="font-display text-2xl font-extrabold tabular-nums text-foreground">{plage ?? "Horaire à préciser"}</span>
+            <span className="text-base text-muted-foreground">{lieu?.nom || lieu?.adresseFormatee || "Lieu à préciser"}</span>
+            {capacite > 0 && <span className="text-base text-foreground">{libellePlaces(capacite)}</span>}
+          </div>
+        </section>
+
+        {erreur && <Alert variant="destructive">{erreur}</Alert>}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button type="submit" size="lg" disabled={isSubmitting}>
+            {isSubmitting && <Spinner size="sm" />}
+            {distribution ? "Enregistrer" : "Créer la distribution"}
+          </Button>
+          <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>
+            Annuler
+          </Button>
+        </div>
+        {!distribution && (
+          <p className="text-base text-muted-foreground">
+            Elle est créée en brouillon : vous la publierez depuis sa feuille.
+          </p>
+        )}
+      </form>
     </APIProvider>
   );
 }

@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Check, X, AlertTriangle } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ActionMenu } from "@/components/ui/action-menu";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SearchField } from "@/components/ui/search-field";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +16,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
@@ -27,6 +29,10 @@ interface Props {
   initialDenrees: CatalogueDenreeResponse[];
 }
 
+// En dessous, la liste se parcourt d'un coup d'oeil.
+const SEUIL_RECHERCHE = 12;
+const normaliser = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("fr");
+
 export function CatalogueGestionPanel({ initialDenrees }: Props) {
   const [denrees, setDenrees] = useState<CatalogueDenreeResponse[]>(initialDenrees);
   const [nouveauLibelle, setNouveauLibelle] = useState("");
@@ -35,6 +41,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
   const [suppressionCible, setSuppressionCible] = useState<{ id: string; libelle: string } | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [recherche, setRecherche] = useState("");
 
   async function handleCreer(e: React.FormEvent) {
     e.preventDefault();
@@ -106,103 +113,79 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
     }
   }
 
+  const terme = normaliser(recherche.trim());
+  const visibles = denrees.filter((d) => !terme || normaliser(d.libelle).includes(terme));
+
   return (
     <>
-      <div className="space-y-6">
-      {/* Formulaire d'ajout */}
-      <form onSubmit={handleCreer} className="flex gap-2">
-        <Input
-          value={nouveauLibelle}
-          onChange={(e) => setNouveauLibelle(e.target.value)}
-          placeholder="Nouvelle denrée (ex : Pommes de terre)"
-          className="flex-1"
-          disabled={pending}
-        />
-        <Button type="submit" disabled={pending || !nouveauLibelle.trim()}>
-          Ajouter
-        </Button>
-      </form>
+      <div className="flex max-w-2xl flex-col gap-4">
+        <form onSubmit={handleCreer} className="flex gap-2">
+          <Input
+            aria-label="Nouvelle denrée"
+            value={nouveauLibelle}
+            onChange={(e) => setNouveauLibelle(e.target.value)}
+            placeholder="Nouvelle denrée, par exemple Pâtes"
+            className="flex-1"
+            disabled={pending}
+          />
+          <Button type="submit" disabled={pending || !nouveauLibelle.trim()}>
+            <Plus aria-hidden="true" />
+            Ajouter
+          </Button>
+        </form>
 
-      {erreur && (
-        <p className="text-sm text-destructive">{erreur}</p>
-      )}
+        {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
-      {/* Liste */}
-      {denrees.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-muted px-6 py-10 text-center">
-          <p className="text-sm text-muted-foreground">Le catalogue est vide.</p>
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-3">
-            <Badge variant="secondary">{denrees.length}</Badge>
-            <span className="text-sm text-muted-foreground">
-              denrée{denrees.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-
-          <ul className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-            {denrees.map((d) => (
-              <li key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors">
-                {editId === d.id ? (
-                  <>
-                    <Input
-                      value={editLibelle}
-                      onChange={(e) => setEditLibelle(e.target.value)}
-                      className="flex-1 h-8 text-sm"
-                      disabled={pending}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleModifier(d.id);
-                        if (e.key === "Escape") annulerEdition();
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleModifier(d.id)}
-                      disabled={pending || !editLibelle.trim()}
-                      className="text-primary hover:text-primary"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={annulerEdition}
-                      disabled={pending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1 text-sm text-foreground">{d.libelle}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => ouvrirEdition(d)}
-                      disabled={pending}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => demanderSuppression(d.id, d.libelle)}
-                      disabled={pending}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {denrees.length === 0 ? (
+          <EmptyState size="sm" title="Le catalogue est vide" description="Les denrées ajoutées ici sont proposées à la saisie de la répartition." />
+        ) : (
+          <>
+            {denrees.length > SEUIL_RECHERCHE && (
+              <SearchField label="Chercher une denrée" placeholder="Nom de la denrée" value={recherche} onValueChange={setRecherche} />
+            )}
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+              {visibles.map((d) => (
+                <li key={d.id} className="flex min-h-14 items-center gap-2 px-4 py-2">
+                  {editId === d.id ? (
+                    <>
+                      <Input
+                        aria-label={`Nouveau nom pour ${d.libelle}`}
+                        value={editLibelle}
+                        onChange={(e) => setEditLibelle(e.target.value)}
+                        className="flex-1"
+                        disabled={pending}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleModifier(d.id);
+                          if (e.key === "Escape") annulerEdition();
+                        }}
+                      />
+                      <Button variant="ghost" size="icon" aria-label="Valider" onClick={() => handleModifier(d.id)} disabled={pending || !editLibelle.trim()}>
+                        <Check aria-hidden="true" />
+                      </Button>
+                      <Button variant="ghost" size="icon" aria-label="Annuler" onClick={annulerEdition} disabled={pending}>
+                        <X aria-hidden="true" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-base text-foreground">{d.libelle}</span>
+                      <ActionMenu
+                        label={`Plus d'actions sur ${d.libelle}`}
+                        className="border-transparent bg-transparent text-muted-foreground"
+                        items={[
+                          { label: "Renommer", icon: Pencil, onClick: () => ouvrirEdition(d) },
+                          { label: "Supprimer", icon: Trash2, destructive: true, onClick: () => demanderSuppression(d.id, d.libelle) },
+                        ]}
+                      />
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {terme && visibles.length === 0 && <p className="text-base text-muted-foreground">Aucune denrée ne correspond.</p>}
+          </>
+        )}
       </div>
 
       <AlertDialog
@@ -211,20 +194,12 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogMedia className="bg-destructive/10">
-              <AlertTriangle className="text-destructive" />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Supprimer la denrée</AlertDialogTitle>
-            <AlertDialogDescription>
-              &quot;{suppressionCible?.libelle}&quot; sera supprimée du catalogue.
-              Cette action est irréversible.
-            </AlertDialogDescription>
+            <AlertDialogTitle>Supprimer {suppressionCible?.libelle}</AlertDialogTitle>
+            <AlertDialogDescription>La denrée sort du catalogue. Cette action est irréversible.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSuppressionCible(null)}>
-              Annuler
-            </AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmerSuppression}>
+            <AlertDialogCancel onClick={() => setSuppressionCible(null)}>Garder</AlertDialogCancel>
+            <AlertDialogAction variant="destructive-solid" onClick={confirmerSuppression}>
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

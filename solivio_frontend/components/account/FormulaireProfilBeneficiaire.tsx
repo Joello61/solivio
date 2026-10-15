@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
@@ -43,10 +43,9 @@ const EMPLOI = [
   { value: "false", label: "Non" },
 ];
 
-function SelectField({ id, label, value, onChange, options, placeholder = "-- Choisir --" }: SelectFieldProps) {
+function SelectField({ id, label, value, onChange, options, placeholder = "Choisir" }: SelectFieldProps) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+    <FormField label={label} htmlFor={id}>
       <Select items={options} value={value || undefined} onValueChange={(v) => { if (v !== null) onChange(v); }}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder={placeholder} />
@@ -59,7 +58,16 @@ function SelectField({ id, label, value, onChange, options, placeholder = "-- Ch
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FormField>
+  );
+}
+
+function Rubrique({ titre, children }: { titre: string; children: React.ReactNode }) {
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-4 border-t border-border pt-5 first:border-t-0 first:pt-0">
+      <legend className="float-left mb-4 w-full font-display text-lg font-bold text-foreground">{titre}</legend>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </fieldset>
   );
 }
 
@@ -114,31 +122,29 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-base font-medium">Informations sociales</h2>
-        <Badge variant={profil.complet ? "default" : "secondary"}>
+        <span className="text-base font-semibold">Dossier</span>
+        <Badge variant={profil.complet ? "success" : "warning"}>
           {profil.complet ? "Complet" : "Incomplet"}
         </Badge>
       </div>
 
       {!profil.complet && (
-        <Alert className="border-warning/50 bg-warning/10 text-warning text-sm">
+        <Alert variant="warning">
           Complétez votre dossier pour faciliter l&apos;inscription aux distributions.
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="dateNaissance">Date de naissance</Label>
+      <Rubrique titre="Vous">
+        <FormField label="Date de naissance" htmlFor="dateNaissance">
           <Input
             id="dateNaissance"
             type="date"
             value={dateNaissance}
             onChange={(e) => setDateNaissance(e.target.value)}
           />
-        </div>
-
+        </FormField>
         <SelectField
           id="categorieNationalite"
           label="Nationalité"
@@ -146,43 +152,9 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
           onChange={setCategorieNationalite}
           options={CATEGORIES_NATIONALITE}
         />
+      </Rubrique>
 
-        <SelectField
-          id="statutBoursier"
-          label="Statut boursier"
-          value={statutBoursier}
-          onChange={setStatutBoursier}
-          options={STATUTS_BOURSIER}
-        />
-
-        {statutBoursier === "boursier" && (
-          <div className="space-y-1.5">
-            <Label htmlFor="echelonBourse">Échelon de bourse</Label>
-            <Input
-              id="echelonBourse"
-              type="number"
-              min={0}
-              max={7}
-              value={echelonBourse}
-              onChange={(e) => setEchelonBourse(e.target.value)}
-              placeholder="0 a 7"
-            />
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="resteAVivre">Reste a vivre mensuel (euros)</Label>
-          <Input
-            id="resteAVivre"
-            type="number"
-            min={0}
-            step="0.01"
-            value={resteAVivre}
-            onChange={(e) => setResteAVivre(e.target.value)}
-            placeholder="ex : 350"
-          />
-        </div>
-
+      <Rubrique titre="Études">
         <SelectField
           id="niveauAcademique"
           label="Niveau académique"
@@ -190,18 +162,54 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
           onChange={setNiveauAcademique}
           options={NIVEAUX_ACADEMIQUES}
         />
-
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="etablissement">Établissement</Label>
+        <FormField label="Établissement" htmlFor="etablissement" hint="Université ou école.">
           <Input
             id="etablissement"
             value={etablissement}
             onChange={(e) => setEtablissement(e.target.value)}
             maxLength={255}
-            placeholder="Nom de votre universite ou ecole"
           />
-        </div>
+        </FormField>
+      </Rubrique>
 
+      <Rubrique titre="Ressources">
+        <SelectField
+          id="statutBoursier"
+          label="Statut boursier"
+          value={statutBoursier}
+          onChange={setStatutBoursier}
+          options={STATUTS_BOURSIER}
+        />
+        {statutBoursier === "boursier" && (
+          <FormField label="Échelon de bourse" htmlFor="echelonBourse" hint="De 0 à 7.">
+            <Input
+              id="echelonBourse"
+              type="number"
+              min={0}
+              max={7}
+              value={echelonBourse}
+              onChange={(e) => setEchelonBourse(e.target.value)}
+            />
+          </FormField>
+        )}
+        <FormField
+          label="Reste à vivre mensuel (euros)"
+          htmlFor="resteAVivre"
+          hint="Ce qu'il vous reste chaque mois après le loyer et les factures."
+        >
+          <Input
+            id="resteAVivre"
+            type="number"
+            min={0}
+            step="0.01"
+            value={resteAVivre}
+            onChange={(e) => setResteAVivre(e.target.value)}
+          />
+        </FormField>
+        <SelectField id="aEmploi" label="Emploi étudiant" value={aEmploi} onChange={setAEmploi} options={EMPLOI} />
+      </Rubrique>
+
+      <Rubrique titre="Logement">
         <SelectField
           id="situationLogement"
           label="Situation de logement"
@@ -209,33 +217,17 @@ export function FormulaireProfilBeneficiaire({ profil }: Props) {
           onChange={setSituationLogement}
           options={SITUATIONS_LOGEMENT}
         />
-
-        <div className="space-y-1.5">
-          <Label htmlFor="aEmploi">Emploi étudiant</Label>
-          <Select items={EMPLOI} value={aEmploi || undefined} onValueChange={(v) => { if (v !== null) setAEmploi(v); }}>
-            <SelectTrigger id="aEmploi" className="w-full">
-              <SelectValue placeholder="-- Choisir --" />
-            </SelectTrigger>
-            <SelectContent>
-              {EMPLOI.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      </Rubrique>
 
       {succes && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Dossier mis à jour avec succès.</span>
-        </div>
+        <p role="status" className="flex items-center gap-2 text-base font-semibold text-success">
+          <CheckCircle aria-hidden="true" className="size-5 shrink-0" />
+          Dossier mis à jour.
+        </p>
       )}
       {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" className="self-start" disabled={pending}>
         {pending ? <><Spinner size="sm" /> Enregistrement...</> : "Enregistrer le dossier"}
       </Button>
     </form>

@@ -16,7 +16,7 @@ const distribution = (statut: DistributionResponse["statut"]) =>
 describe("DistributionDuJour", () => {
   it("ouvre le pointage d'une distribution en cours", () => {
     render(<DistributionDuJour distributions={[distribution("EN_COURS")]} />);
-    expect(screen.getByRole("link", { name: /Ouvrir le pointage/ })).toHaveAttribute("href", "/distributions/d1/pointage");
+    expect(screen.getByRole("link", { name: /Ouvrir le jour J/ })).toHaveAttribute("href", "/distributions/d1/pointage");
     expect(screen.getByText("17:00 - 19:00")).toBeInTheDocument();
   });
 

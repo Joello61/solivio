@@ -10,7 +10,7 @@
 
 ## Avertissement de lecture
 
-Ce document décrit l'expérience concrète des utilisateurs de la V1 : ce qu'ils voient, ce qu'ils font, dans quel ordre, et où se jouent les moments décisifs. Il ne décrit pas la charte graphique précise (couleurs, typographie, composants), qui relèvera d'une phase de design au moment du développement frontend.
+Ce document décrit l'expérience concrète des utilisateurs de la V1 : ce qu'ils voient, ce qu'ils font, dans quel ordre, et où se jouent les moments décisifs. Il ne décrit pas la charte graphique (couleurs, typographie, composants), qui vit dans `DESIGN.md` ; la section 12 relie chaque parcours à ses écrans.
 
 Il se limite strictement aux parcours de la V1. Les fonctions repoussées (dons, campagnes, stocks permanents, multi-antennes) n'apparaissent pas, car elles ne font pas partie de l'expérience à concevoir maintenant.
 
@@ -84,7 +84,7 @@ flowchart TD
 
 ### 4.2 Les étapes en détail
 
-**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, aux couleurs de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
+**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, au nom et au logo de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
 
 **Étape 2 - Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
 
@@ -150,6 +150,8 @@ Le coordinateur peut basculer la base de calcul des inscrits vers les présents,
 
 Avant la distribution, le coordinateur voit en temps réel le remplissage : inscrits confirmés, places restantes, liste d'attente. Il peut inscrire ou désinscrire quelqu'un manuellement si besoin. Cette vue est sa source de vérité, celle qui remplace les multiples onglets de tableur.
 
+Son accueil tient une liste "À faire" : une distribution restée en cours après sa date (à clore), un brouillon à venir (à publier), une distribution publiée à 7 jours ou moins remplie à moins de la moitié de ses places bénéficiaires ("Peu d'inscrits"), et une distribution publiée à 14 jours ou moins à laquelle il manque des bénévoles.
+
 ### 6.4 Le jour J
 
 Le coordinateur supervise le pointage (qu'il fait lui-même ou délègue aux bénévoles), suit en direct qui est présent, et dispose de la répartition à jour. Tout est sur un seul écran, pensé pour l'action sous pression.
@@ -167,7 +169,7 @@ Après la distribution, le coordinateur la clôt. Il dispose alors d'un bilan : 
 
 ### 7.1 Configurer l'association
 
-À la mise en place, le responsable renseigne l'identité de l'association : nom, logo, couleurs. Ce paramétrage donne à l'espace son apparence propre. Il définit aussi les paramètres de base (contact, fuseau, langue).
+À la mise en place, le responsable renseigne l'identité de l'association : nom et logo. Il définit aussi les paramètres de base : contact et fréquence d'inscription. Les couleurs suivent le système de design et le fuseau est celui de Toulouse ; ni l'un ni l'autre ne se règle.
 
 ### 7.2 Gérer les membres et les rôles
 
@@ -203,7 +205,7 @@ Pour rester cohérent avec le périmètre, ces parcours n'existent pas en V1 :
 - enregistrer des dons ou gérer des donateurs ;
 - créer des campagnes ;
 - gérer des antennes et une hiérarchie ;
-- composer des messages groupés libres ou des modèles personnalisés ;
+- composer des modèles de messages personnalisés ou des messages ciblés plus finement que par rôle ;
 - s'inscrire en tant que nouvelle association en autonomie.
 
 Ces absences sont des choix, pas des oublis.
@@ -227,5 +229,20 @@ Ces absences sont des choix, pas des oublis.
 **Le responsable.** Configurer l'association, gérer membres et rôles, suivre des statistiques agrégées, et exporter ou supprimer les données - le non-enfermement rendu concret.
 
 **Les moments de vérité.** Première inscription, pointage, calcul de répartition, annulation, reprise par un nouveau bureau. C'est là que se joue l'adoption, et c'est là que la simplicité doit être irréprochable.
+
+## 12. Écrans de la V1 (refonte d'octobre 2026)
+
+La navigation compte quatre entrées au plus sur téléphone (barre basse) et se groupe par intention sur ordinateur. Chaque objet a une seule page qui suit son cycle de vie, avec une action principale et les actions rares dans un menu "Plus".
+
+| Rôle | Écrans | Adresses |
+|---|---|---|
+| Visiteur | Accueil de Linkee Toulouse avec les prochaines distributions, création de compte, connexion, mot de passe oublié | `/`, `/register`, `/login`, `/forgot-password` |
+| Bénéficiaire | Accueil (billet du prochain rendez-vous), Agenda par semaine, fiche d'une distribution avec choix du créneau, Mes inscriptions, Compte et dossier social | `/dashboard`, `/distributions`, `/distributions/{id}`, `/mes-inscriptions`, `/mon-compte` |
+| Bénévole | Les mêmes, plus "On a besoin de vous", Mes engagements (distributions, missions, événements, sessions), missions de collecte, événements et reconditionnement | `/missions-collecte`, `/evenements`, `/reconditionnement` |
+| Coordinateur | Aujourd'hui et sa liste "À faire", Planning, feuille d'une distribution (vue d'ensemble, inscrits, équipe, denrées, bilan), création et duplication, Jour J en plein écran, répartition et fiche stand, statistiques, rôles bénévoles | `/distributions/nouvelle`, `/distributions/{id}/pointage`, `/distributions/{id}/repartition`, `/statistiques`, `/association/roles-benevoles` |
+| Responsable | Les mêmes, plus membres, réglages et export, catalogue des denrées, message aux membres, création des activités | `/association/membres`, `/association/configuration`, `/association/catalogue-denrees`, `/notifications/email-libre` |
+| Super admin | Administration des comptes | `/admin/utilisateurs` |
+
+Seuils de la liste "À faire" : voir la section 6.3.
 
 *Fin des parcours utilisateurs. Document suivant : `roadmap.md`.*

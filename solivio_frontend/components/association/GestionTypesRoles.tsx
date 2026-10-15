@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { Archive, Check, CornerDownRight, Pencil, Plus, X } from "lucide-react";
+import { ActionMenu } from "@/components/ui/action-menu";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -21,6 +24,7 @@ import {
   listerTypesRoles,
   modifierTypeRole,
 } from "@/lib/api/distributions";
+import { messageErreur } from "@/lib/erreurs";
 import type { TypeRoleResponse } from "@/types/distribution";
 
 interface Props {
@@ -30,11 +34,6 @@ interface Props {
 }
 
 type Saisie = { mode: "renommer" | "sous-type"; id: string; valeur: string } | null;
-
-function messageErreur(err: unknown, defaut: string): string {
-  const e = err as { detail?: string; message?: string };
-  return e.detail ?? e.message ?? defaut;
-}
 
 /** Catalogue des roles benevoles (deux niveaux : role et sous-role). */
 export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
@@ -98,7 +97,7 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
           }}
           disabled={pending}
           autoFocus
-          className="h-9 flex-1"
+          className="flex-1"
         />
         <Button variant="ghost" size="icon" aria-label="Valider" onClick={validerSaisie} disabled={pending || !saisie?.valeur.trim()}>
           <Check className="size-4" />
@@ -119,45 +118,22 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
           champSaisie("Nouveau libellé")
         ) : (
           <>
-            <span className={`flex-1 text-sm ${type.actif ? "text-foreground" : "text-muted-foreground line-through"}`}>
+            <span className={`flex-1 text-base ${type.actif ? "text-foreground" : "text-muted-foreground line-through"}`}>
               {type.libelle}
             </span>
             {!type.actif && <Badge variant="secondary">Archivé</Badge>}
             {type.actif && (
-              <div className="flex shrink-0 items-center">
-                {!sousRole && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Ajouter un sous-rôle à ${type.libelle}`}
-                    onClick={() => setSaisie({ mode: "sous-type", id: type.id, valeur: "" })}
-                    disabled={pending}
-                  >
-                    <Plus className="size-4" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Renommer ${type.libelle}`}
-                  onClick={() => setSaisie({ mode: "renommer", id: type.id, valeur: type.libelle })}
-                  disabled={pending}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                {peutArchiver && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Archiver ${type.libelle}`}
-                    onClick={() => setAArchiver(type)}
-                    disabled={pending}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Archive className="size-4" />
-                  </Button>
-                )}
-              </div>
+              <ActionMenu
+                label={`Plus d'actions sur ${type.libelle}`}
+                className="border-transparent bg-transparent text-muted-foreground"
+                items={[
+                  ...(sousRole
+                    ? []
+                    : [{ label: "Ajouter un sous-rôle", icon: Plus, onClick: () => setSaisie({ mode: "sous-type", id: type.id, valeur: "" }) }]),
+                  { label: "Renommer", icon: Pencil, onClick: () => setSaisie({ mode: "renommer", id: type.id, valeur: type.libelle }) },
+                  ...(peutArchiver ? [{ label: "Archiver", icon: Archive, destructive: true, onClick: () => setAArchiver(type) }] : []),
+                ]}
+              />
             )}
           </>
         )}
@@ -166,7 +142,7 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex max-w-2xl flex-col gap-4">
       <form onSubmit={creerRacine} className="flex gap-2">
         <Input
           aria-label="Nouveau rôle"
@@ -181,28 +157,22 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
         </Button>
       </form>
 
-      {erreur && (
-        <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
-          {erreur}
-        </p>
-      )}
+      {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
       {types.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-muted px-6 py-10 text-center">
-          <p className="text-sm text-muted-foreground">Aucun rôle pour le moment.</p>
-        </div>
+        <EmptyState size="sm" title="Aucun rôle pour le moment" description="Ajoutez le premier : accueil, distribution, rangement." />
       ) : (
-        <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/60 bg-card">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
           {types.map((t) => (
             <li key={t.id}>
               {ligne(t, false)}
               {t.sousTypes.map((s) => (
-                <div key={s.id} className="border-t border-border/40">
+                <div key={s.id} className="border-t border-border">
                   {ligne(s, true)}
                 </div>
               ))}
               {saisie?.mode === "sous-type" && saisie.id === t.id && (
-                <div className="flex items-center gap-2 border-t border-border/40 px-4 py-2 pl-10">
+                <div className="flex items-center gap-2 border-t border-border px-4 py-2 pl-10">
                   <CornerDownRight className="size-4 shrink-0 text-muted-foreground" />
                   {champSaisie(`Sous-rôle de ${t.libelle}`)}
                 </div>
@@ -222,7 +192,7 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Retour</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmerArchivage} disabled={pending}>
+            <AlertDialogAction variant="destructive-solid" onClick={confirmerArchivage} disabled={pending}>
               Archiver
             </AlertDialogAction>
           </AlertDialogFooter>

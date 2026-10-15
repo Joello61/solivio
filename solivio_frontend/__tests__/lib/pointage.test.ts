@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { correspond, delaiNouvelEssai, doitReessayer, lignesAffichees } from "@/lib/pointage";
+import { correspond, delaiNouvelEssai, doitReessayer, grouperParCreneau, lignesAffichees } from "@/lib/pointage";
 import type { PointageInfoResponse } from "@/types/distribution";
 
 const marie: PointageInfoResponse = {
@@ -49,5 +49,32 @@ describe("pointage, regles d'envoi", () => {
     expect(correspond(marie, "helene")).toBe(true);
     expect(correspond(marie, "DUP")).toBe(true);
     expect(correspond(marie, "martin")).toBe(false);
+  });
+});
+
+describe("grouperParCreneau", () => {
+  const ligne = (id: string, debut: string | null, fin: string | null) =>
+    ({ ...marie, inscriptionId: id, heureCreneauDebut: debut, heureCreneauFin: fin, etat: null, derniereDemande: null });
+  const lignes = [
+    ligne("a", "17:30:00", "17:45:00"),
+    ligne("b", "18:00:00", "18:15:00"),
+    ligne("c", "17:45:00", "18:00:00"),
+    ligne("d", "18:15:00", "18:30:00"),
+    ligne("e", "18:00:00", "18:15:00"),
+    ligne("f", null, null),
+  ];
+
+  it("met le creneau en cours d'abord, puis ceux a venir, puis les passes du plus recent", () => {
+    const groupes = grouperParCreneau(lignes, "18:05");
+    expect(groupes.map((g) => g.debut)).toEqual(["18:00", "18:15", "17:45", "17:30", null]);
+    expect(groupes[0].courant).toBe(true);
+    expect(groupes[0].lignes.map((l) => l.inscriptionId)).toEqual(["b", "e"]);
+    expect(groupes.filter((g) => g.courant)).toHaveLength(1);
+  });
+
+  it("garde l'ordre chronologique tant que l'heure n'est pas connue", () => {
+    const groupes = grouperParCreneau(lignes, null);
+    expect(groupes.map((g) => g.debut)).toEqual(["17:30", "17:45", "18:00", "18:15", null]);
+    expect(groupes.some((g) => g.courant)).toBe(false);
   });
 });

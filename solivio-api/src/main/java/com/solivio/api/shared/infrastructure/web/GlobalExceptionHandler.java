@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiError> handleDisabled(DisabledException ex) {
-        return reponse(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED", "Votre compte est desactive.");
+        return reponse(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED", "Votre compte est désactivé.");
     }
 
     @ExceptionHandler(EmailNonVerifieException.class)
@@ -56,13 +56,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<ApiError> handleAuthorizationDenied(AuthorizationDeniedException ex) {
         return reponse(HttpStatus.FORBIDDEN, "FORBIDDEN",
-            "Vous n'avez pas les droits necessaires pour cette operation.");
+            "Vous n'avez pas les droits nécessaires pour cette opération.");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         return reponse(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
-            "Le corps de la requete est mal forme ou contient des valeurs invalides.");
+            "Le corps de la requête est mal formé ou contient des valeurs invalides.");
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
-        return reponse(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage());
+        return reponse(HttpStatus.CONFLICT, ex.getCode(), ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiError> handleMissingParam(MissingServletRequestParameterException ex) {
         return reponse(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER",
-            "Parametre obligatoire manquant : " + ex.getParameterName());
+            "Paramètre obligatoire manquant : " + ex.getParameterName());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
         String message = champs.stream()
             .map(c -> c.champ() + " : " + c.message())
             .reduce((a, b) -> a + ", " + b)
-            .orElse("Donnees invalides.");
+            .orElse("Données invalides.");
         return ResponseEntity.badRequest().body(ApiError.of("VALIDATION_FAILED", message, champs));
     }
 
@@ -153,10 +153,10 @@ public class GlobalExceptionHandler {
     private static String messagePourStatut(HttpStatusCode statut) {
         return switch (statut.value()) {
             case 404 -> "Ressource introuvable.";
-            case 405 -> "Methode non autorisee pour cette ressource.";
-            case 413 -> "Fichier ou requete trop volumineux.";
-            case 415 -> "Type de contenu non supporte.";
-            default -> "Requete invalide.";
+            case 405 -> "Méthode non autorisée pour cette ressource.";
+            case 413 -> "Fichier ou requête trop volumineux.";
+            case 415 -> "Type de contenu non supporté.";
+            default -> "Requête invalide.";
         };
     }
 }

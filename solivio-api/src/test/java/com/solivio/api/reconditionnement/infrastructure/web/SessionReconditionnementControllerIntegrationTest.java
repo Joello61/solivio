@@ -197,6 +197,16 @@ class SessionReconditionnementControllerIntegrationTest {
     }
 
     @Test
+    void inscrire_refuseAuBeneficiaire() throws Exception {
+        String tokenBeneficiaire = jwtService.genererAccessToken(
+            UUID.randomUUID(), "benef@reco.com", "Benef", "Test", List.of("beneficiaire"), null, false
+        );
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + UUID.randomUUID() + "/inscrire")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
     void inscription_confirmeeParEmail_etReinscriptionConfirmeeANouveau() throws Exception {
         String corps = "{\"titre\":\"Session confirmation\","
             + "\"dateHeureDebut\":\"2026-12-16T09:00:00Z\","
@@ -247,6 +257,10 @@ class SessionReconditionnementControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"motif\":\"Entrepot indisponible\"}"))
             .andExpect(status().isOk());
+        mockMvc.perform(get("/api/sessions-reconditionnement/mes-inscriptions")
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].sessionStatut").value("ANNULEE"));
 
         // Type de 36 caracteres : la trace echouait avant l'elargissement de la colonne (V13).
         await().atMost(15, TimeUnit.SECONDS).until(() -> jdbcTemplate.queryForObject(

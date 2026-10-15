@@ -23,7 +23,7 @@ function Switch({
         "aria-invalid:ring-2 aria-invalid:ring-destructive/20",
         "data-[size=default]:h-6 data-[size=default]:w-11",
         "data-[size=sm]:h-5 data-[size=sm]:w-9",
-        "data-checked:bg-primary data-unchecked:bg-muted",
+        "data-checked:bg-primary data-unchecked:border-input data-unchecked:bg-muted",
         "",
         "data-disabled:cursor-not-allowed data-disabled:opacity-45",
         className

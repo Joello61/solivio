@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DUREES_CRENEAU, genererCreneaux, type CreneauGenere } from "@/lib/creneaux";
-import { cn } from "@/lib/utils";
 
 interface Props {
   // Nombre de creneaux deja saisis, que la generation remplacera.
@@ -14,38 +14,35 @@ interface Props {
   onGenerer: (creneaux: CreneauGenere[]) => void;
 }
 
-/** Decoupe une plage horaire en creneaux reguliers (par exemple toutes les 15 minutes). */
+/** Decoupe une plage horaire en creneaux reguliers, avec la frise des horaires obtenus. */
 export function GenerateurCreneaux({ nbExistants, onGenerer }: Props) {
   const [ouvert, setOuvert] = useState(false);
-  const [debut, setDebut] = useState("10:00");
-  const [fin, setFin] = useState("12:00");
-  const [duree, setDuree] = useState<number>(15);
-  const [capacite, setCapacite] = useState("5");
+  const [debut, setDebut] = useState("17:30");
+  const [fin, setFin] = useState("19:30");
+  const [duree, setDuree] = useState<string>("15");
+  const [capacite, setCapacite] = useState("10");
 
-  const apercu = genererCreneaux(debut, fin, duree, Number(capacite));
+  const apercu = genererCreneaux(debut, fin, Number(duree), Number(capacite));
 
   if (!ouvert) {
     return (
-      <Button type="button" variant="ghost" size="sm" onClick={() => setOuvert(true)} className="text-primary">
-        <Wand2 className="mr-1.5 size-3.5" />
+      <Button type="button" variant="secondary" className="self-start" onClick={() => setOuvert(true)}>
+        <Wand2 aria-hidden="true" />
         Générer des créneaux réguliers
       </Button>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="space-y-1">
-          <Label htmlFor="gen-debut" className="text-xs">De</Label>
-          <Input id="gen-debut" type="time" value={debut} onChange={(e) => setDebut(e.target.value)} className="h-11 sm:h-9" />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="gen-fin" className="text-xs">À</Label>
-          <Input id="gen-fin" type="time" value={fin} onChange={(e) => setFin(e.target.value)} className="h-11 sm:h-9" />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="gen-capacite" className="text-xs">Places par créneau</Label>
+    <div className="flex flex-col gap-4 rounded-lg border border-primary/30 bg-secondary/40 p-4">
+      <div className="grid grid-cols-3 items-end gap-3">
+        <FormField label="De" htmlFor="gen-debut">
+          <Input id="gen-debut" type="time" value={debut} onChange={(e) => setDebut(e.target.value)} />
+        </FormField>
+        <FormField label="À" htmlFor="gen-fin">
+          <Input id="gen-fin" type="time" value={fin} onChange={(e) => setFin(e.target.value)} />
+        </FormField>
+        <FormField label="Places par créneau" htmlFor="gen-capacite">
           <Input
             id="gen-capacite"
             type="number"
@@ -53,54 +50,49 @@ export function GenerateurCreneaux({ nbExistants, onGenerer }: Props) {
             min={1}
             value={capacite}
             onChange={(e) => setCapacite(e.target.value)}
-            className="h-11 sm:h-9"
           />
-        </div>
-        <fieldset className="space-y-1">
-          <legend className="text-xs font-medium">Durée (min)</legend>
-          <div className="flex gap-1">
-            {DUREES_CRENEAU.map((d) => (
-              <button
-                key={d}
-                type="button"
-                aria-pressed={duree === d}
-                aria-label={`${d} minutes`}
-                onClick={() => setDuree(d)}
-                className={cn(
-                  "h-11 flex-1 rounded-lg border text-xs font-medium transition-colors sm:h-9",
-                  duree === d ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground",
-                )}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        </FormField>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground" aria-live="polite">
-          {apercu.length === 0
-            ? "Vérifiez la plage horaire et le nombre de places."
-            : `${apercu.length} créneau${apercu.length > 1 ? "x" : ""} de ${duree} min, ${apercu.length * Number(capacite)} places au total`}
-          {nbExistants > 0 && apercu.length > 0 &&
-            (nbExistants > 1 ? ` - remplace les ${nbExistants} créneaux saisis` : " - remplace le créneau saisi")}
-        </p>
-        <div className="flex gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setOuvert(false)}>
-            Fermer
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={apercu.length === 0}
-            onClick={() => {
-              onGenerer(apercu);
-              setOuvert(false);
-            }}
-          >
-            Générer
-          </Button>
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-base font-semibold text-foreground">Toutes les</span>
+        <SegmentedControl
+          label="Durée d'un créneau"
+          value={duree}
+          onValueChange={setDuree}
+          options={DUREES_CRENEAU.map((d) => ({ value: String(d), label: `${d} min` }))}
+        />
+      </div>
+
+      {apercu.length > 0 ? (
+        <ol aria-label="Créneaux qui seront créés" className="flex flex-wrap gap-1.5">
+          {apercu.map((c) => (
+            <li key={c.heureDebut} className="rounded-md bg-card px-2 py-1 text-sm font-semibold tabular-nums text-foreground">
+              {c.heureDebut}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      <p className="text-base text-muted-foreground" aria-live="polite">
+        {apercu.length === 0
+          ? "Vérifiez la plage horaire et le nombre de places."
+          : `${apercu.length} créneaux de ${duree} min, ${apercu.length * Number(capacite)} places au total.`}
+        {nbExistants > 0 && apercu.length > 0 &&
+          (nbExistants > 1 ? ` Ils remplacent les ${nbExistants} créneaux saisis.` : " Ils remplacent le créneau saisi.")}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          disabled={apercu.length === 0}
+          onClick={() => {
+            onGenerer(apercu);
+            setOuvert(false);
+          }}
+        >
+          Générer
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => setOuvert(false)}>
+          Fermer
+        </Button>
       </div>
     </div>
   );

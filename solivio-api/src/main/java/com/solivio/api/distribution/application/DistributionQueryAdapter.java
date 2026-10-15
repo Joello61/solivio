@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,7 +49,7 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
     public CreneauInfo trouverCreneau(UUID creneauId, UUID distributionId) {
         Creneau c = creneauRepository.findByIdAndDistributionId(creneauId, distributionId)
             .orElseThrow(() -> new NotFoundException(
-                "Creneau " + creneauId + " introuvable pour distribution " + distributionId
+                "Créneau " + creneauId + " introuvable pour distribution " + distributionId
             ));
         return new CreneauInfo(c.getId(), c.getCapacite(), c.getHeureDebut(), c.getHeureFin());
     }
@@ -63,7 +64,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
             d.getDate(),
             d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
             d.getMotifAnnulation(),
-            d.getStatut().name()
+            d.getStatut().name(),
+            d.getLieu() != null ? d.getLieu().getNom() : null
         );
     }
 
@@ -85,7 +87,8 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
                 d.getId(), d.getTitre(), d.getDate(),
                 d.getLieu() != null ? d.getLieu().getAdresseFormatee() : null,
                 d.getMotifAnnulation(),
-                d.getStatut().name()
+                d.getStatut().name(),
+                d.getLieu() != null ? d.getLieu().getNom() : null
             ))
             .toList();
     }
@@ -106,6 +109,16 @@ public class DistributionQueryAdapter implements DistributionQueryPort {
                 StatutDistribution.PUBLIEE, StatutDistribution.EN_COURS, StatutDistribution.TERMINEE))
             .stream()
             .map(Distribution::getId)
+            .toList();
+    }
+
+    @Override
+    public List<HoraireCreneau> trouverHorairesCreneaux(Collection<UUID> distributionIds) {
+        if (distributionIds.isEmpty()) {
+            return List.of();
+        }
+        return creneauRepository.findByDistributionIdInOrderByHeureDebut(distributionIds).stream()
+            .map(c -> new HoraireCreneau(c.getDistributionId(), c.getId(), c.getHeureDebut(), c.getHeureFin()))
             .toList();
     }
 }

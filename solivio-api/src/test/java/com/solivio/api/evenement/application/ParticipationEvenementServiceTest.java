@@ -96,7 +96,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("beneficiaire")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("benevoles");
+            .hasMessageContaining("bénévoles");
     }
 
     @Test
@@ -195,7 +195,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("capacite");
+            .hasMessageContaining("capacité");
     }
 
     @Test
@@ -209,7 +209,7 @@ class ParticipationEvenementServiceTest {
         assertThatThrownBy(() ->
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("deja inscrit");
+            .hasMessageContaining("déjà inscrit");
     }
 
     @Test
@@ -229,6 +229,17 @@ class ParticipationEvenementServiceTest {
             service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("ouvert");
+    }
+
+    @Test
+    void inscrire_echoueSiSansInscription() {
+        evenementPublie.setModeInscription(ModeInscription.SANS_INSCRIPTION);
+        when(evenementRepository.findById(evenementId)).thenReturn(Optional.of(evenementPublie));
+
+        assertThatThrownBy(() ->
+            service.inscrire(evenementId, "benevole@test.com", RoleParticipation.STAFF, List.of("benevole")))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("sans inscription");
     }
 
     @Test

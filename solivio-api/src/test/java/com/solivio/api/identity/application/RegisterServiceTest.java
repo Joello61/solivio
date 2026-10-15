@@ -52,7 +52,7 @@ class RegisterServiceTest {
 
         assertThatThrownBy(() -> service.inscrireBeneficiaire("alice@example.com", "pass", "Dupont", "Alice"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Un compte existe deja");
+            .hasMessageContaining("Un compte existe déjà");
         verify(membreRepo, never()).save(any());
     }
 
@@ -113,7 +113,7 @@ class RegisterServiceTest {
 
         assertThatThrownBy(() -> service.verifierEmail("inconnu@example.com", "123456"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Code de verification invalide ou expire");
+            .hasMessage("Code de vérification invalide ou expiré");
     }
 
     @Test
@@ -199,7 +199,7 @@ class RegisterServiceTest {
 
         assertThatThrownBy(() -> service.finaliserCompteGoogle("g@example.com", null, null, null))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("deja membre");
+            .hasMessageContaining("déjà membre");
     }
 
     @Test

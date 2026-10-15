@@ -114,6 +114,45 @@ class InscriptionControllerIntegrationTest {
     }
 
     @Test
+    void mesInscriptions_donneLHoraireDuRendezVousEtLeLieu() throws Exception {
+        UUID personne = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO personne (id, nom, prenom, email) VALUES (?, 'Benef', 'Test', 'benef@test.com')",
+            personne);
+        UUID decoupee = distribution(personne, "CRENEAUX_DECOUPES", 1);
+        creneau(decoupee, "10:00");
+        UUID suite = creneau(decoupee, "11:00");
+        UUID unique = distribution(personne, "CRENEAU_UNIQUE", 2);
+        creneau(unique, "17:30");
+        jdbcTemplate.update("INSERT INTO inscription (id, distribution_id, creneau_id, personne_id, nom, prenom, type, "
+            + "statut) VALUES (?, ?, ?, ?, 'Benef', 'Test', 'BENEFICIAIRE', 'CONFIRMEE')",
+            UUID.randomUUID(), decoupee, suite, personne);
+        jdbcTemplate.update("INSERT INTO inscription (id, distribution_id, personne_id, nom, prenom, type, statut) "
+            + "VALUES (?, ?, ?, 'Benef', 'Test', 'BENEVOLE', 'CONFIRMEE')", UUID.randomUUID(), unique, personne);
+
+        mockMvc.perform(get("/api/inscriptions/mes").cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.type == 'BENEFICIAIRE')].heureDebut").value("11:00:00"))
+            .andExpect(jsonPath("$[?(@.type == 'BENEFICIAIRE')].heureFin").value("12:00:00"))
+            .andExpect(jsonPath("$[?(@.type == 'BENEFICIAIRE')].distributionLieuNom").value("Local Rangueil"))
+            .andExpect(jsonPath("$[?(@.type == 'BENEVOLE')].heureDebut").value("17:30:00"));
+    }
+
+    private UUID distribution(UUID createur, String mode, int dansJours) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO distribution (id, titre, date, statut, capacite_beneficiaires, mode_creneau, "
+            + "base_repartition, cree_par_id, lieu_nom) VALUES (?, 'Distribution', CURRENT_DATE + ?, 'PUBLIEE', 10, "
+            + "?, 'INSCRITS', ?, 'Local Rangueil')", id, dansJours, mode, createur);
+        return id;
+    }
+
+    private UUID creneau(UUID distribution, String debut) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO creneau (id, distribution_id, heure_debut, heure_fin, capacite) "
+            + "VALUES (?, ?, ?::time, ?::time + interval '1 hour', 5)", id, distribution, debut, debut);
+        return id;
+    }
+
+    @Test
     void pointage_necessiteRoleCoordinateurOuBenevole() throws Exception {
         mockMvc.perform(get("/api/distributions/00000000-0000-0000-0000-000000000000/pointage")
                 .cookie(new Cookie("access_token", tokenBeneficiaire)))

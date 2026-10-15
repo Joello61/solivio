@@ -15,6 +15,7 @@ import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.identity.PersonneQueryPort;
+import com.solivio.api.shared.inscription.InscriptionQueryPort;
 import com.solivio.api.shared.temps.HorlogeAssociation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,7 @@ class DistributionServiceTest {
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private AssociationQueryPort associationQueryPort;
     @Mock private AuditService auditService;
+    @Mock private InscriptionQueryPort inscriptionQueryPort;
 
     private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
 
@@ -107,7 +109,7 @@ class DistributionServiceTest {
         );
         assertThatThrownBy(() -> service.creer(request, "user@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("creneau");
+            .hasMessageContaining("créneau");
     }
 
     @Test
@@ -239,8 +241,10 @@ class DistributionServiceTest {
             20, null, ModeCreneauDistribution.CRENEAUX_DECOUPES, creeParId);
         autre.setId(UUID.randomUUID());
         when(distributionRepository.findAllByOrderByDateDesc()).thenReturn(List.of(autre, distribution));
+        Creneau creneau = new Creneau(autre.getId(), LocalTime.of(9, 0), LocalTime.of(10, 0), 10);
+        creneau.setId(UUID.randomUUID());
         when(creneauRepository.findByDistributionIdInOrderByHeureDebut(List.of(autre.getId(), distributionId)))
-            .thenReturn(List.of(new Creneau(autre.getId(), LocalTime.of(9, 0), LocalTime.of(10, 0), 10)));
+            .thenReturn(List.of(creneau));
 
         List<DistributionResponse> liste = service.lister();
 
@@ -280,7 +284,7 @@ class DistributionServiceTest {
 
         assertThatThrownBy(() -> service.creer(hier, "coord@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("deja passee");
+            .hasMessageContaining("déjà passée");
         verifyNoInteractions(distributionRepository);
     }
 
@@ -293,12 +297,13 @@ class DistributionServiceTest {
 
         assertThatThrownBy(() -> service.creer(deuxCreneaux, "coord@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("un seul creneau");
+            .hasMessageContaining("un seul créneau");
     }
 
     private DistributionService serviceA(Clock clock) {
         lenient().when(associationQueryPort.fuseauHoraire()).thenReturn(PARIS);
         return new DistributionService(distributionRepository, creneauRepository, eventPublisher,
-            personneQueryPort, new HorlogeAssociation(clock, associationQueryPort), auditService);
+            personneQueryPort, new HorlogeAssociation(clock, associationQueryPort), auditService,
+            new ReponseDistribution(inscriptionQueryPort));
     }
 }

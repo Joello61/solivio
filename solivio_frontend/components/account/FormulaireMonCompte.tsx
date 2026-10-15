@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Camera, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import Image from "next/image";
@@ -69,7 +69,7 @@ export function FormulaireMonCompte({ user }: Props) {
   const initiales = `${user.prenom[0] ?? ""}${user.nom[0] ?? ""}`.toUpperCase();
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-6">
       {/* Photo de profil */}
       <div className="flex items-center gap-5">
         <div className="relative">
@@ -104,13 +104,13 @@ export function FormulaireMonCompte({ user }: Props) {
             aria-label="Fichier photo de profil"
           />
         </div>
-        <div>
-          <p className="font-semibold text-sm">
+        <div className="min-w-0">
+          <p className="text-base font-semibold">
             {user.prenom} {user.nom}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{user.email}</p>
+          <p className="text-sm break-all text-muted-foreground">{user.email}</p>
           {uploadPending && (
-            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+            <p className="mt-1.5 flex items-center gap-1 text-sm text-muted-foreground">
               <Spinner size="sm" />
               Chargement de la photo...
             </p>
@@ -119,7 +119,7 @@ export function FormulaireMonCompte({ user }: Props) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="mt-1.5 text-xs text-primary hover:underline"
+              className="mt-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"
             >
               Modifier la photo
             </button>
@@ -128,10 +128,9 @@ export function FormulaireMonCompte({ user }: Props) {
       </div>
 
       {/* Formulaire */}
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="prenom">Prénom</Label>
+          <FormField label="Prénom" htmlFor="prenom">
             <Input
               id="prenom"
               value={prenom}
@@ -139,9 +138,8 @@ export function FormulaireMonCompte({ user }: Props) {
               maxLength={100}
               required
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="nom">Nom</Label>
+          </FormField>
+          <FormField label="Nom" htmlFor="nom">
             <Input
               id="nom"
               value={nom}
@@ -149,34 +147,29 @@ export function FormulaireMonCompte({ user }: Props) {
               maxLength={100}
               required
             />
-          </div>
+          </FormField>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" value={user.email} disabled className="bg-muted/50 cursor-not-allowed" />
-          <p className="text-xs text-muted-foreground">
-            L&apos;adresse email ne peut pas être modifiée ici.
-          </p>
-        </div>
+        <FormField label="Email" htmlFor="email" hint="L'adresse email sert à vous connecter : elle ne se modifie pas ici.">
+          <Input id="email" value={user.email} disabled className="cursor-not-allowed bg-muted" />
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="telephone">Téléphone</Label>
+        <FormField label="Téléphone" htmlFor="telephone" hint="Facultatif.">
           <Input
             id="telephone"
             type="tel"
             value={telephone}
             onChange={(e) => setTelephone(e.target.value)}
             maxLength={30}
-            placeholder="ex : 0600000000"
+            autoComplete="tel"
           />
-        </div>
+        </FormField>
 
         {succes && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-primary">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            <span className="text-sm">Profil mis à jour avec succès.</span>
-          </div>
+          <p role="status" className="flex items-center gap-2 text-base font-semibold text-success">
+            <CheckCircle aria-hidden="true" className="size-5 shrink-0" />
+            Profil mis à jour.
+          </p>
         )}
         {erreur && <Alert variant="destructive">{erreur}</Alert>}
 

@@ -9,8 +9,7 @@ const COULEUR_LITTERALE = /#[0-9a-fA-F]{3,8}\b|oklch\(|rgba?\(/;
 // Logo Google (couleurs imposees par la marque) et couleurs par defaut de
 // l'association (donnees configurables, pas du style).
 const EXCEPTIONS_LITTERALES = new Set([
-  "app/login/page.tsx",
-  "app/register/page.tsx",
+  "components/auth/ConnexionGoogle.tsx",
   "components/association/FormulaireConfiguration.tsx",
 ]);
 
@@ -40,6 +39,16 @@ describe("couleurs", () => {
       .flatMap((f) => readFileSync(f, "utf8").split("\n")
         .filter((ligne) => COULEUR_LITTERALE.test(ligne))
         .map((ligne) => `${f}: ${ligne.trim()}`));
+    expect(fautes).toEqual([]);
+  });
+
+  // DESIGN.md : aucun texte sous 13 px. L'echelle Tailwind (text-xs = 13 px) suffit.
+  it("n'utilise aucune taille de texte arbitraire en pixels", () => {
+    const fautes = sources.flatMap((f) =>
+      readFileSync(f, "utf8").split("\n")
+        .filter((ligne) => /text-\[\d+(\.\d+)?px\]/.test(ligne))
+        .map((ligne) => `${f}: ${ligne.trim()}`),
+    );
     expect(fautes).toEqual([]);
   });
 });

@@ -13,6 +13,7 @@ import com.solivio.api.inscription.infrastructure.web.dto.InscriptionResponse;
 import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
 import com.solivio.api.shared.association.AssociationQueryPort;
 import com.solivio.api.shared.distribution.DistributionQueryPort.DistributionDetailInfo;
+import com.solivio.api.shared.distribution.DistributionQueryPort.HoraireCreneau;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
@@ -25,8 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,6 +44,7 @@ public class InscriptionService {
 
     // Limite hebdomadaire si l'association n'en a pas configure (RG1).
     private static final int FREQUENCE_PAR_DEFAUT = 1;
+    static final String CODE_FREQUENCE_DEPASSEE = "FREQUENCY_LIMIT";
 
     private final InscriptionRepository inscriptionRepository;
     private final DistributionQueryPort distributionQueryPort;
@@ -86,7 +90,7 @@ public class InscriptionService {
 
         if (!"PUBLIEE".equals(distrib.statut()) && !"EN_COURS".equals(distrib.statut())) {
             throw new ConflictException(
-                "Inscription impossible : la distribution n'est pas publiee (statut : " + distrib.statut() + ")"
+                "Inscription impossible : la distribution n'est pas publiée (statut : " + distrib.statut() + ")"
             );
         }
 
@@ -99,7 +103,8 @@ public class InscriptionService {
         // RG2 : unicite par distribution - erreur si deja active, reinscription autorisee si ANNULEE
         if (existante.isPresent() && existante.get().estActive()) {
             throw new ConflictException(
-                "Vous etes deja inscrit(e) a cette distribution en tant que " + type.name().toLowerCase()
+                "Vous êtes déjà inscrit(e) à cette distribution en tant que "
+                    + (type == TypeInscription.BENEVOLE ? "bénévole" : "bénéficiaire")
             );
         }
 
@@ -112,7 +117,7 @@ public class InscriptionService {
         if (creneauId != null) {
             creneau = distributionQueryPort.trouverCreneau(creneauId, distributionId);
         } else if ("CRENEAUX_DECOUPES".equals(distrib.modeCreneau())) {
-            throw new IllegalArgumentException("Un creneau est obligatoire pour ce mode de distribution.");
+            throw new IllegalArgumentException("Un créneau est obligatoire pour ce mode de distribution.");
         }
 
         boolean placeDisponible = placeDisponible(distrib, creneau, type);
@@ -155,16 +160,17 @@ public class InscriptionService {
         }
 
         if (inscription.getStatut() == StatutInscription.ANNULEE) {
-            throw new ConflictException("Cette inscription est deja annulee.");
+            throw new ConflictException("Cette inscription est déjà annulée.");
         }
         if (inscription.getPresence() != StatutPresence.NON_POINTE) {
-            throw new ConflictException("Desinscription impossible : votre presence a deja ete pointee.");
+            throw new ConflictException("Désinscription impossible : votre présence a déjà été pointée.");
         }
         DistributionQueryPort.DistributionInfo distrib =
             distributionQueryPort.trouverDistribution(distributionId);
         if ("TERMINEE".equals(distrib.statut()) || "ANNULEE".equals(distrib.statut())) {
             throw new ConflictException(
-                "Desinscription impossible : la distribution est " + distrib.statut().toLowerCase()
+                "Désinscription impossible : la distribution est "
+                    + ("TERMINEE".equals(distrib.statut()) ? "terminée." : "annulée.")
             );
         }
 
@@ -286,7 +292,7 @@ public class InscriptionService {
             );
         }
         if (inscription.getStatut() != StatutInscription.CONFIRMEE) {
-            throw new ConflictException("Seules les inscriptions confirmees peuvent etre pointees.");
+            throw new ConflictException("Seules les inscriptions confirmées peuvent être pointées.");
         }
 
         StatutPresence statutPresence = parsePresence(statutPresenceStr);
@@ -337,29 +343,49 @@ public class InscriptionService {
                 .trouverDetailsParIds(distributionIds)
                 .stream()
                 .collect(Collectors.toMap(DistributionDetailInfo::id, Function.identity()));
+            Map<UUID, List<HoraireCreneau>> horaires = distributionQueryPort
+                .trouverHorairesCreneaux(distributionIds)
+                .stream()
+                .collect(Collectors.groupingBy(HoraireCreneau::distributionId));
 
             return inscriptions.stream()
-                .map(i -> {
-                    DistributionDetailInfo dist = detailsParId.get(i.getDistributionId());
-                    return new InscriptionPersonnelleResponse(
-                        i.getId(),
-                        i.getDistributionId(),
-                        dist != null ? dist.titre() : null,
-                        dist != null ? dist.date() : null,
-                        dist != null ? dist.lieu() : null,
-                        dist != null ? dist.statut() : null,
-                        i.getType().name(),
-                        i.getStatut().name(),
-                        i.getRangListeAttente(),
-                        i.getPresence().name(),
-                        i.isAbsenceDeduite(),
-                        i.getDateInscription()
-                    );
-                })
+                .map(i -> versPersonnelle(i, detailsParId.get(i.getDistributionId()),
+                    horaires.getOrDefault(i.getDistributionId(), List.of())))
                 .toList();
         } catch (com.solivio.api.shared.exception.NotFoundException e) {
             return List.of();
         }
+    }
+
+    private static InscriptionPersonnelleResponse versPersonnelle(
+        Inscription i, DistributionDetailInfo dist, List<HoraireCreneau> creneaux
+    ) {
+        List<HoraireCreneau> retenus = creneaux.stream()
+            .filter(c -> c.creneauId().equals(i.getCreneauId()))
+            .findFirst()
+            .map(List::of)
+            .orElse(creneaux);
+        LocalTime debut = retenus.stream().map(HoraireCreneau::heureDebut)
+            .min(Comparator.naturalOrder()).orElse(null);
+        LocalTime fin = retenus.stream().map(HoraireCreneau::heureFin)
+            .max(Comparator.naturalOrder()).orElse(null);
+        return new InscriptionPersonnelleResponse(
+            i.getId(),
+            i.getDistributionId(),
+            dist != null ? dist.titre() : null,
+            dist != null ? dist.date() : null,
+            dist != null ? dist.lieu() : null,
+            dist != null ? dist.lieuNom() : null,
+            dist != null ? dist.statut() : null,
+            debut,
+            fin,
+            i.getType().name(),
+            i.getStatut().name(),
+            i.getRangListeAttente(),
+            i.getPresence().name(),
+            i.isAbsenceDeduite(),
+            i.getDateInscription()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -407,10 +433,10 @@ public class InscriptionService {
     private void verifierFrequence(UUID personneId, DistributionQueryPort.DistributionInfo distrib) {
         if (frequenceDepassee(personneId, distrib)) {
             int maxParSemaine = frequenceMaxParSemaine();
-            throw new ConflictException(maxParSemaine == 1
-                ? "Vous etes deja inscrit(e) a une distribution cette semaine."
-                : "Vous etes deja inscrit(e) a " + maxParSemaine + " distributions cette semaine, "
-                    + "la limite fixee par l'association.");
+            throw new ConflictException(CODE_FREQUENCE_DEPASSEE, maxParSemaine == 1
+                ? "Vous êtes déjà inscrit(e) à une distribution cette semaine."
+                : "Vous êtes déjà inscrit(e) à " + maxParSemaine + " distributions cette semaine, "
+                    + "la limite fixée par l'association.");
         }
     }
 
@@ -515,8 +541,8 @@ public class InscriptionService {
         boolean autorise = type == TypeInscription.BENEFICIAIRE ? beneficiaire : !beneficiaire;
         if (!autorise) {
             throw new AuthorizationDeniedException(type == TypeInscription.BENEFICIAIRE
-                ? "Seuls les beneficiaires peuvent s'inscrire en tant que beneficiaire."
-                : "Les beneficiaires ne peuvent pas s'inscrire en tant que benevole.");
+                ? "Seuls les bénéficiaires peuvent s'inscrire en tant que bénéficiaire."
+                : "Les bénéficiaires ne peuvent pas s'inscrire en tant que bénévole.");
         }
     }
 
@@ -532,7 +558,7 @@ public class InscriptionService {
         try {
             return StatutPresence.valueOf(presence.toUpperCase());
         } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("Statut de presence invalide : " + presence);
+            throw new IllegalArgumentException("Statut de présence invalide : " + presence);
         }
     }
 

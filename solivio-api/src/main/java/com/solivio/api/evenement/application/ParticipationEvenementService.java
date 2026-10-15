@@ -54,14 +54,17 @@ public class ParticipationEvenementService {
         Evenement evenement = trouverOuEchouer(evenementId);
         if (evenement.getStatut() != StatutEvenement.PUBLIE
             && evenement.getStatut() != StatutEvenement.EN_COURS) {
-            throw new ConflictException("Inscription impossible : l'evenement n'est pas ouvert");
+            throw new ConflictException("Inscription impossible : l'événement n'est pas ouvert");
+        }
+        if (evenement.getModeInscription() == ModeInscription.SANS_INSCRIPTION) {
+            throw new ConflictException("Inscription impossible : cet événement se fait sans inscription");
         }
 
         PersonneInfo personne = personneQueryPort.trouverPersonne(emailUser);
 
         if (participationRepository.existsByEvenementIdAndPersonneIdAndRole(
                 evenementId, personne.id(), role)) {
-            throw new ConflictException("Vous etes deja inscrit avec ce role");
+            throw new ConflictException("Vous êtes déjà inscrit avec ce rôle");
         }
 
         verifierDroitInscription(evenement, role, userRoles);
@@ -82,7 +85,7 @@ public class ParticipationEvenementService {
             .filter(p -> p.getPersonneId().equals(personne.id()))
             .toList();
         if (lesMinnes.isEmpty()) {
-            throw new NotFoundException("Vous n'etes pas inscrit a cet evenement");
+            throw new NotFoundException("Vous n'êtes pas inscrit à cet événement");
         }
         auditService.tracer("EVENEMENT_DESINSCRIPTION", "evenement", evenementId);
         participationRepository.deleteAll(lesMinnes);
@@ -163,16 +166,16 @@ public class ParticipationEvenementService {
     ) {
         if (role == RoleParticipation.STAFF) {
             if (!evenement.isABesoiNStaff()) {
-                throw new ConflictException("Cet evenement ne recherche pas de staff benevole");
+                throw new ConflictException("Cet événement ne recherche pas de staff bénévole");
             }
             if (!userRoles.contains("benevole")) {
-                throw new ConflictException("Seuls les benevoles peuvent s'inscrire comme staff");
+                throw new ConflictException("Seuls les bénévoles peuvent s'inscrire comme staff");
             }
             return;
         }
         // role == PARTICIPANT
         if (!evenement.isOuvertParticipants() || evenement.getPublicParticipants() == null) {
-            throw new ConflictException("Cet evenement n'est pas ouvert aux participants");
+            throw new ConflictException("Cet événement n'est pas ouvert aux participants");
         }
         PublicCible cible = evenement.getPublicParticipants();
         boolean autorise = switch (cible) {
@@ -181,7 +184,7 @@ public class ParticipationEvenementService {
             case TOUS          -> true;
         };
         if (!autorise) {
-            throw new ConflictException("Votre profil ne correspond pas au public cible de cet evenement");
+            throw new ConflictException("Votre profil ne correspond pas au public cible de cet événement");
         }
     }
 
@@ -189,12 +192,12 @@ public class ParticipationEvenementService {
         if (role == RoleParticipation.STAFF && evenement.getCapaciteStaff() != null) {
             long actuel = participationRepository.countByEvenementIdAndRole(evenement.getId(), role);
             if (actuel >= evenement.getCapaciteStaff()) {
-                throw new ConflictException("La capacite staff de cet evenement est atteinte");
+                throw new ConflictException("La capacité staff de cet événement est atteinte");
             }
         } else if (role == RoleParticipation.PARTICIPANT && evenement.getCapaciteParticipants() != null) {
             long actuel = participationRepository.countByEvenementIdAndRole(evenement.getId(), role);
             if (actuel >= evenement.getCapaciteParticipants()) {
-                throw new ConflictException("La capacite participants de cet evenement est atteinte");
+                throw new ConflictException("La capacité participants de cet événement est atteinte");
             }
         }
     }
@@ -211,7 +214,7 @@ public class ParticipationEvenementService {
 
     private Evenement trouverOuEchouer(UUID evenementId) {
         return evenementRepository.findById(evenementId)
-            .orElseThrow(() -> new NotFoundException("Evenement introuvable : " + evenementId));
+            .orElseThrow(() -> new NotFoundException("Événement introuvable : " + evenementId));
     }
 
     static ParticipationEvenementResponse toResponse(ParticipationEvenement p, Evenement e, String nomComplet) {

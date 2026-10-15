@@ -1,76 +1,74 @@
-import Link from "next/link";
-import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Plus, PackageX } from "lucide-react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { ListeActivites, type LigneActivite } from "@/components/activites/ListeActivites";
 import { buttonVariants } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { SessionReconditionnementCard } from "@/components/reconditionnement/SessionReconditionnementCard";
+import { SECTIONS_ACTIVITE, quandActivite, sectionActivite, trierActivites, type SectionActivite } from "@/lib/activites";
+import { lieuCourt } from "@/lib/agenda";
+import { lireMoi, lireServeur } from "@/lib/api/serveur";
+import { estGestionnaireDistribution } from "@/lib/droits-distribution";
+import { STATUT_SESSION } from "@/lib/libelles";
+import { estResponsable } from "@/lib/roles";
 import type { SessionReconditionnementResponse } from "@/types/reconditionnement";
-import type { MeResponse } from "@/types/auth";
 
 export const metadata: Metadata = { title: "Reconditionnement" };
 
-async function fetchData(): Promise<{
-  me: MeResponse | null;
-  sessions: SessionReconditionnementResponse[];
-}> {
-  const [me, sessions] = await Promise.all([
+function places(s: SessionReconditionnementResponse): string {
+  const inscrits = `${s.nbInscrits} inscrit${s.nbInscrits > 1 ? "s" : ""}`;
+  return s.capacite ? `${inscrits} sur ${s.capacite}` : inscrits;
+}
+
+function ligne(s: SessionReconditionnementResponse): LigneActivite {
+  const { date, plage } = quandActivite(s.dateHeureDebut, s.dateHeureFin);
+  return {
+    id: s.id,
+    href: `/reconditionnement/${s.id}`,
+    date,
+    titre: s.titre,
+    details: [plage, lieuCourt(s.lieu), places(s)],
+    statut: STATUT_SESSION[s.statut],
+  };
+}
+
+export default async function ReconditionnementPage({ searchParams }: { searchParams: Promise<{ section?: string }> }) {
+  const [{ section }, me, sessions] = await Promise.all([
+    searchParams,
     lireMoi(),
     lireServeur<SessionReconditionnementResponse[]>("/api/sessions-reconditionnement"),
   ]);
-  return { me, sessions: sessions ?? [] };
-}
-
-export default async function ReconditionnementPage() {
-  const { me, sessions } = await fetchData();
-
-  const estGestionnaire = me?.roles.some((r) =>
-    ["coordinateur", "responsable", "super_admin"].includes(r),
-  );
+  const roles = me?.roles ?? [];
+  const gestion = estGestionnaireDistribution(roles);
+  // Le reconditionnement des denrees est un travail benevole.
+  if (!gestion && !roles.includes("benevole")) notFound();
+  const maintenant = new Date();
+  const sections = SECTIONS_ACTIVITE.filter((s) => gestion || s.valeur === "a-venir" || s.valeur === "passees").map((s) => ({
+    ...s,
+    lignes: trierActivites(
+      (sessions ?? []).filter((x) => sectionActivite(x, maintenant) === s.valeur),
+      s.valeur,
+      (x) => x.dateHeureDebut,
+    ).map(ligne),
+  }));
+  const aVenir = sections.find((s) => s.valeur === "a-venir")?.lignes.length ?? 0;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground font-display">Reconditionnement</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {estGestionnaire
-              ? "Gérez les sessions de reconditionnement de l'association."
-              : "Consultez et inscrivez-vous aux sessions disponibles."}
-          </p>
-        </div>
-        {me?.roles.some((r) => ["responsable", "super_admin"].includes(r)) && (
-          <Link href="/reconditionnement/nouvelle" className={buttonVariants({ size: "sm" })}>
-            <Plus className="mr-2 size-4" />
+    <ListeActivites<SectionActivite>
+      titre="Reconditionnement"
+      description={aVenir ? `${aVenir} session${aVenir > 1 ? "s" : ""} à venir.` : "Aucune session à venir."}
+      actions={
+        estResponsable(roles) && (
+          <Link href="/reconditionnement/nouvelle" className={buttonVariants()}>
+            <Plus aria-hidden="true" />
             Nouvelle session
           </Link>
-        )}
-      </div>
-
-      {sessions.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
-          <EmptyState
-            icon={PackageX}
-            title="Aucune session"
-            description={
-              estGestionnaire
-                ? "Aucune session de reconditionnement n'a été créée."
-                : "Aucune session n'est disponible pour le moment."
-            }
-            action={
-              me?.roles.some((r) => ["responsable", "super_admin"].includes(r))
-                ? { label: "Créer une session", href: "/reconditionnement/nouvelle" }
-                : undefined
-            }
-          />
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sessions.map((s) => (
-            <SessionReconditionnementCard key={s.id} session={s} />
-          ))}
-        </div>
-      )}
-    </div>
+        )
+      }
+      sections={sections}
+      section={(section as SectionActivite) ?? "a-venir"}
+      defaut="a-venir"
+      vide="Rien dans cette section."
+      libelleFiltre="Sessions à afficher"
+    />
   );
 }

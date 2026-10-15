@@ -40,7 +40,7 @@ public class EvenementQueryAdapter implements EvenementQueryPort {
                 e.getModeInscription().name(),
                 e.getRaisonAnnulation()
             ))
-            .orElseThrow(() -> new NotFoundException("Evenement introuvable : " + evenementId));
+            .orElseThrow(() -> new NotFoundException("Événement introuvable : " + evenementId));
     }
 
     @Override

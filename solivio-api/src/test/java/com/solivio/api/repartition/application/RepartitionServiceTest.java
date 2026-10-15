@@ -77,7 +77,7 @@ class RepartitionServiceTest {
         SaisirDenreeRequest req = new SaisirDenreeRequest("Pommes", "TONNE", 3, 20.0);
         assertThatThrownBy(() -> service.saisirDenree(distributionId, req))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Unite invalide");
+            .hasMessageContaining("Unité invalide");
     }
 
     @Test
@@ -112,7 +112,7 @@ class RepartitionServiceTest {
         assertThatThrownBy(() ->
             service.saisirDenree(distributionId, new SaisirDenreeRequest("Pommes", "KILOGRAMME", 1, 5.0))
         ).isInstanceOf(ConflictException.class)
-            .hasMessageContaining("terminee");
+            .hasMessageContaining("terminée");
     }
 
     @Test
@@ -127,7 +127,7 @@ class RepartitionServiceTest {
             service.modifierDenree(distributionId, UUID.randomUUID(),
                 new SaisirDenreeRequest("Pommes", "KILOGRAMME", 1, 5.0))
         ).isInstanceOf(ConflictException.class)
-            .hasMessageContaining("annulee");
+            .hasMessageContaining("annulée");
     }
 
     @Test
@@ -140,7 +140,7 @@ class RepartitionServiceTest {
 
         assertThatThrownBy(() -> service.supprimerDenree(distributionId, UUID.randomUUID()))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("terminee");
+            .hasMessageContaining("terminée");
     }
 
     // === Tests du calcul de dotation (RG8) ===

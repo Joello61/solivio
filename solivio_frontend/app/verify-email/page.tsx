@@ -4,19 +4,15 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MailCheck } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { ChampCode, CODE_VIDE, codeComplet } from "@/components/auth/ChampCode";
 import { FormError } from "@/components/auth/FormError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { resendVerification, verifyEmail } from "@/lib/auth";
-
-const CODE_VIDE = ["", "", "", "", "", ""];
-
-function messageErreur(err: unknown, parDefaut: string): string {
-  return err instanceof Error ? (err as { detail?: string }).detail ?? err.message : parDefaut;
-}
+import { messageErreur } from "@/lib/erreurs";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -28,7 +24,6 @@ function VerifyEmailForm() {
 
   const [email, setEmail] = useState(emailInitial);
   const [digits, setDigits] = useState(CODE_VIDE);
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [renvoiEnCours, setRenvoiEnCours] = useState(false);
@@ -66,58 +61,29 @@ function VerifyEmailForm() {
       .catch((err: unknown) => setError(messageErreur(err, "Impossible d'envoyer un nouveau code.")));
   }, [depuisConnexion, emailInitial]);
 
-  function handleDigitChange(index: number, value: string) {
-    if (!/^\d?$/.test(value)) return;
-    const next = [...digits];
-    next[index] = value;
-    setDigits(next);
-    if (value && index < 5) {
-      inputs.current[index + 1]?.focus();
-    }
-  }
-
-  function handleKeyDown(index: number, e: React.KeyboardEvent) {
-    if (e.key === "Backspace" && !digits[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  }
-
-  function handlePaste(e: React.ClipboardEvent) {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
-      setDigits(pasted.split(""));
-      inputs.current[5]?.focus();
-    }
-    e.preventDefault();
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const code = digits.join("");
-    if (code.length !== 6 || !email) return;
+    if (!codeComplet(digits) || !email) return;
     setError(null);
     setPending(true);
     try {
-      await verifyEmail(email, code);
+      await verifyEmail(email, digits.join(""));
       router.push("/login?verified=1");
     } catch (err: unknown) {
       setError(messageErreur(err, "Code invalide ou expire"));
       setDigits(CODE_VIDE);
-      inputs.current[0]?.focus();
     } finally {
       setPending(false);
     }
   }
-
-  const codeComplet = digits.join("").length === 6;
 
   return (
     <AuthLayout
       title="Vérifiez votre email"
       description={
         emailInitial
-          ? `Code à 6 chiffres envoyé à ${emailInitial}`
-          : "Entrez votre adresse et le code à 6 chiffres reçu par email."
+          ? `Saisissez le code à 6 chiffres envoyé à ${emailInitial}.`
+          : "Indiquez votre adresse et le code à 6 chiffres reçu par email."
       }
     >
       {info && (
@@ -127,10 +93,9 @@ function VerifyEmailForm() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {!emailInitial && (
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Adresse email</Label>
+          <FormField label="Adresse email" htmlFor="email">
             <Input
               id="email"
               type="email"
@@ -138,55 +103,30 @@ function VerifyEmailForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@example.com"
             />
-          </div>
+          </FormField>
         )}
 
-        <fieldset className="space-y-2">
-          <legend className="sr-only">Code de vérification</legend>
-          <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
-            {digits.map((d, i) => (
-              <input
-                key={i}
-                ref={(el) => { inputs.current[i] = el; }}
-                type="text"
-                inputMode="numeric"
-                autoComplete={i === 0 ? "one-time-code" : "off"}
-                maxLength={1}
-                value={d}
-                onChange={(e) => handleDigitChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                aria-label={`Chiffre ${i + 1}`}
-                className={[
-                  "h-14 w-11 rounded-xl border-2 bg-card text-center text-xl font-bold font-mono",
-                  "text-foreground caret-transparent transition-all duration-150",
-                  "focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20",
-                  "",
-                  d ? "border-primary bg-primary/10" : "border-border",
-                ].join(" ")}
-              />
-            ))}
-          </div>
-        </fieldset>
+        <ChampCode chiffres={digits} onChange={setDigits} />
 
         <FormError message={error} />
 
-        <Button type="submit" className="w-full" disabled={pending || !codeComplet || !email}>
-          {pending ? <><Spinner size="sm" /> Vérification...</> : "Valider le code"}
+        <Button type="submit" className="w-full" disabled={pending || !codeComplet(digits) || !email}>
+          {pending ? (
+            <>
+              <Spinner size="sm" /> Vérification...
+            </>
+          ) : (
+            "Valider le code"
+          )}
         </Button>
       </form>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Pas recu le code, ou code expire ?{" "}
-        <button
-          type="button"
-          className="text-primary hover:underline font-medium disabled:opacity-60"
-          onClick={renvoyerCode}
-          disabled={renvoiEnCours}
-        >
+      <p className="text-center text-base text-muted-foreground">
+        Pas reçu le code, ou code expiré ?{" "}
+        <Button type="button" variant="link" className="h-auto p-0 text-base" onClick={renvoyerCode} disabled={renvoiEnCours}>
           {renvoiEnCours ? "Envoi..." : "Renvoyer un code"}
-        </button>
+        </Button>
       </p>
     </AuthLayout>
   );

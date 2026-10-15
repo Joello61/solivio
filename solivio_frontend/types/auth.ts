@@ -19,9 +19,3 @@ export interface MeResponse {
   emailVerifie: boolean;
   authMethod: "google" | "password";
 }
-
-export interface ApiError {
-  title: string;
-  detail?: string;
-  status: number;
-}

@@ -2,11 +2,13 @@
 
 > Ce que le produit fait concrètement, module par module, et où passe la ligne de la première version.
 
-**Document structurant - version 1.1**
+**Document structurant - version 1.2**
 **Statut : référence de travail**
-**Dernière mise à jour : juin 2026**
+**Dernière mise à jour : octobre 2026**
 
-> Changement depuis la version 1.0 : ajout en V1 du module Répartition des denrées (calcul de dotation par bénéficiaire pour une distribution), à la demande du porteur, sur la base d'un besoin opérationnel réel observé.
+> Changement depuis la version 1.1 : ajout des trois modules complémentaires livrés en juin 2026 et jusque-là absents de ce document : Événements, Missions de collecte et Sessions de reconditionnement (section 4.10). Le document décrit le comportement réellement implémenté.
+>
+> Rappel de la version 1.1 : ajout en V1 du module Répartition des denrées (calcul de dotation par bénéficiaire pour une distribution), à la demande du porteur, sur la base d'un besoin opérationnel réel observé.
 
 ## Avertissement de lecture
 
@@ -60,6 +62,9 @@ Voici la carte complète des modules, tous niveaux confondus. Les sections suiva
 | Répartition des denrées | Calcul de la dotation par bénéficiaire pour une distribution | V1 |
 | Notifications | Emails automatiques (confirmation, rappel, annulation) | V1 |
 | Statistiques de base | Indicateurs essentiels de pilotage | V1 |
+| Événements | Stands, fêtes et autres événements, avec participants et équipe bénévole | V1 (complémentaire) |
+| Missions de collecte | Aller chercher des denrées et les déposer à l'association | V1 (complémentaire) |
+| Sessions de reconditionnement | Séances de travail sur place, avec inscription et pointage | V1 (complémentaire) |
 | Ressources et stocks | Suivi des denrées et ressources | V2 |
 | Dons | Suivi des dons, intégration de la collecte externe | V2 |
 | Configurabilité étendue | Champs et types personnalisables par l'association | V2 |
@@ -106,8 +111,9 @@ Cette section décrivait à l'origine un socle multi-association (isolation de p
 
 **Fonctions indispensables (V1) :**
 
-- Renseigner le nom de l'association, son logo, ses couleurs principales.
-- Définir les paramètres de base : fuseau horaire, langue (français en V1), coordonnées de contact.
+- Renseigner le nom de l'association et son logo.
+- Définir les paramètres de base : langue (français en V1), coordonnées de contact, fréquence d'inscription (RG1).
+- Précisions retenues en octobre 2026 : les couleurs de l'interface sont celles du système de design (`DESIGN.md`) et ne se règlent pas, car une couleur libre romprait les contrastes vérifiés en mode clair et sombre ; le fuseau horaire est Europe/Paris, puisque Solivio sert une seule association toulousaine (ADR-001). Les deux valeurs restent en base sans réglage dans l'interface.
 - Gérer la liste des membres et leurs rôles.
 
 **Repoussé (V2 et au-delà) :** la personnalisation poussée (types de ressources sur mesure, champs de profil personnalisés, modèles de messages éditables) relève de la configurabilité étendue, traitée plus loin.
@@ -127,7 +133,7 @@ C'est le cœur du produit. Il doit être la partie la plus soignée de la V1.
 - Publier une distribution (la rendre visible pour les inscriptions) et l'annuler (avec notification automatique des inscrits).
 - Modifier une distribution tant qu'elle n'a pas démarré (brouillon ou publiée) : intitulé, description, date, lieu, capacités, créneaux. Les places déjà attribuées sont protégées : une capacité ne descend jamais sous le nombre d'inscrits confirmés, et un créneau qui a reçu des inscriptions ne peut pas être supprimé. Le mode de créneau ne change plus une fois la distribution publiée. Un changement de date, de lieu ou d'horaires prévient par email les inscrits confirmés et en liste d'attente (comme RG6) ; une capacité augmentée fait avancer la liste d'attente (RG3).
 - Supprimer une distribution restée en brouillon (jamais publiée, donc sans inscrit) ; une distribution publiée s'annule.
-- Revenir à « publiée » après un démarrage accidentel, tant qu'aucune présence n'a été pointée.
+- Revenir à "publiée" après un démarrage accidentel, tant qu'aucune présence n'a été pointée.
 - Réactiver une distribution annulée par erreur, tant que sa date n'est pas passée : elle retrouve son état d'avant (un brouillon reste brouillon, sinon publiée). Les inscriptions supprimées par l'annulation sont rétablies avec leur statut et leur rang, sauf celle d'une personne inscrite entre-temps à une autre distribution de la même semaine (RG1), qui est invitée à se réinscrire ; une place ainsi libérée fait avancer la liste d'attente. Chaque personne concernée est prévenue par email. Une désinscription personnelle n'est jamais rétablie.
 - Consulter la liste des inscrits (bénéficiaires et bénévoles) d'une distribution.
 
@@ -209,8 +215,10 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 - Rappel automatique la veille de la distribution.
 - Notification automatique en cas d'annulation de la distribution.
 - Notification de promotion depuis la liste d'attente (une place s'est libérée).
+- Les emails des modules complémentaires : publication et annulation d'un événement, création et annulation d'une mission de collecte, confirmation d'inscription et annulation d'une session de reconditionnement (section 4.10).
+- Le message aux membres (intégré à la V1 en octobre 2026) : le responsable écrit un email libre (sujet et texte) à un public choisi par rôle, bénévoles, bénéficiaires, coordinateurs, responsables ou tous les membres actifs. Il voit un aperçu et confirme le nombre de destinataires avant l'envoi.
 
-**Repoussé (V2) :** l'envoi de messages groupés libres, les modèles de messages éditables par l'association, et les canaux supplémentaires (SMS, notifications push). En V1, les messages ont un contenu fixe et soigné, en français.
+**Repoussé (V2) :** les messages ciblés plus finement que par rôle, les modèles de messages éditables par l'association, et les canaux supplémentaires (SMS, notifications push). Hors message aux membres, les messages ont un contenu fixe et soigné, en français.
 
 ### 4.9 Module Statistiques de base
 
@@ -225,6 +233,59 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 **Précision sur la confidentialité.** Les statistiques sont présentées de manière **agrégée et pseudonymisée**. On compte des bénéficiaires, on ne les expose pas nominativement dans les tableaux de bord. C'est une exigence RGPD et éthique, applicable dès la V1.
 
 **Repoussé (V2 et au-delà) :** les exports détaillés pour les financeurs, les tableaux de bord avancés, et les statistiques de plaidoyer sur la précarité.
+
+### 4.10 Modules complémentaires
+
+Linkee Toulouse ne fait pas que des distributions. Trois activités ont été ajoutées en juin 2026, en plus des neuf points de la V1 (section 9). Elles réutilisent le socle de la V1 (comptes, rôles, notifications, journal d'audit) mais restent indépendantes des distributions : elles n'ont ni créneaux, ni liste d'attente, ni règle de fréquence, et n'alimentent ni la répartition ni les statistiques.
+
+Chaque création, modification, changement d'état, inscription et pointage est tracé dans le journal d'audit. Un texte saisi (titre, description, motif d'annulation) est assaini avant d'être enregistré.
+
+#### 4.10.1 Événements
+
+**Objectif.** Organiser les événements de l'association autres que les distributions (stand, fête, autre), pour lesquels il faut une équipe de bénévoles, des participants, ou les deux.
+
+**Fonctions :**
+
+- Le responsable crée un événement : titre, description, type (stand, fête, autre), lieu, début et fin (la fin est après le début).
+- Il précise si l'événement **a besoin d'une équipe bénévole** (staff) et s'il est **ouvert à des participants**, et dans ce cas à quel public : bénévoles, bénéficiaires ou tous.
+- Il choisit le **mode d'inscription** : obligatoire (inscription et pointage), libre (inscription facultative), ou sans inscription.
+- Il peut fixer une capacité pour l'équipe et une capacité pour les participants ; une fois une capacité atteinte, les inscriptions sont refusées (pas de liste d'attente).
+- Cycle de vie fixe : brouillon, publié, en cours, terminé, annulé. Un événement n'est modifiable qu'en brouillon ; il s'annule avec une raison. Un brouillon n'est visible que du coordinateur, du responsable et du super admin.
+- Une personne s'inscrit à un événement publié ou en cours, dans l'équipe (bénévoles seulement, et seulement si l'événement a besoin d'une équipe) ou comme participant (si son rôle correspond au public visé). Un événement sans inscription n'en accepte aucune. Elle se désinscrit elle-même et retrouve ses événements dans "Mes événements".
+- Le coordinateur et le responsable consultent la liste des inscrits et pointent la présence (présent, absent), en mode d'inscription obligatoire seulement.
+
+**Emails.** À la publication, les bénévoles sont prévenus si une équipe est recherchée, et le public visé si l'événement est ouvert aux participants. À l'annulation, les inscrits sont prévenus (et l'adresse générale de l'association en mode libre) ; sans inscription, tous les bénévoles et bénéficiaires le sont.
+
+#### 4.10.2 Missions de collecte
+
+**Objectif.** Organiser la récupération de denrées chez un partenaire et leur dépôt à l'association, confiées à un bénévole.
+
+**Ce que ce module n'est pas.** Il ne gère ni les dons ni les donateurs (module Dons, V2), ni la quantité collectée, ni un stock (module Ressources et stocks, V2). Il suit seulement l'avancement d'un trajet.
+
+**Fonctions :**
+
+- Le responsable crée une mission : titre, description, lieu de collecte, lieu de dépôt, date et heure, nombre de personnes prévues (6 par défaut). Il peut la modifier tant qu'elle est disponible.
+- Un bénévole **prend en charge** une mission disponible. Il ne peut avoir qu'une mission en cours à la fois. Il peut la **libérer** tant que la collecte n'est pas validée : elle redevient disponible.
+- Le responsable **valide la collecte**, puis le bénévole assigné, et lui seul, **valide le dépôt**.
+- Cycle de vie fixe : disponible, prise en charge, collecte effectuée, dépôt validé, annulée. Le responsable annule une mission non terminée, avec une raison ; le bénévole assigné peut aussi annuler la sienne.
+- Les bénévoles voient la liste des missions et retrouvent les leurs dans "Mes missions de collecte".
+
+**Confidentialité.** Un bénévole ne voit le nom du bénévole assigné que sur sa propre mission ; le responsable le voit sur toutes.
+
+**Emails.** À la création, tous les bénévoles sont prévenus. À l'annulation d'une mission prise en charge, le bénévole assigné est prévenu.
+
+#### 4.10.3 Sessions de reconditionnement
+
+**Objectif.** Organiser les séances de reconditionnement des denrées (répartition et réemballage en lots avant une distribution) et savoir quels bénévoles y viennent.
+
+**Fonctions :**
+
+- Le responsable crée une session : titre, description, lieu, début et fin (la fin est après le début), capacité facultative. Une capacité atteinte refuse les nouvelles inscriptions (pas de liste d'attente).
+- Cycle de vie fixe : brouillon, publiée, en cours, terminée, annulée. Le responsable publie, démarre, termine ou annule une session (avec un motif).
+- Les bénévoles (coordinateurs et responsables compris, par la hiérarchie des rôles) voient les sessions publiées et s'inscrivent à une session publiée ; ils se désinscrivent tant que la session n'a pas démarré, et peuvent se réinscrire ensuite. Le reconditionnement est un travail bénévole : un bénéficiaire ne voit pas les sessions et ne peut pas s'y inscrire. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
+- Le coordinateur et le responsable consultent les inscrits et pointent la présence (présent, absent) pendant ou après la session.
+
+**Emails.** Une inscription est confirmée par email, y compris une réinscription après désistement. À l'annulation, les inscrits sont prévenus.
 
 ## 5. Détail fonctionnel des modules ultérieurs
 
@@ -250,7 +311,7 @@ Tableaux de bord approfondis, exports aux formats courants pour les rapports d'a
 
 ### 5.5 Notifications multicanal (V2)
 
-Ajout du SMS et des notifications push aux côtés de l'email, et envoi de messages groupés ciblés par segment (bénévoles, bénéficiaires).
+Ajout du SMS et des notifications push aux côtés de l'email, et envoi de messages groupés ciblés plus finement que par rôle (le message par rôle existe dès la V1, section 4.8).
 
 ### 5.6 Moteur de workflow configurable (V3)
 
@@ -328,7 +389,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 **La V1 de Solivio permet à une association :**
 
 1. de gérer ses membres et leurs rôles, avec un accès restreint à ce qui les concerne ;
-2. de configurer son identité de base (nom, logo, couleurs) ;
+2. de configurer son identité de base (nom, logo) ;
 3. de créer, publier, gérer et annuler des distributions avec créneaux et capacités ;
 4. d'inscrire des bénéficiaires et des bénévoles, avec liste d'attente et règles de fréquence ;
 5. de pointer les présences le jour de la distribution, dans le respect de la confidentialité ;
@@ -336,6 +397,8 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 7. d'envoyer automatiquement par email les confirmations, rappels et annulations ;
 8. de consulter des statistiques de base agrégées et pseudonymisées ;
 9. le tout de façon traçable, avec export des données de l'association et suppression des données personnelles.
+
+**En complément**, la V1 de Linkee Toulouse organise aussi ses événements, ses missions de collecte et ses sessions de reconditionnement (section 4.10). Ces modules ont été livrés en juin 2026.
 
 **La V1 ne fait rien d'autre.** Elle inclut le calcul de répartition des denrées pour une distribution (point 6), mais **pas** la gestion d'un stock permanent. Et elle ne fait ni dons, ni campagnes, ni workflow configurable, ni formulaires sur mesure, ni multi-antennes, ni interface de programmation, ni SMS. Ces fonctions viendront, dans l'ordre, après que la V1 aura prouvé sa valeur en conditions réelles.
 
@@ -350,7 +413,7 @@ Pour qu'il n'y ait aucune ambiguïté, voici la définition exacte de la premiè
 
 **Le cœur.** Le module Distributions et le module Inscriptions sont le cœur du produit. C'est là qu'est la différence, et c'est là que doit aller le soin.
 
-**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, avec export des données. Rien de plus.
+**La V1, en neuf points.** Membres et rôles, configuration de base, distributions avec créneaux, inscriptions avec liste d'attente, pointage confidentiel, répartition des denrées par bénéficiaire, notifications email, statistiques agrégées, avec export des données. En complément, les événements, les missions de collecte et les sessions de reconditionnement de Linkee Toulouse. Rien de plus.
 
 **Le reste.** Stocks, dons, configurabilité étendue, statistiques avancées et SMS viennent en V2. Workflow configurable, formulaires sur mesure, multi-antennes, interface de programmation et campagnes viennent en V3 - décrits ici pour que le modèle de données les anticipe, pas pour les construire maintenant.
 

@@ -141,7 +141,7 @@ public class MissionCollecte {
     public void validerDepot(UUID benevoleIdDemandeur) {
         if (!benevoleIdDemandeur.equals(this.benevoleId)) {
             throw new IllegalArgumentException(
-                "Seul le benevole assigne peut valider le depot"
+                "Seul le bénévole assigné peut valider le dépôt"
             );
         }
         transitionner(StatutMission.DEPOT_VALIDE);

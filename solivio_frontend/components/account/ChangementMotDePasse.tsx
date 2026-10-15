@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { FormField } from "@/components/ui/form-field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { changerMotDePasse, logout } from "@/lib/auth";
@@ -56,22 +56,8 @@ export function ChangementMotDePasse() {
   }
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
-      <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <KeyRound className="size-4" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Mot de passe</h2>
-          <p className="text-sm text-muted-foreground">
-            Après le changement, vous serez déconnecté de tous vos appareils.
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={envoyer} className="grid gap-4 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="mdp-actuel">Mot de passe actuel</Label>
+      <form onSubmit={envoyer} className="grid items-start gap-4 sm:grid-cols-3">
+        <FormField label="Mot de passe actuel" htmlFor="mdp-actuel">
           <PasswordInput
             id="mdp-actuel"
             required
@@ -79,20 +65,17 @@ export function ChangementMotDePasse() {
             value={actuel}
             onChange={(e) => setActuel(e.target.value)}
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="mdp-nouveau">Nouveau mot de passe</Label>
+        </FormField>
+        <FormField label="Nouveau mot de passe" htmlFor="mdp-nouveau" hint="8 caractères minimum.">
           <PasswordInput
             id="mdp-nouveau"
             required
             autoComplete="new-password"
-            placeholder="8 caractères minimum"
             value={nouveau}
             onChange={(e) => setNouveau(e.target.value)}
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="mdp-confirmation">Confirmation</Label>
+        </FormField>
+        <FormField label="Confirmation" htmlFor="mdp-confirmation">
           <PasswordInput
             id="mdp-confirmation"
             required
@@ -100,21 +83,20 @@ export function ChangementMotDePasse() {
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
           />
-        </div>
+        </FormField>
 
         {erreur && (
-          <p role="alert" className="sm:col-span-3 rounded-xl border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+          <Alert variant="destructive" className="sm:col-span-3">
             {erreur}
-          </p>
+          </Alert>
         )}
 
         <div className="sm:col-span-3">
-          <Button type="submit" size="sm" disabled={enCours}>
-            {enCours && <Spinner size="sm" className="mr-2" />}
+          <Button type="submit" disabled={enCours}>
+            {enCours && <Spinner size="sm" />}
             Changer le mot de passe
           </Button>
         </div>
       </form>
-    </section>
   );
 }

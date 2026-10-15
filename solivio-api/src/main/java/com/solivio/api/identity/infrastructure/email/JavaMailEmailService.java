@@ -59,7 +59,7 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
         Context ctx = nouveauContext();
         ctx.setVariable("prenom", compte.getPrenom());
         ctx.setVariable("code", code);
-        envoyer(compte.getEmail(), "Verifiez votre email - Solivio", "email-verification", ctx);
+        envoyer(compte.getEmail(), "Vérifiez votre email - Solivio", "email-verification", ctx);
     }
 
     @Override
@@ -67,14 +67,14 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
         Context ctx = nouveauContext();
         ctx.setVariable("prenom", compte.getPrenom());
         ctx.setVariable("code", code);
-        envoyer(compte.getEmail(), "Reinitialisation de mot de passe - Solivio", "password-reset", ctx);
+        envoyer(compte.getEmail(), "Réinitialisation de mot de passe - Solivio", "password-reset", ctx);
     }
 
     @Override
     public void envoyerConfirmationChangementMotDePasse(Compte compte) {
         Context ctx = nouveauContext();
         ctx.setVariable("prenom", compte.getPrenom());
-        envoyer(compte.getEmail(), "Votre mot de passe a ete modifie - Solivio", "password-changed", ctx);
+        envoyer(compte.getEmail(), "Votre mot de passe a été modifié - Solivio", "password-changed", ctx);
     }
 
     @Override
