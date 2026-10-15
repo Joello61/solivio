@@ -5,15 +5,20 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import logoLinkee from "@/public/images/linkee/logo-linkee.png";
 import type { MeResponse } from "@/types/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-/* Logo de l'application, sur la pastille pin. */
-export function Logo({ className }: { className?: string }) {
+/*
+ * Logo de Linkee, a la hauteur donnee par className (h-9 par defaut). Le bleu
+ * du logo se perd sur fond sombre : une plaque blanche le porte alors
+ * (automatique en mode sombre, `plaque` sur les sections bleu nuit).
+ */
+export function Logo({ className, plaque = false }: { className?: string; plaque?: boolean }) {
   return (
-    <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand", className)}>
-      <Image src="/logo.svg" alt="" width={20} height={20} style={{ width: 20, height: 20 }} />
+    <span className={cn("inline-flex h-9 shrink-0 rounded-lg px-1.5 py-1", plaque ? "bg-on-night" : "bg-logo-plate", className)}>
+      <Image src={logoLinkee} alt="Linkee" className="h-full w-auto" />
     </span>
   );
 }

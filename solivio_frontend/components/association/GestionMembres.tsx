@@ -20,6 +20,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormField } from "@/components/ui/form-field";
+import { Initiales } from "@/components/ui/initiales";
 import { SearchField } from "@/components/ui/search-field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -214,12 +215,15 @@ export function GestionMembres({ membres, currentUserId, peutVoirDossiers = fals
   const ouvert = membres.find((m) => m.compteId === ouvertId) ?? null;
 
   const nomCellule = (m: MembreResponse) => (
-    <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex flex-col text-left hover:underline focus-visible:underline">
-      <span className="font-semibold text-foreground">
-        {m.nom} {m.prenom}
-        {m.compteId === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+    <button type="button" onClick={() => setOuvertId(m.compteId)} className="group flex items-center gap-3 text-left">
+      <Initiales prenom={m.prenom} nom={m.nom} />
+      <span className="flex flex-col">
+        <span className="font-semibold text-foreground group-hover:underline group-focus-visible:underline">
+          {m.nom} {m.prenom}
+          {m.compteId === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+        </span>
+        <span className="text-sm text-muted-foreground">{m.email}</span>
       </span>
-      <span className="text-sm text-muted-foreground">{m.email}</span>
     </button>
   );
 
@@ -283,6 +287,7 @@ export function GestionMembres({ membres, currentUserId, peutVoirDossiers = fals
             {lignes.map((m) => (
               <li key={m.compteId}>
                 <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                  <Initiales prenom={m.prenom} nom={m.nom} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-semibold text-foreground">
                       {m.nom} {m.prenom}

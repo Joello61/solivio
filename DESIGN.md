@@ -16,39 +16,42 @@ Quatre motifs signature, chacun justifié par un besoin documenté :
 Principes :
 
 - **Mobile d'abord, jamais mobile uniquement** : l'inscription et le pointage sont pensés pour le pouce, la gestion reste confortable sur ordinateur.
-- **L'information utile en premier** : jour, heure, lieu, places restantes, avant tout décor. Pas de photo d'illustration, pas d'icône décorative dans un carré coloré.
+- **L'information utile en premier** : jour, heure, lieu, places restantes, avant tout décor.
+- **L'identité de Linkee, visible** (décision d'octobre 2026, après une première version jugée trop plate) : les couleurs du logo, de vraies photos de l'association sur les pages publiques, les écrans d'accès et les bandeaux d'accueil (`lib/photos.ts`, publiées avec l'accord des personnes), des pastilles d'icône là où elles aident à parcourir (étapes, chiffres, tâches). Jamais de photo de banque d'images, jamais une photo à la place d'une information.
 - **Une action principale par écran** ; les actions rares et destructrices vont dans le menu "Plus" (`ActionMenu`).
 - **Respect des personnes** : aucun libellé stigmatisant, aucune donnée sensible hors des écrans autorisés, formes non genrées dans les statuts.
 - **Sobriété du mouvement** : transitions d'état de 150 à 200 ms, aucune transition de page, tout désactivé sous `prefers-reduced-motion`.
 
 ## 2. Couleurs
 
-Tokens en OKLCH dans `app/globals.css` (Tailwind CSS v4, `@theme inline`). Les composants n'utilisent que les tokens sémantiques, jamais une couleur codée en dur ni une variante `dark:` de couleur : les tokens s'adaptent au mode. Un test (`__tests__/design/couleurs.test.ts`) le vérifie.
+Tokens en OKLCH dans `app/globals.css` (Tailwind CSS v4, `@theme inline`), tirés du logo de Linkee : bleu du lettrage, turquoise de l'oiseau, jaune du bec. Les composants n'utilisent que les tokens sémantiques, jamais une couleur codée en dur ni une variante `dark:` de couleur : les tokens s'adaptent au mode. Un test (`__tests__/design/couleurs.test.ts`) le vérifie.
 
 | Rôle | Token | Clair | Sens |
 |---|---|---|---|
-| Papier | `--background` | `#F4F5F2` | Fond de page, légèrement vert |
+| Papier | `--background` | `#F5F8FB` | Fond de page, légèrement bleuté |
 | Carte | `--card` | blanc | Surfaces posées sur le papier |
-| Encre | `--foreground` | `#14201A` | Texte, titres, toasts (en négatif) |
-| Encre secondaire | `--muted-foreground` | `#56605A` | Texte d'appoint (contraste 6:1 sur le papier) |
-| Papier enfoncé | `--muted` | `#ECEEEA` | Fond des contrôles segmentés, survols |
-| Pin | `--primary` | `#17513F` | Action principale, confirmé, étape faite |
-| Pin pâle | `--secondary` | `#E3EEE8` | Sélection, état ouvert |
-| Citron | `--accent` | `#F3C93B` | **Maintenant** : en cours, jour J, étape courante. Toujours avec texte encre |
-| Citron en texte | `--accent-strong` | `#7A5800` | Citron lisible sur papier |
-| Bordures, champs | `--border`, `--input` | `#DCE0DA`, `#C9CFC8` | Le contour des champs est plus marqué que celui des cartes |
+| Encre | `--foreground` | `#0E1A36` | Texte et titres, bleu nuit |
+| Encre secondaire | `--muted-foreground` | `#4A5675` | Texte d'appoint (6,8:1 sur le papier) |
+| Papier enfoncé | `--muted` | `#ECF0F5` | Fond des contrôles segmentés, survols |
+| Bleu Linkee | `--primary`, `--brand` | `#106CB0` | Action principale, billet, bandeau des distributions (5,5:1 avec du blanc) |
+| Bleu pâle | `--secondary` | `#E6F0F8` | Sélection, filtre actif, blocs de date |
+| Jaune | `--accent` | `#F8E014` | **Maintenant** : en cours, jour J, appels forts. Toujours avec texte encre |
+| Jaune en texte | `--accent-strong` | `#6B5A00` | Jaune lisible sur papier |
+| Turquoise | `--brand-alt` | `#5CC0D4` | Pastilles et décor, toujours avec texte encre (8:1), jamais avec du blanc (2,8:1) |
+| Bleu nuit | `--night`, `--on-night`, `--on-night-muted` | `#0E1A36` | Sections sombres des pages publiques, panneau des écrans d'accès |
+| Bordures, champs | `--border`, `--input` | `#DCE3EC`, `#7A879E` | Le contour des champs atteint 3:1 (WCAG 1.4.11) |
 | Rouge | `--destructive` | `#B3261E` | Erreur et destruction, rien d'autre |
 | Succès, attente, info | `--success`, `--warning`, `--info` | | Texte et icônes ; fonds légers par transparence (`bg-warning/12`) |
-| Marque | `--brand`, `--brand-deep`, `--on-brand` | pin, blanc | Billet et bandeaux, identiques dans les deux modes |
+| Plaque du logo | `--logo-plate` | transparent | Blanche en mode sombre : le bleu du logo resterait illisible sur le bleu nuit |
 | Voile | `--overlay` | noir | Modales et feuilles |
 
-Le mode sombre (classe `.dark`, `next-themes`) redéfinit les mêmes tokens : papier vert très profond, pin éclairci (`#5FBF97`) avec texte sombre, citron inchangé.
+Le mode sombre (classe `.dark`, `next-themes`) redéfinit les mêmes tokens : papier bleu nuit profond, bleu Linkee éclairci (`#6AA8E8`) avec texte sombre, jaune et turquoise inchangés.
 
 Règles :
 
 - La couleur ne porte jamais seule une information : couleur, libellé, et parfois une forme (point du statut en cours, hachures de la liste d'attente, pointillés du brouillon).
-- Le citron est réservé à ce qui se passe maintenant. Le passé s'efface en gris.
-- L'association personnalise l'espace par son nom et son logo, jamais par ses couleurs : une couleur libre romprait les contrastes vérifiés.
+- Le jaune est réservé à ce qui se passe maintenant et aux appels forts. Le passé s'efface en gris.
+- Les couleurs sont celles de Linkee, fixées dans les tokens ; elles ne se règlent pas depuis l'interface (une couleur libre romprait les contrastes vérifiés).
 - Contrastes vérifiés au calcul pour le texte (AA) et par l'audit axe en intégration continue, dans les deux modes.
 
 ## 3. Typographie
@@ -78,7 +81,7 @@ Primitives dans `components/ui/` (fondées sur `@base-ui/react`).
 
 | Primitive | Rôle |
 |---|---|
-| `button` | Tailles `default` 44 px (cible tactile), `sm` 36 px (tableaux denses), `xl` 56 px (jour J). Variantes : `default` (pin), `outline`, `secondary`, `ghost`, `accent` (citron), `destructive` (discrète), `destructive-solid` (confirmation dans une boîte de dialogue uniquement), `link` |
+| `button` | Tailles `default` 44 px (cible tactile), `sm` 36 px (tableaux denses), `xl` 56 px (jour J). Variantes : `default` (bleu Linkee), `outline`, `secondary`, `ghost`, `accent` (jaune), `destructive` (discrète), `destructive-solid` (confirmation dans une boîte de dialogue uniquement), `link` |
 | `input`, `password-input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `label`, `form-field` | Champs de 44 px, libellé visible en gras, aide et erreur sous le champ |
 | `badge`, `statut` | `Statut` affiche un statut à partir de `lib/libelles.ts`, qui donne libellé et ton pour tous les modules |
 | `jauge`, `rail`, `billet` | Motifs signature (section 1) |

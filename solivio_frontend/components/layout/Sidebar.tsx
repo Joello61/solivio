@@ -6,7 +6,7 @@ import { ClipboardCheck, LogOut } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { NOM_ASSOCIATION } from "@/lib/marque";
+import { VILLE_ASSOCIATION } from "@/lib/marque";
 import { libelleRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
@@ -29,8 +29,8 @@ export function Sidebar({ user, jourJ }: SidebarProps) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card lg:flex print:hidden">
       <Link href="/dashboard" className="flex h-16 shrink-0 items-center gap-2.5 px-5">
-        <Logo />
-        <span className="truncate font-display text-lg font-bold text-foreground">{NOM_ASSOCIATION}</span>
+        <Logo className="h-10" />
+        <span className="truncate font-display text-lg font-bold text-foreground">{VILLE_ASSOCIATION}</span>
       </Link>
 
       <nav aria-label="Navigation principale" className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-2 pb-4">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { NOM_ASSOCIATION } from "@/lib/marque";
+import { VILLE_ASSOCIATION } from "@/lib/marque";
 import type { MeResponse } from "@/types/auth";
 import { AvatarMembre, Logo } from "./identite";
 import { COMPTE, itemActif, libelleNav, sectionsPourRoles } from "./navigation";
@@ -22,9 +22,9 @@ export function TopBar({ user }: { user: MeResponse }) {
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 backdrop-blur-md lg:hidden print:hidden">
       {surRubrique ? (
         <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 px-2">
-          <Logo />
+          <Logo className="h-8" />
           <span className="truncate font-display text-lg font-bold text-foreground">
-            {!rubrique || rubrique.href === "/dashboard" ? NOM_ASSOCIATION : libelleNav(rubrique, user.roles)}
+            {!rubrique || rubrique.href === "/dashboard" ? VILLE_ASSOCIATION : libelleNav(rubrique, user.roles)}
           </span>
         </Link>
       ) : (

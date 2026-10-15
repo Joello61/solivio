@@ -64,7 +64,7 @@ describe("TopBar", () => {
   it("affiche l'association sur l'accueil", () => {
     chemin = "/dashboard";
     render(<TopBar user={membre(["beneficiaire"])} />);
-    expect(screen.getByText("Linkee Toulouse")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Linkee Toulouse" })).toHaveAttribute("href", "/dashboard");
   });
 
   it("propose le retour vers la rubrique depuis une page de detail", () => {

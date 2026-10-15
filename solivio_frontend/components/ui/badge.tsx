@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /*
- * Pastilles de statut. Le plus important se voit le plus : "accent" (citron) pour
+ * Pastilles de statut. Le plus important se voit le plus : "accent" (jaune) pour
  * ce qui se passe maintenant, "muted" pour ce qui est passe. Jamais la couleur
  * seule : le libelle porte toujours l'information.
  */
