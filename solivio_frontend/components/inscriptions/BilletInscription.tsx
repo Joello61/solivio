@@ -44,7 +44,7 @@ export function BilletInscription({ billet: b, lienFiche = false, className }: P
           {enAttente ? `Liste d'attente, rang ${b.rangListeAttente ?? "?"}` : "Confirmée"}
         </Badge>
       }
-      note={b.benevole ? "Bénévole" : undefined}
+      note={b.benevole ? (b.roles?.length ? `Bénévole : ${b.roles.join(", ")}` : "Bénévole") : undefined}
       actions={
         (itineraire || b.desinscriptionPossible) && (
           <>
@@ -60,8 +60,8 @@ export function BilletInscription({ billet: b, lienFiche = false, className }: P
                 distributionId={b.distributionId}
                 inscriptionId={b.inscriptionId}
                 titre={`la distribution du ${dateLongue(b.date)}`}
-                benevole={b.benevole}
                 enAttente={enAttente}
+                tardif={b.desistementTardif}
               />
             )}
           </>

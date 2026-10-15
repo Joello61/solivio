@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -21,8 +21,9 @@ interface Props {
   distributionId: string;
   inscriptionId: string;
   titre: string;
-  benevole: boolean;
   enAttente: boolean;
+  /* Benevole qui se desiste la veille ou le jour meme. */
+  tardif?: boolean;
   /* "billet" : action de pied de billet, sur fond pin. */
   apparence?: "bouton" | "billet";
 }
@@ -32,8 +33,8 @@ export function BoutonDesinscription({
   distributionId,
   inscriptionId,
   titre,
-  benevole,
   enAttente,
+  tardif = false,
   apparence = "bouton",
 }: Props) {
   const router = useRouter();
@@ -79,9 +80,17 @@ export function BoutonDesinscription({
               {enAttente
                 ? `Vous quitterez la liste d'attente pour ${titre}.`
                 : `Votre place pour ${titre} sera proposée à la personne suivante en liste d'attente.`}
-              {benevole && " Si la distribution est proche, les coordinateurs sont prévenus de votre désistement."}
             </DialogDescription>
           </DialogHeader>
+          {tardif && (
+            <Alert variant="warning">
+              <AlertTitle>Désistement de dernière minute</AlertTitle>
+              <AlertDescription>
+                La distribution a lieu très bientôt : les coordinateurs seront prévenus pour trouver
+                quelqu&apos;un d&apos;autre.
+              </AlertDescription>
+            </Alert>
+          )}
           {erreur && (
             <Alert variant="destructive">{erreur}</Alert>
           )}

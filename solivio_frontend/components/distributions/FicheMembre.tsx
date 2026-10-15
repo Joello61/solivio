@@ -9,6 +9,8 @@ import { PlanDepliable } from "@/components/distributions/PlanDepliable";
 import { ReservationDistribution } from "@/components/distributions/ReservationDistribution";
 import { dateLongue, libellePlaces, placesPour, plageDistribution } from "@/lib/agenda";
 import { lienItineraire } from "@/lib/lieu";
+import { jourAssociation } from "@/lib/distribution-du-jour";
+import { estDesistementTardif } from "@/lib/mes-inscriptions";
 import { cn } from "@/lib/utils";
 import type { DistributionResponse, InscriptionResponse, TypeInscription } from "@/types/distribution";
 
@@ -111,7 +113,9 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
             statut: inscriptionActive.statut === "LISTE_ATTENTE" ? "LISTE_ATTENTE" : "CONFIRMEE",
             rangListeAttente: inscriptionActive.rangListeAttente,
             benevole: inscriptionActive.type === "BENEVOLE",
+            roles: inscriptionActive.roles.map((r) => r.libelle),
             desinscriptionPossible: inscriptionActive.presence === "NON_POINTE",
+            desistementTardif: estDesistementTardif(inscriptionActive, d.date, jourAssociation(new Date())),
           }}
         />
       ) : (
@@ -122,7 +126,7 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
               <Jauge
                 valeur={places.capacite - places.restantes}
                 capacite={places.capacite}
-                libelle={libellePlaces(places.restantes)}
+                libelle={libellePlaces(places.restantes, type)}
                 detail={`sur ${places.capacite}`}
                 detailTon={places.restantes <= 0 ? "attente" : "neutre"}
               />

@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const desinscrire = vi.fn();
 vi.mock("@/lib/api/distributions", () => ({ desinscrire: (...a: unknown[]) => desinscrire(...a) }));
 
-const props = { distributionId: "d1", inscriptionId: "i1", titre: "la distribution du jeudi", benevole: false, enAttente: false };
+const props = { distributionId: "d1", inscriptionId: "i1", titre: "la distribution du jeudi", enAttente: false };
 
 describe("BoutonDesinscription", () => {
   beforeEach(() => {
@@ -36,14 +36,20 @@ describe("BoutonDesinscription", () => {
     expect(desinscrire).not.toHaveBeenCalled();
   });
 
-  it("adapte le message a la liste d'attente et au benevole, et affiche le refus du backend", async () => {
+  it("previent d'un desistement de derniere minute", async () => {
+    render(<BoutonDesinscription {...props} tardif />);
+    await userEvent.click(screen.getByRole("button", { name: "Je ne peux plus venir" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(/Désistement de dernière minute.*coordinateurs seront prévenus/);
+  });
+
+  it("adapte le message a la liste d'attente et affiche le refus du backend", async () => {
     desinscrire.mockRejectedValue(new Error("Desinscription impossible : la distribution est terminee"));
-    render(<BoutonDesinscription {...props} benevole enAttente />);
+    render(<BoutonDesinscription {...props} enAttente />);
 
     await userEvent.click(screen.getByRole("button", { name: "Quitter la liste d'attente" }));
     const boite = screen.getByRole("dialog");
     expect(boite).toHaveTextContent(/quitterez la liste d'attente/);
-    expect(boite).toHaveTextContent(/coordinateurs sont prévenus/);
+    expect(boite).not.toHaveTextContent(/coordinateurs/);
     await userEvent.click(within(boite).getByRole("button", { name: "Quitter la liste" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("terminee");
