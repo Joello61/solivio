@@ -30,7 +30,7 @@ Deux mises au point essentielles, héritées de l'étude de faisabilité :
 
 **O4 - Incréments courts et livrables.** Chaque phase produit quelque chose de cohérent et testable. Pas de chantier de plusieurs mois sans rien de montrable.
 
-**O5 - Le périmètre V1 est verrouillé.** La roadmap construit exactement les neuf points de la V1 définis dans les spécifications, et rien d'autre. Toute idée nouvelle va dans la réserve d'après-V1, pas dans le plan.
+**O5 - Le périmètre V1 est verrouillé.** La roadmap construit exactement les neuf points de la V1 définis dans les spécifications, plus ce qui y a été intégré en octobre 2026 et déjà livré : les trois modules complémentaires (événements, missions de collecte, sessions de reconditionnement, section 4.10) et le message aux membres (section 4.8). Rien d'autre. Toute idée nouvelle va dans la réserve d'après-V1, pas dans le plan.
 
 **O6 - La documentation est un livrable.** Conformément au modèle économique, la documentation d'installation et d'usage n'est pas une corvée de fin de projet : c'est ce qui rend l'auto-hébergement et la pérennité possibles.
 
@@ -224,7 +224,7 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 - gestion des dons et connexion à la plateforme de collecte externe ;
 - configurabilité étendue (champs, types, modèles de messages) - premier vrai pas vers d'autres associations ;
 - statistiques avancées et exports pour les financeurs ;
-- notifications multicanal (SMS, push) et messages groupés ;
+- notifications multicanal (SMS, push) et messages ciblés plus finement que par rôle ;
 - onboarding d'une deuxième association pilote, au fonctionnement différent, pour valider la généricité.
 
 **Horizon V3 (devenir une plateforme) :**
@@ -252,7 +252,7 @@ Rien de ceci ne se construit avant que la V1 ait prouvé sa valeur en conditions
 
 **Le contre-pied stratégique.** Faire le plus lourd maintenant, tant que le temps est là, parce qu'il se raréfiera avec la prise de poste.
 
-**Le verrou.** La V1, ce sont neuf points, pas un de plus. Toute idée nouvelle attend l'après-V1.
+**Le verrou.** La V1, ce sont neuf points et les ajouts déjà livrés d'octobre 2026 (règle O5), pas un de plus. Toute idée nouvelle attend l'après-V1.
 
 **La pérennité.** La documentation et l'open source ne sont pas la fin du projet : ils sont ce qui lui permet de survivre à son auteur.
 

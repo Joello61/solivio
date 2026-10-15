@@ -216,8 +216,9 @@ C'est l'ajout de la version 1.1. Il répond à un besoin opérationnel réel et 
 - Notification automatique en cas d'annulation de la distribution.
 - Notification de promotion depuis la liste d'attente (une place s'est libérée).
 - Les emails des modules complémentaires : publication et annulation d'un événement, création et annulation d'une mission de collecte, confirmation d'inscription et annulation d'une session de reconditionnement (section 4.10).
+- Le message aux membres (intégré à la V1 en octobre 2026) : le responsable écrit un email libre (sujet et texte) à un public choisi par rôle, bénévoles, bénéficiaires, coordinateurs, responsables ou tous les membres actifs. Il voit un aperçu et confirme le nombre de destinataires avant l'envoi.
 
-**Repoussé (V2) :** l'envoi de messages groupés libres, les modèles de messages éditables par l'association, et les canaux supplémentaires (SMS, notifications push). En V1, les messages ont un contenu fixe et soigné, en français.
+**Repoussé (V2) :** les messages ciblés plus finement que par rôle, les modèles de messages éditables par l'association, et les canaux supplémentaires (SMS, notifications push). Hors message aux membres, les messages ont un contenu fixe et soigné, en français.
 
 ### 4.9 Module Statistiques de base
 
@@ -275,13 +276,13 @@ Chaque création, modification, changement d'état, inscription et pointage est 
 
 #### 4.10.3 Sessions de reconditionnement
 
-**Objectif.** Organiser les séances de reconditionnement de l'association et savoir qui y vient.
+**Objectif.** Organiser les séances de reconditionnement des denrées (répartition et réemballage en lots avant une distribution) et savoir quels bénévoles y viennent.
 
 **Fonctions :**
 
 - Le responsable crée une session : titre, description, lieu, début et fin (la fin est après le début), capacité facultative. Une capacité atteinte refuse les nouvelles inscriptions (pas de liste d'attente).
 - Cycle de vie fixe : brouillon, publiée, en cours, terminée, annulée. Le responsable publie, démarre, termine ou annule une session (avec un motif).
-- Toute personne connectée voit les sessions publiées et s'inscrit à une session publiée ; elle se désinscrit tant que la session n'a pas démarré, et peut se réinscrire ensuite. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
+- Les bénévoles (coordinateurs et responsables compris, par la hiérarchie des rôles) voient les sessions publiées et s'inscrivent à une session publiée ; ils se désinscrivent tant que la session n'a pas démarré, et peuvent se réinscrire ensuite. Le reconditionnement est un travail bénévole : un bénéficiaire ne voit pas les sessions et ne peut pas s'y inscrire. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
 - Le coordinateur et le responsable consultent les inscrits et pointent la présence (présent, absent) pendant ou après la session.
 
 **Emails.** Une inscription est confirmée par email, y compris une réinscription après désistement. À l'annulation, les inscrits sont prévenus.
@@ -310,7 +311,7 @@ Tableaux de bord approfondis, exports aux formats courants pour les rapports d'a
 
 ### 5.5 Notifications multicanal (V2)
 
-Ajout du SMS et des notifications push aux côtés de l'email, et envoi de messages groupés ciblés par segment (bénévoles, bénéficiaires).
+Ajout du SMS et des notifications push aux côtés de l'email, et envoi de messages groupés ciblés plus finement que par rôle (le message par rôle existe dès la V1, section 4.8).
 
 ### 5.6 Moteur de workflow configurable (V3)
 

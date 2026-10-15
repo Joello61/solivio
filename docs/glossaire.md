@@ -4,7 +4,7 @@
 
 **Document de pilotage - version 1.0**
 **Statut : référence de travail**
-**Dernière mise à jour : juin 2026**
+**Dernière mise à jour : octobre 2026**
 
 ## Avertissement de lecture
 
@@ -48,6 +48,8 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Répartition.** Le calcul qui détermine combien de chaque denrée donner à chaque bénéficiaire, à partir des quantités disponibles et du nombre de bénéficiaires. C'est une fonction distinctive de Solivio.
 
+**Session de reconditionnement.** Une séance où des bénévoles répartissent et réemballent des denrées en lots, en général avant une distribution. Elle a une date, un lieu, une capacité facultative et une liste d'inscrits pointée ; elle ne tient aucun stock.
+
 **Dotation.** Le résultat de la répartition pour une denrée : la quantité attribuée à chaque bénéficiaire (quantité totale divisée par le nombre de bénéficiaires, arrondie à l'inférieur, avec un plancher à 1).
 
 **Reste à vivre.** L'argent dont dispose une personne par mois une fois ses charges fixes déduites. C'est un indicateur clé de précarité, recueilli dans le profil bénéficiaire.
@@ -64,7 +66,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Instance.** Une installation de Solivio. Depuis octobre 2026, une instance sert une seule association : Linkee Toulouse (`architecture_technique.md`, ADR-001). Une autre association utiliserait sa propre instance. Les anciennes notions de "multi-association", "multi-tenant" et "isolation entre associations" ne s'appliquent plus.
 
-**Configuration.** L'ensemble des réglages propres à une association : nom, logo, couleurs, paramètres. Elle permet d'adapter l'apparence sans développement.
+**Configuration.** L'ensemble des réglages propres à l'association : nom, logo, contact, fréquence d'inscription. Les couleurs de l'interface suivent le système de design et ne se règlent pas.
 
 **Non-enfermement.** Le principe selon lequel une association peut à tout moment exporter et supprimer l'intégralité de ses données, et n'est jamais prisonnière de l'outil. Découle de l'open source et de l'export des données.
 
