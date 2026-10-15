@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { GestionMembres } from "@/components/association/GestionMembres";
 import { InviterMembre } from "@/components/association/InviterMembre";
+import { PageHeader } from "@/components/ui/page-header";
 import type { MembreResponse } from "@/types/association";
 import type { MeResponse } from "@/types/auth";
 
@@ -24,17 +25,13 @@ export default async function MembresPage() {
   const estResponsable = me?.roles.includes("responsable") ?? false;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground font-display">Membres</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {membres.length} membre{membres.length !== 1 ? "s" : ""} dans l&apos;association.
-          </p>
-        </div>
-        {estResponsable && <InviterMembre />}
-      </div>
-
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        className="mb-0 sm:mb-0"
+        titre="Membres"
+        description={`${membres.length} membre${membres.length > 1 ? "s" : ""} dans l'association.`}
+        actions={estResponsable && <InviterMembre />}
+      />
       <GestionMembres membres={membres} currentUserId={me?.id ?? ""} peutVoirDossiers={estResponsable} />
     </div>
   );

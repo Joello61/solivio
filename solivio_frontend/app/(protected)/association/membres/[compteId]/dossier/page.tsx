@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { ShieldCheck } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { PageHeader } from "@/components/ui/page-header";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import {
   CATEGORIES_NATIONALITE,
@@ -23,8 +23,8 @@ interface PageProps {
 function Ligne({ titre, valeur }: { titre: string; valeur: string }) {
   return (
     <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-      <dt className="text-sm text-muted-foreground">{titre}</dt>
-      <dd className="text-sm font-medium text-foreground sm:text-right">{valeur}</dd>
+      <dt className="text-base text-muted-foreground">{titre}</dt>
+      <dd className="text-base font-semibold text-foreground sm:text-right">{valeur}</dd>
     </div>
   );
 }
@@ -44,38 +44,28 @@ export default async function DossierBeneficiairePage({ params }: PageProps) {
     v == null ? "Non renseigné" : v.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/association/membres"
-          className={buttonVariants({ variant: "ghost", size: "icon" })}
-          aria-label="Retour aux membres"
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground font-display">
-            {membre ? `${membre.prenom} ${membre.nom}` : "Dossier bénéficiaire"}
-          </h1>
-          <p className="text-sm text-muted-foreground">Dossier social, en lecture seule.</p>
-        </div>
-      </div>
+    <div className="flex max-w-2xl flex-col gap-6">
+      <PageHeader
+        className="mb-0 sm:mb-0"
+        retour={{ href: "/association/membres", libelle: "Membres" }}
+        surtitre="Dossier social"
+        titre={membre ? `${membre.prenom} ${membre.nom}` : "Dossier bénéficiaire"}
+        description="En lecture seule."
+      />
 
-      <div className="flex items-start gap-2.5 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-foreground">
-        <ShieldCheck className="size-4 shrink-0 mt-0.5 text-primary" />
-        <span>
-          Données confidentielles : cette consultation est enregistrée dans le journal d&apos;audit. Ne les
-          recopiez pas hors de Solivio.
-        </span>
-      </div>
+      <Alert role="note">
+        <ShieldCheck aria-hidden="true" />
+        Données confidentielles : cette consultation est enregistrée dans le journal d&apos;audit. Ne les recopiez pas hors
+        de Solivio.
+      </Alert>
 
-      <section className="rounded-2xl border border-border/60 bg-card shadow-sm px-5">
+      <section className="rounded-xl border border-border bg-card px-5">
         {!dossier.complet && (
-          <p className="border-b border-border/60 py-3 text-sm text-warning">
+          <p className="border-b border-border py-3 text-base text-muted-foreground">
             Dossier incomplet : la personne n&apos;a pas renseigné toutes les informations.
           </p>
         )}
-        <dl className="divide-y divide-border/60">
+        <dl className="divide-y divide-border">
           <Ligne
             titre="Date de naissance"
             valeur={dossier.dateNaissance ? new Date(`${dossier.dateNaissance}T12:00:00`).toLocaleDateString("fr-FR") : "Non renseigné"}

@@ -38,20 +38,22 @@ describe("GestionTypesRoles", () => {
     render(<GestionTypesRoles initialTypes={types} peutArchiver />);
     expect(screen.getByText("Badges")).toBeInTheDocument();
     expect(screen.getByText("Archivé")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Renommer Ancien rôle/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Plus d'actions sur Ancien rôle/ })).not.toBeInTheDocument();
   });
 
-  it("cache l'archivage au coordinateur", () => {
+  it("cache l'archivage au coordinateur", async () => {
     render(<GestionTypesRoles initialTypes={types} peutArchiver={false} />);
-    expect(screen.getByRole("button", { name: /Renommer Accueil/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Archiver/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Plus d'actions sur Accueil" }));
+    expect(await screen.findByRole("menuitem", { name: "Renommer" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Archiver" })).not.toBeInTheDocument();
   });
 
   it("cree un sous-role sous son role", async () => {
     api.creerTypeRole.mockResolvedValue({});
     render(<GestionTypesRoles initialTypes={types} peutArchiver={false} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /Ajouter un sous-rôle à Accueil/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Plus d'actions sur Accueil" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Ajouter un sous-rôle" }));
     await userEvent.type(screen.getByLabelText(/Sous-rôle de Accueil/), "Vestiaire{Enter}");
 
     await waitFor(() => expect(api.creerTypeRole).toHaveBeenCalledWith("Vestiaire", "accueil"));
@@ -62,7 +64,8 @@ describe("GestionTypesRoles", () => {
     api.archiverTypeRole.mockResolvedValue(undefined);
     render(<GestionTypesRoles initialTypes={types} peutArchiver />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Archiver Badges" }));
+    await userEvent.click(screen.getByRole("button", { name: "Plus d'actions sur Badges" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Archiver" }));
     const boite = await screen.findByRole("alertdialog");
     await userEvent.click(within(boite).getByRole("button", { name: "Archiver" }));
 
