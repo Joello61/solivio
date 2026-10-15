@@ -48,6 +48,7 @@ Règles :
 
 - La couleur ne porte jamais seule une information : couleur, libellé, et parfois une forme (point du statut en cours, hachures de la liste d'attente, pointillés du brouillon).
 - Le citron est réservé à ce qui se passe maintenant. Le passé s'efface en gris.
+- L'association personnalise l'espace par son nom et son logo, jamais par ses couleurs : une couleur libre romprait les contrastes vérifiés.
 - Contrastes vérifiés au calcul pour le texte (AA) ; audit automatisé `@axe-core/playwright` prévu au lot 10 de la refonte.
 
 ## 3. Typographie
