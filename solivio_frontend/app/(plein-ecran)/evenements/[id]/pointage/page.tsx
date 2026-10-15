@@ -15,10 +15,10 @@ export default async function PointageEvenementPage({ params }: { params: Promis
   // Le backend refuse le pointage hors inscription obligatoire et aux non-gestionnaires.
   if (!evenement || !participations) notFound();
 
-  // Plein ecran par-dessus la navigation, comme le jour J d'une distribution.
+  // Plein ecran, sans navigation, comme le jour J d'une distribution.
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background">
+    <main className="min-h-dvh bg-background">
       <PointageEvenement evenementId={id} intitule={evenement.titre} participations={participations} />
-    </div>
+    </main>
   );
 }

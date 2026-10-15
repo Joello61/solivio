@@ -24,15 +24,15 @@ export default async function PointagePage({ params }: PageProps) {
   if (!autorise || !distribution) notFound();
   const jour = dateLongue(distribution.date);
 
-  // Plein ecran par-dessus la navigation : le jour J n'a besoin que de la liste.
+  // Plein ecran, sans navigation : le jour J n'a besoin que de la liste.
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background">
+    <main className="min-h-dvh bg-background">
       <JourJ
         distributionId={id}
         jour={jour.charAt(0).toUpperCase() + jour.slice(1)}
         peutGerer={estGestionnaireDistribution(me?.roles ?? [])}
         close={distribution.statut === "TERMINEE"}
       />
-    </div>
+    </main>
   );
 }
