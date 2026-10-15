@@ -1,39 +1,24 @@
-import { notFound } from "next/navigation";
-import { lireServeur } from "@/lib/api/serveur";
 import type { Metadata } from "next";
-import { PointageEvenementClient } from "./PointageEvenementClient";
+import { notFound } from "next/navigation";
+import { PointageEvenement } from "@/components/evenement/PointageEvenement";
+import { lireServeur } from "@/lib/api/serveur";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
 
-export const metadata: Metadata = { title: "Pointage événement" };
+export const metadata: Metadata = { title: "Pointage" };
 
-async function fetchData(id: string) {
+export default async function PointageEvenementPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [evenement, participations] = await Promise.all([
     lireServeur<EvenementResponse>(`/api/evenements/${id}`),
     lireServeur<ParticipationEvenementResponse[]>(`/api/evenements/${id}/pointage`),
   ]);
-  return { evenement, participations: participations ?? [] };
-}
+  // Le backend refuse le pointage hors inscription obligatoire et aux non-gestionnaires.
+  if (!evenement || !participations) notFound();
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export default async function PointageEvenementPage({ params }: Props) {
-  const { id } = await params;
-  const { evenement, participations } = await fetchData(id);
-
-  if (!evenement) notFound();
-
+  // Plein ecran par-dessus la navigation, comme le jour J d'une distribution.
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground font-display">Pointage</h1>
-        <p className="text-sm text-muted-foreground mt-1">{evenement.titre}</p>
-      </div>
-      <PointageEvenementClient
-        evenementId={id}
-        participationsInitiales={participations}
-      />
+    <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background">
+      <PointageEvenement evenementId={id} intitule={evenement.titre} participations={participations} />
     </div>
   );
 }
