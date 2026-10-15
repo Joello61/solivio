@@ -15,9 +15,6 @@ import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, saut
 
 // Libelles du bouton selon le role et l'horaire choisi.
 const RESERVER = /réserver|je viens aider|venir à|liste d'attente/i;
-// Lien vers la fiche d'une distribution, hors creation, duplication et jour J.
-const CARTE_DISTRIBUTION =
-  "a[href^='/distributions/']:not([href^='/distributions/nouvelle']):not([href$='/pointage'])";
 
 test.describe("Parcours inscription beneficiaire", () => {
   // La base de test n'a pas de distribution : on en cree une, sinon les tests
