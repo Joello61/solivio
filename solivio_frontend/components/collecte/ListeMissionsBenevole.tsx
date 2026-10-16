@@ -1,6 +1,8 @@
 import { Truck } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { List, ListRow } from "@/components/ui/list-row";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
+import { ReperesMissions } from "@/components/shared/ReperesActivites";
 import { PageHeader } from "@/components/ui/page-header";
 import { Statut } from "@/components/ui/statut";
 import { DateBloc } from "@/components/agenda/DateBloc";
@@ -60,9 +62,9 @@ export async function ListeMissionsBenevole({ vue }: { vue: VueMissions }) {
   const missions = listes[vue];
 
   return (
-    <div className="max-w-2xl">
-      <PageHeader titre="Missions de collecte" description="Récupérer des dons et les déposer au local." />
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <PageHeader className="mb-0 sm:mb-0" titre="Missions de collecte" description="Récupérer des dons et les déposer au local." />
+      <DeuxColonnes aside={<ReperesMissions />}>
         <FiltreUrl
           label="Missions à afficher"
           parametre="vue"
@@ -83,7 +85,7 @@ export async function ListeMissionsBenevole({ vue }: { vue: VueMissions }) {
             ))}
           </List>
         )}
-      </div>
+      </DeuxColonnes>
     </div>
   );
 }

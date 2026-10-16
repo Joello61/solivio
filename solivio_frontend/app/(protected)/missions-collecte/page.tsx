@@ -9,6 +9,7 @@ import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { jourEtHeure } from "@/lib/engagements";
 import { STATUT_MISSION } from "@/lib/libelles";
 import type { MissionCollecteResponse } from "@/types/collecte";
+import { ReperesMissions } from "@/components/shared/ReperesActivites";
 
 export const metadata: Metadata = { title: "Missions de collecte" };
 
@@ -58,6 +59,7 @@ export default async function MissionsCollectePage({ searchParams }: { searchPar
       defaut="a-pourvoir"
       vide="Rien dans cette section."
       libelleFiltre="Missions à afficher"
+      aside={<ReperesMissions />}
     />
   );
 }

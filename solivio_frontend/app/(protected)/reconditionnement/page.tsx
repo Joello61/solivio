@@ -11,6 +11,7 @@ import { estGestionnaireDistribution } from "@/lib/droits-distribution";
 import { STATUT_SESSION } from "@/lib/libelles";
 import { estResponsable } from "@/lib/roles";
 import type { SessionReconditionnementResponse } from "@/types/reconditionnement";
+import { ReperesReconditionnement } from "@/components/shared/ReperesActivites";
 
 export const metadata: Metadata = { title: "Reconditionnement" };
 
@@ -69,6 +70,7 @@ export default async function ReconditionnementPage({ searchParams }: { searchPa
       defaut="a-venir"
       vide="Rien dans cette section."
       libelleFiltre="Sessions à afficher"
+      aside={<ReperesReconditionnement />}
     />
   );
 }
