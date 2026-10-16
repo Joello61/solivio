@@ -125,8 +125,12 @@ public class SessionReconditionnementService {
     }
 
     @Transactional(readOnly = true)
-    public SessionReconditionnementResponse detail(UUID sessionId) {
+    public SessionReconditionnementResponse detail(UUID sessionId, boolean gestionnaire) {
         SessionReconditionnement session = trouverOuEchouer(sessionId);
+        // Un brouillon n'existe pas pour qui ne gere pas les sessions (404, pas 403).
+        if (!gestionnaire && session.getStatut() == StatutSessionReconditionnement.BROUILLON) {
+            throw new NotFoundException("Session introuvable : " + sessionId);
+        }
         return toResponse(session, compterInscrits(sessionId));
     }
 

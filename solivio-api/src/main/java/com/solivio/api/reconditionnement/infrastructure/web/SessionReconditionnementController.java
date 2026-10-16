@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -46,28 +45,25 @@ public class SessionReconditionnementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    // Le reconditionnement est un travail benevole : les beneficiaires ne voient pas les sessions.
     @GetMapping
+    @PreAuthorize("hasAnyRole('BENEVOLE','COORDINATEUR','SUPER_ADMIN')")
     public ResponseEntity<List<SessionReconditionnementResponse>> lister(
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        boolean voitTout = user.getAuthorities().stream()
-            .anyMatch(a -> Objects.equals(a.getAuthority(),
-                "ROLE_COORDINATEUR")
-                ||
-                Objects.equals(a.getAuthority(),
-                    "ROLE_RESPONSABLE")
-                ||
-                Objects.equals(a.getAuthority(),
-                    "ROLE_SUPER_ADMIN"));
-        List<SessionReconditionnementResponse> liste = voitTout
+        List<SessionReconditionnementResponse> liste = estGestionnaire(user)
             ? sessionService.lister()
             : sessionService.listerPubliees();
         return ResponseEntity.ok(liste);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SessionReconditionnementResponse> detail(@PathVariable UUID id) {
-        return ResponseEntity.ok(sessionService.detail(id));
+    @PreAuthorize("hasAnyRole('BENEVOLE','COORDINATEUR','SUPER_ADMIN')")
+    public ResponseEntity<SessionReconditionnementResponse> detail(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal SolivioUserDetails user
+    ) {
+        return ResponseEntity.ok(sessionService.detail(id, estGestionnaire(user)));
     }
 
     @PostMapping("/{id}/publier")
@@ -159,5 +155,9 @@ public class SessionReconditionnementController {
     ) {
         InscriptionReconditionnementResponse response = sessionService.pointer(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    private static boolean estGestionnaire(SolivioUserDetails user) {
+        return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }
 }
