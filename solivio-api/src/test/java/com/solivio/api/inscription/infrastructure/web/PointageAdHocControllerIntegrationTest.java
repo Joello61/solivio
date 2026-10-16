@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -141,5 +142,43 @@ class PointageAdHocControllerIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.presence").value("PRESENT"))
             .andExpect(jsonPath("$.type").value("BENEVOLE"));
+    }
+
+    // Le lien de creation de compte, facultatif, n'est envoye qu'a un visiteur qui a laisse son email.
+    @Test
+    void envoyerLienInscription_parUnCoordinateur_puisRefuseUneSecondeFois() throws Exception {
+        String visiteur = ajouterVisiteur("{\"nom\":\"Durand\",\"prenom\":\"Bob\",\"email\":\"bob@test.com\"}");
+
+        mockMvc.perform(post(urlLien(visiteur)).cookie(new Cookie("access_token", tokenCoordinateur)))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/distributions/" + distributionId + "/pointage/ad-hoc")
+                .cookie(new Cookie("access_token", tokenCoordinateur)))
+            .andExpect(jsonPath("$[0].invitationEnvoyee").value(true));
+        mockMvc.perform(post(urlLien(visiteur)).cookie(new Cookie("access_token", tokenCoordinateur)))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void envoyerLienInscription_refuseAuBenevoleEtSansEmail() throws Exception {
+        String sansEmail = ajouterVisiteur("{\"nom\":\"Martin\",\"prenom\":\"Lea\"}");
+
+        mockMvc.perform(post(urlLien(sansEmail)).cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isForbidden());
+        mockMvc.perform(post(urlLien(sansEmail)).cookie(new Cookie("access_token", tokenCoordinateur)))
+            .andExpect(status().isBadRequest());
+    }
+
+    private String ajouterVisiteur(String corps) throws Exception {
+        String reponse = mockMvc.perform(post("/api/distributions/" + distributionId + "/pointage/ad-hoc/visiteur")
+                .cookie(new Cookie("access_token", tokenCoordinateur))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corps))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        return JsonMapper.builder().build().readTree(reponse).get("id").asString();
+    }
+
+    private String urlLien(String visiteur) {
+        return "/api/distributions/" + distributionId + "/pointage/ad-hoc/" + visiteur + "/lien-inscription";
     }
 }
