@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import type { MeResponse } from "@/types/auth";
 import type { DistributionResponse } from "@/types/distribution";
 import { estGestionnaireDistribution } from "@/lib/droits-distribution";
-import { distributionsDuJour, jourAssociation, type InscriptionDuMembre } from "@/lib/distribution-du-jour";
+import { distributionsDuJour, jourAssociation } from "@/lib/distribution-du-jour";
 import { engagements, type Engagement } from "@/lib/engagements";
 import type { MissionCollecteResponse } from "@/types/collecte";
 import type { EvenementResponse, ParticipationEvenementResponse } from "@/types/evenement";
@@ -37,20 +37,16 @@ export function lireMoi(): Promise<MeResponse | null> {
 }
 
 /**
- * Distributions du jour du membre : toutes pour un gestionnaire, celles ou il est
- * benevole confirme sinon. Un beneficiaire ne pointe pas : liste vide.
+ * Distributions du jour, pour le raccourci de pointage : seuls coordinateurs et
+ * responsables pointent (ADR-012), les autres recoivent une liste vide.
  */
 export async function lireDistributionsDuJour(
   roles: string[],
   maintenant = new Date(),
 ): Promise<DistributionResponse[]> {
-  const gestionnaire = estGestionnaireDistribution(roles);
-  if (!gestionnaire && !roles.includes("benevole")) return [];
-  const [distributions, inscriptions] = await Promise.all([
-    lireServeur<DistributionResponse[]>("/api/distributions"),
-    gestionnaire ? null : lireServeur<InscriptionDuMembre[]>("/api/inscriptions/mes"),
-  ]);
-  return distributionsDuJour(distributions ?? [], jourAssociation(maintenant), gestionnaire, inscriptions ?? []);
+  if (!estGestionnaireDistribution(roles)) return [];
+  const distributions = await lireServeur<DistributionResponse[]>("/api/distributions");
+  return distributionsDuJour(distributions ?? [], jourAssociation(maintenant));
 }
 
 /**

@@ -45,10 +45,12 @@ describe("lireDistributionsDuJour", () => {
   const midi = new Date("2026-10-14T10:00:00Z");
   const distribution = (id: string, date: string, statut: string) => ({ id, date, statut, creneaux: [] });
 
-  it("ne sollicite pas le backend pour un beneficiaire", async () => {
+  // ADR-012 : seuls coordinateurs et responsables pointent.
+  it("ne sollicite pas le backend pour un beneficiaire ni un benevole", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     await expect(lireDistributionsDuJour(["beneficiaire"], midi)).resolves.toEqual([]);
+    await expect(lireDistributionsDuJour(["benevole", "beneficiaire"], midi)).resolves.toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -59,13 +61,5 @@ describe("lireDistributionsDuJour", () => {
     ])));
     const duJour = await lireDistributionsDuJour(["coordinateur"], midi);
     expect(duJour.map((d) => d.id)).toEqual(["jour"]);
-  });
-
-  it("ne garde pour un benevole que celles ou il est confirme", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(reponse(200, [distribution("a", "2026-10-14", "PUBLIEE"), distribution("b", "2026-10-14", "PUBLIEE")]))
-      .mockResolvedValueOnce(reponse(200, [{ distributionId: "b", type: "BENEVOLE", statut: "CONFIRMEE" }])));
-    const duJour = await lireDistributionsDuJour(["benevole"], midi);
-    expect(duJour.map((d) => d.id)).toEqual(["b"]);
   });
 });

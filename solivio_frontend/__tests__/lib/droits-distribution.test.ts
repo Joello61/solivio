@@ -1,41 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { peutPointer, typeInscriptionPossible } from "@/lib/droits-distribution";
-import type { InscriptionResponse } from "@/types/distribution";
+import { estGestionnaireDistribution, typesInscriptionPossibles } from "@/lib/droits-distribution";
 
-function inscription(type: "BENEVOLE" | "BENEFICIAIRE", statut: "CONFIRMEE" | "LISTE_ATTENTE"): InscriptionResponse {
-  return {
-    id: "i1", distributionId: "d1", creneauId: null, nom: "Dupont", prenom: "Marie", type, statut,
-    rangListeAttente: null, roles: [], presence: "NON_POINTE",
-    absenceDeduite: false, dateInscription: "2026-10-01T10:00:00Z",
-    nombreAbsencesPassees: 0,
-  } as InscriptionResponse;
-}
-
-describe("peutPointer", () => {
-  it("ouvre le pointage au benevole confirme une fois la distribution demarree", () => {
-    expect(peutPointer(["benevole"], "EN_COURS", [inscription("BENEVOLE", "CONFIRMEE")])).toBe(true);
-  });
-
-  it("le refuse au benevole non inscrit ou en liste d'attente, et avant le demarrage", () => {
-    expect(peutPointer(["benevole"], "EN_COURS", [])).toBe(false);
-    expect(peutPointer(["benevole"], "EN_COURS", [inscription("BENEVOLE", "LISTE_ATTENTE")])).toBe(false);
-    expect(peutPointer(["benevole"], "PUBLIEE", [inscription("BENEVOLE", "CONFIRMEE")])).toBe(false);
-  });
-
-  it("l'ouvre toujours au gestionnaire sur une distribution en cours", () => {
-    expect(peutPointer(["coordinateur"], "EN_COURS", [])).toBe(true);
+describe("estGestionnaireDistribution", () => {
+  it("reconnait coordinateurs, responsables et super admins", () => {
+    expect(estGestionnaireDistribution(["coordinateur"])).toBe(true);
+    expect(estGestionnaireDistribution(["responsable"])).toBe(true);
+    expect(estGestionnaireDistribution(["super_admin"])).toBe(true);
+    expect(estGestionnaireDistribution(["benevole", "beneficiaire"])).toBe(false);
   });
 });
 
-describe("typeInscriptionPossible", () => {
-  it("propose le benevolat au coordinateur et au responsable (spec 4.5)", () => {
-    expect(typeInscriptionPossible(["coordinateur"])).toBe("BENEVOLE");
-    expect(typeInscriptionPossible(["responsable"])).toBe("BENEVOLE");
-    expect(typeInscriptionPossible(["benevole"])).toBe("BENEVOLE");
+describe("typesInscriptionPossibles", () => {
+  it("demande le role correspondant a chaque type (ADR-012)", () => {
+    expect(typesInscriptionPossibles(["beneficiaire"])).toEqual(["BENEFICIAIRE"]);
+    expect(typesInscriptionPossibles(["benevole"])).toEqual(["BENEVOLE"]);
   });
 
-  it("inscrit le beneficiaire comme beneficiaire et rien pour un compte sans role", () => {
-    expect(typeInscriptionPossible(["beneficiaire"])).toBe("BENEFICIAIRE");
-    expect(typeInscriptionPossible([])).toBeNull();
+  it("ouvre les deux places a qui est benevole et beneficiaire, beneficiaire d'abord", () => {
+    expect(typesInscriptionPossibles(["benevole", "beneficiaire"])).toEqual(["BENEFICIAIRE", "BENEVOLE"]);
+  });
+
+  it("ne donne rien aux roles de gestion seuls", () => {
+    expect(typesInscriptionPossibles(["coordinateur"])).toEqual([]);
+    expect(typesInscriptionPossibles(["responsable"])).toEqual([]);
+    expect(typesInscriptionPossibles(["coordinateur", "benevole"])).toEqual(["BENEVOLE"]);
   });
 });

@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { BandeauAccueil } from "@/components/accueil/BandeauAccueil";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { List, ListRow } from "@/components/ui/list-row";
 import { DateBloc } from "@/components/agenda/DateBloc";
 import { LigneDistribution } from "@/components/agenda/LigneDistribution";
 import { LigneEngagement } from "@/components/agenda/LigneEngagement";
-import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
 import { BilletInscription } from "@/components/inscriptions/BilletInscription";
 import { lireEngagements, lireServeur } from "@/lib/api/serveur";
 import { PHOTOS } from "@/lib/photos";
@@ -52,18 +51,22 @@ async function besoinsBenevoles(maintenant: Date, dejaPris: Set<string>): Promis
 
 interface Props {
   prenom: string;
-  type: TypeInscription;
-  duJour: DistributionResponse[];
+  /* Types d'inscription ouverts, beneficiaire d'abord (typesInscriptionPossibles). */
+  types: TypeInscription[];
 }
 
 /*
  * Accueil d'un beneficiaire ou d'un benevole : le prochain rendez-vous d'abord,
  * puis ce qu'il est possible de reserver.
  */
-export async function AccueilMembre({ prenom, type, duJour }: Props) {
+export async function AccueilMembre({ prenom, types }: Props) {
   const maintenant = new Date();
   const aujourdhui = jourAssociation(maintenant);
+  // Qui est aussi beneficiaire voit d'abord les places a reserver ; les besoins
+  // de l'equipe s'ajoutent des qu'il est benevole.
+  const [type] = types;
   const benevole = type === "BENEVOLE";
+  const aideAussi = types.includes("BENEVOLE");
   const [inscriptions, distributions, autres] = await Promise.all([
     lireServeur<InscriptionPersonnelle[]>("/api/inscriptions/mes"),
     lireServeur<DistributionResponse[]>("/api/distributions"),
@@ -74,7 +77,7 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
   const autresAVenir = autres.filter((e) => e.aVenir);
   const [roles, besoins] = await Promise.all([
     rolesSur(prochaine),
-    benevole ? besoinsBenevoles(maintenant, new Set(autres.map((e) => e.href))) : [],
+    aideAussi ? besoinsBenevoles(maintenant, new Set(autres.map((e) => e.href))) : [],
   ]);
   const dejaInscrit = new Set(avenir.map((i) => i.distributionId));
   // Un benevole voit d'abord les distributions ou il manque du monde.
@@ -113,8 +116,6 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
 
   const prochainJour = [prochaine?.distributionDate, autresAVenir[0]?.date].filter(Boolean).sort()[0];
 
-  const enCours = duJour.filter((d) => d.statut === "EN_COURS");
-
   return (
     <div className="flex flex-col gap-8">
       <BandeauAccueil
@@ -124,10 +125,7 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
           prochainJour ? `Prochain rendez-vous ${quand(prochainJour, aujourdhui)}.` : "Aucun rendez-vous prévu pour l'instant."
         }
         photo={benevole ? PHOTOS.equipeSoiree : PHOTOS.colis}
-      >
-        {/* Avant le demarrage, le billet suffit ; ensuite, le pointage est a portee. */}
-        {enCours.length > 0 && <DistributionDuJour distributions={enCours} />}
-      </BandeauAccueil>
+      />
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
         <div className="flex flex-col gap-8">
@@ -183,6 +181,19 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
           )}
         </section>
       </div>
+
+      {types.length === 1 && (
+        <Link
+          href="/mon-compte#roles"
+          className="flex items-center gap-3 self-start rounded-2xl bg-secondary px-4 py-3 text-base text-foreground hover:bg-secondary/80"
+        >
+          <UserPlus aria-hidden="true" className="size-5 shrink-0 text-primary" />
+          <span>
+            {benevole ? "Étudiant, vous pouvez aussi être bénéficiaire." : "Envie d'aider ? Vous pouvez aussi être bénévole."}{" "}
+            <span className="font-semibold text-primary underline underline-offset-4">Voir comment</span>
+          </span>
+        </Link>
+      )}
     </div>
   );
 }

@@ -109,8 +109,8 @@ export function libelleNav(item: NavItem, roles: string[]): string {
 
 /**
  * Barre basse mobile : trois destinations utiles au role, la quatrieme case ouvre le
- * menu complet. Le jour d'une distribution, le gestionnaire ou le benevole qui y
- * participe trouve le pointage a la place de la troisieme.
+ * menu complet. Le jour d'une distribution, le gestionnaire, seul a pointer (ADR-012),
+ * trouve le pointage a la place de la troisieme.
  */
 export function bottomNavItems(roles: string[], pointageDuJour?: string): NavItem[] {
   const troisieme: NavItem = pointageDuJour
