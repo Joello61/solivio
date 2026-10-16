@@ -66,7 +66,7 @@ export default async function StatistiquesPage({ searchParams }: PageProps) {
   const lignes = parDistribution ?? [];
 
   return (
-    <div className="flex max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         className="mb-0 sm:mb-0"
         titre="Statistiques"

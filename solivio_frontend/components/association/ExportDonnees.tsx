@@ -33,7 +33,7 @@ export function ExportDonnees() {
   }
 
   return (
-    <section aria-labelledby="titre-donnees" className="flex max-w-2xl flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:p-6">
+    <section aria-labelledby="titre-donnees" className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5">
       <h2 id="titre-donnees" className="font-display text-xl font-bold text-foreground">
         Données et confidentialité
       </h2>

@@ -118,7 +118,7 @@ export function CatalogueGestionPanel({ initialDenrees }: Props) {
 
   return (
     <>
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <form onSubmit={handleCreer} className="flex gap-2">
           <Input
             aria-label="Nouvelle denrée"

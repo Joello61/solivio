@@ -13,6 +13,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
 import { AdresseAutocomplete } from "@/components/distributions/AdresseAutocomplete";
 import { GenerateurCreneaux } from "@/components/distributions/GenerateurCreneaux";
 import { SectionFormulaire } from "@/components/shared/SectionFormulaire";
@@ -170,174 +171,179 @@ export function CreateDistributionForm({ distribution, modele, aujourdhui }: Pro
   const fins = (creneaux ?? []).map((c) => c.heureFin).filter(Boolean).sort();
   const plage = horaire(debuts[0] ?? null, fins.at(-1) ?? null);
 
+  // A cote du formulaire sur ordinateur : la distribution telle que les beneficiaires la verront.
+  const apercu = (
+    <section aria-labelledby="apercu" className="flex flex-col gap-2">
+      <h2 id="apercu" className="font-display text-lg font-bold text-foreground">
+        Ce que verront les bénéficiaires
+      </h2>
+      <div className="flex flex-col gap-1 rounded-xl border border-dashed border-border bg-card p-4">
+        <span className="font-mono text-sm font-semibold tracking-wider text-primary uppercase">
+          {date ? dateLongue(date) : "Date à choisir"}
+        </span>
+        <span className="font-display text-2xl font-extrabold tabular-nums text-foreground">{plage ?? "Horaire à préciser"}</span>
+        <span className="text-base text-muted-foreground">{lieu?.nom || lieu?.adresseFormatee || "Lieu à préciser"}</span>
+        {capacite > 0 && <span className="text-base text-foreground">{libellePlaces(capacite)}</span>}
+      </div>
+    </section>
+  );
+
   return (
     <APIProvider apiKey={mapsApiKey} libraries={["places"]}>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex max-w-2xl flex-col gap-6" noValidate>
-        <SectionFormulaire titre="Quand et où">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Date" htmlFor="date" required error={errors.date?.message}>
-              <Input id="date" type="date" min={distribution ? undefined : aujourdhui} {...register("date")} />
-            </FormField>
-            <FormField label="Lieu" htmlFor="lieu" hint="Le nom du lieu et l'itinéraire s'affichent sur les billets.">
-              <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} />
-            </FormField>
-          </div>
-          <FormField
-            label="Titre"
-            htmlFor="titre"
-            required
-            error={errors.titre?.message}
-            hint="Proposé à partir de la date ; visible des gestionnaires et dans les emails."
-          >
-            <Input id="titre" {...register("titre")} />
-          </FormField>
-        </SectionFormulaire>
-
-        <SectionFormulaire titre="Créneaux">
-          <p className="text-base text-muted-foreground">
-            {modeFige === "CRENEAU_UNIQUE"
-              ? "Distribution publiée avec un seul créneau : on ne peut plus la découper."
-              : "Un seul créneau, ou des horaires échelonnés que chacun choisit en s'inscrivant."}
-          </p>
-          {peutGenerer && <GenerateurCreneaux nbExistants={fields.length} onGenerer={(liste) => replace(liste)} />}
-
-          <ul className="flex flex-col gap-3">
-            {fields.map((field, index) => {
-              const id = getValues(`creneaux.${index}.id`);
-              const occupes = id ? (comptes.get(id) ?? 0) : 0;
-              const confirmes = id ? (confirmesCreneau.get(id) ?? 0) : 0;
-              const dernierDecoupe = modeFige === "CRENEAUX_DECOUPES" && fields.length <= 2;
-              const erreurs = errors.creneaux?.[index];
-              return (
-                <li key={field.id} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-                  <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                    <FormField label="Début" htmlFor={`creneaux.${index}.heureDebut`} error={erreurs?.heureDebut?.message}>
-                      <Input id={`creneaux.${index}.heureDebut`} type="time" {...register(`creneaux.${index}.heureDebut`)} />
-                    </FormField>
-                    <FormField label="Fin" htmlFor={`creneaux.${index}.heureFin`} error={erreurs?.heureFin?.message}>
-                      <Input id={`creneaux.${index}.heureFin`} type="time" {...register(`creneaux.${index}.heureFin`)} />
-                    </FormField>
-                    <div className="col-span-2 flex items-end gap-2 sm:col-span-1">
-                      <FormField className="w-24" label="Places" htmlFor={`creneaux.${index}.capacite`} error={erreurs?.capacite?.message}>
-                        <Input
-                          id={`creneaux.${index}.capacite`}
-                          type="number"
-                          inputMode="numeric"
-                          min={Math.max(1, confirmes)}
-                          {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
-                        />
-                      </FormField>
-                      {fields.length > 1 && occupes === 0 && !dernierDecoupe ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          aria-label={`Supprimer le créneau ${index + 1}`}
-                        >
-                          <Trash2 aria-hidden="true" />
-                        </Button>
-                      ) : (
-                        <span className="size-11" aria-hidden="true" />
-                      )}
-                    </div>
-                  </div>
-                  {occupes > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {occupes} inscription{occupes > 1 ? "s" : ""} sur ce créneau : il ne peut pas être supprimé
-                      {confirmes > 0 ? `, ni passer sous ${confirmes} place${confirmes > 1 ? "s" : ""}` : ""}.
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {errors.creneaux?.root && <Alert variant="destructive">{errors.creneaux.root.message}</Alert>}
-          {modeFige !== "CRENEAU_UNIQUE" && (
-            <Button
-              type="button"
-              variant="outline"
-              className="self-start"
-              onClick={() => append({ heureDebut: "", heureFin: "", capacite: getValues("creneaux.0.capacite") || 10 })}
-            >
-              <Plus aria-hidden="true" />
-              Ajouter un créneau
-            </Button>
-          )}
-        </SectionFormulaire>
-
-        <SectionFormulaire titre="Capacités">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <DeuxColonnes collante aside={apercu}>
+          <SectionFormulaire titre="Quand et où">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Date" htmlFor="date" required error={errors.date?.message}>
+                <Input id="date" type="date" min={distribution ? undefined : aujourdhui} {...register("date")} />
+              </FormField>
+              <FormField label="Lieu" htmlFor="lieu" hint="Le nom du lieu et l'itinéraire s'affichent sur les billets.">
+                <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} />
+              </FormField>
+            </div>
             <FormField
-              label="Bénéficiaires"
-              htmlFor="capaciteBeneficiaires"
+              label="Titre"
+              htmlFor="titre"
               required
-              error={errors.capaciteBeneficiaires?.message}
-              hint={r?.beneficiairesConfirmes ? `Au moins ${r.beneficiairesConfirmes} : déjà inscrits.` : "Au-delà, liste d'attente."}
+              error={errors.titre?.message}
+              hint="Proposé à partir de la date ; visible des gestionnaires et dans les emails."
             >
-              <Input
-                id="capaciteBeneficiaires"
-                type="number"
-                inputMode="numeric"
-                min={Math.max(1, r?.beneficiairesConfirmes ?? 0)}
-                {...register("capaciteBeneficiaires", { valueAsNumber: true })}
-              />
+              <Input id="titre" {...register("titre")} />
             </FormField>
-            <FormField
-              label="Bénévoles"
-              htmlFor="capaciteBenevoles"
-              error={errors.capaciteBenevoles?.message}
-              hint={r?.benevolesConfirmes ? `Au moins ${r.benevolesConfirmes} : déjà inscrits. Vide : sans limite.` : "Vide : sans limite."}
-            >
-              <Input
-                id="capaciteBenevoles"
-                type="number"
-                inputMode="numeric"
-                min={Math.max(1, r?.benevolesConfirmes ?? 0)}
-                {...register("capaciteBenevoles", {
-                  // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
-                  setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
-                })}
-              />
+          </SectionFormulaire>
+
+          <SectionFormulaire titre="Créneaux">
+            <p className="text-base text-muted-foreground">
+              {modeFige === "CRENEAU_UNIQUE"
+                ? "Distribution publiée avec un seul créneau : on ne peut plus la découper."
+                : "Un seul créneau, ou des horaires échelonnés que chacun choisit en s'inscrivant."}
+            </p>
+            {peutGenerer && <GenerateurCreneaux nbExistants={fields.length} onGenerer={(liste) => replace(liste)} />}
+
+            <ul className="flex flex-col gap-3">
+              {fields.map((field, index) => {
+                const id = getValues(`creneaux.${index}.id`);
+                const occupes = id ? (comptes.get(id) ?? 0) : 0;
+                const confirmes = id ? (confirmesCreneau.get(id) ?? 0) : 0;
+                const dernierDecoupe = modeFige === "CRENEAUX_DECOUPES" && fields.length <= 2;
+                const erreurs = errors.creneaux?.[index];
+                return (
+                  <li key={field.id} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+                    <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                      <FormField label="Début" htmlFor={`creneaux.${index}.heureDebut`} error={erreurs?.heureDebut?.message}>
+                        <Input id={`creneaux.${index}.heureDebut`} type="time" {...register(`creneaux.${index}.heureDebut`)} />
+                      </FormField>
+                      <FormField label="Fin" htmlFor={`creneaux.${index}.heureFin`} error={erreurs?.heureFin?.message}>
+                        <Input id={`creneaux.${index}.heureFin`} type="time" {...register(`creneaux.${index}.heureFin`)} />
+                      </FormField>
+                      <div className="col-span-2 flex items-end gap-2 sm:col-span-1">
+                        <FormField className="w-24" label="Places" htmlFor={`creneaux.${index}.capacite`} error={erreurs?.capacite?.message}>
+                          <Input
+                            id={`creneaux.${index}.capacite`}
+                            type="number"
+                            inputMode="numeric"
+                            min={Math.max(1, confirmes)}
+                            {...register(`creneaux.${index}.capacite`, { valueAsNumber: true })}
+                          />
+                        </FormField>
+                        {fields.length > 1 && occupes === 0 && !dernierDecoupe ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            aria-label={`Supprimer le créneau ${index + 1}`}
+                          >
+                            <Trash2 aria-hidden="true" />
+                          </Button>
+                        ) : (
+                          <span className="size-11" aria-hidden="true" />
+                        )}
+                      </div>
+                    </div>
+                    {occupes > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        {occupes} inscription{occupes > 1 ? "s" : ""} sur ce créneau : il ne peut pas être supprimé
+                        {confirmes > 0 ? `, ni passer sous ${confirmes} place${confirmes > 1 ? "s" : ""}` : ""}.
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {errors.creneaux?.root && <Alert variant="destructive">{errors.creneaux.root.message}</Alert>}
+            {modeFige !== "CRENEAU_UNIQUE" && (
+              <Button
+                type="button"
+                variant="outline"
+                className="self-start"
+                onClick={() => append({ heureDebut: "", heureFin: "", capacite: getValues("creneaux.0.capacite") || 10 })}
+              >
+                <Plus aria-hidden="true" />
+                Ajouter un créneau
+              </Button>
+            )}
+          </SectionFormulaire>
+
+          <SectionFormulaire titre="Capacités">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Bénéficiaires"
+                htmlFor="capaciteBeneficiaires"
+                required
+                error={errors.capaciteBeneficiaires?.message}
+                hint={r?.beneficiairesConfirmes ? `Au moins ${r.beneficiairesConfirmes} : déjà inscrits.` : "Au-delà, liste d'attente."}
+              >
+                <Input
+                  id="capaciteBeneficiaires"
+                  type="number"
+                  inputMode="numeric"
+                  min={Math.max(1, r?.beneficiairesConfirmes ?? 0)}
+                  {...register("capaciteBeneficiaires", { valueAsNumber: true })}
+                />
+              </FormField>
+              <FormField
+                label="Bénévoles"
+                htmlFor="capaciteBenevoles"
+                error={errors.capaciteBenevoles?.message}
+                hint={r?.benevolesConfirmes ? `Au moins ${r.benevolesConfirmes} : déjà inscrits. Vide : sans limite.` : "Vide : sans limite."}
+              >
+                <Input
+                  id="capaciteBenevoles"
+                  type="number"
+                  inputMode="numeric"
+                  min={Math.max(1, r?.benevolesConfirmes ?? 0)}
+                  {...register("capaciteBenevoles", {
+                    // Champ vide : illimite (valueAsNumber donnerait NaN, refuse par la validation).
+                    setValueAs: (v) => (v === "" || v === null ? undefined : Number(v)),
+                  })}
+                />
+              </FormField>
+            </div>
+          </SectionFormulaire>
+
+          <SectionFormulaire titre="Description">
+            <FormField label="À savoir" htmlFor="description" hint="Ce qu'il faut apporter, comment trouver l'entrée. Facultatif.">
+              <Textarea id="description" rows={3} {...register("description")} />
             </FormField>
+          </SectionFormulaire>
+
+          {erreur && <Alert variant="destructive">{erreur}</Alert>}
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button type="submit" size="lg" disabled={isSubmitting}>
+              {isSubmitting && <Spinner size="sm" />}
+              {distribution ? "Enregistrer" : "Créer la distribution"}
+            </Button>
+            <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>
+              Annuler
+            </Button>
           </div>
-        </SectionFormulaire>
-
-        <SectionFormulaire titre="Description">
-          <FormField label="À savoir" htmlFor="description" hint="Ce qu'il faut apporter, comment trouver l'entrée. Facultatif.">
-            <Textarea id="description" rows={3} {...register("description")} />
-          </FormField>
-        </SectionFormulaire>
-
-        <section aria-labelledby="apercu" className="flex flex-col gap-2">
-          <h2 id="apercu" className="font-display text-lg font-bold text-foreground">
-            Ce que verront les bénéficiaires
-          </h2>
-          <div className="flex flex-col gap-1 rounded-xl border border-dashed border-border bg-card p-4">
-            <span className="font-mono text-sm font-semibold tracking-wider text-primary uppercase">
-              {date ? dateLongue(date) : "Date à choisir"}
-            </span>
-            <span className="font-display text-2xl font-extrabold tabular-nums text-foreground">{plage ?? "Horaire à préciser"}</span>
-            <span className="text-base text-muted-foreground">{lieu?.nom || lieu?.adresseFormatee || "Lieu à préciser"}</span>
-            {capacite > 0 && <span className="text-base text-foreground">{libellePlaces(capacite)}</span>}
-          </div>
-        </section>
-
-        {erreur && <Alert variant="destructive">{erreur}</Alert>}
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button type="submit" size="lg" disabled={isSubmitting}>
-            {isSubmitting && <Spinner size="sm" />}
-            {distribution ? "Enregistrer" : "Créer la distribution"}
-          </Button>
-          <Button type="button" size="lg" variant="outline" onClick={() => router.back()}>
-            Annuler
-          </Button>
-        </div>
-        {!distribution && (
-          <p className="text-base text-muted-foreground">
-            Elle est créée en brouillon : vous la publierez depuis sa feuille.
-          </p>
-        )}
+          {!distribution && (
+            <p className="text-base text-muted-foreground">
+              Elle est créée en brouillon : vous la publierez depuis sa feuille.
+            </p>
+          )}
+        </DeuxColonnes>
       </form>
     </APIProvider>
   );

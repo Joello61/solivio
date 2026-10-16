@@ -7,6 +7,7 @@ import { PlanDepliable } from "@/components/distributions/PlanDepliable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Jauge } from "@/components/ui/jauge";
 import { List, ListRow } from "@/components/ui/list-row";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
 import { PageHeader } from "@/components/ui/page-header";
 import { Rail } from "@/components/ui/rail";
 import { Statut } from "@/components/ui/statut";
@@ -91,8 +92,49 @@ export default async function DetailEvenementPage({ params }: { params: Promise<
   const avecPresence = evenement.modeInscription === "OBLIGATOIRE" && (evenement.statut === "EN_COURS" || evenement.statut === "TERMINE");
   const tous = participations ?? [];
 
+  const colonne = (
+    <>
+      {evenement.lieuAdresseFormatee && (
+        <section aria-label="Lieu" className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5">
+          <div className="flex items-start gap-3">
+            <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-base text-foreground">{evenement.lieuAdresseFormatee}</span>
+              {itineraire && (
+                <a href={itineraire} target="_blank" rel="noopener noreferrer" className="w-fit font-semibold text-primary underline underline-offset-4">
+                  Itinéraire
+                </a>
+              )}
+            </div>
+          </div>
+          {evenement.lieuLatitude != null && evenement.lieuLongitude != null && (
+            <PlanDepliable lieu={{ latitude: evenement.lieuLatitude, longitude: evenement.lieuLongitude, adresseFormatee: evenement.lieuAdresseFormatee }} />
+          )}
+        </section>
+      )}
+
+      <section aria-labelledby="titre-organisation" className="flex flex-col gap-4 rounded-3xl bg-secondary p-5">
+        <h2 id="titre-organisation" className="font-display text-lg font-bold text-foreground">
+          Organisation
+        </h2>
+        <p className="text-base text-muted-foreground">
+          <span className="font-semibold text-foreground">{mode.libelle}.</span> {mode.consequence}
+        </p>
+        {evenement.aBesoiNStaff && <Remplissage libelle="Équipe" nombre={evenement.nbStaff} capacite={evenement.capaciteStaff} />}
+        {evenement.ouvertParticipants && (
+          <>
+            <Remplissage libelle="Participants" nombre={evenement.nbParticipants} capacite={evenement.capaciteParticipants} />
+            {evenement.publicParticipants && (
+              <p className="text-base text-muted-foreground">Ouvert à : {PUBLIC_CIBLE[evenement.publicParticipants].toLowerCase()}.</p>
+            )}
+          </>
+        )}
+      </section>
+    </>
+  );
+
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         className="mb-0 sm:mb-0"
         retour={{ href: "/evenements", libelle: "Événements" }}
@@ -121,68 +163,33 @@ export default async function DetailEvenementPage({ params }: { params: Promise<
         gestion && etape !== null && <Rail etapes={ETAPES_ACTIVITE} courante={etape} libelle="Cycle de l'événement" />
       )}
 
-      {!gestion && (
-        <ParticipationEvenement
-          evenementId={id}
-          monRole={maParticipation?.role ?? null}
-          places={maParticipation ? [] : placesOuvertes(evenement, roles)}
-        />
-      )}
-
-      {evenement.description && <p className="text-base whitespace-pre-line text-foreground">{evenement.description}</p>}
-
-      {evenement.lieuAdresseFormatee && (
-        <section aria-label="Lieu" className="flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-            <div className="flex flex-col gap-0.5">
-              <span className="text-base text-foreground">{evenement.lieuAdresseFormatee}</span>
-              {itineraire && (
-                <a href={itineraire} target="_blank" rel="noopener noreferrer" className="w-fit font-semibold text-primary underline underline-offset-4">
-                  Itinéraire
-                </a>
-              )}
-            </div>
-          </div>
-          {evenement.lieuLatitude != null && evenement.lieuLongitude != null && (
-            <PlanDepliable lieu={{ latitude: evenement.lieuLatitude, longitude: evenement.lieuLongitude, adresseFormatee: evenement.lieuAdresseFormatee }} />
-          )}
-        </section>
-      )}
-
-      <section aria-labelledby="titre-organisation" className="flex flex-col gap-4">
-        <h2 id="titre-organisation" className="font-display text-xl font-bold text-foreground">
-          Organisation
-        </h2>
-        <p className="text-base text-muted-foreground">
-          <span className="font-semibold text-foreground">{mode.libelle}.</span> {mode.consequence}
-        </p>
-        {evenement.aBesoiNStaff && <Remplissage libelle="Équipe" nombre={evenement.nbStaff} capacite={evenement.capaciteStaff} />}
-        {evenement.ouvertParticipants && (
-          <>
-            <Remplissage libelle="Participants" nombre={evenement.nbParticipants} capacite={evenement.capaciteParticipants} />
-            {evenement.publicParticipants && (
-              <p className="text-base text-muted-foreground">Ouvert à : {PUBLIC_CIBLE[evenement.publicParticipants].toLowerCase()}.</p>
-            )}
-          </>
+      <DeuxColonnes aside={colonne}>
+        {!gestion && (
+          <ParticipationEvenement
+            evenementId={id}
+            monRole={maParticipation?.role ?? null}
+            places={maParticipation ? [] : placesOuvertes(evenement, roles)}
+          />
         )}
-      </section>
 
-      {gestion && (
-        <section aria-labelledby="titre-inscrits" className="flex flex-col gap-4">
-          <h2 id="titre-inscrits" className="font-display text-xl font-bold text-foreground">
-            Inscrits
-          </h2>
-          {tous.length === 0 ? (
-            <p className="text-base text-muted-foreground">Personne pour l&apos;instant.</p>
-          ) : (
-            <>
-              <Inscrits titre="Équipe" liste={tous.filter((p) => p.role === "STAFF")} avecPresence={avecPresence} />
-              <Inscrits titre="Participants" liste={tous.filter((p) => p.role === "PARTICIPANT")} avecPresence={avecPresence} />
-            </>
-          )}
-        </section>
-      )}
+        {evenement.description && <p className="text-base whitespace-pre-line text-foreground">{evenement.description}</p>}
+
+        {gestion && (
+          <section aria-labelledby="titre-inscrits" className="flex flex-col gap-4">
+            <h2 id="titre-inscrits" className="font-display text-xl font-bold text-foreground">
+              Inscrits
+            </h2>
+            {tous.length === 0 ? (
+              <p className="text-base text-muted-foreground">Personne pour l&apos;instant.</p>
+            ) : (
+              <>
+                <Inscrits titre="Équipe" liste={tous.filter((p) => p.role === "STAFF")} avecPresence={avecPresence} />
+                <Inscrits titre="Participants" liste={tous.filter((p) => p.role === "PARTICIPANT")} avecPresence={avecPresence} />
+              </>
+            )}
+          </section>
+        )}
+      </DeuxColonnes>
     </div>
   );
 }
