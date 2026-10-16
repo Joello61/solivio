@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ArrowRight, CalendarCheck, ShoppingBag, UserPlus } from "lucide-react";
+import { ArrowRight, CalendarCheck, Mail, ShoppingBag, UserPlus } from "lucide-react";
 import { datePublique, lieuPublic, ProchainesDistributions } from "@/components/accueil/ProchainesDistributions";
 import { Logo } from "@/components/layout/identite";
 import { buttonVariants } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { lireProchainesDistributions } from "@/lib/api/public";
-import { NOM_ASSOCIATION, VILLE_ASSOCIATION } from "@/lib/marque";
+import { EMAIL_ASSOCIATION, NOM_ASSOCIATION, VILLE_ASSOCIATION } from "@/lib/marque";
 import { PHOTOS } from "@/lib/photos";
 import { cn } from "@/lib/utils";
 import type { DistributionPubliqueResponse } from "@/types/distribution";
@@ -23,6 +23,22 @@ const ETAPES = [
   { icone: UserPlus, titre: "Créez votre compte", texte: "Un nom, une adresse email, un mot de passe. Vous confirmez avec un code reçu par email." },
   { icone: CalendarCheck, titre: "Choisissez une date et un horaire", texte: "S'il n'y a plus de place, vous passez en liste d'attente et on vous prévient dès qu'une place se libère." },
   { icone: ShoppingBag, titre: "Venez avec un sac", texte: "Un rappel arrive la veille. Sur place, on vous accueille par votre nom, rien d'autre." },
+];
+
+// Chiffres verifies a la source le 16/10/2026 ; l'annee et le lien restent affiches.
+const OVE_2023 = {
+  libelle: "OVE, enquête Conditions de vie 2023",
+  url: "https://www.ove-national.education.fr/wp-content/uploads/2024/03/OVE-BROCHURE-REPERES-CDV2023.pdf",
+};
+const CHIFFRES = [
+  { valeur: "13 %", texte: "des étudiants ne mangent pas toujours à leur faim", source: OVE_2023 },
+  { valeur: "22 %", texte: "sautent souvent des repas", source: OVE_2023 },
+  { valeur: "30 %", texte: "estiment ne pas avoir assez d'argent pour leurs besoins du mois", source: OVE_2023 },
+  {
+    valeur: "25 000+",
+    texte: "étudiants interrogés par Linkee sur leurs conditions de vie",
+    source: { libelle: "Linkee, enquête 2025", url: "https://linkee.co/etudes-sociologiques/" },
+  },
 ];
 
 const TITRE_SECTION = "font-display text-3xl font-extrabold tracking-tight sm:text-4xl";
@@ -180,6 +196,26 @@ export default async function Accueil() {
           </div>
         </section>
 
+        <section aria-labelledby="titre-chiffres" className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-16 sm:px-8 lg:pb-24">
+          <div className="flex max-w-2xl flex-col gap-2">
+            <h2 id="titre-chiffres" className={TITRE_SECTION}>
+              La précarité étudiante, en chiffres
+            </h2>
+            <p className="text-lg text-muted-foreground">Pourquoi nos distributions existent.</p>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CHIFFRES.map((c) => (
+              <li key={c.valeur} className="flex flex-col gap-2 rounded-3xl border border-border bg-card p-5">
+                <span className="font-display text-4xl font-extrabold text-primary tabular-nums">{c.valeur}</span>
+                <span className="flex-1 text-base text-foreground">{c.texte}</span>
+                <a href={c.source.url} rel="external noopener" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                  {c.source.libelle}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section id="benevole" aria-labelledby="titre-benevole" className="bg-night text-on-night">
           <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:py-24">
             <div className="flex flex-col gap-5 lg:order-2">
@@ -223,6 +259,13 @@ export default async function Accueil() {
                 <span className="font-display text-lg font-bold">{VILLE_ASSOCIATION}</span>
               </span>
               <p>Association de solidarité étudiante : distributions alimentaires, collectes et entraide sur les campus toulousains.</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-bold text-on-night">Nous écrire</span>
+              <a href={`mailto:${EMAIL_ASSOCIATION}`} className="flex items-center gap-2 hover:text-on-night hover:underline">
+                <Mail aria-hidden="true" className="size-4 shrink-0" />
+                {EMAIL_ASSOCIATION}
+              </a>
             </div>
             <div className="flex flex-col gap-2">
               <span className="font-bold text-on-night">Votre espace</span>
