@@ -101,7 +101,7 @@ L'ancien découpage entre un registre global et des données par association est
 | membre | référence | Le membre ; clé avec le rôle |
 | role | énumération | responsable, coordinateur, benevole, beneficiaire |
 
-> Invariants (RG9) : au moins un rôle par membre ; benevole, beneficiaire et coordinateur se cumulent, responsable est seul ; au moins un responsable actif. Hiérarchie : responsable > coordinateur (ADR-012, qui remplace celle de l'ADR-011). Les rôles sont portés dans le jeton d'accès et vérifiés côté backend. À l'inscription libre, la personne choisit benevole, beneficiaire ou les deux ; une invitation ne crée qu'un responsable. L'ancienne colonne `membre.role` n'est plus lue et sera supprimée après la bascule (ADR-010).
+> Invariants (RG9) : au moins un rôle par membre ; benevole, beneficiaire et coordinateur se cumulent, responsable est seul ; au moins un responsable actif. Hiérarchie : responsable > coordinateur (ADR-012, qui remplace celle de l'ADR-011). Les rôles sont portés dans le jeton d'accès et vérifiés côté backend. À l'inscription libre, la personne choisit benevole, beneficiaire ou les deux ; une invitation ne crée qu'un responsable. L'ancienne colonne `membre.role`, gardée le temps de la bascule (ADR-010), est supprimée par la migration V17.
 
 **`personne`** - le profil de contact métier, quel que soit le rôle.
 
