@@ -1,4 +1,4 @@
-import { request, type APIRequestContext, type Page, type TestType } from "@playwright/test";
+import { expect, request, type APIRequestContext, type Page, type TestType } from "@playwright/test";
 
 // Backend joint en direct par les tests (preparation des donnees, verifications).
 export const API_URL = process.env.E2E_API_URL ?? "http://localhost:8080";
@@ -87,4 +87,15 @@ export async function assurerDistributionPubliee(): Promise<string> {
 export function sauterHorsCi(test: TestType<any, any>, raison: string): void {
   if (process.env.CI) throw new Error(`Prerequis absent en CI : ${raison}`);
   test.skip(true, raison);
+}
+
+/*
+ * Attend que la liste soit rendue, avec une carte ou le message vide, puis dit si elle a
+ * des distributions. isVisible() ne patiente pas : appele trop tot, il concluait a une
+ * liste vide.
+ */
+export async function listeChargee(page: Page): Promise<boolean> {
+  const carte = page.locator(CARTE_DISTRIBUTION).first();
+  await expect(carte.or(page.getByText(/aucune distribution/i).first())).toBeVisible();
+  return carte.isVisible();
 }
