@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { CalendarX } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { List, ListRow } from "@/components/ui/list-row";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
+import { ReperesDistribution } from "@/components/shared/Reperes";
 import { PageHeader } from "@/components/ui/page-header";
 import { DateBloc } from "@/components/agenda/DateBloc";
 import { LigneDistribution } from "@/components/agenda/LigneDistribution";
@@ -116,7 +118,7 @@ export async function AgendaMembre({ distributions, type, roles, filtre }: Props
   const semaines = grouperParSemaine(visibles, (e) => e.date, aujourdhui);
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <DeuxColonnes aside={<ReperesDistribution benevole={type === "BENEVOLE"} />}>
       <PageHeader className="mb-0 sm:mb-0" titre="Agenda" description="Ce qui vient. Touchez une date pour vous inscrire." />
       {options.length > 2 && <FiltreUrl label="Afficher" parametre="type" valeur={courant} defaut="tout" options={options} />}
       {semaines.length === 0 ? (
@@ -137,6 +139,6 @@ export async function AgendaMembre({ distributions, type, roles, filtre }: Props
           ))}
         </div>
       )}
-    </div>
+    </DeuxColonnes>
   );
 }

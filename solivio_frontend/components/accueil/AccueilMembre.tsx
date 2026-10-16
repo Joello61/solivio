@@ -116,7 +116,7 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
   const enCours = duJour.filter((d) => d.statut === "EN_COURS");
 
   return (
-    <div className="flex max-w-5xl flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <BandeauAccueil
         surtitre={dateLongue(aujourdhui)}
         titre={`Bonjour ${prenom}`}

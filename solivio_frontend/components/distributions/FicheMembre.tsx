@@ -3,6 +3,8 @@ import { ClipboardCheck, MapPin } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { Jauge } from "@/components/ui/jauge";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
+import { ReperesDistribution } from "@/components/shared/Reperes";
 import { PageHeader } from "@/components/ui/page-header";
 import { BilletInscription } from "@/components/inscriptions/BilletInscription";
 import { PlanDepliable } from "@/components/distributions/PlanDepliable";
@@ -50,8 +52,25 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
   const ouverte = d.statut === "PUBLIEE";
   const annulee = d.statut === "ANNULEE";
 
+  const aside = (
+    <>
+      {d.description && (
+        <section className="rounded-3xl border border-border bg-card p-5">
+          <h2 className="mb-1 font-display text-lg font-bold text-foreground">Le mot de l&apos;équipe</h2>
+          <p className="text-base leading-relaxed whitespace-pre-line text-foreground">{d.description}</p>
+        </section>
+      )}
+      {d.lieu?.latitude != null && d.lieu.longitude != null && (
+        <PlanDepliable
+          lieu={{ latitude: d.lieu.latitude, longitude: d.lieu.longitude, adresseFormatee: d.lieu.adresseFormatee }}
+        />
+      )}
+      <ReperesDistribution benevole={(inscriptionActive?.type ?? type) === "BENEVOLE"} />
+    </>
+  );
+
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <DeuxColonnes aside={aside}>
       <PageHeader
         className="mb-0 sm:mb-0"
         retour={{ href: "/distributions", libelle: "Agenda" }}
@@ -152,18 +171,6 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
         <p className="text-base text-muted-foreground">Votre place était réservée pour cette distribution.</p>
       )}
 
-      {d.description && (
-        <section className="rounded-xl border border-border bg-card p-4">
-          <h2 className="mb-1 font-display text-lg font-bold text-foreground">À savoir</h2>
-          <p className="text-base leading-relaxed whitespace-pre-line text-foreground">{d.description}</p>
-        </section>
-      )}
-
-      {d.lieu?.latitude != null && d.lieu.longitude != null && (
-        <PlanDepliable
-          lieu={{ latitude: d.lieu.latitude, longitude: d.lieu.longitude, adresseFormatee: d.lieu.adresseFormatee }}
-        />
-      )}
-    </div>
+    </DeuxColonnes>
   );
 }
