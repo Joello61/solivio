@@ -38,23 +38,23 @@ export function Billet({ date, horaire, lieu, statut, note, actions, className }
           aria-hidden="true"
           className="flex min-w-20 flex-col items-center justify-center gap-0.5 border-r-2 border-dashed border-on-brand/35 px-4 py-5"
         >
-          <span className="font-mono text-xs uppercase tracking-widest text-on-brand/80">
+          <span className="font-mono text-xs uppercase tracking-widest text-on-brand">
             {JOUR.format(jour).replace(".", "")}
           </span>
           <span className="font-display text-4xl leading-none font-extrabold tabular-nums">
             {jour.getUTCDate()}
           </span>
-          <span className="font-mono text-xs uppercase tracking-widest text-on-brand/80">
+          <span className="font-mono text-xs uppercase tracking-widest text-on-brand">
             {MOIS.format(jour).replace(".", "")}
           </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-4 py-5">
           <p className="font-display text-2xl leading-tight font-bold tabular-nums">{horaire}</p>
-          <div className="text-base leading-snug text-on-brand/85">{lieu}</div>
+          <div className="text-base leading-snug text-on-brand">{lieu}</div>
           {(statut || note) && (
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
               {statut}
-              {note && <span className="text-on-brand/80">{note}</span>}
+              {note && <span className="text-on-brand">{note}</span>}
             </div>
           )}
         </div>

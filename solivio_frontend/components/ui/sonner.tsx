@@ -6,7 +6,7 @@ import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon
 
 /*
  * Toasts en negatif (encre sur papier inverse) : ils se detachent de la page dans
- * les deux modes. L'action (souvent "Annuler") prend le citron. La marge basse
+ * les deux modes. L'action (souvent "Annuler") prend le jaune. La marge basse
  * mobile degage la barre de navigation.
  */
 const Toaster = ({ ...props }: ToasterProps) => {

@@ -1,3 +1,4 @@
+import type { RoleLibre } from "@/lib/roles";
 import { API_URL, apiPost } from "./api";
 import type { TokenResponse } from "@/types/auth";
 
@@ -21,6 +22,8 @@ export async function register(payload: {
   motDePasse: string;
   nom: string;
   prenom: string;
+  roles?: RoleLibre[];
+  attestationEtudiant?: boolean;
   tokenInvitation?: string;
 }): Promise<void> {
   return apiPost<void>("/api/auth/register", payload);
@@ -50,6 +53,8 @@ export async function completerInscriptionGoogle(payload: {
   email: string;
   nom: string;
   prenom: string;
+  roles?: RoleLibre[];
+  attestationEtudiant?: boolean;
   tokenInvitation?: string;
 }): Promise<TokenResponse> {
   return apiPost<TokenResponse>("/api/auth/google/complete-registration", payload);

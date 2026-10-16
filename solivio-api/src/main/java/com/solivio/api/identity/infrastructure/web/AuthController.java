@@ -111,7 +111,7 @@ public class AuthController {
             HttpServletResponse httpResponse) {
         TokenResponse token = authService.completerInscriptionGoogle(
             request.email(), request.nom(), request.prenom(), request.tokenInvitation(),
-            httpRequest, httpResponse);
+            request.roles(), request.attestationEtudiant(), httpRequest, httpResponse);
         return ResponseEntity.ok(token);
     }
 }

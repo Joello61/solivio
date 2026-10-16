@@ -214,6 +214,8 @@ La clé Google Maps et le secret client Google publiés dans l'historique du dé
 
 **Critère de sortie atteint (15 octobre 2026).** Tous les écrans sont repris, vérifiés en capture sur téléphone et ordinateur, en clair et en sombre ; l'audit axe (WCAG 2.2 AA) passe sur les pages publiques et les écrans principaux de chaque rôle ; le pointage d'une personne reste sous la seconde avec 360 inscrits sur un processeur ralenti quatre fois.
 
+**Après la refonte (16 octobre 2026).** La partie connectée occupe toute la largeur sur ordinateur, avec une colonne de droite utile (#131). Les rôles deviennent cumulables (ADR-012, RG9) : on choisit d'être bénévole, bénéficiaire ou les deux, le responsable gère les rôles sans invitation, et le pointage revient aux coordinateurs et responsables.
+
 ## 9. Phase 6 - Mise en conditions réelles
 
 **Objectif.** Confronter la V1 au terrain, et corriger sur la base du réel.

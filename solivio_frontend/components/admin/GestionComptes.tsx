@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { Initiales } from "@/components/ui/initiales";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +27,13 @@ import { Statut } from "@/components/ui/statut";
 import { DialogEffacementCompte } from "@/components/admin/DialogEffacementCompte";
 import { changerStatutCompte, changerSuperAdmin, effacerDonneesCompteAdmin, supprimerCompteAdmin } from "@/lib/api/profil";
 import { messageErreur } from "@/lib/erreurs";
-import { libelleRole } from "@/lib/roles";
+import { libelleRoles } from "@/lib/roles";
 import type { CompteAdminResponse, PageResponse } from "@/types/profil";
+
+function rolesDuCompte(compte: CompteAdminResponse): string {
+  const roles = libelleRoles(compte.roles);
+  return compte.statutMembre === "suspendu" ? `${roles} (suspendu)` : roles;
+}
 
 interface Props {
   page: PageResponse<CompteAdminResponse>;
@@ -102,7 +108,7 @@ function FicheCompte({ compte, estSoi, onFermer }: { compte: CompteAdminResponse
         {compte.superAdmin && <Statut libelle={{ texte: "Super admin", ton: "info" }} />}
         {!compte.emailVerifie && <Statut libelle={{ texte: "Email non vérifié", ton: "attente" }} />}
       </div>
-      <p className="text-base text-foreground">{compte.role ? libelleRole(compte.role, compte.statutMembre) : "Aucun rôle dans l'association."}</p>
+      <p className="text-base text-foreground">{compte.roles.length > 0 ? rolesDuCompte(compte) : "Aucun rôle dans l'association."}</p>
 
       {estSoi ? (
         <p className="text-base text-muted-foreground">C&apos;est votre compte : aucune action possible ici.</p>
@@ -181,16 +187,19 @@ export function GestionComptes({ page, currentUserId, recherche: rechercheInitia
       header: "Utilisateur",
       sortable: true,
       cell: (c) => (
-        <button type="button" onClick={() => setOuvertId(c.id)} className="flex flex-col text-left hover:underline">
-          <span className="font-semibold text-foreground">
-            {c.nom} {c.prenom}
-            {c.id === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+        <button type="button" onClick={() => setOuvertId(c.id)} className="group flex items-center gap-3 text-left">
+          <Initiales prenom={c.prenom} nom={c.nom} />
+          <span className="flex flex-col">
+            <span className="font-semibold text-foreground group-hover:underline">
+              {c.nom} {c.prenom}
+              {c.id === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+            </span>
+            <span className="text-sm text-muted-foreground">{c.email}</span>
           </span>
-          <span className="text-sm text-muted-foreground">{c.email}</span>
         </button>
       ),
     },
-    { key: "role", header: "Rôle", cell: (c) => (c.role ? libelleRole(c.role, c.statutMembre) : "-") },
+    { key: "role", header: "Rôles", cell: (c) => (c.roles.length > 0 ? rolesDuCompte(c) : "-") },
     {
       key: "etat",
       header: "État",

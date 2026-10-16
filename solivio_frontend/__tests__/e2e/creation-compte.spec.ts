@@ -52,6 +52,10 @@ test.describe("Creation de compte", () => {
     await page.getByLabel("Nom", { exact: true }).fill("Essai");
     await page.getByLabel("Adresse email").fill(email);
     await page.getByLabel("Mot de passe", { exact: true }).fill(MOT_DE_PASSE);
+    // Benevole et beneficiaire (ADR-012) : etre beneficiaire demande l'attestation.
+    await page.getByRole("checkbox", { name: /Bénévole/ }).check();
+    await page.getByRole("checkbox", { name: /Bénéficiaire/ }).check();
+    await page.getByRole("checkbox", { name: /Je suis étudiant inscrit/ }).check();
     await page.getByRole("button", { name: "Créer mon compte" }).click();
 
     await expect(page).toHaveURL(/\/verify-email\?email=/);

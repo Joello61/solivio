@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { AlertCircle, CircleDot, Info } from "lucide-react";
+import { AlertCircle, CalendarCheck, CircleDot, HeartHandshake, Info, Users } from "lucide-react";
+import { BandeauAccueil } from "@/components/accueil/BandeauAccueil";
+import { Stat } from "@/components/ui/stat";
 import { List, ListRow } from "@/components/ui/list-row";
 import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
 import { lireServeur } from "@/lib/api/serveur";
@@ -7,12 +9,22 @@ import { dateLongue } from "@/lib/agenda";
 import { tachesDistributions, type Tache, type TonTache } from "@/lib/cycle-distribution";
 import { jourEtHeure } from "@/lib/engagements";
 import { missionsNonPrises } from "@/lib/missions";
+import { PHOTOS } from "@/lib/photos";
 import type { StatistiquePeriodeResponse } from "@/types/association";
 import type { MissionCollecteResponse } from "@/types/collecte";
 import type { DistributionResponse } from "@/types/distribution";
 
 const ICONE: Record<TonTache, typeof AlertCircle> = { action: CircleDot, attention: AlertCircle, info: Info };
-const COULEUR: Record<TonTache, string> = { action: "text-primary", attention: "text-warning", info: "text-muted-foreground" };
+const PASTILLE: Record<TonTache, string> = {
+  action: "bg-secondary text-secondary-foreground",
+  attention: "bg-accent text-accent-foreground",
+  info: "bg-muted text-muted-foreground",
+};
+
+function resume(taches: number): string {
+  if (taches === 0) return "Rien ne presse aujourd'hui.";
+  return taches > 1 ? `${taches} choses demandent votre attention.` : "Une chose demande votre attention.";
+}
 
 function premierDuMois(jour: string): string {
   return `${jour.slice(0, 8)}01`;
@@ -54,63 +66,68 @@ export async function AujourdhuiGestion({ prenom, duJour, aujourdhui }: Props) {
   ];
 
   return (
-    <div className="flex max-w-4xl flex-col gap-8">
-      <header className="flex flex-col gap-1.5">
-        <h1 className="font-display text-3xl leading-tight font-extrabold text-foreground sm:text-4xl">
-          Bonjour {prenom}
-        </h1>
-        <p className="text-lg text-muted-foreground first-letter:uppercase">{dateLongue(aujourdhui)}.</p>
-      </header>
+    <div className="flex max-w-6xl flex-col gap-8">
+      <BandeauAccueil
+        surtitre={dateLongue(aujourdhui)}
+        titre={`Bonjour ${prenom}`}
+        description={resume(taches.length)}
+        photo={PHOTOS.salleDistribution}
+      >
+        {duJour.length > 0 && <DistributionDuJour distributions={duJour} />}
+      </BandeauAccueil>
 
-      <DistributionDuJour distributions={duJour} />
-
-      <section aria-labelledby="a-faire" className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="a-faire" className="font-display text-xl font-bold text-foreground">
-            À faire
-          </h2>
-          <Link href="/distributions" className="font-semibold text-primary underline underline-offset-4">
-            Planning
-          </Link>
-        </div>
-        {taches.length === 0 ? (
-          <p className="text-base text-muted-foreground">Rien ne presse : tout est publié et les équipes sont complètes.</p>
-        ) : (
-          <List>
-            {taches.map((t) => {
-              const Icone = ICONE[t.ton];
-              return (
-                <ListRow
-                  key={t.cle}
-                  href={t.href}
-                  debut={<Icone aria-hidden="true" className={`size-5 ${COULEUR[t.ton]}`} />}
-                  titre={t.titre}
-                  sousTitre={t.detail}
-                />
-              );
-            })}
-          </List>
-        )}
-      </section>
-
-      {stats && (
-        <section aria-labelledby="ce-mois" className="flex flex-col gap-2">
-          <h2 id="ce-mois" className="font-display text-xl font-bold text-foreground">
-            Ce mois-ci
-          </h2>
-          <p className="text-base text-foreground">
-            <strong className="tabular-nums">{stats.nbDistributions}</strong>{" "}
-            {stats.nbDistributions > 1 ? "distributions" : "distribution"},{" "}
-            <strong className="tabular-nums">{stats.nbBeneficiairesDistinctsServis}</strong>{" "}
-            {stats.nbBeneficiairesDistinctsServis > 1 ? "bénéficiaires servis" : "bénéficiaire servi"},{" "}
-            <strong className="tabular-nums">{stats.nbBenevolesDistincts}</strong>{" "}
-            {stats.nbBenevolesDistincts > 1 ? "bénévoles mobilisés" : "bénévole mobilisé"}.{" "}
-            <Link href="/statistiques" className="font-semibold text-primary underline underline-offset-4">
-              Statistiques
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <section aria-labelledby="a-faire" className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="a-faire" className="font-display text-xl font-bold text-foreground">
+              À faire
+            </h2>
+            <Link href="/distributions" className="font-semibold text-primary underline underline-offset-4">
+              Planning
             </Link>
-          </p>
+          </div>
+          {taches.length === 0 ? (
+            <p className="text-base text-muted-foreground">Rien ne presse : tout est publié et les équipes sont complètes.</p>
+          ) : (
+            <List>
+              {taches.map((t) => {
+                const Icone = ICONE[t.ton];
+                return (
+                  <ListRow
+                    key={t.cle}
+                    href={t.href}
+                    debut={
+                      <span aria-hidden="true" className={`flex size-10 items-center justify-center rounded-xl ${PASTILLE[t.ton]}`}>
+                        <Icone className="size-5" />
+                      </span>
+                    }
+                    titre={t.titre}
+                    sousTitre={t.detail}
+                  />
+                );
+              })}
+            </List>
+          )}
         </section>
-      )}
+
+        {stats && (
+          <section aria-labelledby="ce-mois" className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="ce-mois" className="font-display text-xl font-bold text-foreground">
+                Ce mois-ci
+              </h2>
+              <Link href="/statistiques" className="font-semibold text-primary underline underline-offset-4">
+                Statistiques
+              </Link>
+            </div>
+            <div className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card">
+              <Stat className="p-4" icone={CalendarCheck} valeur={stats.nbDistributions} libelle={stats.nbDistributions > 1 ? "distributions closes" : "distribution close"} />
+              <Stat className="p-4" icone={HeartHandshake} ton="turquoise" valeur={stats.nbBeneficiairesDistinctsServis} libelle={stats.nbBeneficiairesDistinctsServis > 1 ? "bénéficiaires servis" : "bénéficiaire servi"} />
+              <Stat className="p-4" icone={Users} ton="jaune" valeur={stats.nbBenevolesDistincts} libelle={stats.nbBenevolesDistincts > 1 ? "bénévoles mobilisés" : "bénévole mobilisé"} />
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

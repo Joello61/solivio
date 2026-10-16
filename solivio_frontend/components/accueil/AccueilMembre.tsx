@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
+import { BandeauAccueil } from "@/components/accueil/BandeauAccueil";
+import { CalendarDays, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { List, ListRow } from "@/components/ui/list-row";
 import { DateBloc } from "@/components/agenda/DateBloc";
 import { LigneDistribution } from "@/components/agenda/LigneDistribution";
 import { LigneEngagement } from "@/components/agenda/LigneEngagement";
-import { DistributionDuJour } from "@/components/dashboard/DistributionDuJour";
 import { BilletInscription } from "@/components/inscriptions/BilletInscription";
 import { lireEngagements, lireServeur } from "@/lib/api/serveur";
+import { PHOTOS } from "@/lib/photos";
 import { dateLongue, horaire, quand } from "@/lib/agenda";
 import { jourAssociation } from "@/lib/distribution-du-jour";
 import { evenementCherchantEquipe, missionAPrendre, placesEquipe, type Engagement } from "@/lib/engagements";
@@ -50,18 +51,22 @@ async function besoinsBenevoles(maintenant: Date, dejaPris: Set<string>): Promis
 
 interface Props {
   prenom: string;
-  type: TypeInscription;
-  duJour: DistributionResponse[];
+  /* Types d'inscription ouverts, beneficiaire d'abord (typesInscriptionPossibles). */
+  types: TypeInscription[];
 }
 
 /*
  * Accueil d'un beneficiaire ou d'un benevole : le prochain rendez-vous d'abord,
  * puis ce qu'il est possible de reserver.
  */
-export async function AccueilMembre({ prenom, type, duJour }: Props) {
+export async function AccueilMembre({ prenom, types }: Props) {
   const maintenant = new Date();
   const aujourdhui = jourAssociation(maintenant);
+  // Qui est aussi beneficiaire voit d'abord les places a reserver ; les besoins
+  // de l'equipe s'ajoutent des qu'il est benevole.
+  const [type] = types;
   const benevole = type === "BENEVOLE";
+  const aideAussi = types.includes("BENEVOLE");
   const [inscriptions, distributions, autres] = await Promise.all([
     lireServeur<InscriptionPersonnelle[]>("/api/inscriptions/mes"),
     lireServeur<DistributionResponse[]>("/api/distributions"),
@@ -72,7 +77,7 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
   const autresAVenir = autres.filter((e) => e.aVenir);
   const [roles, besoins] = await Promise.all([
     rolesSur(prochaine),
-    benevole ? besoinsBenevoles(maintenant, new Set(autres.map((e) => e.href))) : [],
+    aideAussi ? besoinsBenevoles(maintenant, new Set(autres.map((e) => e.href))) : [],
   ]);
   const dejaInscrit = new Set(avenir.map((i) => i.distributionId));
   // Un benevole voit d'abord les distributions ou il manque du monde.
@@ -112,71 +117,83 @@ export async function AccueilMembre({ prenom, type, duJour }: Props) {
   const prochainJour = [prochaine?.distributionDate, autresAVenir[0]?.date].filter(Boolean).sort()[0];
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8">
-      <header className="flex flex-col gap-1.5">
-        <h1 className="font-display text-3xl leading-tight font-extrabold text-foreground sm:text-4xl">
-          Bonjour {prenom}
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          {prochainJour
-            ? `Prochain rendez-vous ${quand(prochainJour, aujourdhui)}.`
-            : "Aucun rendez-vous prévu pour l'instant."}
-        </p>
-      </header>
+    <div className="flex flex-col gap-8">
+      <BandeauAccueil
+        surtitre={dateLongue(aujourdhui)}
+        titre={`Bonjour ${prenom}`}
+        description={
+          prochainJour ? `Prochain rendez-vous ${quand(prochainJour, aujourdhui)}.` : "Aucun rendez-vous prévu pour l'instant."
+        }
+        photo={benevole ? PHOTOS.equipeSoiree : PHOTOS.colis}
+      />
 
-      {/* Avant le demarrage, le billet suffit ; ensuite, le pointage est a portee. */}
-      <DistributionDuJour distributions={duJour.filter((d) => d.statut === "EN_COURS")} />
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+        <div className="flex flex-col gap-8">
+          {prochaine ? (
+            <BilletInscription billet={versBillet(prochaine, aujourdhui, roles)} lienFiche />
+          ) : (
+            suite.length === 0 &&
+            ouvertes.length > 0 && (
+              <Link
+                href={`/distributions/${ouvertes[0].id}`}
+                className={buttonVariants({ size: "lg", className: "sm:self-start" })}
+              >
+                <CalendarDays aria-hidden="true" />
+                {benevole ? "Venir aider" : "Réserver"} {quand(ouvertes[0].date, aujourdhui)}
+              </Link>
+            )
+          )}
 
-      {prochaine ? (
-        <BilletInscription billet={versBillet(prochaine, aujourdhui, roles)} lienFiche />
-      ) : (
-        suite.length === 0 &&
-        ouvertes.length > 0 && (
-          <Link
-            href={`/distributions/${ouvertes[0].id}`}
-            className={buttonVariants({ size: "lg", className: "sm:self-start" })}
-          >
-            <CalendarDays aria-hidden="true" />
-            {benevole ? "Venir aider" : "Réserver"} {quand(ouvertes[0].date, aujourdhui)}
-          </Link>
-        )
-      )}
-
-      {suite.length > 0 && (
-        <section aria-labelledby="ensuite" className="flex flex-col gap-3">
-          <h2 id="ensuite" className="font-display text-xl font-bold text-foreground">
-            {prochaine ? "Ensuite" : "À venir"}
-          </h2>
-          <List>{suite.map((s) => s.ligne)}</List>
-        </section>
-      )}
-
-      <section aria-labelledby="ouvertes" className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="ouvertes" className="font-display text-xl font-bold text-foreground">
-            {benevole ? "On a besoin de vous" : "Ouvertes aux inscriptions"}
-          </h2>
-          <Link href="/distributions" className="font-semibold text-primary underline underline-offset-4">
-            Agenda
-          </Link>
+          {suite.length > 0 && (
+            <section aria-labelledby="ensuite" className="flex flex-col gap-3">
+              <h2 id="ensuite" className="font-display text-xl font-bold text-foreground">
+                {prochaine ? "Ensuite" : "À venir"}
+              </h2>
+              <List>{suite.map((s) => s.ligne)}</List>
+            </section>
+          )}
         </div>
-        {ouvertes.length === 0 && besoins.length === 0 ? (
-          <p className="text-base text-muted-foreground">
-            {benevole
-              ? "Toutes les équipes sont au complet pour le moment. Merci !"
-              : "Pas d'autre date ouverte pour le moment. Les prochaines apparaîtront dans l'agenda."}
-          </p>
-        ) : (
-          <List>
-            {ouvertes.map((d) => (
-              <LigneDistribution key={d.id} distribution={d} type={type} />
-            ))}
-            {besoins.map((e) => (
-              <LigneEngagement key={e.cle} engagement={e} />
-            ))}
-          </List>
-        )}
-      </section>
+
+        <section aria-labelledby="ouvertes" className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="ouvertes" className="font-display text-xl font-bold text-foreground">
+              {benevole ? "On a besoin de vous" : "Ouvertes aux inscriptions"}
+            </h2>
+            <Link href="/distributions" className="font-semibold text-primary underline underline-offset-4">
+              Agenda
+            </Link>
+          </div>
+          {ouvertes.length === 0 && besoins.length === 0 ? (
+            <p className="text-base text-muted-foreground">
+              {benevole
+                ? "Toutes les équipes sont au complet pour le moment. Merci !"
+                : "Pas d'autre date ouverte pour le moment. Les prochaines apparaîtront dans l'agenda."}
+            </p>
+          ) : (
+            <List>
+              {ouvertes.map((d) => (
+                <LigneDistribution key={d.id} distribution={d} type={type} />
+              ))}
+              {besoins.map((e) => (
+                <LigneEngagement key={e.cle} engagement={e} />
+              ))}
+            </List>
+          )}
+        </section>
+      </div>
+
+      {types.length === 1 && (
+        <Link
+          href="/mon-compte#roles"
+          className="flex items-center gap-3 self-start rounded-2xl bg-secondary px-4 py-3 text-base text-foreground hover:bg-secondary/80"
+        >
+          <UserPlus aria-hidden="true" className="size-5 shrink-0 text-primary" />
+          <span>
+            {benevole ? "Étudiant, vous pouvez aussi être bénéficiaire." : "Envie d'aider ? Vous pouvez aussi être bénévole."}{" "}
+            <span className="font-semibold text-primary underline underline-offset-4">Voir comment</span>
+          </span>
+        </Link>
+      )}
     </div>
   );
 }

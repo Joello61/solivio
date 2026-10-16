@@ -77,7 +77,7 @@ export function FormulaireConfiguration({ association }: Props) {
   }
 
   return (
-    <form onSubmit={soumettre} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={soumettre} className="flex flex-col gap-6">
       <SectionFormulaire titre="Identité">
         <FormField label="Nom de l'association" htmlFor="nom">
           <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} minLength={2} maxLength={255} />

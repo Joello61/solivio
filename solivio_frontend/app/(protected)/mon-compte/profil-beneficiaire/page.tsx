@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { EyeOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
 import { PageHeader } from "@/components/ui/page-header";
 import { FormulaireProfilBeneficiaire } from "@/components/account/FormulaireProfilBeneficiaire";
 import { lireServeur } from "@/lib/api/serveur";
@@ -14,7 +15,21 @@ export default async function ProfilBeneficiairePage() {
   if (profil === null) redirect("/mon-compte");
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <DeuxColonnes
+      collante
+      aside={
+        // RG5 : confidentialite par defaut.
+        <Alert variant="info">
+          <EyeOff aria-hidden="true" />
+          <AlertTitle>Qui voit ces informations</AlertTitle>
+          <AlertDescription>
+            Vous, et les responsables de l&apos;association. Chaque consultation est enregistrée. Les
+            bénévoles ne les voient jamais, même à l&apos;accueil d&apos;une distribution, et les
+            statistiques restent anonymes.
+          </AlertDescription>
+        </Alert>
+      }
+    >
       <PageHeader
         className="mb-0 sm:mb-0"
         retour={{ href: "/mon-compte", libelle: "Mon compte" }}
@@ -22,20 +37,9 @@ export default async function ProfilBeneficiairePage() {
         description="Ces informations aident l'association à comprendre les besoins. Chaque champ est facultatif."
       />
 
-      {/* RG5 : confidentialite par defaut. */}
-      <Alert variant="info">
-        <EyeOff aria-hidden="true" />
-        <AlertTitle>Qui voit ces informations</AlertTitle>
-        <AlertDescription>
-          Vous, et les responsables de l&apos;association. Chaque consultation est enregistrée. Les
-          bénévoles ne les voient jamais, même à l&apos;accueil d&apos;une distribution, et les
-          statistiques restent anonymes.
-        </AlertDescription>
-      </Alert>
-
       <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
         <FormulaireProfilBeneficiaire profil={profil} />
       </div>
-    </div>
+    </DeuxColonnes>
   );
 }

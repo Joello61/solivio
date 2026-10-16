@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { CalendarCheck, HeartHandshake, Users } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
@@ -65,7 +66,7 @@ export default async function StatistiquesPage({ searchParams }: PageProps) {
   const lignes = parDistribution ?? [];
 
   return (
-    <div className="flex max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         className="mb-0 sm:mb-0"
         titre="Statistiques"
@@ -77,10 +78,10 @@ export default async function StatistiquesPage({ searchParams }: PageProps) {
         <Alert variant="destructive">Les statistiques n&apos;ont pas pu être chargées. Réessayez dans un instant.</Alert>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-6 border-y border-border py-5 sm:grid-cols-3">
-            <Stat valeur={totaux.nbDistributions} libelle={`distribution${totaux.nbDistributions > 1 ? "s" : ""} close${totaux.nbDistributions > 1 ? "s" : ""}`} />
-            <Stat valeur={totaux.nbBeneficiairesDistinctsServis} libelle="bénéficiaires servis" detail="personnes distinctes" />
-            <Stat valeur={totaux.nbBenevolesDistincts} libelle="bénévoles mobilisés" detail="personnes distinctes" />
+          <div className="grid gap-6 border-y border-border py-5 sm:grid-cols-3">
+            <Stat icone={CalendarCheck} valeur={totaux.nbDistributions} libelle={`distribution${totaux.nbDistributions > 1 ? "s" : ""} close${totaux.nbDistributions > 1 ? "s" : ""}`} />
+            <Stat icone={HeartHandshake} ton="turquoise" valeur={totaux.nbBeneficiairesDistinctsServis} libelle="bénéficiaires servis" detail="personnes distinctes" />
+            <Stat icone={Users} ton="jaune" valeur={totaux.nbBenevolesDistincts} libelle="bénévoles mobilisés" detail="personnes distinctes" />
           </div>
 
           {lignes.length === 0 ? (

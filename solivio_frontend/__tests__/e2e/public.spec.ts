@@ -72,9 +72,11 @@ test.describe("Page inscription (register)", () => {
 test.describe("Page d'accueil", () => {
   test("presente l'association, les prochaines dates et l'acces aux comptes", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Linkee Toulouse");
+    await expect(page).toHaveTitle("Linkee Toulouse");
+    await expect(page.getByRole("link", { name: "Linkee Toulouse" })).toHaveAttribute("href", "/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("sur simple inscription");
     await expect(page.getByRole("heading", { name: "Prochaines distributions" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveAttribute("href", "/register");
-    await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/login");
+    await expect(page.getByRole("link", { name: "Je m'inscris" })).toHaveAttribute("href", "/register");
+    await expect(page.getByRole("banner").getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", "/login");
   });
 });

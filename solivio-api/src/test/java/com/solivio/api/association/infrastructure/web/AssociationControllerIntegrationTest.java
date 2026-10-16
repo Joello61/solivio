@@ -45,10 +45,7 @@ class AssociationControllerIntegrationTest {
                 + "VALUES (?, ?, 'hash', 'Resp', 'Config', true)",
             compteResponsableId, "resp@cfg.com"
         );
-        jdbcTemplate.update(
-            "INSERT INTO membre (compte_id, role) VALUES (?, 'responsable')",
-            compteResponsableId
-        );
+        insererMembre(compteResponsableId, "responsable");
 
         compteCoordinateurId = UUID.randomUUID();
         jdbcTemplate.update(
@@ -56,7 +53,7 @@ class AssociationControllerIntegrationTest {
                 + "VALUES (?, ?, 'hash', 'Coord', 'Config', true)",
             compteCoordinateurId, "coord@cfg.com"
         );
-        jdbcTemplate.update("INSERT INTO membre (compte_id, role) VALUES (?, 'coordinateur')", compteCoordinateurId);
+        insererMembre(compteCoordinateurId, "coordinateur");
 
         tokenResponsable = jwtService.genererAccessToken(
             compteResponsableId, "resp@cfg.com", "Resp", "Config", List.of("responsable"), null, false
@@ -216,5 +213,11 @@ class AssociationControllerIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(entrees)
             .contains("association.json", "membre.json", "personne.json", "distribution.json")
             .doesNotContain("compte.json", "refresh_token.json", "verification_code.json", "invitation.json");
+    }
+
+    private void insererMembre(UUID compteId, String role) {
+        UUID membreId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO membre (id, compte_id) VALUES (?, ?)", membreId, compteId);
+        jdbcTemplate.update("INSERT INTO membre_role (membre_id, role) VALUES (?, ?)", membreId, role);
     }
 }

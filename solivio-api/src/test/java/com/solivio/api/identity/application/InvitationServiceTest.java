@@ -5,6 +5,7 @@ import com.solivio.api.identity.domain.Invitation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.InvitationRepository;
 import com.solivio.api.identity.SolivioUserDetails;
+import com.solivio.api.shared.exception.ConflictException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,26 +44,36 @@ class InvitationServiceTest {
     }
 
     @Test
-    void inviter_creeInvitationEtEnvoieEmail() {
+    void inviterResponsable_creeInvitationEtEnvoieEmail() {
         when(invitationRepository.existsByEmailAndStatut("guest@example.com", "pending")).thenReturn(false);
         when(compteRepository.findById(any())).thenReturn(Optional.of(invitant));
 
-        Invitation result = service.inviter(invitantDetails, "guest@example.com", "coordinateur", "coordo_sec");
+        Invitation result = service.inviterResponsable(invitantDetails, "guest@example.com");
 
-        assertThat(result.getRole()).isEqualTo("coordinateur");
-        assertThat(result.getCoordoType()).isEqualTo("coordo_sec");
+        assertThat(result.getRole()).isEqualTo("responsable");
         assertThat(result.getInvitePar()).isSameAs(invitant);
         verify(invitationRepository).save(result);
         verify(emailService).envoyerInvitation(result);
     }
 
     @Test
-    void inviter_lanceExceptionSiInvitationEnAttente() {
+    void inviterResponsable_lanceExceptionSiInvitationEnAttente() {
         when(invitationRepository.existsByEmailAndStatut("guest@example.com", "pending")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.inviter(invitantDetails, "guest@example.com", "benevole", null))
+        assertThatThrownBy(() -> service.inviterResponsable(invitantDetails, "guest@example.com"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("déjà en attente");
+        verify(emailService, never()).envoyerInvitation(any());
+    }
+
+    // Une personne deja inscrite se nomme responsable depuis la liste des membres (ADR-012).
+    @Test
+    void inviterResponsable_refuseUnePersonneQuiADejaUnCompte() {
+        when(compteRepository.existsByEmail("membre@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.inviterResponsable(invitantDetails, "membre@example.com"))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("déjà un compte");
         verify(emailService, never()).envoyerInvitation(any());
     }
 

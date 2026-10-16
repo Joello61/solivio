@@ -1,7 +1,6 @@
 package com.solivio.api.identity.application;
 
 import com.solivio.api.identity.domain.Compte;
-import com.solivio.api.identity.domain.MembreAssociation;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
 import com.solivio.api.shared.exception.ConflictException;
@@ -42,15 +41,15 @@ public class GardeMembres {
 
     /**
      * A appeler avant qu'un membre cesse d'etre responsable actif. Le verrou sur les
-     * responsables actifs serialise deux retraits simultanes : le second voit qu'il
-     * ne reste qu'un responsable.
+     * responsables actifs serialise deux retraits simultanes. Les roles vivant dans
+     * membre_role, la requete qui verrouille les lit telles qu'avant l'attente : on les
+     * relit ensuite, et le second retrait voit qu'il ne reste qu'un responsable.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public void garderUnResponsable(UUID cibleCompteId) {
-        List<MembreAssociation> responsables = membreRepository.verrouillerResponsablesActifs();
-        boolean cibleEstResponsable = responsables.stream()
-            .anyMatch(m -> m.getCompte().getId().equals(cibleCompteId));
-        if (cibleEstResponsable && responsables.size() <= 1) {
+        membreRepository.verrouillerResponsablesActifs();
+        List<UUID> responsables = membreRepository.trouverComptesResponsablesActifs();
+        if (responsables.contains(cibleCompteId) && responsables.size() <= 1) {
             throw new ConflictException("L'association doit garder au moins un responsable actif.");
         }
     }

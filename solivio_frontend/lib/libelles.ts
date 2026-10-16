@@ -5,7 +5,7 @@ import type { StatutSession } from "@/types/reconditionnement";
 
 /*
  * Ton visuel d'un statut, independant de la couleur exacte : "maintenant" pour ce
- * qui se passe en ce moment (citron), "ouvert" pour ce qui attend une action,
+ * qui se passe en ce moment (jaune), "ouvert" pour ce qui attend une action,
  * "passe" pour ce qui est clos. Le vocabulaire suit docs/glossaire.md.
  */
 export type TonStatut =

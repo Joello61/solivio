@@ -42,11 +42,11 @@ Rappel de la note d'intention, sous l'angle fonctionnel. Les intitulés exacts d
 | Acteur | Ce qu'il fait dans le produit |
 |---|---|
 | Responsable | Configure l'association, gère les membres et les droits, voit l'ensemble et les statistiques |
-| Coordinateur | Crée et gère les distributions, coordonne bénévoles et bénéficiaires sur son périmètre |
-| Bénévole | S'inscrit à des créneaux, consulte ses missions, participe au pointage le jour J |
+| Coordinateur | Crée et gère les distributions, coordonne bénévoles et bénéficiaires sur son périmètre, pointe les présences le jour J |
+| Bénévole | S'inscrit à des créneaux, consulte ses missions |
 | Bénéficiaire | S'inscrit à une distribution, reçoit les informations et rappels |
 
-Rappel essentiel : un même individu peut cumuler plusieurs rôles (un bénéficiaire peut être bénévole). Le produit gère des personnes, pas des comptes cloisonnés par rôle.
+Rappel essentiel : un même individu peut cumuler plusieurs rôles (un bénéficiaire peut être bénévole, un coordinateur peut être bénévole et bénéficiaire). Le produit gère des personnes, pas des comptes cloisonnés par rôle. Seul le responsable n'a que ce rôle (RG9).
 
 ## 3. Vue d'ensemble des modules
 
@@ -84,8 +84,9 @@ Voici la carte complète des modules, tous niveaux confondus. Les sections suiva
 
 **Fonctions indispensables (V1) :**
 
-- Création de compte et connexion sécurisée (email et mot de passe), réinitialisation de mot de passe.
-- Attribution d'un ou plusieurs rôles à une personne, au sein d'une association.
+- Création de compte et connexion sécurisée (email et mot de passe), réinitialisation de mot de passe. À la création du compte, la personne choisit d'être bénévole, bénéficiaire ou les deux (RG9).
+- Depuis son compte, un membre prend seul le rôle qu'il n'a pas encore, bénévole ou bénéficiaire, sans validation (RG9).
+- Le responsable ajoute ou retire les rôles bénévole, bénéficiaire et coordinateur d'un membre, et peut le nommer responsable (RG9). Il n'invite plus personne à devenir bénévole ou coordinateur : l'invitation par email sert seulement à faire créer son compte à un futur responsable qui n'en a pas.
 - Contrôle d'accès fondé sur le rôle, avec les règles contextuelles essentielles :
   - un coordinateur agit sur les distributions de son périmètre ;
   - un bénévole voit les distributions auxquelles il est inscrit ;
@@ -161,7 +162,7 @@ Côté coordinateur :
 - Attribuer un ou plusieurs rôles aux bénévoles inscrits (distribution, réapprovisionnement, gestion des cartons, etc.). Les rôles sont définis librement ou à partir d'un catalogue propre à l'association. Un même bénévole peut cumuler plusieurs rôles.
 - Consulter le nombre d'absences passées de chaque bénéficiaire dans la liste des inscrits.
 
-**Précision sur l'inscription manuelle.** Le coordinateur ne peut pas inscrire ni désinscrire une autre personne à la place de cette personne. Chaque utilisateur gère ses propres inscriptions. Le coordinateur peut néanmoins s'inscrire lui-même en tant que bénévole sur un créneau. Ce choix préserve l'autonomie de chaque utilisateur et simplifie le modèle de contrôle d'accès en V1.
+**Précision sur l'inscription manuelle.** Le coordinateur ne peut pas inscrire ni désinscrire une autre personne à la place de cette personne. Chaque utilisateur gère ses propres inscriptions. Un coordinateur qui est aussi bénévole, ou bénéficiaire, s'inscrit lui-même comme tel (RG9). Ce choix préserve l'autonomie de chaque utilisateur et simplifie le modèle de contrôle d'accès en V1.
 
 **Règles de gestion clés (détaillées en section 6) :** la fréquence d'inscription d'un bénéficiaire peut être limitée (par exemple une fois par semaine), et le comportement en cas d'absence répétée est défini.
 
@@ -175,7 +176,9 @@ Côté coordinateur :
 - Pointer la présence des bénévoles.
 - Marquer les absences (les inscrits non venus).
 
-**Précision sur la confidentialité.** Lors du pointage, la personne qui pointe (souvent un bénévole) ne doit voir que le strict nécessaire : le nom et le statut d'inscription, pas l'ensemble des données sensibles du bénéficiaire. C'est une règle de confidentialité à appliquer dès la V1, cohérente avec le différenciateur du produit.
+**Qui pointe.** Le pointage est réservé aux coordinateurs et aux responsables (décision d'octobre 2026, RG9). Un visiteur venu aider sans compte est ajouté à l'équipe du jour ; s'il laisse son email, on peut lui envoyer le lien pour créer son compte, ce qui reste facultatif.
+
+**Précision sur la confidentialité.** Lors du pointage, la personne qui pointe ne doit voir que le strict nécessaire : le nom et le statut d'inscription, pas l'ensemble des données sensibles du bénéficiaire. C'est une règle de confidentialité à appliquer dès la V1, cohérente avec le différenciateur du produit.
 
 **Repoussé (V2) :** le pointage par code à scanner (type QR code) est un confort, pas une nécessité. La V1 se contente d'un pointage manuel par recherche dans la liste.
 
@@ -282,7 +285,7 @@ Chaque création, modification, changement d'état, inscription et pointage est 
 
 - Le responsable crée une session : titre, description, lieu, début et fin (la fin est après le début), capacité facultative. Une capacité atteinte refuse les nouvelles inscriptions (pas de liste d'attente).
 - Cycle de vie fixe : brouillon, publiée, en cours, terminée, annulée. Le responsable publie, démarre, termine ou annule une session (avec un motif).
-- Les bénévoles (coordinateurs et responsables compris, par la hiérarchie des rôles) voient les sessions publiées et s'inscrivent à une session publiée ; ils se désinscrivent tant que la session n'a pas démarré, et peuvent se réinscrire ensuite. Le reconditionnement est un travail bénévole : un bénéficiaire ne voit pas les sessions et ne peut pas s'y inscrire. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
+- Les bénévoles (un coordinateur qui est aussi bénévole compris) voient les sessions publiées et s'inscrivent à une session publiée ; ils se désinscrivent tant que la session n'a pas démarré, et peuvent se réinscrire ensuite. Le reconditionnement est un travail bénévole : un bénéficiaire ne voit pas les sessions et ne peut pas s'y inscrire. Le coordinateur et le responsable voient toutes les sessions, quel que soit leur état.
 - Le coordinateur et le responsable consultent les inscrits et pointent la présence (présent, absent) pendant ou après la session.
 
 **Emails.** Une inscription est confirmée par email, y compris une réinscription après désistement. À l'annulation, les inscrits sont prévenus.
@@ -339,19 +342,21 @@ Ces règles métier transverses conditionnent le comportement du produit. Elles 
 
 **RG1 - Fréquence d'inscription des bénéficiaires.** L'association peut définir une limite (par exemple : un bénéficiaire ne peut s'inscrire qu'à une distribution par semaine). En V1, cette limite est un paramètre simple ; sa configuration fine par l'association est un raffinement ultérieur. Précisions retenues en octobre 2026 : la limite par défaut est d'une distribution par semaine ; la semaine est la semaine calendaire (du lundi au dimanche) de la distribution visée ; les inscriptions confirmées et celles en liste d'attente comptent, celles des distributions annulées non.
 
-**RG2 - Unicité par distribution.** Un bénéficiaire ne peut s'inscrire qu'une fois à une même distribution (cohérent avec la règle réelle "un colis par personne par distribution").
+**RG2 - Unicité par distribution.** Un bénéficiaire ne peut s'inscrire qu'une fois à une même distribution (cohérent avec la règle réelle "un colis par personne par distribution"). Une personne bénévole et bénéficiaire peut tenir une place de chaque côté à la même distribution (RG9).
 
 **RG3 - Liste d'attente.** Quand la capacité est atteinte, les nouvelles inscriptions vont en liste d'attente et sont promues automatiquement, dans l'ordre, dès qu'une place se libère.
 
 **RG4 - Absences (no-show).** Le produit compte les absences des bénéficiaires inscrits non venus. En V1, il les enregistre et les rend visibles au coordinateur : à la clôture d'une distribution, un bénéficiaire confirmé resté non pointé est enregistré absent (absence déduite, distinguée d'une absence pointée) ; un pointage fait après coup par un gestionnaire la corrige. Toute action automatique en cas d'absences répétées (signalement, restriction) est un raffinement ultérieur : on observe d'abord, on automatise ensuite.
 
-**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles : le bénéficiaire lui-même et le responsable, dont chaque consultation est tracée dans le journal d'audit ; les bénévoles au pointage voient le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
+**RG5 - Confidentialité par défaut.** L'accès aux données d'un bénéficiaire est restreint par défaut. Seuls les rôles autorisés voient les données sensibles : le bénéficiaire lui-même et le responsable, dont chaque consultation est tracée dans le journal d'audit ; au pointage, on ne voit que le minimum. Les statistiques sont toujours agrégées et pseudonymisées.
 
 **RG6 - Annulation et information.** Toute annulation de distribution déclenche une notification automatique de tous les inscrits. Aucun inscrit ne doit se déplacer pour rien faute d'information.
 
 **RG7 - Non-enfermement.** Une association peut à tout moment exporter et supprimer l'intégralité de ses données.
 
 **RG8 - Répartition des denrées.** La dotation par bénéficiaire d'une denrée est égale à la quantité totale divisée par le nombre de bénéficiaires retenu, **arrondie à l'inférieur au palier de l'unité (1 à l'unité et à la pièce, 0,5 au kilo et au litre), avec un plancher d'un palier** (la dotation n'est jamais 0). La quantité totale est calculée à partir du conditionnement (nombre de contenants x quantité par contenant). Le nombre de bénéficiaires retenu est, par défaut, le nombre d'inscrits ; le coordinateur peut choisir le nombre de présents réels, et ce choix est enregistré sur la distribution. Lorsque la quantité totale ne permet pas de donner un palier à chacun, la dotation est d'un palier par personne et la denrée s'épuise avant d'avoir servi tout le monde : l'application affiche alors le nombre de bénéficiaires servis et le nombre de bénéficiaires sans, sans chercher à corriger ce manque. Le reste éventuel est affiché. Chaque denrée est calculée indépendamment. La répartition est égalitaire en V1.
+
+**RG9 - Rôles (décision d'octobre 2026, ADR-012).** Bénévole, bénéficiaire et coordinateur se cumulent ; responsable ne se cumule avec aucun autre rôle. À la création de son compte, une personne choisit d'être bénévole, bénéficiaire ou les deux ; depuis son compte, elle prend seule le rôle qui lui manque. Aucune validation n'est demandée, mais être bénéficiaire suppose d'être étudiant inscrit et de présenter sa carte étudiante à l'accueil : ces conditions sont affichées et la personne les atteste. Chaque type d'inscription demande le rôle correspondant. Le responsable ajoute ou retire les rôles bénévole, bénéficiaire et coordinateur ; nommer quelqu'un responsable lui retire ses autres rôles, et n'est possible qu'une fois ses inscriptions à venir passées ou annulées. Une invitation ne sert plus qu'à faire créer son compte à un futur responsable. L'association garde toujours au moins un responsable actif.
 
 ## 7. Exigences non fonctionnelles
 

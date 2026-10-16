@@ -29,10 +29,6 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
     List<Inscription> findByDistributionIdAndTypeAndStatutAndPresence(
         UUID distributionId, TypeInscription type, StatutInscription statut, StatutPresence presence);
 
-    boolean existsByDistributionIdAndPersonneIdAndTypeAndStatut(
-        UUID distributionId, UUID personneId, TypeInscription type, StatutInscription statut
-    );
-
     List<Inscription> findByDistributionIdAndStatutOrderByNomAscPrenomAsc(
         UUID distributionId, StatutInscription statut
     );
@@ -88,6 +84,10 @@ public interface InscriptionRepository extends JpaRepository<Inscription, UUID> 
     );
 
     List<Inscription> findByPersonneIdOrderByDateInscriptionDesc(UUID personneId);
+
+    @Query("SELECT DISTINCT i.distributionId FROM Inscription i"
+        + " WHERE i.personneId = :personneId AND i.statut IN :statuts")
+    List<UUID> trouverDistributionsDesInscriptions(UUID personneId, Collection<StatutInscription> statuts);
 
     // RG4 : absences passees par beneficiaire (batch pour eviter le N+1).
     // Renvoie des paires [personneId, count] pour les personneIds fournis.

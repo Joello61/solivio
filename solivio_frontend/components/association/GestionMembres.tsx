@@ -17,22 +17,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormField } from "@/components/ui/form-field";
+import { Initiales } from "@/components/ui/initiales";
 import { SearchField } from "@/components/ui/search-field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { Statut } from "@/components/ui/statut";
-import { changerStatutMembre, mettreAJourRoleMembre, supprimerMembre } from "@/lib/api/association";
+import { changerStatutMembre, mettreAJourRolesMembre, supprimerMembre } from "@/lib/api/association";
 import { messageErreur } from "@/lib/erreurs";
 import type { LibelleStatut } from "@/lib/libelles";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS, ROLES_CUMULABLES, SANS_TYPE_COORDINATION, TYPES_COORDINATION, libelleRoles } from "@/lib/roles";
 import type { MembreResponse } from "@/types/association";
-
-const ROLES_ATTRIBUABLES = ["benevole", "coordinateur", "responsable", "super_admin"];
 
 type FiltreRole = "tous" | "beneficiaire" | "benevole" | "encadrement";
 type FiltreStatut = "actifs" | "en_attente" | "suspendus";
@@ -48,8 +48,8 @@ const normaliser = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLo
 
 function correspondRole(m: MembreResponse, filtre: FiltreRole): boolean {
   if (filtre === "tous") return true;
-  if (filtre === "encadrement") return m.role === "coordinateur" || m.role === "responsable" || m.role === "super_admin";
-  return m.role === filtre;
+  if (filtre === "encadrement") return m.roles.includes("coordinateur") || m.roles.includes("responsable");
+  return m.roles.includes(filtre);
 }
 
 function correspondStatut(m: MembreResponse, filtre: FiltreStatut): boolean {
@@ -67,7 +67,110 @@ interface FicheProps {
   onFermer: () => void;
 }
 
-/* Les actions sur un membre, a l'ecart de la liste : role, suspension, retrait. */
+/*
+ * Roles d'un membre (ADR-012) : coordinateur, benevole et beneficiaire se cumulent ;
+ * responsable remplace tous les autres et se donne a part, avec confirmation.
+ */
+function RolesDuMembre({ membre, enCours, executer }: { membre: MembreResponse; enCours: boolean; executer: Executer }) {
+  const responsable = membre.roles.includes("responsable");
+  const initiaux = membre.roles.filter((r) => r !== "responsable");
+  const [choisis, setChoisis] = useState<string[]>(initiaux);
+  const [coordoType, setCoordoType] = useState(membre.coordoType ?? SANS_TYPE_COORDINATION);
+  const [nommer, setNommer] = useState(false);
+  const nom = `${membre.prenom} ${membre.nom}`;
+  const modifie =
+    choisis.length > 0 &&
+    (responsable ||
+      choisis.length !== initiaux.length ||
+      choisis.some((r) => !initiaux.includes(r)) ||
+      (choisis.includes("coordinateur") && coordoType !== (membre.coordoType ?? SANS_TYPE_COORDINATION)));
+
+  function enregistrer() {
+    const roles = ROLES_CUMULABLES.filter((r) => choisis.includes(r));
+    executer(
+      () =>
+        mettreAJourRolesMembre(membre.compteId, {
+          roles,
+          coordoType: roles.includes("coordinateur") && coordoType !== SANS_TYPE_COORDINATION ? coordoType : null,
+        }),
+      `Rôles de ${nom} : ${libelleRoles(roles).toLowerCase()}.`,
+    );
+  }
+
+  return (
+    <fieldset className="flex flex-col gap-3" disabled={enCours}>
+      <legend className="mb-1 text-base font-semibold text-foreground">Rôles</legend>
+      {responsable && (
+        <p className="text-base text-muted-foreground">
+          {nom} est responsable, rôle qui ne se cumule avec aucun autre. Pour le lui retirer, choisissez ce qu&apos;il
+          devient.
+        </p>
+      )}
+      {ROLES_CUMULABLES.map((r) => (
+        <label key={r} className="flex cursor-pointer items-center gap-3 text-base text-foreground">
+          <Checkbox
+            checked={choisis.includes(r)}
+            onCheckedChange={(v) => setChoisis((prev) => (v === true ? [...prev, r] : prev.filter((x) => x !== r)))}
+          />
+          {ROLE_LABELS[r]}
+        </label>
+      ))}
+      {choisis.includes("coordinateur") && (
+        <FormField label="Type de coordination" htmlFor="role-coordination">
+          <Select items={TYPES_COORDINATION} value={coordoType} onValueChange={(v) => v && setCoordoType(v)}>
+            <SelectTrigger id="role-coordination" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TYPES_COORDINATION.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  {t.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button className="self-start" disabled={!modifie} onClick={enregistrer}>
+          {enCours && <Spinner size="sm" />}
+          Enregistrer les rôles
+        </Button>
+        {!responsable && (
+          <Button variant="outline" className="self-start" onClick={() => setNommer(true)}>
+            Nommer responsable
+          </Button>
+        )}
+      </div>
+
+      <AlertDialog open={nommer} onOpenChange={setNommer}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nommer {nom} responsable</AlertDialogTitle>
+            <AlertDialogDescription>
+              Un responsable n&apos;a que ce rôle : {nom} ne pourra plus s&apos;inscrire comme bénévole ni comme
+              bénéficiaire. Ce n&apos;est possible qu&apos;une fois ses inscriptions à venir passées ou annulées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                executer(() => mettreAJourRolesMembre(membre.compteId, { roles: ["responsable"] }), `${nom} est maintenant responsable.`)
+              }
+            >
+              Nommer responsable
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </fieldset>
+  );
+}
+
+type Executer = (appel: () => Promise<unknown>, succes: string, fermer?: boolean) => void;
+
+/* Les actions sur un membre, a l'ecart de la liste : roles, suspension, retrait. */
 function FicheMembre({ membre, estSoi, peutVoirDossier, onFermer }: FicheProps) {
   const router = useRouter();
   const [enCours, setEnCours] = useState(false);
@@ -92,7 +195,6 @@ function FicheMembre({ membre, estSoi, peutVoirDossier, onFermer }: FicheProps) 
   if (!membre) return null;
   const nom = `${membre.prenom} ${membre.nom}`;
   const suspendu = membre.statut === "suspendu";
-  const roles = ROLES_ATTRIBUABLES.includes(membre.role) ? ROLES_ATTRIBUABLES : [membre.role, ...ROLES_ATTRIBUABLES];
 
   return (
     <>
@@ -104,7 +206,7 @@ function FicheMembre({ membre, estSoi, peutVoirDossier, onFermer }: FicheProps) 
       </SheetHeader>
       <Statut libelle={STATUT_MEMBRE[membre.statut] ?? { texte: membre.statut, ton: "passe" }} className="w-fit" />
 
-      {peutVoirDossier && membre.role === "beneficiaire" && (
+      {peutVoirDossier && membre.roles.includes("beneficiaire") && (
         <Link href={`/association/membres/${membre.compteId}/dossier`} className={buttonVariants({ variant: "outline", className: "self-start" })}>
           <FileText aria-hidden="true" />
           Voir le dossier social
@@ -112,30 +214,18 @@ function FicheMembre({ membre, estSoi, peutVoirDossier, onFermer }: FicheProps) 
       )}
 
       {estSoi ? (
-        <p className="text-base text-muted-foreground">C&apos;est votre compte : un autre responsable peut changer votre rôle.</p>
+        <p className="text-base text-muted-foreground">C&apos;est votre compte : un autre responsable peut changer vos rôles.</p>
       ) : (
         <>
-          <FormField label="Rôle" htmlFor="role-membre" hint={suspendu ? "Réactivez le membre pour changer son rôle." : undefined}>
-            <Select
-              items={ROLE_LABELS}
-              value={membre.role}
-              disabled={enCours || suspendu}
-              onValueChange={(v) => v && v !== membre.role && executer(() => mettreAJourRoleMembre(membre.compteId, { role: v }), `${nom} est maintenant ${ROLE_LABELS[v]?.toLowerCase() ?? v}.`)}
-            >
-              <SelectTrigger id="role-membre" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {ROLE_LABELS[r] ?? r}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
+          {suspendu ? (
+            <p className="text-base text-muted-foreground">
+              {libelleRoles(membre.roles)}. Réactivez le membre pour changer ses rôles.
+            </p>
+          ) : (
+            <RolesDuMembre membre={membre} enCours={enCours} executer={executer} />
+          )}
 
-          {membre.statut !== "invite_en_attente" && (
+      {membre.statut !== "invite_en_attente" && (
             <div className="flex flex-col gap-2">
               <p className="text-base text-muted-foreground">
                 {suspendu
@@ -214,18 +304,21 @@ export function GestionMembres({ membres, currentUserId, peutVoirDossiers = fals
   const ouvert = membres.find((m) => m.compteId === ouvertId) ?? null;
 
   const nomCellule = (m: MembreResponse) => (
-    <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex flex-col text-left hover:underline focus-visible:underline">
-      <span className="font-semibold text-foreground">
-        {m.nom} {m.prenom}
-        {m.compteId === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+    <button type="button" onClick={() => setOuvertId(m.compteId)} className="group flex items-center gap-3 text-left">
+      <Initiales prenom={m.prenom} nom={m.nom} />
+      <span className="flex flex-col">
+        <span className="font-semibold text-foreground group-hover:underline group-focus-visible:underline">
+          {m.nom} {m.prenom}
+          {m.compteId === currentUserId && <span className="font-normal text-muted-foreground"> (vous)</span>}
+        </span>
+        <span className="text-sm text-muted-foreground">{m.email}</span>
       </span>
-      <span className="text-sm text-muted-foreground">{m.email}</span>
     </button>
   );
 
   const colonnes: ColumnDef<MembreResponse>[] = [
     { key: "nom", header: "Membre", sortable: true, cell: nomCellule },
-    { key: "role", header: "Rôle", sortable: true, cell: (m) => ROLE_LABELS[m.role] ?? m.role },
+    { key: "role", header: "Rôles", sortable: true, cell: (m) => libelleRoles(m.roles) },
     { key: "arrivee", header: "Arrivée", sortable: true, className: "tabular-nums text-muted-foreground", cell: arrivee },
     {
       key: "gerer",
@@ -277,17 +370,18 @@ export function GestionMembres({ membres, currentUserId, peutVoirDossiers = fals
             columns={colonnes}
             pageSize={50}
             getRowKey={(m) => m.compteId}
-            sortKey={(m, cle) => (cle === "role" ? (ROLE_LABELS[m.role] ?? m.role) : cle === "arrivee" ? m.dateDebut : `${m.nom} ${m.prenom}`)}
+            sortKey={(m, cle) => (cle === "role" ? libelleRoles(m.roles) : cle === "arrivee" ? m.dateDebut : `${m.nom} ${m.prenom}`)}
           />
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card md:hidden">
             {lignes.map((m) => (
               <li key={m.compteId}>
                 <button type="button" onClick={() => setOuvertId(m.compteId)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted">
+                  <Initiales prenom={m.prenom} nom={m.nom} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-semibold text-foreground">
                       {m.nom} {m.prenom}
                     </span>
-                    <span className="truncate text-sm text-muted-foreground">{ROLE_LABELS[m.role] ?? m.role}</span>
+                    <span className="truncate text-sm text-muted-foreground">{libelleRoles(m.roles)}</span>
                   </span>
                   <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                 </button>

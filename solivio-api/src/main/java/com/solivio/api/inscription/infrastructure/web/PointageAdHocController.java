@@ -73,13 +73,13 @@ public class PointageAdHocController {
         return ResponseEntity.ok(service.lister(distributionId));
     }
 
-    @PostMapping("/{adHocId}/invitation")
-    public ResponseEntity<Void> envoyerInvitation(
+    @PostMapping("/{adHocId}/lien-inscription")
+    public ResponseEntity<Void> envoyerLienInscription(
         @PathVariable UUID distributionId,
         @PathVariable UUID adHocId,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        service.envoyerInvitation(adHocId, user.getCompteId());
+        service.envoyerLienInscription(adHocId, user.getCompteId());
         return ResponseEntity.ok().build();
     }
 }

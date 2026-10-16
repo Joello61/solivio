@@ -16,6 +16,7 @@ import { estGestionnaireDistribution } from "@/lib/droits-distribution";
 import { STATUT_EVENEMENT } from "@/lib/libelles";
 import { estResponsable } from "@/lib/roles";
 import type { EvenementResponse } from "@/types/evenement";
+import { ReperesEvenements } from "@/components/shared/ReperesActivites";
 
 export const metadata: Metadata = { title: "Événements" };
 
@@ -80,6 +81,7 @@ export default async function EvenementsPage({ searchParams }: { searchParams: P
       defaut="a-venir"
       vide="Rien dans cette section."
       libelleFiltre="Événements à afficher"
+      aside={<ReperesEvenements />}
     />
   );
 }

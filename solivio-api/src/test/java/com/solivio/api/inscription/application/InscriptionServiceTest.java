@@ -296,7 +296,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.save(any(Inscription.class))).thenReturn(confirmee);
 
         InscriptionResponse response =
-            service.pointer(distributionId, inscriptionId, "PRESENT", "coord@example.com", true);
+            service.pointer(distributionId, inscriptionId, "PRESENT", "coord@example.com");
 
         assertThat(response.presence()).isEqualTo("PRESENT");
     }
@@ -315,7 +315,7 @@ class InscriptionServiceTest {
         when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
 
         assertThatThrownBy(() -> service.pointer(
-            distributionId, inscriptionId, "PRESENT", "coord@example.com", true))
+            distributionId, inscriptionId, "PRESENT", "coord@example.com"))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("en cours");
     }
@@ -326,7 +326,7 @@ class InscriptionServiceTest {
         when(inscriptionRepository.findByIdAndDistributionId(inscriptionId, distributionId))
             .thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.pointer(
-            distributionId, inscriptionId, "PRESENT", "coord@example.com", true))
+            distributionId, inscriptionId, "PRESENT", "coord@example.com"))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -734,6 +734,32 @@ class InscriptionServiceTest {
     }
 
     @Test
+    void inscrire_refuseUnCoordinateurQuiNEstPasBenevole() {
+        assertThatThrownBy(() -> service.inscrire(
+            distributionId, "coord@example.com", "BENEVOLE", null, Set.of("coordinateur")
+        ))
+            .isInstanceOf(AuthorizationDeniedException.class);
+        verify(inscriptionRepository, never()).save(any());
+    }
+
+    // Une personne benevole et beneficiaire peut tenir les deux places a la meme distribution.
+    @Test
+    void inscrire_benevoleEtBeneficiairePeutSInscrireCommeBenevole() {
+        when(distributionQueryPort.trouverDistribution(distributionId)).thenReturn(distribPubliee);
+        when(personneQueryPort.trouverPersonne("marie@example.com")).thenReturn(personne);
+        when(inscriptionRepository.findByDistributionIdAndPersonneIdAndType(
+            distributionId, personneId, TypeInscription.BENEVOLE)
+        ).thenReturn(Optional.empty());
+        when(inscriptionRepository.save(any(Inscription.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        InscriptionResponse response = service.inscrire(
+            distributionId, "marie@example.com", "BENEVOLE", null, Set.of("benevole", "beneficiaire")
+        );
+
+        assertThat(response.type()).isEqualTo("BENEVOLE");
+    }
+
+    @Test
     void inscrire_refuseUnBenevoleEnTantQueBeneficiaire() {
         assertThatThrownBy(() -> service.inscrire(
             distributionId, "ben@example.com", "BENEFICIAIRE", null, ROLES_BENEVOLE
@@ -741,41 +767,16 @@ class InscriptionServiceTest {
             .isInstanceOf(AuthorizationDeniedException.class);
     }
 
-    // --- C4 : pointage limite aux benevoles inscrits ---
-
+    // Le pointage est reserve aux gestionnaires par le controleur (ADR-012) : le service
+    // ne filtre plus selon l'inscription du pointeur.
     @Test
-    void pointer_repond404PourUnBenevoleNonInscritALaDistribution() {
-        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
-        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
-            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
-        ).thenReturn(false);
+    void rechercherPourPointage_renvoieLesInscritsSansDonneeSensible() {
+        Inscription inscrite = inscriptionBeneficiaire(personneId, StatutInscription.CONFIRMEE);
+        when(inscriptionRepository.rechercherPourPointage(distributionId, "Du")).thenReturn(List.of(inscrite));
 
-        assertThatThrownBy(() -> service.pointer(
-            distributionId, inscriptionId, "PRESENT", "ben@example.com", false))
-            .isInstanceOf(NotFoundException.class);
-        verify(inscriptionRepository, never()).findByIdAndDistributionId(any(), any());
-    }
-
-    @Test
-    void rechercherPourPointage_repond404PourUnBenevoleNonInscrit() {
-        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
-        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
-            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
-        ).thenReturn(false);
-
-        assertThatThrownBy(() -> service.rechercherPourPointage(distributionId, "Du", "ben@example.com", false))
-            .isInstanceOf(NotFoundException.class);
-    }
-
-    @Test
-    void rechercherPourPointage_autoriseUnBenevoleInscritConfirme() {
-        when(personneQueryPort.trouverPersonne("ben@example.com")).thenReturn(personne);
-        when(inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
-            distributionId, personneId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE)
-        ).thenReturn(true);
-        when(inscriptionRepository.rechercherPourPointage(distributionId, "Du")).thenReturn(List.of());
-
-        assertThat(service.rechercherPourPointage(distributionId, "Du", "ben@example.com", false)).isEmpty();
+        assertThat(service.rechercherPourPointage(distributionId, "Du"))
+            .singleElement()
+            .satisfies(p -> assertThat(p.type()).isEqualTo("BENEFICIAIRE"));
     }
 
     // --- Helpers ---

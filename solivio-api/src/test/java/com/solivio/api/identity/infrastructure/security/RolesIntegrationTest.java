@@ -23,11 +23,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * ADR-011 : hierarchie responsable > coordinateur > benevole, beneficiaire a part,
- * plus de role admin.
+ * ADR-012 : responsable > coordinateur ; benevole et beneficiaire sont des roles a
+ * part entiere, que l'on cumule ou non. Plus de role admin (ADR-011).
  */
 @SolivioIntegrationTest
-class HierarchieRolesIntegrationTest {
+class RolesIntegrationTest {
 
     @Autowired private WebApplicationContext context;
     @Autowired private JdbcTemplate jdbcTemplate;
@@ -41,22 +41,44 @@ class HierarchieRolesIntegrationTest {
     }
 
     @Test
-    void coordinateur_peutPrendreUneMissionReserveeAuxBenevoles() throws Exception {
+    void coordinateurBenevole_peutPrendreUneMission() throws Exception {
         String mission = creerMission();
 
         mockMvc.perform(post("/api/missions-collecte/" + mission + "/prendre")
-                .cookie(jeton("coord@roles.test", "coordinateur")))
+                .cookie(jeton("coord@roles.test", "coordinateur", "benevole")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.statut").value("PRISE_EN_CHARGE"));
     }
 
     @Test
-    void responsable_peutPrendreUneMissionReserveeAuxBenevoles() throws Exception {
+    void coordinateurSeul_nePrendPasDeMission() throws Exception {
+        String mission = creerMission();
+
+        mockMvc.perform(post("/api/missions-collecte/" + mission + "/prendre")
+                .cookie(jeton("coord@roles.test", "coordinateur")))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void responsable_nePrendPasDeMission() throws Exception {
         String mission = creerMission();
 
         mockMvc.perform(post("/api/missions-collecte/" + mission + "/prendre")
                 .cookie(jeton("resp2@roles.test", "responsable")))
+            .andExpect(status().isForbidden());
+    }
+
+    // Les gestionnaires suivent les missions sans etre benevoles.
+    @Test
+    void coordinateurEtResponsable_voientLesMissions() throws Exception {
+        String mission = creerMission();
+
+        mockMvc.perform(get("/api/missions-collecte").cookie(jeton("coord@roles.test", "coordinateur")))
             .andExpect(status().isOk());
+        mockMvc.perform(get("/api/missions-collecte/" + mission).cookie(jeton("resp2@roles.test", "responsable")))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/missions-collecte").cookie(jeton("benef@roles.test", "beneficiaire")))
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -106,15 +128,30 @@ class HierarchieRolesIntegrationTest {
             .andExpect(status().isForbidden());
     }
 
+    // Les invitations ne creent que des responsables, et seulement pour une personne sans compte.
     @Test
-    void invitation_refuseLeRoleAdmin() throws Exception {
+    void invitation_refuseUnePersonneQuiADejaUnCompte() throws Exception {
+        jdbcTemplate.update("INSERT INTO compte (id, email, password_hash, nom, prenom, email_verifie) "
+            + "VALUES (?, 'inscrit@roles.test', 'hash', 'Nom', 'Prenom', true)", UUID.randomUUID());
+
         mockMvc.perform(post("/api/invitations")
                 .cookie(jeton("resp@roles.test", "responsable"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"email": "nouveau@roles.test", "role": "admin"}
+                    {"email": "inscrit@roles.test"}
                     """))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void invitation_refuseeAuCoordinateur() throws Exception {
+        mockMvc.perform(post("/api/invitations")
+                .cookie(jeton("coord@roles.test", "coordinateur"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"email": "nouveau@roles.test"}
+                    """))
+            .andExpect(status().isForbidden());
     }
 
     private String creerMission() throws Exception {
@@ -129,7 +166,7 @@ class HierarchieRolesIntegrationTest {
         return JsonMapper.builder().build().readTree(body).get("id").asString();
     }
 
-    private Cookie jeton(String email, String role) {
+    private Cookie jeton(String email, String... roles) {
         Integer existe = jdbcTemplate.queryForObject(
             "SELECT count(*) FROM personne WHERE email = ?", Integer.class, email);
         if (existe == 0) {
@@ -137,6 +174,6 @@ class HierarchieRolesIntegrationTest {
                 UUID.randomUUID(), email);
         }
         return new Cookie("access_token",
-            jwtService.genererAccessToken(UUID.randomUUID(), email, "Nom", "Prenom", List.of(role), null, false));
+            jwtService.genererAccessToken(UUID.randomUUID(), email, "Nom", "Prenom", List.of(roles), null, false));
     }
 }

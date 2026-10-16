@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { APIProvider } from "@vis.gl/react-google-maps";
+import { EyeOff, Megaphone, Users } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
@@ -12,6 +13,8 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
+import { EncartInfo } from "@/components/shared/Encarts";
 import {
   Select,
   SelectContent,
@@ -177,6 +180,18 @@ export function FormulaireEvenement({ evenement }: { evenement?: EvenementRespon
     }
   }
 
+  const ensuite = (
+    <EncartInfo
+      titre="Ce qui se passe ensuite"
+      ton="marque"
+      points={[
+        { icone: EyeOff, texte: "En brouillon, seuls les coordinateurs et les responsables le voient." },
+        { icone: Megaphone, texte: "À la publication, l'équipe et le public choisis sont prévenus par email." },
+        { icone: Users, texte: "Sans liste d'attente : une fois les places prises, les inscriptions sont refusées." },
+      ]}
+    />
+  );
+
   if (mapsApiKey === null) {
     return (
       <div className="flex justify-center py-12">
@@ -187,116 +202,118 @@ export function FormulaireEvenement({ evenement }: { evenement?: EvenementRespon
 
   return (
     <APIProvider apiKey={mapsApiKey} libraries={["places"]}>
-      <form onSubmit={soumettre} noValidate className="flex max-w-2xl flex-col gap-6">
-        <SectionFormulaire titre="L'événement">
-          <FormField label="Titre" htmlFor="titre" required>
-            <Input id="titre" value={form.titre} onChange={(e) => set("titre", e.target.value)} />
-          </FormField>
-          <FormField label="Type" htmlFor="type">
-            <Select items={TYPES} value={form.type} onValueChange={(v) => set("type", v as TypeEvenement)}>
-              <SelectTrigger id="type" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-          <FormField label="Description" htmlFor="description" hint="Ce que les inscrits doivent savoir : programme, tenue, ce qu'il faut apporter.">
-            <Textarea id="description" rows={3} value={form.description} onChange={(e) => set("description", e.target.value)} />
-          </FormField>
-        </SectionFormulaire>
+      <form onSubmit={soumettre} noValidate>
+        <DeuxColonnes collante aside={ensuite}>
+          <SectionFormulaire titre="L'événement">
+            <FormField label="Titre" htmlFor="titre" required>
+              <Input id="titre" value={form.titre} onChange={(e) => set("titre", e.target.value)} />
+            </FormField>
+            <FormField label="Type" htmlFor="type">
+              <Select items={TYPES} value={form.type} onValueChange={(v) => set("type", v as TypeEvenement)}>
+                <SelectTrigger id="type" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label="Description" htmlFor="description" hint="Ce que les inscrits doivent savoir : programme, tenue, ce qu'il faut apporter.">
+              <Textarea id="description" rows={3} value={form.description} onChange={(e) => set("description", e.target.value)} />
+            </FormField>
+          </SectionFormulaire>
 
-        <SectionFormulaire titre="Quand et où">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Début" htmlFor="debut" required>
-              <Input id="debut" type="datetime-local" value={form.dateHeureDebut} onChange={(e) => set("dateHeureDebut", e.target.value)} />
+          <SectionFormulaire titre="Quand et où">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Début" htmlFor="debut" required>
+                <Input id="debut" type="datetime-local" value={form.dateHeureDebut} onChange={(e) => set("dateHeureDebut", e.target.value)} />
+              </FormField>
+              <FormField label="Fin" htmlFor="fin" required>
+                <Input id="fin" type="datetime-local" value={form.dateHeureFin} onChange={(e) => set("dateHeureFin", e.target.value)} />
+              </FormField>
+            </div>
+            <FormField label="Adresse">
+              <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} placeholder="Rechercher une adresse" />
             </FormField>
-            <FormField label="Fin" htmlFor="fin" required>
-              <Input id="fin" type="datetime-local" value={form.dateHeureFin} onChange={(e) => set("dateHeureFin", e.target.value)} />
-            </FormField>
+          </SectionFormulaire>
+
+          <SectionFormulaire titre="Qui vient">
+            <Choix
+              id="staff"
+              checked={form.aBesoiNStaff}
+              onChange={(v) => set("aBesoiNStaff", v)}
+              titre="Une équipe de bénévoles"
+              detail="Les bénévoles sont prévenus à la publication et peuvent rejoindre l'équipe."
+            />
+            {form.aBesoiNStaff && (
+              <FormField label="Taille de l'équipe" htmlFor="capStaff" hint="Facultatif. Une fois atteinte, les inscriptions sont refusées : pas de liste d'attente.">
+                <Input id="capStaff" type="number" inputMode="numeric" min={1} value={form.capaciteStaff} onChange={(e) => set("capaciteStaff", e.target.value)} className="w-32" />
+              </FormField>
+            )}
+            <Choix
+              id="participants"
+              checked={form.ouvertParticipants}
+              onChange={(v) => {
+                set("ouvertParticipants", v);
+                if (v && !form.publicParticipants) set("publicParticipants", "TOUS");
+              }}
+              titre="Des participants"
+              detail="Le public choisi est prévenu à la publication et peut s'inscrire."
+            />
+            {form.ouvertParticipants && (
+              <>
+                <FormField label="Ouvert à">
+                  <SegmentedControl
+                    label="Ouvert à"
+                    value={form.publicParticipants || "TOUS"}
+                    onValueChange={(v) => set("publicParticipants", v)}
+                    options={(Object.keys(PUBLIC_CIBLE) as PublicCible[]).map((p) => ({ value: p, label: PUBLIC_CIBLE[p] }))}
+                  />
+                </FormField>
+                <FormField label="Nombre de participants" htmlFor="capParticipants" hint="Facultatif. Une fois atteint, les inscriptions sont refusées : pas de liste d'attente.">
+                  <Input
+                    id="capParticipants"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={form.capaciteParticipants}
+                    onChange={(e) => set("capaciteParticipants", e.target.value)}
+                    className="w-32"
+                  />
+                </FormField>
+              </>
+            )}
+          </SectionFormulaire>
+
+          <SectionFormulaire titre="Inscription">
+            <RadioGroup value={form.modeInscription} onValueChange={(v) => set("modeInscription", v as ModeInscription)} aria-label="Mode d'inscription" className="gap-3">
+              {MODES.map((m) => (
+                <label key={m} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 has-data-checked:border-primary has-data-checked:bg-secondary">
+                  <RadioGroupItem value={m} className="mt-0.5" />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="text-base font-semibold text-foreground">{MODE_INSCRIPTION[m].libelle}</span>
+                    <span className="text-sm text-muted-foreground">{MODE_INSCRIPTION[m].consequence}</span>
+                  </span>
+                </label>
+              ))}
+            </RadioGroup>
+          </SectionFormulaire>
+
+          {erreur && <Alert variant="destructive">{erreur}</Alert>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="ghost" onClick={() => router.back()}>
+              Annuler
+            </Button>
+            <Button type="submit" size="lg" disabled={pending}>
+              {pending && <Spinner size="sm" />}
+              {evenement ? "Enregistrer les modifications" : "Créer le brouillon"}
+            </Button>
           </div>
-          <FormField label="Adresse">
-            <AdresseAutocomplete value={lieu?.adresseFormatee} onSelect={setLieu} onClear={() => setLieu(undefined)} placeholder="Rechercher une adresse" />
-          </FormField>
-        </SectionFormulaire>
-
-        <SectionFormulaire titre="Qui vient">
-          <Choix
-            id="staff"
-            checked={form.aBesoiNStaff}
-            onChange={(v) => set("aBesoiNStaff", v)}
-            titre="Une équipe de bénévoles"
-            detail="Les bénévoles sont prévenus à la publication et peuvent rejoindre l'équipe."
-          />
-          {form.aBesoiNStaff && (
-            <FormField label="Taille de l'équipe" htmlFor="capStaff" hint="Facultatif. Une fois atteinte, les inscriptions sont refusées : pas de liste d'attente.">
-              <Input id="capStaff" type="number" inputMode="numeric" min={1} value={form.capaciteStaff} onChange={(e) => set("capaciteStaff", e.target.value)} className="w-32" />
-            </FormField>
-          )}
-          <Choix
-            id="participants"
-            checked={form.ouvertParticipants}
-            onChange={(v) => {
-              set("ouvertParticipants", v);
-              if (v && !form.publicParticipants) set("publicParticipants", "TOUS");
-            }}
-            titre="Des participants"
-            detail="Le public choisi est prévenu à la publication et peut s'inscrire."
-          />
-          {form.ouvertParticipants && (
-            <>
-              <FormField label="Ouvert à">
-                <SegmentedControl
-                  label="Ouvert à"
-                  value={form.publicParticipants || "TOUS"}
-                  onValueChange={(v) => set("publicParticipants", v)}
-                  options={(Object.keys(PUBLIC_CIBLE) as PublicCible[]).map((p) => ({ value: p, label: PUBLIC_CIBLE[p] }))}
-                />
-              </FormField>
-              <FormField label="Nombre de participants" htmlFor="capParticipants" hint="Facultatif. Une fois atteint, les inscriptions sont refusées : pas de liste d'attente.">
-                <Input
-                  id="capParticipants"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  value={form.capaciteParticipants}
-                  onChange={(e) => set("capaciteParticipants", e.target.value)}
-                  className="w-32"
-                />
-              </FormField>
-            </>
-          )}
-        </SectionFormulaire>
-
-        <SectionFormulaire titre="Inscription">
-          <RadioGroup value={form.modeInscription} onValueChange={(v) => set("modeInscription", v as ModeInscription)} aria-label="Mode d'inscription" className="gap-3">
-            {MODES.map((m) => (
-              <label key={m} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 has-data-checked:border-primary has-data-checked:bg-secondary">
-                <RadioGroupItem value={m} className="mt-0.5" />
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-base font-semibold text-foreground">{MODE_INSCRIPTION[m].libelle}</span>
-                  <span className="text-sm text-muted-foreground">{MODE_INSCRIPTION[m].consequence}</span>
-                </span>
-              </label>
-            ))}
-          </RadioGroup>
-        </SectionFormulaire>
-
-        {erreur && <Alert variant="destructive">{erreur}</Alert>}
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="ghost" onClick={() => router.back()}>
-            Annuler
-          </Button>
-          <Button type="submit" size="lg" disabled={pending}>
-            {pending && <Spinner size="sm" />}
-            {evenement ? "Enregistrer les modifications" : "Créer le brouillon"}
-          </Button>
-        </div>
+        </DeuxColonnes>
       </form>
     </APIProvider>
   );

@@ -10,7 +10,7 @@ interface JaugeProps {
   /* Texte de droite, par exemple "32 places" ou "5 manquent". */
   detail?: string;
   detailTon?: "neutre" | "attente";
-  ton?: "pin" | "encre";
+  ton?: "marque" | "encre";
   taille?: "sm" | "md";
   /* Masque la ligne de texte quand le contexte l'affiche deja. */
   sansTexte?: boolean;
@@ -30,7 +30,7 @@ export function Jauge({
   libelle,
   detail,
   detailTon = "neutre",
-  ton = "pin",
+  ton = "marque",
   taille = "md",
   sansTexte = false,
   className,
@@ -69,7 +69,7 @@ export function Jauge({
         )}
       >
         <div
-          className={cn("h-full", ton === "pin" ? "bg-primary" : "bg-foreground")}
+          className={cn("h-full", ton === "marque" ? "bg-primary" : "bg-foreground")}
           style={{ width: `${plein}%` }}
         />
         {enAttente > 0 && (

@@ -204,7 +204,7 @@ function OngletVisiteur({
           <Input id="visiteur-prenom" value={prenom} onChange={(e) => setPrenom(e.target.value)} required />
         </FormField>
       </div>
-      <FormField label="Email" htmlFor="visiteur-email" hint="Facultatif : pour l'inviter ensuite à créer son compte.">
+      <FormField label="Email" htmlFor="visiteur-email" hint="Facultatif : pour lui envoyer ensuite le lien de création de compte.">
         <Input id="visiteur-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </FormField>
       <FormField label="Rôle du jour" htmlFor="visiteur-role" hint="Facultatif : accueil, distribution, rangement.">

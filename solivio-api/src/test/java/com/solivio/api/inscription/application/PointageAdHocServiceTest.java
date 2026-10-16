@@ -13,7 +13,7 @@ import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.InvitationPort;
+import com.solivio.api.shared.identity.LienInscriptionPort;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ class PointageAdHocServiceTest {
     @Mock private InscriptionRepository inscriptionRepository;
     @Mock private PersonneQueryPort personneQueryPort;
     @Mock private DistributionQueryPort distributionQueryPort;
-    @Mock private InvitationPort invitationPort;
+    @Mock private LienInscriptionPort lienInscriptionPort;
     @Mock private AuditService auditService;
 
     @InjectMocks
@@ -165,51 +165,51 @@ class PointageAdHocServiceTest {
     }
 
     @Test
-    void envoyerInvitation_envoieEtMarqueLInvitation() {
+    void envoyerLienInscription_envoieEtMarqueLInvitation() {
         UUID adHocId = UUID.randomUUID();
         PointageAdHoc adHoc = new PointageAdHoc(distributionId, "Dupont", "Jean", "jean@test.com", null);
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
         when(adHocRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.envoyerInvitation(adHocId, pointeParId);
+        service.envoyerLienInscription(adHocId, pointeParId);
 
-        verify(invitationPort).inviterBenevole("jean@test.com", pointeParId);
+        verify(lienInscriptionPort).envoyerLienInscription("jean@test.com");
         assertThat(adHoc.isInvitationEnvoyee()).isTrue();
     }
 
     @Test
-    void envoyerInvitation_echoueSiEmailAbsent() {
+    void envoyerLienInscription_echoueSiEmailAbsent() {
         UUID adHocId = UUID.randomUUID();
         PointageAdHoc adHoc = new PointageAdHoc(distributionId, "Dupont", "Jean", null, null);
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
+        assertThatThrownBy(() -> service.envoyerLienInscription(adHocId, pointeParId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("email");
 
-        verify(invitationPort, never()).inviterBenevole(any(), any());
+        verify(lienInscriptionPort, never()).envoyerLienInscription(any());
     }
 
     @Test
-    void envoyerInvitation_echoueSiDejaEnvoyee() {
+    void envoyerLienInscription_echoueSiDejaEnvoyee() {
         UUID adHocId = UUID.randomUUID();
         PointageAdHoc adHoc = new PointageAdHoc(distributionId, "Dupont", "Jean", "jean@test.com", null);
         adHoc.setInvitationEnvoyee(true);
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.of(adHoc));
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
+        assertThatThrownBy(() -> service.envoyerLienInscription(adHocId, pointeParId))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("invitation");
+            .hasMessageContaining("déjà été envoyé");
 
-        verify(invitationPort, never()).inviterBenevole(any(), any());
+        verify(lienInscriptionPort, never()).envoyerLienInscription(any());
     }
 
     @Test
-    void envoyerInvitation_echoueSiAdHocInexistant() {
+    void envoyerLienInscription_echoueSiAdHocInexistant() {
         UUID adHocId = UUID.randomUUID();
         when(adHocRepository.findById(adHocId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.envoyerInvitation(adHocId, pointeParId))
+        assertThatThrownBy(() -> service.envoyerLienInscription(adHocId, pointeParId))
             .isInstanceOf(NotFoundException.class);
     }
 }

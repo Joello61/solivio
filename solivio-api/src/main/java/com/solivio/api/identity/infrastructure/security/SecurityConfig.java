@@ -69,14 +69,14 @@ public class SecurityConfig {
         this.environment = environment;
     }
 
-    // ADR-011 : un responsable peut tout ce que peut un coordinateur, qui peut tout ce
-    // que peut un benevole. Le beneficiaire reste hors hierarchie. Statique, comme le
-    // recommande Spring Security, pour etre disponible avant la securite des methodes.
+    // ADR-012 : un responsable peut tout ce que peut un coordinateur. Benevole et
+    // beneficiaire sont des roles a part entiere, que l'on cumule ou non : un coordinateur
+    // ne s'inscrit comme benevole que s'il l'est aussi. Statique, comme le recommande
+    // Spring Security, pour etre disponible avant la securite des methodes.
     @Bean
     static RoleHierarchy roleHierarchy() {
         return RoleHierarchyImpl.withDefaultRolePrefix()
             .role("RESPONSABLE").implies("COORDINATEUR")
-            .role("COORDINATEUR").implies("BENEVOLE")
             .build();
     }
 

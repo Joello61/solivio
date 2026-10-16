@@ -31,9 +31,9 @@ interface Props {
   roles: RoleAttribuable[];
   onglet: OngletFeuille;
   aujourdhui: string;
-  /* Le gestionnaire peut aussi venir aider : son inscription et le type ouvert. */
-  monInscription: InscriptionResponse | undefined;
-  typeInscription: TypeInscription | null;
+  /* Un coordinateur peut aussi etre benevole ou beneficiaire : ses inscriptions et les types ouverts. */
+  mesInscriptions: InscriptionResponse[];
+  typesInscription: TypeInscription[];
 }
 
 const DERNIERES = 5;
@@ -202,7 +202,13 @@ function Participation({ d, mienne, type, aujourdhui }: { d: DistributionRespons
   return (
     <details open={mienne !== undefined} className="group rounded-xl border border-border bg-card">
       <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 font-display text-lg font-bold text-foreground [&::-webkit-details-marker]:hidden">
-        {mienne ? "Votre participation" : "Venir aider sur cette distribution"}
+        {type === "BENEVOLE"
+          ? mienne
+            ? "Votre participation"
+            : "Venir aider sur cette distribution"
+          : mienne
+            ? "Votre place"
+            : "Réserver une place"}
       </summary>
       <div className="flex flex-col gap-3 px-4 pb-4">
       {mienne ? (
@@ -210,7 +216,9 @@ function Participation({ d, mienne, type, aujourdhui }: { d: DistributionRespons
           <p className="text-base text-foreground">
             {mienne.statut === "LISTE_ATTENTE"
               ? `Vous êtes en liste d'attente, rang ${mienne.rangListeAttente ?? "?"}.`
-              : "Vous faites partie de l'équipe."}
+              : type === "BENEVOLE"
+                ? "Vous faites partie de l'équipe."
+                : "Votre place est réservée."}
           </p>
           <BoutonDesinscription
             distributionId={d.id}
@@ -289,8 +297,8 @@ export function FeuilleDistribution({
   roles,
   onglet,
   aujourdhui,
-  monInscription,
-  typeInscription,
+  mesInscriptions,
+  typesInscription,
 }: Props) {
   const actifs = inscrits.filter((i) => i.statut !== "ANNULEE");
   const benevoles = actifs.filter((i) => i.type === "BENEVOLE" && i.statut === "CONFIRMEE");
@@ -342,9 +350,17 @@ export function FeuilleDistribution({
       <Onglets id={d.id} actif={courant} onglets={onglets} />
 
       {courant === "vue" && <VueEnsemble d={d} inscrits={actifs} id={d.id} />}
-      {courant === "vue" && typeInscription && d.statut === "PUBLIEE" && (
-        <Participation d={d} mienne={monInscription} type={typeInscription} aujourdhui={aujourdhui} />
-      )}
+      {courant === "vue" &&
+        d.statut === "PUBLIEE" &&
+        typesInscription.map((type) => (
+          <Participation
+            key={type}
+            d={d}
+            mienne={mesInscriptions.find((i) => i.type === type && (i.statut === "CONFIRMEE" || i.statut === "LISTE_ATTENTE"))}
+            type={type}
+            aujourdhui={aujourdhui}
+          />
+        ))}
       {courant === "inscrits" && (
         <TableInscrits inscrits={actifs} horaires={horaires} avecPresence={d.statut === "EN_COURS" || d.statut === "TERMINEE"} />
       )}

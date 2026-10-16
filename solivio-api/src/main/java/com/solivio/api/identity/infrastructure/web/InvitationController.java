@@ -38,8 +38,7 @@ public class InvitationController {
     public ResponseEntity<Map<String, String>> inviter(
             @Valid @RequestBody InviterMembreRequest request,
             @AuthenticationPrincipal SolivioUserDetails userDetails) {
-        Invitation invitation = invitationService.inviter(
-            userDetails, request.email(), request.role(), request.coordoType());
+        Invitation invitation = invitationService.inviterResponsable(userDetails, request.email());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(Map.of("token", invitation.getToken().toString()));
     }

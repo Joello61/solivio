@@ -31,6 +31,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
@@ -199,29 +200,30 @@ class AuthServiceTest {
         googleCompte.setId(googleCompteId);
         googleCompte.setGoogleId("google-uid");
 
-        when(registerService.finaliserCompteGoogle("google@example.com", "Dupont", "Alice", null))
+        List<String> roles = List.of("beneficiaire", "benevole");
+        when(registerService.finaliserCompteGoogle("google@example.com", "Dupont", "Alice", null, roles, true))
             .thenReturn(googleCompte);
         when(membreRepo.findActifByCompteId(googleCompteId))
-            .thenReturn(Optional.of(new MembreAssociation(googleCompte, "beneficiaire")));
+            .thenReturn(Optional.of(new MembreAssociation(googleCompte, roles)));
         stubEmissionJetons();
 
         TokenResponse result = service.completerInscriptionGoogle(
-            "google@example.com", "Dupont", "Alice", null, mock(HttpServletRequest.class),
+            "google@example.com", "Dupont", "Alice", null, roles, true, mock(HttpServletRequest.class),
             mock(HttpServletResponse.class));
 
         assertThat(result.accessToken()).isEqualTo("access-token");
         verify(jwtService).genererAccessToken(eq(googleCompteId), eq("google@example.com"), eq("Dupont"),
-            eq("Alice"), eq(List.of("beneficiaire")), isNull(), eq(false));
+            eq("Alice"), eq(roles), isNull(), eq(false));
     }
 
     @Test
     void completerInscriptionGoogle_propageLExceptionDeRegisterService() {
-        when(registerService.finaliserCompteGoogle(any(), any(), any(), any()))
+        when(registerService.finaliserCompteGoogle(any(), any(), any(), any(), any(), anyBoolean()))
             .thenThrow(new IllegalArgumentException("Ce compte est déjà membre de l'association"));
 
         assertThatThrownBy(() -> service.completerInscriptionGoogle(
-            "google@example.com", "Dupont", "Alice", null, mock(HttpServletRequest.class),
-            mock(HttpServletResponse.class)))
+            "google@example.com", "Dupont", "Alice", null, List.of("benevole"), false,
+            mock(HttpServletRequest.class), mock(HttpServletResponse.class)))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("déjà membre");
     }

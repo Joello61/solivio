@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Autorisations de l'inscription et du pointage sur de vraies donnees :
  * desinscription par le seul proprietaire (C1), role requis selon le type
- * d'inscription (C2), pointage limite aux benevoles inscrits (C4).
+ * d'inscription (C2), pointage reserve aux gestionnaires (ADR-012).
  */
 @SolivioIntegrationTest
 class AutorisationsInscriptionIntegrationTest {
@@ -119,10 +119,32 @@ class AutorisationsInscriptionIntegrationTest {
             .andExpect(status().isForbidden());
     }
 
+    // ADR-012 : un coordinateur ne s'inscrit comme benevole que s'il l'est aussi.
     @Test
-    void inscrire_coordinateurEnTantQueBenevole_repond201() throws Exception {
+    void inscrire_coordinateurSeulEnTantQueBenevole_repond403() throws Exception {
         inscrire(jeton("coord@test.com", "coordinateur"), "BENEVOLE")
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void inscrire_coordinateurBenevoleEnTantQueBenevole_repond201() throws Exception {
+        inscrire(jeton("coord@test.com", "benevole", "coordinateur"), "BENEVOLE")
             .andExpect(status().isCreated());
+    }
+
+    @Test
+    void inscrire_responsableEnTantQueBenevole_repond403() throws Exception {
+        inscrire(jeton("coord@test.com", "responsable"), "BENEVOLE")
+            .andExpect(status().isForbidden());
+    }
+
+    // Benevole et beneficiaire : une place de chaque cote a la meme distribution.
+    @Test
+    void inscrire_benevoleEtBeneficiaire_peutTenirLesDeuxPlaces() throws Exception {
+        Cookie mixte = jeton("marie@test.com", "benevole", "beneficiaire");
+
+        inscrire(mixte, "BENEFICIAIRE").andExpect(status().isCreated());
+        inscrire(mixte, "BENEVOLE").andExpect(status().isCreated());
     }
 
     @Test
@@ -132,33 +154,32 @@ class AutorisationsInscriptionIntegrationTest {
             .andExpect(jsonPath("$.statut").value("CONFIRMEE"));
     }
 
-    // --- C4 ---
+    // --- Pointage reserve aux coordinateurs et responsables (ADR-012) ---
 
     @Test
-    void pointage_benevoleNonInscrit_repond404EnLectureEtEnEcriture() throws Exception {
-        UUID distributionEnCours = insererDistribution("EN_COURS");
-        UUID inscription = insererInscription(distributionEnCours, marieId, "BENEFICIAIRE");
-        Cookie benevole = jeton("ben@test.com", "benevole");
-
-        mockMvc.perform(get("/api/distributions/" + distributionEnCours + "/pointage").cookie(benevole))
-            .andExpect(status().isNotFound());
-        pointer(distributionEnCours, inscription, benevole)
-            .andExpect(status().isNotFound());
-        assertThat(presence(inscription)).isEqualTo("NON_POINTE");
-    }
-
-    @Test
-    void pointage_benevoleInscritConfirme_repond200() throws Exception {
+    void pointage_benevoleMemeInscrit_repond403EnLectureEtEnEcriture() throws Exception {
         UUID distributionEnCours = insererDistribution("EN_COURS");
         UUID inscription = insererInscription(distributionEnCours, marieId, "BENEFICIAIRE");
         insererInscription(distributionEnCours, benevoleId, "BENEVOLE");
         Cookie benevole = jeton("ben@test.com", "benevole");
 
+        mockMvc.perform(get("/api/distributions/" + distributionEnCours + "/pointage").cookie(benevole))
+            .andExpect(status().isForbidden());
+        pointer(distributionEnCours, inscription, benevole)
+            .andExpect(status().isForbidden());
+        assertThat(presence(inscription)).isEqualTo("NON_POINTE");
+    }
+
+    @Test
+    void pointage_coordinateurEtResponsable_repondent200() throws Exception {
+        UUID distributionEnCours = insererDistribution("EN_COURS");
+        UUID inscription = insererInscription(distributionEnCours, marieId, "BENEFICIAIRE");
+
         mockMvc.perform(get("/api/distributions/" + distributionEnCours + "/pointage")
-                .param("q", "Test").cookie(benevole))
+                .param("q", "Test").cookie(jeton("resp@test.com", "responsable")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray());
-        pointer(distributionEnCours, inscription, benevole)
+        pointer(distributionEnCours, inscription, jeton("coord@test.com", "coordinateur"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.presence").value("PRESENT"));
     }

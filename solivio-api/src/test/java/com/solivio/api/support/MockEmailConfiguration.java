@@ -22,6 +22,7 @@ public class MockEmailConfiguration {
             @Override public void envoyerResetMotDePasse(Compte compte, String code) {}
             @Override public void envoyerConfirmationChangementMotDePasse(Compte compte) {}
             @Override public void envoyerInvitation(Invitation invitation) {}
+            @Override public void envoyerLienInscription(String email) {}
         };
     }
 }

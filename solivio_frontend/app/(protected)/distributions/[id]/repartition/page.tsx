@@ -24,7 +24,7 @@ export default async function RepartitionPage({ params }: PageProps) {
   const intitule = jour.charAt(0).toUpperCase() + jour.slice(1);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col">
+    <div className="flex flex-col">
       <PageHeader
         className="print:hidden"
         retour={{ href: `/distributions/${id}?onglet=denrees`, libelle: "Distribution" }}

@@ -24,7 +24,7 @@ interface Props {
   enAttente: boolean;
   /* Benevole qui se desiste la veille ou le jour meme. */
   tardif?: boolean;
-  /* "billet" : action de pied de billet, sur fond pin. */
+  /* "billet" : action de pied de billet, sur fond de marque. */
   apparence?: "bouton" | "billet";
 }
 

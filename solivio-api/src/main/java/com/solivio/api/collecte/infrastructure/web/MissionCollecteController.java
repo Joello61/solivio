@@ -35,9 +35,9 @@ public class MissionCollecteController {
         this.missionService = missionService;
     }
 
-    // Reserve aux benevoles, et par la hierarchie aux coordinateurs et responsables.
+    // Benevoles et gestionnaires (le responsable par la hierarchie, ADR-012).
     @GetMapping
-    @PreAuthorize("hasAnyRole('BENEVOLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('BENEVOLE','COORDINATEUR','SUPER_ADMIN')")
     public ResponseEntity<List<MissionCollecteResponse>> lister(
         @RequestParam(required = false) String statut,
         @AuthenticationPrincipal SolivioUserDetails user
@@ -57,7 +57,7 @@ public class MissionCollecteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('BENEVOLE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('BENEVOLE','COORDINATEUR','SUPER_ADMIN')")
     public ResponseEntity<MissionCollecteResponse> detail(
         @PathVariable UUID id,
         @AuthenticationPrincipal SolivioUserDetails user

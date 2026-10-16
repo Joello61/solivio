@@ -21,7 +21,7 @@ const ENDPOINTS_AUTH_PUBLICS = new Set([
 // meme si plusieurs requetes recoivent un 401 simultanement.
 let refreshPromise: Promise<boolean> | null = null;
 
-async function tentativeRefresh(): Promise<boolean> {
+export async function tentativeRefresh(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
       method: "POST",

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { CalendarSearch } from "lucide-react";
+import { CalendarCheck, CalendarSearch, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { List, ListRow } from "@/components/ui/list-row";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
+import { Stat } from "@/components/ui/stat";
+import { ReperesDistribution } from "@/components/shared/Reperes";
 import { PageHeader } from "@/components/ui/page-header";
 import { DateBloc } from "@/components/agenda/DateBloc";
 import { LigneEngagement } from "@/components/agenda/LigneEngagement";
@@ -68,9 +71,28 @@ export default async function MesInscriptionsPage() {
       .map((e) => ({ date: e.date, ligne: <LigneEngagement key={e.cle} engagement={e} avecMois /> })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 
+  const beneficiaire = me?.roles.includes("beneficiaire") ?? false;
+  const presences = distributions.filter((i) => i.presence === "PRESENT").length;
+  const aside = (
+    <>
+      {(presences > 0 || autres.length > 0) && (
+        <section aria-labelledby="parcours" className="flex flex-col gap-1 rounded-3xl border border-border bg-card p-5">
+          <h2 id="parcours" className="mb-2 font-display text-lg font-bold text-foreground">
+            Votre parcours
+          </h2>
+          <Stat icone={CalendarCheck} valeur={presences} libelle={presences > 1 ? "distributions où vous étiez" : "distribution où vous étiez"} />
+          {autres.length > 0 && (
+            <Stat className="mt-3" icone={Sparkles} ton="turquoise" valeur={autres.length} libelle={autres.length > 1 ? "autres engagements" : "autre engagement"} detail="événements, missions, sessions" />
+          )}
+        </section>
+      )}
+      <ReperesDistribution benevole={!beneficiaire} />
+    </>
+  );
+
   return (
-    <div className="max-w-2xl">
-      <PageHeader titre={titre} />
+    <DeuxColonnes aside={aside}>
+      <PageHeader className="mb-0 sm:mb-0" titre={titre} />
 
       {distributions.length === 0 && autres.length === 0 ? (
         <EmptyState
@@ -116,6 +138,6 @@ export default async function MesInscriptionsPage() {
           )}
         </div>
       )}
-    </div>
+    </DeuxColonnes>
   );
 }

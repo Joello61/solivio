@@ -168,11 +168,12 @@ class InscriptionControllerIntegrationTest {
             .andExpect(jsonPath("$").isArray());
     }
 
+    // ADR-012 : le pointage est reserve aux coordinateurs et responsables.
     @Test
-    void pointage_retourne404PourBenevoleSansPersonneNiInscription() throws Exception {
+    void pointage_refuseAUnBenevole() throws Exception {
         mockMvc.perform(get("/api/distributions/00000000-0000-0000-0000-000000000000/pointage")
                 .cookie(new Cookie("access_token", tokenBenevole))
                 .param("q", ""))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isForbidden());
     }
 }

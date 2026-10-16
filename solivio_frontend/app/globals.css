@@ -38,6 +38,12 @@
   --color-brand:                var(--brand);
   --color-brand-deep:           var(--brand-deep);
   --color-on-brand:             var(--on-brand);
+  --color-brand-alt:            var(--brand-alt);
+  --color-on-brand-alt:         var(--on-brand-alt);
+  --color-night:                var(--night);
+  --color-on-night:             var(--on-night);
+  --color-on-night-muted:       var(--on-night-muted);
+  --color-logo-plate:           var(--logo-plate);
 
   /* RAYONS - Systeme coherent */
   --radius-xs:   0.25rem;   /* 4px */
@@ -51,12 +57,12 @@
 
   /* ELEVATION - a plat par defaut ; ombre legere pour ce qui flotte
      (menus, feuilles, toasts), plus marquee pour les modales. */
-  --shadow-xs:  0 1px 2px 0 oklch(0.230 0.021 162.5 / 0.06);
-  --shadow-sm:  0 1px 3px 0 oklch(0.230 0.021 162.5 / 0.08), 0 1px 2px -1px oklch(0.230 0.021 162.5 / 0.06);
-  --shadow-md:  0 4px 12px -2px oklch(0.230 0.021 162.5 / 0.10), 0 2px 4px -2px oklch(0.230 0.021 162.5 / 0.06);
-  --shadow-lg:  0 12px 24px -6px oklch(0.230 0.021 162.5 / 0.16), 0 4px 8px -4px oklch(0.230 0.021 162.5 / 0.08);
-  --shadow-xl:  0 20px 40px -8px oklch(0.230 0.021 162.5 / 0.22);
-  --shadow-2xl: 0 28px 56px -12px oklch(0.230 0.021 162.5 / 0.30);
+  --shadow-xs:  0 1px 2px 0 oklch(0.224 0.057 264.7 / 0.06);
+  --shadow-sm:  0 1px 3px 0 oklch(0.224 0.057 264.7 / 0.08), 0 1px 2px -1px oklch(0.224 0.057 264.7 / 0.06);
+  --shadow-md:  0 4px 12px -2px oklch(0.224 0.057 264.7 / 0.10), 0 2px 4px -2px oklch(0.224 0.057 264.7 / 0.06);
+  --shadow-lg:  0 12px 24px -6px oklch(0.224 0.057 264.7 / 0.16), 0 4px 8px -4px oklch(0.224 0.057 264.7 / 0.08);
+  --shadow-xl:  0 20px 40px -8px oklch(0.224 0.057 264.7 / 0.22);
+  --shadow-2xl: 0 28px 56px -12px oklch(0.224 0.057 264.7 / 0.30);
 
   /* TYPOGRAPHIE - aucun texte sous 13 px : text-xs est remonte a 13 px. */
   --text-xs: 0.8125rem;
@@ -79,40 +85,41 @@
 }
 
 /* MODE CLAIR
-   Papier legerement vert, encre sombre, pin pour l'action, citron pour ce qui
-   se passe maintenant. */
+   Couleurs de Linkee : bleu du logo pour l'action, turquoise de l'oiseau en
+   decor, jaune du bec pour ce qui se passe maintenant, encre bleu nuit. */
 :root {
-  --background:    oklch(0.969 0.004 121.6);
-  --foreground:    oklch(0.230 0.021 162.5);
+  --background:    oklch(0.978 0.005 247.9);
+  --foreground:    oklch(0.224 0.057 264.7);
 
   --card:          oklch(1 0 0);
-  --card-foreground: oklch(0.230 0.021 162.5);
+  --card-foreground: oklch(0.224 0.057 264.7);
 
   --popover:       oklch(1 0 0);
-  --popover-foreground: oklch(0.230 0.021 162.5);
+  --popover-foreground: oklch(0.224 0.057 264.7);
 
-  /* Pin : action principale, confirme */
-  --primary:          oklch(0.392 0.067 168.6);
+  /* Bleu Linkee : action principale, confirme */
+  --primary:          oklch(0.518 0.133 247.9);
   --primary-foreground: oklch(1 0 0);
 
-  /* Pin tres pale : selection, filtre actif, etat confirme */
-  --secondary:          oklch(0.939 0.014 162.5);
-  --secondary-foreground: oklch(0.392 0.067 168.6);
+  /* Bleu tres pale : selection, filtre actif, etat confirme */
+  --secondary:          oklch(0.950 0.015 241.8);
+  --secondary-foreground: oklch(0.455 0.115 247.7);
 
   /* Papier enfonce : fonds de controles segmentes, survols */
-  --muted:            oklch(0.946 0.006 128.5);
-  --muted-foreground: oklch(0.478 0.016 159.5);
+  --muted:            oklch(0.954 0.008 253.9);
+  --muted-foreground: oklch(0.456 0.053 267.9);
 
-  /* Citron : maintenant, aujourd'hui, a faire. Toujours avec du texte encre. */
-  --accent:          oklch(0.849 0.157 91.5);
-  --accent-foreground: oklch(0.230 0.021 162.5);
+  /* Jaune : maintenant, aujourd'hui, a faire. Toujours avec du texte encre. */
+  --accent:          oklch(0.899 0.185 101.4);
+  --accent-foreground: oklch(0.224 0.057 264.7);
 
   --destructive:          oklch(0.501 0.178 28.7);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.902 0.009 134.9);
-  --input:  oklch(0.848 0.012 141.3);
-  --ring:   oklch(0.392 0.067 168.6);
+  --border: oklch(0.913 0.014 254.6);
+  /* Contour des champs : 3:1 au moins sur la carte (WCAG 1.4.11) */
+  --input:  oklch(0.621 0.038 261.9);
+  --ring:   oklch(0.518 0.133 247.9);
 
   /* Etats : la valeur sert au texte et aux icones (contraste AA sur le papier),
      les fonds legers s'obtiennent par transparence (bg-warning/10). */
@@ -120,65 +127,79 @@
   --success-foreground: oklch(1 0 0);
   --warning:            oklch(0.508 0.108 73.3);
   --warning-foreground: oklch(1 0 0);
-  --info:               oklch(0.489 0.140 255.8);
+  --info:               oklch(0.506 0.094 223.0);
   --info-foreground:    oklch(1 0 0);
-  /* Citron lisible en texte, le citron plein etant reserve aux fonds */
-  --accent-strong:      oklch(0.483 0.100 82.4);
+  /* Jaune lisible en texte, le jaune plein etant reserve aux fonds */
+  --accent-strong:      oklch(0.470 0.097 96.3);
   /* Voile des modales et des images, noir dans les deux modes */
   --overlay:            oklch(0 0 0);
-  /* Surfaces de marque (billet, bandeaux) : identiques dans les deux modes,
-     texte toujours blanc. */
-  --brand:              oklch(0.392 0.067 168.6);
-  --brand-deep:         oklch(0.331 0.057 169.7);
+  /* Surfaces de marque (billet, bandeaux) : texte toujours blanc. */
+  --brand:              oklch(0.518 0.133 247.9);
+  --brand-deep:         oklch(0.417 0.105 247.8);
   --on-brand:           oklch(1 0 0);
+  /* Turquoise : pastilles et decor, jamais avec du texte blanc (2,8:1). */
+  --brand-alt:          oklch(0.756 0.097 212.6);
+  --on-brand-alt:       oklch(0.224 0.057 264.7);
+  /* Bleu nuit : sections sombres des pages publiques, bandeau d'accueil. */
+  --night:              oklch(0.224 0.057 264.7);
+  --on-night:           oklch(1 0 0);
+  --on-night-muted:     oklch(0.869 0.035 266.0);
+  /* Plaque du logo : transparente sur le papier, blanche sur fond sombre. */
+  --logo-plate:         transparent;
 
   --radius: 0.625rem;
 }
 
 /* MODE SOMBRE
-   Encre verte profonde, le pin s'eclaircit pour rester lisible. */
+   Bleu nuit profond, le bleu Linkee s'eclaircit pour rester lisible. */
 .dark {
   /* Controles natifs (selecteur de date, barres de defilement) en sombre */
   color-scheme: dark;
-  --background:    oklch(0.188 0.011 163.5);
-  --foreground:    oklch(0.957 0.007 145.5);
+  --background:    oklch(0.193 0.039 263.1);
+  --foreground:    oklch(0.960 0.009 258.3);
 
-  --card:          oklch(0.237 0.016 160.6);
-  --card-foreground: oklch(0.957 0.007 145.5);
+  --card:          oklch(0.238 0.049 263.0);
+  --card-foreground: oklch(0.960 0.009 258.3);
 
-  --popover:       oklch(0.237 0.016 160.6);
-  --popover-foreground: oklch(0.957 0.007 145.5);
+  --popover:       oklch(0.238 0.049 263.0);
+  --popover-foreground: oklch(0.960 0.009 258.3);
 
-  --primary:          oklch(0.735 0.109 164.2);
-  --primary-foreground: oklch(0.202 0.025 162.8);
+  --primary:          oklch(0.716 0.114 250.4);
+  --primary-foreground: oklch(0.193 0.039 263.1);
 
-  --secondary:          oklch(0.323 0.039 166.1);
-  --secondary-foreground: oklch(0.827 0.088 164.6);
+  --secondary:          oklch(0.306 0.065 254.1);
+  --secondary-foreground: oklch(0.830 0.064 250.8);
 
-  --muted:            oklch(0.270 0.017 163.4);
-  --muted-foreground: oklch(0.742 0.017 160.5);
+  --muted:            oklch(0.263 0.050 263.8);
+  --muted-foreground: oklch(0.752 0.037 264.3);
 
-  --accent:          oklch(0.849 0.157 91.5);
-  --accent-foreground: oklch(0.230 0.021 162.5);
+  --accent:          oklch(0.899 0.185 101.4);
+  --accent-foreground: oklch(0.224 0.057 264.7);
 
   --destructive:          oklch(0.745 0.127 25.8);
-  --destructive-foreground: oklch(0.202 0.025 162.8);
+  --destructive-foreground: oklch(0.193 0.039 263.1);
 
-  --border: oklch(0.317 0.017 166.0);
-  --input:  oklch(0.384 0.021 161.8);
-  --ring:   oklch(0.735 0.109 164.2);
+  --border: oklch(0.319 0.055 263.9);
+  --input:  oklch(0.549 0.072 264.1);
+  --ring:   oklch(0.716 0.114 250.4);
 
   --success:            oklch(0.771 0.114 160.5);
-  --success-foreground: oklch(0.202 0.025 162.8);
+  --success-foreground: oklch(0.193 0.039 263.1);
   --warning:            oklch(0.841 0.120 83.7);
-  --warning-foreground: oklch(0.202 0.025 162.8);
-  --info:               oklch(0.763 0.098 257.3);
-  --info-foreground:    oklch(0.202 0.025 162.8);
-  --accent-strong:      oklch(0.849 0.157 91.5);
+  --warning-foreground: oklch(0.193 0.039 263.1);
+  --info:               oklch(0.819 0.085 211.1);
+  --info-foreground:    oklch(0.193 0.039 263.1);
+  --accent-strong:      oklch(0.899 0.185 101.4);
   --overlay:            oklch(0 0 0);
-  --brand:              oklch(0.420 0.072 168.6);
-  --brand-deep:         oklch(0.331 0.057 169.7);
+  --brand:              oklch(0.500 0.128 249.2);
+  --brand-deep:         oklch(0.417 0.105 247.8);
   --on-brand:           oklch(1 0 0);
+  --brand-alt:          oklch(0.756 0.097 212.6);
+  --on-brand-alt:       oklch(0.224 0.057 264.7);
+  --night:              oklch(0.170 0.036 262.4);
+  --on-night:           oklch(1 0 0);
+  --on-night-muted:     oklch(0.869 0.035 266.0);
+  --logo-plate:         oklch(1 0 0);
 }
 
 /* ANIMATIONS */

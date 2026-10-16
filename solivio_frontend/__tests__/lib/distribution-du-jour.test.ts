@@ -13,16 +13,8 @@ const liste = [
 ];
 
 describe("distributionsDuJour", () => {
-  it("montre au gestionnaire les distributions du jour, en cours d'abord", () => {
-    expect(distributionsDuJour(liste, "2026-10-11", true, []).map((x) => x.id)).toEqual(["en-cours", "publiee"]);
-  });
-
-  it("ne montre au benevole que celles ou il est confirme", () => {
-    const inscriptions = [
-      { distributionId: "publiee", type: "BENEVOLE", statut: "CONFIRMEE" },
-      { distributionId: "en-cours", type: "BENEVOLE", statut: "LISTE_ATTENTE" },
-    ];
-    expect(distributionsDuJour(liste, "2026-10-11", false, inscriptions).map((x) => x.id)).toEqual(["publiee"]);
+  it("garde les distributions du jour, en cours d'abord", () => {
+    expect(distributionsDuJour(liste, "2026-10-11").map((x) => x.id)).toEqual(["en-cours", "publiee"]);
   });
 
   it("calcule le jour dans le fuseau de l'association", () => {

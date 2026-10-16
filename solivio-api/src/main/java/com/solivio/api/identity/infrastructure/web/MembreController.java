@@ -5,7 +5,7 @@ import com.solivio.api.identity.application.MembreService;
 import com.solivio.api.identity.application.ProfilBeneficiaireService;
 import com.solivio.api.identity.infrastructure.web.dto.MembreResponse;
 import com.solivio.api.identity.infrastructure.web.dto.ProfilBeneficiaireResponse;
-import com.solivio.api.identity.infrastructure.web.dto.UpdateRoleMembreRequest;
+import com.solivio.api.identity.infrastructure.web.dto.UpdateRolesMembreRequest;
 import com.solivio.api.identity.infrastructure.web.dto.UpdateStatutMembreRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,16 +52,14 @@ public class MembreController {
         return ResponseEntity.ok(profilBeneficiaireService.lirePourResponsable(compteId));
     }
 
-    @PatchMapping("/{compteId}/role")
+    @PutMapping("/{compteId}/roles")
     @PreAuthorize("hasAnyRole('RESPONSABLE','SUPER_ADMIN')")
-    public ResponseEntity<MembreResponse> mettreAJourRole(
+    public ResponseEntity<MembreResponse> mettreAJourRoles(
         @PathVariable UUID compteId,
-        @Valid @RequestBody UpdateRoleMembreRequest request,
+        @Valid @RequestBody UpdateRolesMembreRequest request,
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
-        MembreResponse response =
-            membreService.mettreAJourRole(compteId, request, user.getCompteId());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(membreService.mettreAJourRoles(compteId, request, user.getCompteId()));
     }
 
     @PatchMapping("/{compteId}/statut")

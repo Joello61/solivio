@@ -16,8 +16,7 @@ const distribution = (surcharge: Partial<DistributionPubliqueResponse> = {}): Di
 describe("ProchainesDistributions", () => {
   it("affiche le jour, les horaires, le lieu et les places", () => {
     render(<ProchainesDistributions distributions={[distribution()]} />);
-    expect(screen.getByText("jeudi")).toBeInTheDocument();
-    expect(screen.getByText("22 octobre")).toBeInTheDocument();
+    expect(screen.getByText("jeudi 22 octobre")).toBeInTheDocument();
     expect(screen.getByText("17:30 - 19:30")).toBeInTheDocument();
     expect(screen.getByText("Local Rangueil, 135 avenue de Rangueil, Toulouse")).toBeInTheDocument();
     expect(screen.getByText("Places disponibles")).toBeInTheDocument();

@@ -57,7 +57,7 @@ function LoginForm() {
   }
 
   return (
-    <AuthLayout title="Connexion" description="Retrouvez vos inscriptions et les prochaines distributions.">
+    <AuthLayout title="Connexion" description="Retrouvez vos inscriptions et les prochaines distributions." accroche="Bon retour parmi nous.">
       {emailVerifie && (
         <Alert role="status">
           <CheckCircle2 />
