@@ -142,7 +142,7 @@ export function GestionTypesRoles({ initialTypes, peutArchiver }: Props) {
   }
 
   return (
-    <div className="flex max-w-2xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <form onSubmit={creerRacine} className="flex gap-2">
         <Input
           aria-label="Nouveau rôle"

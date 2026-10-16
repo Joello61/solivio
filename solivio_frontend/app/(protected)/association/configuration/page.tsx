@@ -3,6 +3,7 @@ import { lireServeur } from "@/lib/api/serveur";
 import { ExportDonnees } from "@/components/association/ExportDonnees";
 import { FormulaireConfiguration } from "@/components/association/FormulaireConfiguration";
 import { Alert } from "@/components/ui/alert";
+import { DeuxColonnes } from "@/components/ui/deux-colonnes";
 import { PageHeader } from "@/components/ui/page-header";
 import type { AssociationResponse } from "@/types/association";
 
@@ -23,8 +24,9 @@ export default async function ConfigurationPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader className="mb-0 sm:mb-0" titre="Réglages" description={`Ce qui s'applique à toute l'association ${association.nom}.`} />
-      <FormulaireConfiguration association={association} />
-      <ExportDonnees />
+      <DeuxColonnes aside={<ExportDonnees />} collante>
+        <FormulaireConfiguration association={association} />
+      </DeuxColonnes>
     </div>
   );
 }
