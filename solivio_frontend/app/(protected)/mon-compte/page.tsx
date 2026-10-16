@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ChangementMotDePasse } from "@/components/account/ChangementMotDePasse";
 import { EffacementDonnees } from "@/components/account/EffacementDonnees";
 import { FormulaireMonCompte } from "@/components/account/FormulaireMonCompte";
+import { MesRoles } from "@/components/account/MesRoles";
 import { SectionCompte } from "@/components/account/SectionCompte";
 import { lireMoi } from "@/lib/api/serveur";
-import { ROLE_LABELS } from "@/lib/roles";
+import { libelleRoles } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Mon compte" };
 
@@ -19,14 +20,13 @@ export default async function MonComptePage() {
   if (!user) redirect("/login");
 
   const estBeneficiaire = user.roles.includes("beneficiaire");
-  const roles = user.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ");
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         className="mb-0 sm:mb-0"
         titre="Mon compte"
-        description={`${roles}. Membre depuis le ${DATE.format(new Date(user.dateCreation))}.`}
+        description={`${libelleRoles(user.roles)}. Membre depuis le ${DATE.format(new Date(user.dateCreation))}.`}
       />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
@@ -34,6 +34,12 @@ export default async function MonComptePage() {
           <SectionCompte id="profil" titre="Profil" description="Votre nom tel que l'équipe le voit.">
             <FormulaireMonCompte user={user} />
           </SectionCompte>
+
+          {user.roles.length > 0 && (
+            <SectionCompte id="roles" titre="Mes rôles" description="Bénévole, bénéficiaire, ou les deux.">
+              <MesRoles roles={user.roles} />
+            </SectionCompte>
+          )}
 
           {estBeneficiaire && (
             <List>
