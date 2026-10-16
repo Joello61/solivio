@@ -277,11 +277,9 @@ public class InscriptionService {
         UUID distributionId,
         UUID inscriptionId,
         String statutPresenceStr,
-        String emailPointeur,
-        boolean gestionnaire
+        String emailPointeur
     ) {
         PersonneQueryPort.PersonneInfo pointeur = personneQueryPort.trouverPersonne(emailPointeur);
-        verifierAccesPointage(distributionId, pointeur.id(), gestionnaire);
         Inscription inscription = trouverOuEchouer(inscriptionId, distributionId);
         DistributionQueryPort.DistributionInfo distrib =
             distributionQueryPort.trouverDistribution(distributionId);
@@ -408,14 +406,8 @@ public class InscriptionService {
     @Transactional(readOnly = true)
     public List<PointageInfoResponse> rechercherPourPointage(
         UUID distributionId,
-        String recherche,
-        String emailPointeur,
-        boolean gestionnaire
+        String recherche
     ) {
-        if (!gestionnaire) {
-            PersonneQueryPort.PersonneInfo pointeur = personneQueryPort.trouverPersonne(emailPointeur);
-            verifierAccesPointage(distributionId, pointeur.id(), false);
-        }
         String terme = recherche == null ? "" : recherche.trim();
         return inscriptionRepository.rechercherPourPointage(distributionId, terme)
             .stream()
@@ -521,28 +513,16 @@ public class InscriptionService {
         return new NotFoundException("Inscription introuvable.");
     }
 
-    // Un benevole ne pointe que les distributions ou il est lui-meme inscrit et confirme.
-    private void verifierAccesPointage(UUID distributionId, UUID pointeurId, boolean gestionnaire) {
-        if (gestionnaire) {
-            return;
-        }
-        boolean benevoleInscrit = inscriptionRepository.existsByDistributionIdAndPersonneIdAndTypeAndStatut(
-            distributionId, pointeurId, TypeInscription.BENEVOLE, StatutInscription.CONFIRMEE
-        );
-        if (!benevoleInscrit) {
-            throw new NotFoundException("Distribution introuvable.");
-        }
-    }
-
-    // Une inscription beneficiaire est reservee au role beneficiaire ; une inscription
-    // benevole est ouverte a tous les autres roles (decision du 10 octobre 2026).
+    // ADR-012 : chaque type d'inscription demande le role correspondant ; une personne
+    // qui a les deux peut s'inscrire deux fois a la meme distribution.
     private static void verifierRolePourType(TypeInscription type, Set<String> roles) {
-        boolean beneficiaire = roles.contains("beneficiaire");
-        boolean autorise = type == TypeInscription.BENEFICIAIRE ? beneficiaire : !beneficiaire;
+        boolean autorise = type == TypeInscription.BENEFICIAIRE
+            ? roles.contains("beneficiaire")
+            : roles.contains("benevole");
         if (!autorise) {
             throw new AuthorizationDeniedException(type == TypeInscription.BENEFICIAIRE
                 ? "Seuls les bénéficiaires peuvent s'inscrire en tant que bénéficiaire."
-                : "Les bénéficiaires ne peuvent pas s'inscrire en tant que bénévole.");
+                : "Seuls les bénévoles peuvent s'inscrire en tant que bénévole.");
         }
     }
 
