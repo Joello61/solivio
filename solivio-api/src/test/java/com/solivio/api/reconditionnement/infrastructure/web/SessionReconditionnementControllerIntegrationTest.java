@@ -281,4 +281,56 @@ class SessionReconditionnementControllerIntegrationTest {
                 .cookie(new Cookie("access_token", tokenBenevole)))
             .andExpect(status().isForbidden());
     }
+
+    // Un brouillon n'existe pas pour un benevole (404) ; le responsable le voit.
+    @Test
+    void detail_brouillon_cacheAuBenevole() throws Exception {
+        String id = creerSession("Session en preparation");
+
+        mockMvc.perform(get("/api/sessions-reconditionnement/" + id)
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/sessions-reconditionnement/" + id)
+                .cookie(new Cookie("access_token", tokenResponsable)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.statut").value("BROUILLON"));
+
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/publier")
+                .cookie(new Cookie("access_token", tokenResponsable)))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/sessions-reconditionnement/" + id)
+                .cookie(new Cookie("access_token", tokenBenevole)))
+            .andExpect(status().isOk());
+    }
+
+    // Le reconditionnement est un travail benevole : un beneficiaire ne voit pas les sessions.
+    @Test
+    void listeEtDetail_refusesAuBeneficiaire() throws Exception {
+        String id = creerSession("Session publiee");
+        mockMvc.perform(post("/api/sessions-reconditionnement/" + id + "/publier")
+                .cookie(new Cookie("access_token", tokenResponsable)))
+            .andExpect(status().isOk());
+        String tokenBeneficiaire = jwtService.genererAccessToken(
+            UUID.randomUUID(), "benef@reco.com", "Benef", "Test", List.of("beneficiaire"), null, false
+        );
+
+        mockMvc.perform(get("/api/sessions-reconditionnement")
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/sessions-reconditionnement/" + id)
+                .cookie(new Cookie("access_token", tokenBeneficiaire)))
+            .andExpect(status().isForbidden());
+    }
+
+    private String creerSession(String titre) throws Exception {
+        String reponse = mockMvc.perform(post("/api/sessions-reconditionnement")
+                .cookie(new Cookie("access_token", tokenResponsable))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"titre\":\"" + titre + "\","
+                    + "\"dateHeureDebut\":\"2026-12-10T09:00:00Z\","
+                    + "\"dateHeureFin\":\"2026-12-10T12:00:00Z\"}"))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(reponse, "$.id");
+    }
 }
