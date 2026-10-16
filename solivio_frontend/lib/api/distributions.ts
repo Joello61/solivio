@@ -220,12 +220,13 @@ export function listerVisiteursAdHoc(distributionId: string): Promise<PointageAd
   );
 }
 
-export function envoyerInvitationVisiteur(
+/* Lien de creation de compte pour un visiteur qui a laisse son email. */
+export function envoyerLienInscriptionVisiteur(
   distributionId: string,
   adHocId: string,
 ): Promise<void> {
   return apiPost<void>(
-    `/api/distributions/${distributionId}/pointage/ad-hoc/${adHocId}/invitation`,
+    `/api/distributions/${distributionId}/pointage/ad-hoc/${adHocId}/lien-inscription`,
     {},
   );
 }
