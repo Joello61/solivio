@@ -14,4 +14,6 @@ public interface EmailService {
     void envoyerConfirmationChangementMotDePasse(Compte compte);
 
     void envoyerInvitation(Invitation invitation);
+
+    void envoyerLienInscription(String email);
 }
