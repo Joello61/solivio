@@ -29,21 +29,34 @@ class PersonneQueryAdapterIntegrationTest {
     // Non-regression : ces contacts etaient lus dans une table jamais alimentee,
     // si bien que l'alerte de desistement tardif ne partait vers aucun coordinateur.
     @Test
-    void trouverContactsParRole_retourneSeulementLesMembresActifsDuRole() {
+    void trouverContactsParRoles_retourneSeulementLesMembresActifsDuRole() {
         creerMembre("coord.actif@test.com", "coordinateur", "actif");
         creerMembre("coord.suspendu@test.com", "coordinateur", "suspendu");
         creerMembre("benevole@test.com", "benevole", "actif");
 
-        List<PersonneContactInfo> contacts = personneQueryPort.trouverContactsParRole("coordinateur");
+        List<PersonneContactInfo> contacts = personneQueryPort.trouverContactsParRoles("coordinateur");
 
         assertThat(contacts).extracting(PersonneContactInfo::email).containsExactly("coord.actif@test.com");
     }
 
     @Test
-    void trouverContactsParRole_retourneVideSansMembreDuRole() {
+    void trouverContactsParRoles_retourneVideSansMembreDuRole() {
         creerMembre("benevole@test.com", "benevole", "actif");
 
-        assertThat(personneQueryPort.trouverContactsParRole("coordinateur")).isEmpty();
+        assertThat(personneQueryPort.trouverContactsParRoles("coordinateur")).isEmpty();
+    }
+
+    @Test
+    void trouverContactsParRoles_renvoieUneFoisUnePersonneQuiCumuleLesRoles() {
+        Compte compte = compteRepository.save(new Compte("mixte@test.com", "hash", "Nom", "Prenom"));
+        membreRepository.save(new MembreAssociation(compte, List.of("benevole", "beneficiaire")));
+        personneRepository.save(new Personne("Nom", "Prenom", "mixte@test.com"));
+        creerMembre("benef@test.com", "beneficiaire", "actif");
+
+        List<PersonneContactInfo> contacts = personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire");
+
+        assertThat(contacts).extracting(PersonneContactInfo::email)
+            .containsExactlyInAnyOrder("mixte@test.com", "benef@test.com");
     }
 
     // Le message d'une NotFoundException part dans la reponse HTTP et les journaux.

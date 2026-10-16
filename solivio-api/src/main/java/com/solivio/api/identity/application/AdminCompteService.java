@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -108,7 +109,7 @@ public class AdminCompteService {
             compte.isActif(),
             compte.isSuperAdmin(),
             compte.getDateCreation(),
-            membre.map(MembreAssociation::getRole).orElse(null),
+            membre.map(MembreAssociation::rolesTries).orElse(List.of()),
             membre.map(MembreAssociation::getStatut).orElse(null)
         );
     }

@@ -152,7 +152,7 @@ class ProfilBeneficiaireControllerIntegrationTest {
     @Test
     void dossier_introuvablePourUnCompteQuiNEstPasBeneficiaire() throws Exception {
         membreRepo.findByCompteId(compte.getId()).ifPresent(m -> {
-            m.setRole("benevole");
+            m.remplacerRoles(List.of("benevole"));
             membreRepo.save(m);
         });
         mockMvc.perform(get("/api/association/membres/" + compte.getId() + "/profil-beneficiaire")

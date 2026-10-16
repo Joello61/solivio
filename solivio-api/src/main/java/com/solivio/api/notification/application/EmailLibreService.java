@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,18 +60,12 @@ public class EmailLibreService {
 
     private List<PersonneContactInfo> resoudreDestinataires(CibleEmail cible) {
         return switch (cible) {
-            case BENEVOLES      -> personneQueryPort.trouverContactsParRole("benevole");
-            case BENEFICIAIRES  -> personneQueryPort.trouverContactsParRole("beneficiaire");
-            case COORDINATEURS  -> personneQueryPort.trouverContactsParRole("coordinateur");
-            case RESPONSABLES   -> personneQueryPort.trouverContactsParRole("responsable");
-            case TOUS           -> {
-                List<PersonneContactInfo> tous = new ArrayList<>();
-                tous.addAll(personneQueryPort.trouverContactsParRole("benevole"));
-                tous.addAll(personneQueryPort.trouverContactsParRole("beneficiaire"));
-                tous.addAll(personneQueryPort.trouverContactsParRole("coordinateur"));
-                tous.addAll(personneQueryPort.trouverContactsParRole("responsable"));
-                yield tous;
-            }
+            case BENEVOLES      -> personneQueryPort.trouverContactsParRoles("benevole");
+            case BENEFICIAIRES  -> personneQueryPort.trouverContactsParRoles("beneficiaire");
+            case COORDINATEURS  -> personneQueryPort.trouverContactsParRoles("coordinateur");
+            case RESPONSABLES   -> personneQueryPort.trouverContactsParRoles("responsable");
+            case TOUS           ->
+                personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire", "coordinateur", "responsable");
         };
     }
 }

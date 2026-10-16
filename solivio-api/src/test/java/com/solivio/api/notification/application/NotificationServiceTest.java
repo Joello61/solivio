@@ -237,7 +237,7 @@ class NotificationServiceTest {
         PersonneContactInfo coord = new PersonneContactInfo(coordId, "coord@ex.com", "Luc", "Martin");
         when(personneQueryPort.trouverPersonneParId(personneId)).thenReturn(personne);
         when(distributionQueryPort.trouverDistributionDetails(distributionId)).thenReturn(distribution);
-        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of(coord));
+        when(personneQueryPort.trouverContactsParRoles("coordinateur")).thenReturn(List.of(coord));
 
         service.notifierDesistementTardifBenevole(personneId, distributionId, UUID.randomUUID());
 
@@ -314,7 +314,7 @@ class NotificationServiceTest {
         MissionInfo mission = new MissionInfo(missionId, "Collecte banque", ZonedDateTime.now(),
             "12 rue de la Paix", "Entrepot central");
         when(missionCollecteQueryPort.trouverMissionDetails(missionId)).thenReturn(mission);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+        when(personneQueryPort.trouverContactsParRoles("benevole")).thenReturn(List.of(b1));
 
         service.notifierCreationMissionCollecte(missionId);
 
@@ -362,7 +362,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Stand ete", ZonedDateTime.now(),
             "Parc", true, false, null, "OBLIGATOIRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+        when(personneQueryPort.trouverContactsParRoles("benevole")).thenReturn(List.of(b1));
 
         service.notifierPublicationEvenement(evenementId);
 
@@ -378,7 +378,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Fete", ZonedDateTime.now(),
             "Salle", false, true, "BENEFICIAIRES", "LIBRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p));
+        when(personneQueryPort.trouverContactsParRoles("beneficiaire")).thenReturn(List.of(p));
 
         service.notifierPublicationEvenement(evenementId);
 
@@ -396,8 +396,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Fete ouverte", ZonedDateTime.now(),
             "Stade", false, true, "TOUS", "OBLIGATOIRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p1));
+        when(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire")).thenReturn(List.of(b1, p1));
 
         service.notifierPublicationEvenement(evenementId);
 
@@ -413,7 +412,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Stand", ZonedDateTime.now(),
             null, true, true, "BENEVOLES", "OBLIGATOIRE", null);
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
+        when(personneQueryPort.trouverContactsParRoles("benevole")).thenReturn(List.of(b1));
 
         service.notifierPublicationEvenement(evenementId);
 
@@ -514,8 +513,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Stand ouvert annule", ZonedDateTime.now(),
             "Esplanade", false, false, null, "SANS_INSCRIPTION", "Securite");
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(bev));
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(ben));
+        when(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire")).thenReturn(List.of(bev, ben));
 
         service.notifierAnnulationEvenement(evenementId);
 
@@ -532,8 +530,7 @@ class NotificationServiceTest {
         EvenementInfo info = new EvenementInfo(evenementId, "Stand deduplique", ZonedDateTime.now(),
             null, false, false, null, "SANS_INSCRIPTION", "Annule");
         when(evenementQueryPort.trouverEvenementDetails(evenementId)).thenReturn(info);
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(commun));
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(commun));
+        when(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire")).thenReturn(List.of(commun, commun));
 
         service.notifierAnnulationEvenement(evenementId);
 

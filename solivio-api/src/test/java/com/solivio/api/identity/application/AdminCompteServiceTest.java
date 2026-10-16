@@ -58,18 +58,18 @@ class AdminCompteServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().getFirst().email()).isEqualTo("alice@example.com");
-        assertThat(result.getContent().getFirst().role()).isNull();
+        assertThat(result.getContent().getFirst().roles()).isEmpty();
     }
 
     @Test
-    void lireParId_exposeLeRoleEtLeStatutDuMembre() {
-        MembreAssociation membre = new MembreAssociation(compte, "coordinateur");
+    void lireParId_exposeLesRolesEtLeStatutDuMembre() {
+        MembreAssociation membre = new MembreAssociation(compte, List.of("coordinateur", "benevole"));
         when(compteRepository.findById(compteId)).thenReturn(Optional.of(compte));
         when(membreRepository.findByCompteId(any())).thenReturn(Optional.of(membre));
 
         CompteAdminResponse result = service.lireParId(compteId);
 
-        assertThat(result.role()).isEqualTo("coordinateur");
+        assertThat(result.roles()).containsExactly("benevole", "coordinateur");
         assertThat(result.statutMembre()).isEqualTo("actif");
     }
 

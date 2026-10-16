@@ -13,10 +13,10 @@ public interface PersonneQueryPort {
     PersonneContactInfo trouverPersonneParId(UUID id);
 
     /**
-     * Retourne les informations de contact de toutes les personnes ayant le role indique.
-     * Utilise pour notifier les coordinateurs en cas de desistement tardif.
+     * Retourne les informations de contact des membres actifs ayant au moins un des
+     * roles indiques, chaque personne une seule fois meme si elle cumule ces roles.
      */
-    List<PersonneContactInfo> trouverContactsParRole(String nomRole);
+    List<PersonneContactInfo> trouverContactsParRoles(String... nomsRoles);
 
     /**
      * Recherche de membres par nom ou prenom pour l'ajout ad hoc au pointage.

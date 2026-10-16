@@ -25,6 +25,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 
 import jakarta.servlet.http.Cookie;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -188,7 +190,7 @@ class AuthControllerIntegrationTest {
     @Test
     void register_retourne201PourNouvelInscription() throws Exception {
         RegisterRequest request = new RegisterRequest(
-            "bob@example.com", "password123!", "Martin", "Bob", null);
+            "bob@example.com", "password123!", "Martin", "Bob", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -199,9 +201,22 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void register_refuseBeneficiaireSansAttestationEtudiant() throws Exception {
+        RegisterRequest request = new RegisterRequest(
+            "dina@example.com", "password123!", "Durand", "Dina", List.of("beneficiaire"), false, null);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        assertThat(compteRepository.existsByEmail("dina@example.com")).isFalse();
+    }
+
+    @Test
     void register_refuseUnMotDePasseCourant() throws Exception {
         RegisterRequest request = new RegisterRequest(
-            "carole@example.com", "azertyuiop", "Durand", "Carole", null);
+            "carole@example.com", "azertyuiop", "Durand", "Carole", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -214,7 +229,7 @@ class AuthControllerIntegrationTest {
     @Test
     void register_retourne4xxPourEmailDejaPris() throws Exception {
         RegisterRequest request = new RegisterRequest(
-            "alice@example.com", "password123!", "Autre", "Personne", null);
+            "alice@example.com", "password123!", "Autre", "Personne", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -320,7 +335,7 @@ class AuthControllerIntegrationTest {
         compteRepository.save(googleCompte);
 
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "google@example.com", "Dupont", "Alice", null);
+            "google@example.com", "Dupont", "Alice", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -334,7 +349,7 @@ class AuthControllerIntegrationTest {
     void googleCompleteRegistration_retourne400SiPasGoogleId() throws Exception {
         // alice@example.com n'a pas de google_id (compte email/mot de passe)
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "alice@example.com", "Dupont", "Alice", null);
+            "alice@example.com", "Dupont", "Alice", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -350,7 +365,7 @@ class AuthControllerIntegrationTest {
         membreRepo.save(new MembreAssociation(googleCompteAffilie, "beneficiaire"));
 
         GoogleCompleteRegistrationRequest body = new GoogleCompleteRegistrationRequest(
-            "google2@example.com", "Martin", "Bob", null);
+            "google2@example.com", "Martin", "Bob", List.of("benevole"), false, null);
 
         mockMvc.perform(post("/api/auth/google/complete-registration")
                 .contentType(MediaType.APPLICATION_JSON)

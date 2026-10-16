@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -138,8 +139,10 @@ public class AuthService {
      */
     @Transactional
     public TokenResponse completerInscriptionGoogle(String email, String nom, String prenom,
-            String tokenInvitation, HttpServletRequest request, HttpServletResponse response) {
-        Compte compte = registerService.finaliserCompteGoogle(email, nom, prenom, tokenInvitation);
+            String tokenInvitation, Collection<String> roles, boolean attestationEtudiant,
+            HttpServletRequest request, HttpServletResponse response) {
+        Compte compte = registerService.finaliserCompteGoogle(
+            email, nom, prenom, tokenInvitation, roles, attestationEtudiant);
         return emettreJetons(compte, false, request, response);
     }
 
@@ -176,7 +179,7 @@ public class AuthService {
     private TokenResponse emettreJetons(Compte compte, boolean longDuree,
                                         HttpServletRequest request, HttpServletResponse response) {
         Optional<MembreAssociation> membre = membreRepo.findActifByCompteId(compte.getId());
-        List<String> roles = membre.map(m -> List.of(m.getRole())).orElse(List.of());
+        List<String> roles = membre.map(MembreAssociation::rolesTries).orElse(List.of());
         String coordoType = membre.map(MembreAssociation::getCoordoType).orElse(null);
 
         String accessToken = jwtService.genererAccessToken(
