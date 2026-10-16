@@ -3,7 +3,7 @@ import type {
   AssociationResponse,
   UpdateAssociationPayload,
   MembreResponse,
-  UpdateRoleMembrePayload,
+  UpdateRolesMembrePayload,
   InviterMembrePayload,
   StatistiqueDistributionResponse,
 } from "@/types/association";
@@ -26,12 +26,12 @@ export function uploadLogo(file: File): Promise<AssociationResponse> {
   });
 }
 
-export function mettreAJourRoleMembre(
+export function mettreAJourRolesMembre(
   compteId: string,
-  payload: UpdateRoleMembrePayload
+  payload: UpdateRolesMembrePayload
 ): Promise<MembreResponse> {
-  return apiFetch<MembreResponse>(`/api/association/membres/${compteId}/role`, {
-    method: "PATCH",
+  return apiFetch<MembreResponse>(`/api/association/membres/${compteId}/roles`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }

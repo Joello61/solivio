@@ -8,49 +8,22 @@ import { Alert } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form-field";
 import { Spinner } from "@/components/ui/spinner";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { inviterMembre } from "@/lib/api/association";
 import { messageErreur } from "@/lib/erreurs";
-import type { InviterMembrePayload } from "@/types/association";
 
-type Role = InviterMembrePayload["role"];
-
-const ROLES: { value: Role; label: string }[] = [
-  { value: "benevole", label: "Bénévole" },
-  { value: "coordinateur", label: "Coordinateur" },
-  { value: "responsable", label: "Responsable" },
-];
-
-const SANS_TYPE = "aucun";
-
-const TYPES_COORDINATION = [
-  { value: SANS_TYPE, label: "Non précisé" },
-  { value: "coordo_generale", label: "Coordination générale" },
-  { value: "coordo_sec", label: "Produits secs" },
-  { value: "coordo_fruit_legume", label: "Fruits et légumes" },
-  { value: "coordo_exterieur", label: "Extérieur" },
-];
-
-/** Invitation d'un membre par email ; l'acceptation passe par /register?invitation=. */
+/*
+ * Invitation d'une personne sans compte a devenir responsable (ADR-012). Benevoles et
+ * beneficiaires s'inscrivent seuls ; un membre se nomme responsable depuis sa fiche.
+ */
 export function InviterMembre() {
   const [ouvert, setOuvert] = useState(false);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("benevole");
-  const [coordoType, setCoordoType] = useState(SANS_TYPE);
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoyeA, setEnvoyeA] = useState<string | null>(null);
 
   function ouvrir() {
     setEmail("");
-    setRole("benevole");
-    setCoordoType(SANS_TYPE);
     setErreur(null);
     setEnvoyeA(null);
     setOuvert(true);
@@ -61,11 +34,7 @@ export function InviterMembre() {
     setEnCours(true);
     setErreur(null);
     try {
-      await inviterMembre({
-        email: email.trim(),
-        role,
-        coordoType: role === "coordinateur" && coordoType !== SANS_TYPE ? coordoType : undefined,
-      });
+      await inviterMembre({ email: email.trim() });
       setEnvoyeA(email.trim());
     } catch (err) {
       setErreur(messageErreur(err, "L'invitation n'a pas pu être envoyée."));
@@ -78,15 +47,16 @@ export function InviterMembre() {
     <>
       <Button onClick={ouvrir}>
         <UserPlus aria-hidden="true" />
-        Inviter un membre
+        Inviter un responsable
       </Button>
 
       <Sheet open={ouvert} onOpenChange={setOuvert}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Inviter un membre</SheetTitle>
+            <SheetTitle>Inviter un responsable</SheetTitle>
             <SheetDescription>
-              La personne reçoit un lien par email pour créer son compte. Il reste valable 7 jours.
+              Pour une personne qui n&apos;a pas encore de compte : elle reçoit un lien par email, valable 7 jours, et
+              devient responsable en créant son compte. Un membre déjà inscrit se nomme responsable depuis sa fiche.
             </SheetDescription>
           </SheetHeader>
 
@@ -108,45 +78,7 @@ export function InviterMembre() {
                 />
               </FormField>
 
-              <FormField label="Rôle" htmlFor="invitation-role">
-                <Select items={ROLES} value={role} onValueChange={(v) => v && setRole(v as Role)}>
-                  <SelectTrigger id="invitation-role" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormField>
-
-              {role === "coordinateur" && (
-                <FormField label="Type de coordination" htmlFor="invitation-coordination">
-                  <Select
-                    items={TYPES_COORDINATION}
-                    value={coordoType}
-                    onValueChange={(v) => v && setCoordoType(v)}
-                  >
-                    <SelectTrigger id="invitation-coordination" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TYPES_COORDINATION.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormField>
-              )}
-
-              {erreur && (
-                <Alert variant="destructive">{erreur}</Alert>
-              )}
+              {erreur && <Alert variant="destructive">{erreur}</Alert>}
 
               <SheetFooter>
                 <Button type="button" variant="outline" onClick={() => setOuvert(false)}>

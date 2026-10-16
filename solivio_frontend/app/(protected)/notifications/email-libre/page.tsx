@@ -17,9 +17,10 @@ const ROLE: Record<Exclude<CibleEmail, "TOUS">, string> = {
 
 export default async function MessageMembresPage() {
   const membres = ((await lireServeur<MembreResponse[]>("/api/association/membres")) ?? []).filter((m) => m.statut === "actif");
-  const compte = (role: string) => membres.filter((m) => m.role === role).length;
+  const compte = (role: string) => membres.filter((m) => m.roles.includes(role)).length;
   const parRole = Object.fromEntries(Object.entries(ROLE).map(([cible, role]) => [cible, compte(role)])) as Record<Exclude<CibleEmail, "TOUS">, number>;
-  const destinataires = { ...parRole, TOUS: Object.values(parRole).reduce((a, b) => a + b, 0) };
+  // Une personne qui cumule les roles ne recoit qu'un email : on compte des personnes.
+  const destinataires = { ...parRole, TOUS: membres.filter((m) => m.roles.length > 0).length };
 
   return (
     <>

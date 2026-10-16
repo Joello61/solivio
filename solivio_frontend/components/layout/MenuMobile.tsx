@@ -7,7 +7,7 @@ import { CircleUser, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { libelleRole } from "@/lib/roles";
+import { libelleRoles } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
 import { AvatarMembre, useDeconnexion } from "./identite";
@@ -35,7 +35,7 @@ export function MenuMobile({ user, declencheur }: { user: MeResponse; declencheu
               {user.prenom} {user.nom}
             </SheetTitle>
             <span className="text-sm text-muted-foreground">
-              {user.roles.map((r) => libelleRole(r)).join(", ")}
+              {libelleRoles(user.roles)}
             </span>
           </div>
         </div>

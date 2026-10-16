@@ -25,7 +25,7 @@ const compte = (id: string, prenom: string, nom: string, extra: Partial<CompteAd
   actif: true,
   superAdmin: false,
   dateCreation: "2026-01-01T00:00:00Z",
-  role: "benevole",
+  roles: ["benevole"],
   statutMembre: "actif",
   ...extra,
 });
