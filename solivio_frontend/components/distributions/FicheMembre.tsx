@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { ClipboardCheck, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { buttonVariants } from "@/components/ui/button";
 import { Jauge } from "@/components/ui/jauge";
 import { DeuxColonnes } from "@/components/ui/deux-colonnes";
 import { ReperesDistribution } from "@/components/shared/Reperes";
@@ -18,10 +16,10 @@ import type { DistributionResponse, InscriptionResponse, TypeInscription } from 
 
 interface Props {
   distribution: DistributionResponse;
-  monInscription: InscriptionResponse | undefined;
-  /* Type d'inscription ouvert au membre, null s'il ne peut pas s'inscrire. */
-  type: TypeInscription | null;
-  pointageBenevole: boolean;
+  /* Inscriptions du membre a cette distribution, tous types confondus. */
+  mesInscriptions: InscriptionResponse[];
+  /* Types d'inscription ouverts au membre ; les deux s'il est benevole et beneficiaire. */
+  types: TypeInscription[];
 }
 
 const MESSAGE_STATUT: Partial<Record<DistributionResponse["statut"], string>> = {
@@ -30,28 +28,98 @@ const MESSAGE_STATUT: Partial<Record<DistributionResponse["statut"], string>> = 
   TERMINEE: "Cette distribution est terminée.",
 };
 
+const TITRE_TYPE: Record<TypeInscription, string> = {
+  BENEFICIAIRE: "Comme bénéficiaire",
+  BENEVOLE: "Comme bénévole",
+};
+
+function estActive(i: InscriptionResponse): boolean {
+  return i.statut === "CONFIRMEE" || i.statut === "LISTE_ATTENTE";
+}
+
+/*
+ * Ce que le membre peut faire pour un type d'inscription : son billet s'il est inscrit,
+ * sinon la reservation tant que la distribution est ouverte.
+ */
+function Participation({
+  d,
+  type,
+  inscription,
+}: {
+  d: DistributionResponse;
+  type: TypeInscription;
+  inscription: InscriptionResponse | undefined;
+}) {
+  const places = placesPour(d, type);
+  if (inscription && d.statut !== "ANNULEE" && d.statut !== "TERMINEE") {
+    const creneau = d.creneaux.find((c) => c.id === inscription.creneauId);
+    return (
+      <>
+        <BilletInscription
+          billet={{
+            inscriptionId: inscription.id,
+            distributionId: d.id,
+            date: d.date,
+            heureDebut: creneau?.heureDebut ?? d.creneaux[0]?.heureDebut ?? null,
+            heureFin: creneau?.heureFin ?? d.creneaux.at(-1)?.heureFin ?? null,
+            lieuNom: d.lieu?.nom ?? null,
+            adresse: d.lieu?.adresseFormatee ?? null,
+            statut: inscription.statut === "LISTE_ATTENTE" ? "LISTE_ATTENTE" : "CONFIRMEE",
+            rangListeAttente: inscription.rangListeAttente,
+            benevole: inscription.type === "BENEVOLE",
+            roles: inscription.roles.map((r) => r.libelle),
+            desinscriptionPossible: inscription.presence === "NON_POINTE",
+            desistementTardif: estDesistementTardif(inscription, d.date, jourAssociation(new Date())),
+          }}
+        />
+        {inscription.statut === "LISTE_ATTENTE" && (
+          <p className="text-base text-muted-foreground">
+            Si une place se libère, elle vous revient dans l&apos;ordre de la liste et vous recevez un email.
+            Rien à faire d&apos;ici là.
+          </p>
+        )}
+      </>
+    );
+  }
+  if (d.statut !== "PUBLIEE") return null;
+  return (
+    <div className="flex flex-col gap-6">
+      {places && (
+        <Jauge
+          valeur={places.capacite - places.restantes}
+          capacite={places.capacite}
+          libelle={libellePlaces(places.restantes, type)}
+          detail={`sur ${places.capacite}`}
+          detailTon={places.restantes <= 0 ? "attente" : "neutre"}
+        />
+      )}
+      <ReservationDistribution
+        distributionId={d.id}
+        creneaux={d.creneaux}
+        modeCreneau={d.modeCreneau}
+        type={type}
+        placesRestantes={places?.restantes ?? null}
+      />
+    </div>
+  );
+}
+
 /*
  * Fiche d'une distribution pour un beneficiaire ou un benevole : quand, ou,
- * combien de places, puis une seule action. Une fois inscrit, le billet remplace
- * la reservation.
+ * combien de places, puis une seule action par type. Une fois inscrit, le billet
+ * remplace la reservation.
  */
-export function FicheMembre({ distribution: d, monInscription, type, pointageBenevole }: Props) {
+export function FicheMembre({ distribution: d, mesInscriptions, types }: Props) {
   const plage = plageDistribution(d);
-  const places = type ? placesPour(d, type) : null;
   const itineraire = lienItineraire({
     latitude: d.lieu?.latitude ?? null,
     longitude: d.lieu?.longitude ?? null,
     adresseFormatee: d.lieu?.adresseFormatee ?? null,
   });
   const lieu = [d.lieu?.nom, d.lieu?.adresseFormatee].filter(Boolean).join(", ");
-  const monCreneau = d.creneaux.find((c) => c.id === monInscription?.creneauId);
-  const inscriptionActive =
-    monInscription && (monInscription.statut === "CONFIRMEE" || monInscription.statut === "LISTE_ATTENTE")
-      ? monInscription
-      : undefined;
-  const ouverte = d.statut === "PUBLIEE";
+  const actives = mesInscriptions.filter(estActive);
   const annulee = d.statut === "ANNULEE";
-
+  const plusieurs = types.length > 1;
   const aside = (
     <>
       {d.description && (
@@ -65,7 +133,7 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
           lieu={{ latitude: d.lieu.latitude, longitude: d.lieu.longitude, adresseFormatee: d.lieu.adresseFormatee }}
         />
       )}
-      <ReperesDistribution benevole={(inscriptionActive?.type ?? type) === "BENEVOLE"} />
+      <ReperesDistribution benevole={(actives[0]?.type ?? types[0]) === "BENEVOLE"} />
     </>
   );
 
@@ -82,7 +150,7 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
               <MapPin aria-hidden="true" className="mt-1 size-5 shrink-0" />
               <span>
                 {lieu}
-                {itineraire && !inscriptionActive && (
+                {itineraire && actives.length === 0 && (
                   <>
                     {" "}
                     <a
@@ -99,14 +167,6 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
             </span>
           )
         }
-        actions={
-          pointageBenevole && (
-            <Link href={`/distributions/${d.id}/pointage`} className={buttonVariants({ variant: "accent", size: "lg" })}>
-              <ClipboardCheck aria-hidden="true" />
-              Ouvrir le pointage
-            </Link>
-          )
-        }
       />
 
       {annulee && (
@@ -115,62 +175,29 @@ export function FicheMembre({ distribution: d, monInscription, type, pointageBen
           {d.motifAnnulation && <AlertDescription>{d.motifAnnulation}</AlertDescription>}
         </Alert>
       )}
-      {MESSAGE_STATUT[d.statut] && !inscriptionActive && (
+      {MESSAGE_STATUT[d.statut] && actives.length === 0 && (
         <p className="text-base text-muted-foreground">{MESSAGE_STATUT[d.statut]}</p>
       )}
 
-      {inscriptionActive && !annulee && d.statut !== "TERMINEE" ? (
-        <BilletInscription
-          billet={{
-            inscriptionId: inscriptionActive.id,
-            distributionId: d.id,
-            date: d.date,
-            heureDebut: monCreneau?.heureDebut ?? d.creneaux[0]?.heureDebut ?? null,
-            heureFin: monCreneau?.heureFin ?? d.creneaux.at(-1)?.heureFin ?? null,
-            lieuNom: d.lieu?.nom ?? null,
-            adresse: d.lieu?.adresseFormatee ?? null,
-            statut: inscriptionActive.statut === "LISTE_ATTENTE" ? "LISTE_ATTENTE" : "CONFIRMEE",
-            rangListeAttente: inscriptionActive.rangListeAttente,
-            benevole: inscriptionActive.type === "BENEVOLE",
-            roles: inscriptionActive.roles.map((r) => r.libelle),
-            desinscriptionPossible: inscriptionActive.presence === "NON_POINTE",
-            desistementTardif: estDesistementTardif(inscriptionActive, d.date, jourAssociation(new Date())),
-          }}
-        />
-      ) : (
-        ouverte &&
-        type && (
-          <section aria-label="Réservation" className="flex flex-col gap-6">
-            {places && (
-              <Jauge
-                valeur={places.capacite - places.restantes}
-                capacite={places.capacite}
-                libelle={libellePlaces(places.restantes, type)}
-                detail={`sur ${places.capacite}`}
-                detailTon={places.restantes <= 0 ? "attente" : "neutre"}
-              />
-            )}
-            <ReservationDistribution
-              distributionId={d.id}
-              creneaux={d.creneaux}
-              modeCreneau={d.modeCreneau}
-              type={type}
-              placesRestantes={places?.restantes ?? null}
-            />
+      {types.map((type) => {
+        const inscription = actives.find((i) => i.type === type);
+        return plusieurs ? (
+          <section key={type} aria-labelledby={`participation-${type}`} className="flex flex-col gap-4">
+            <h2 id={`participation-${type}`} className="font-display text-xl font-bold text-foreground">
+              {TITRE_TYPE[type]}
+            </h2>
+            <Participation d={d} type={type} inscription={inscription} />
           </section>
-        )
-      )}
+        ) : (
+          <section key={type} aria-label="Réservation" className="flex flex-col gap-4">
+            <Participation d={d} type={type} inscription={inscription} />
+          </section>
+        );
+      })}
 
-      {inscriptionActive?.statut === "LISTE_ATTENTE" && !annulee && (
-        <p className="text-base text-muted-foreground">
-          Si une place se libère, elle vous revient dans l&apos;ordre de la liste et vous recevez un email.
-          Rien à faire d&apos;ici là.
-        </p>
-      )}
-      {d.statut === "TERMINEE" && monInscription?.statut === "CONFIRMEE" && (
+      {d.statut === "TERMINEE" && mesInscriptions.some((i) => i.statut === "CONFIRMEE") && (
         <p className="text-base text-muted-foreground">Votre place était réservée pour cette distribution.</p>
       )}
-
     </DeuxColonnes>
   );
 }

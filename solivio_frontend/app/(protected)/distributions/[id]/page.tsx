@@ -4,7 +4,7 @@ import { FeuilleDistribution, type OngletFeuille } from "@/components/distributi
 import { FicheMembre } from "@/components/distributions/FicheMembre";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { jourAssociation } from "@/lib/distribution-du-jour";
-import { estGestionnaireDistribution, peutPointer, typeInscriptionPossible } from "@/lib/droits-distribution";
+import { estGestionnaireDistribution, typesInscriptionPossibles } from "@/lib/droits-distribution";
 import { rolesAttribuables } from "@/lib/roles-benevoles";
 import type { StatistiqueDistributionResponse } from "@/types/association";
 import type { DistributionResponse, InscriptionResponse, TypeRoleResponse } from "@/types/distribution";
@@ -27,14 +27,8 @@ export default async function DistributionDetailPage({ params, searchParams }: P
 
   if (!estGestionnaireDistribution(roles)) {
     const mesInscriptions = (await lireServeur<InscriptionResponse[]>(`/api/distributions/${id}/inscriptions/mes`)) ?? [];
-    const monInscription = mesInscriptions.find((i) => i.statut === "CONFIRMEE" || i.statut === "LISTE_ATTENTE");
     return (
-      <FicheMembre
-        distribution={distribution}
-        monInscription={monInscription}
-        type={typeInscriptionPossible(roles)}
-        pointageBenevole={peutPointer(roles, distribution.statut, mesInscriptions)}
-      />
+      <FicheMembre distribution={distribution} mesInscriptions={mesInscriptions} types={typesInscriptionPossibles(roles)} />
     );
   }
 
@@ -55,8 +49,8 @@ export default async function DistributionDetailPage({ params, searchParams }: P
       roles={rolesAttribuables(typesRoles ?? [])}
       onglet={(onglet as OngletFeuille | undefined) ?? "vue"}
       aujourdhui={jourAssociation(new Date())}
-      monInscription={(mesInscriptions ?? []).find((i) => i.statut === "CONFIRMEE" || i.statut === "LISTE_ATTENTE")}
-      typeInscription={typeInscriptionPossible(roles)}
+      mesInscriptions={mesInscriptions ?? []}
+      typesInscription={typesInscriptionPossibles(roles)}
     />
   );
 }

@@ -2,6 +2,7 @@ package com.solivio.api.identity.application;
 
 import com.solivio.api.audit.application.AuditService;
 import com.solivio.api.identity.domain.Personne;
+import com.solivio.api.identity.domain.RolesMembre;
 import com.solivio.api.identity.domain.ProfilBeneficiaire;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.MembreAssociationRepository;
@@ -53,7 +54,7 @@ public class ProfilBeneficiaireService {
     @Transactional
     public ProfilBeneficiaireResponse lirePourResponsable(UUID compteId) {
         boolean beneficiaire = membreRepository.findByCompteId(compteId)
-            .map(m -> "beneficiaire".equals(m.getRole()))
+            .map(m -> m.aLeRole(RolesMembre.BENEFICIAIRE))
             .orElse(false);
         if (!beneficiaire) {
             throw new NotFoundException("Dossier bénéficiaire introuvable : " + compteId);

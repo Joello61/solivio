@@ -22,7 +22,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/distributions/{distributionId}/pointage")
-@PreAuthorize("hasAnyRole('COORDINATEUR','RESPONSABLE','BENEVOLE','SUPER_ADMIN')")
+// Pointage reserve aux coordinateurs et responsables (ADR-012, parcours 5.2).
+@PreAuthorize("hasAnyRole('COORDINATEUR','SUPER_ADMIN')")
 public class PointageController {
 
     private final InscriptionService inscriptionService;
@@ -35,12 +36,9 @@ public class PointageController {
     @GetMapping
     public ResponseEntity<List<PointageInfoResponse>> rechercher(
         @PathVariable UUID distributionId,
-        @RequestParam(defaultValue = "") String q,
-        @AuthenticationPrincipal SolivioUserDetails user
+        @RequestParam(defaultValue = "") String q
     ) {
-        return ResponseEntity.ok(inscriptionService.rechercherPourPointage(
-            distributionId, q, user.getUsername(), estGestionnaire(user)
-        ));
+        return ResponseEntity.ok(inscriptionService.rechercherPourPointage(distributionId, q));
     }
 
     @PutMapping("/{inscriptionId}")
@@ -51,12 +49,8 @@ public class PointageController {
         @AuthenticationPrincipal SolivioUserDetails user
     ) {
         InscriptionResponse response = inscriptionService.pointer(
-            distributionId, inscriptionId, request.presence(), user.getUsername(), estGestionnaire(user)
+            distributionId, inscriptionId, request.presence(), user.getUsername()
         );
         return ResponseEntity.ok(response);
-    }
-
-    private static boolean estGestionnaire(SolivioUserDetails user) {
-        return user.aUnDesRoles("coordinateur", "responsable", "super_admin");
     }
 }

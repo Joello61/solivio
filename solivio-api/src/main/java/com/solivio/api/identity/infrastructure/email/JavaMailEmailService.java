@@ -91,6 +91,15 @@ public class JavaMailEmailService implements com.solivio.api.identity.applicatio
             "invitation", ctx);
     }
 
+    @Override
+    public void envoyerLienInscription(String email) {
+        Context ctx = nouveauContext();
+        String associationNom = associationQueryPort.nomAssociation();
+        ctx.setVariable("associationNom", associationNom);
+        ctx.setVariable("lienInscription", appUrl + "/register");
+        envoyer(email, "Rejoindre " + associationNom + " - Solivio", "lien-inscription", ctx);
+    }
+
     private void envoyer(String destinataire, String sujet, String template, Context ctx) {
         try {
             String corps = templateEngine.process(template, ctx);

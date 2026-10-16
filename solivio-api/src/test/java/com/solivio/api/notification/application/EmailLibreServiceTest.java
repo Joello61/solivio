@@ -48,7 +48,7 @@ class EmailLibreServiceTest {
         UUID id2 = UUID.randomUUID();
         PersonneContactInfo b1 = new PersonneContactInfo(id1, "b1@ex.com", "Alice", "A");
         PersonneContactInfo b2 = new PersonneContactInfo(id2, "b2@ex.com", "Bob", "B");
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1, b2));
+        when(personneQueryPort.trouverContactsParRoles("benevole")).thenReturn(List.of(b1, b2));
 
         service.envoyer(CibleEmail.BENEVOLES, "Reunion", "Corps du message");
 
@@ -61,7 +61,7 @@ class EmailLibreServiceTest {
     void envoyer_beneficiaires_envoieAuxBeneficiaires() {
         UUID id = UUID.randomUUID();
         PersonneContactInfo p = new PersonneContactInfo(id, "p@ex.com", "Clara", "C");
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p));
+        when(personneQueryPort.trouverContactsParRoles("beneficiaire")).thenReturn(List.of(p));
 
         service.envoyer(CibleEmail.BENEFICIAIRES, "Info", "Corps");
 
@@ -76,7 +76,7 @@ class EmailLibreServiceTest {
     void envoyer_coordinateurs_envoieAuxCoordinateurs() {
         UUID id = UUID.randomUUID();
         PersonneContactInfo c = new PersonneContactInfo(id, "coord@ex.com", "Dana", "D");
-        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of(c));
+        when(personneQueryPort.trouverContactsParRoles("coordinateur")).thenReturn(List.of(c));
 
         service.envoyer(CibleEmail.COORDINATEURS, "Reunion coord", "Details");
 
@@ -87,7 +87,7 @@ class EmailLibreServiceTest {
     void envoyer_responsables_envoieAuxResponsables() {
         UUID id = UUID.randomUUID();
         PersonneContactInfo r = new PersonneContactInfo(id, "resp@ex.com", "Eric", "E");
-        when(personneQueryPort.trouverContactsParRole("responsable")).thenReturn(List.of(r));
+        when(personneQueryPort.trouverContactsParRoles("responsable")).thenReturn(List.of(r));
 
         service.envoyer(CibleEmail.RESPONSABLES, "Note direction", "Contenu");
 
@@ -104,10 +104,8 @@ class EmailLibreServiceTest {
         PersonneContactInfo p1 = new PersonneContactInfo(p1Id, "ben@ex.com", "Ben", "Y");
         PersonneContactInfo c1 = new PersonneContactInfo(c1Id, "coo@ex.com", "Coo", "Z");
         PersonneContactInfo r1 = new PersonneContactInfo(r1Id, "res@ex.com", "Res", "W");
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(b1));
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(p1));
-        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of(c1));
-        when(personneQueryPort.trouverContactsParRole("responsable")).thenReturn(List.of(r1));
+        when(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire", "coordinateur", "responsable"))
+            .thenReturn(List.of(b1, p1, c1, r1));
 
         service.envoyer(CibleEmail.TOUS, "Message general", "Bonjour a tous");
 
@@ -119,10 +117,8 @@ class EmailLibreServiceTest {
     void envoyer_tous_deduplicateLesMembresPresentsEnPlusieursRoles() {
         UUID communId = UUID.randomUUID();
         PersonneContactInfo commun = new PersonneContactInfo(communId, "multi@ex.com", "Multi", "Role");
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(commun));
-        when(personneQueryPort.trouverContactsParRole("beneficiaire")).thenReturn(List.of(commun));
-        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of());
-        when(personneQueryPort.trouverContactsParRole("responsable")).thenReturn(List.of());
+        when(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire", "coordinateur", "responsable"))
+            .thenReturn(List.of(commun, commun));
 
         service.envoyer(CibleEmail.TOUS, "Sujet", "Corps");
 
@@ -135,7 +131,7 @@ class EmailLibreServiceTest {
     void envoyer_echecEnvoi_traceEchec() {
         UUID id = UUID.randomUUID();
         PersonneContactInfo p = new PersonneContactInfo(id, "fail@ex.com", "Fail", "F");
-        when(personneQueryPort.trouverContactsParRole("benevole")).thenReturn(List.of(p));
+        when(personneQueryPort.trouverContactsParRoles("benevole")).thenReturn(List.of(p));
         doThrow(new NotificationEmailException(new RuntimeException("SMTP KO")))
             .when(emailService).envoyerEmailLibre(anyString(), anyString(), anyString());
 
@@ -149,7 +145,7 @@ class EmailLibreServiceTest {
 
     @Test
     void envoyer_listeVide_nEnvoiePasDemail() {
-        when(personneQueryPort.trouverContactsParRole("coordinateur")).thenReturn(List.of());
+        when(personneQueryPort.trouverContactsParRoles("coordinateur")).thenReturn(List.of());
 
         service.envoyer(CibleEmail.COORDINATEURS, "Sujet", "Corps");
 

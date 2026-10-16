@@ -1,4 +1,6 @@
-import { apiFetch, apiFetchRaw } from "@/lib/api";
+import { apiFetch, apiFetchRaw, apiPost, tentativeRefresh } from "@/lib/api";
+import type { RoleLibre } from "@/lib/roles";
+import type { MembreResponse } from "@/types/association";
 import type {
   UpdateProfilPayload,
   ProfilBeneficiaireResponse,
@@ -59,4 +61,14 @@ export function effacerMesDonnees(): Promise<void> {
 
 export function effacerDonneesCompteAdmin(id: string): Promise<void> {
   return apiFetch<void>(`/api/admin/comptes/${id}/effacement`, { method: "POST" });
+}
+
+/**
+ * Le membre devient aussi benevole ou beneficiaire (ADR-012). Le jeton porte les roles :
+ * on le renouvelle aussitot pour que le nouveau role compte sans se reconnecter.
+ */
+export async function ajouterMonRole(role: RoleLibre, attestationEtudiant: boolean): Promise<MembreResponse> {
+  const membre = await apiPost<MembreResponse>("/api/me/roles", { role, attestationEtudiant });
+  await tentativeRefresh();
+  return membre;
 }

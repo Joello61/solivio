@@ -1,6 +1,7 @@
 package com.solivio.api.identity.infrastructure.web.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record CompteAdminResponse(
@@ -13,7 +14,7 @@ public record CompteAdminResponse(
     boolean actif,
     boolean superAdmin,
     Instant dateCreation,
-    // Role et statut du membre dans l'association ; nuls si le compte n'a pas de role.
-    String role,
+    // Roles et statut du membre dans l'association ; vides ou nul si le compte n'en a pas.
+    List<String> roles,
     String statutMembre
 ) {}

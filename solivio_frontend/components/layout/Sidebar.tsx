@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { VILLE_ASSOCIATION } from "@/lib/marque";
-import { libelleRole } from "@/lib/roles";
+import { libelleRoles } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { MeResponse } from "@/types/auth";
 import { AvatarMembre, Logo, useDeconnexion } from "./identite";
@@ -82,7 +82,7 @@ export function Sidebar({ user, jourJ }: SidebarProps) {
               {user.prenom} {user.nom}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              {user.roles[0] ? libelleRole(user.roles[0]) : "Mon compte"}
+              {user.roles.length > 0 ? libelleRoles(user.roles) : "Mon compte"}
             </span>
           </span>
         </Link>

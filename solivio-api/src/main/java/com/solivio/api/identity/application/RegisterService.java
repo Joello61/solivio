@@ -3,6 +3,7 @@ package com.solivio.api.identity.application;
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Invitation;
 import com.solivio.api.identity.domain.MembreAssociation;
+import com.solivio.api.identity.domain.RolesMembre;
 import com.solivio.api.identity.domain.VerificationCode;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.InvitationRepository;
@@ -11,16 +12,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Inscription de nouveaux comptes.
- * Deux chemins : beneficiaire autonome ou utilisateur invite (token invitation).
+ * Inscription de nouveaux comptes (ADR-012). Deux chemins : inscription libre, ou
+ * l'on choisit d'etre benevole, beneficiaire ou les deux ; invitation, reservee a la
+ * creation d'un responsable.
  */
 @Service
 public class RegisterService {
-
-    private static final String ROLE_PAR_DEFAUT = "beneficiaire";
 
     private final CompteRepository compteRepository;
     private final MembreAssociationRepository membreRepo;
@@ -47,18 +49,17 @@ public class RegisterService {
         this.personneProvisioningService = personneProvisioningService;
     }
 
-    /**
-     * Inscription libre : le compte devient beneficiaire de l'association.
-     * Les autres roles passent par une invitation.
-     */
+    /** Inscription libre, avec les roles choisis par la personne. */
     @Transactional
-    public Compte inscrireBeneficiaire(String email, String motDePasse, String nom, String prenom) {
+    public Compte inscrire(String email, String motDePasse, String nom, String prenom,
+                           Collection<String> roles, boolean attestationEtudiant) {
+        Set<String> rolesChoisis = RolesMembre.choisisSeul(roles, attestationEtudiant);
         if (compteRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Un compte existe déjà avec cet email");
         }
 
         Compte compte = compteRepository.save(new Compte(email, passwordEncoder.encode(motDePasse), nom, prenom));
-        membreRepo.save(new MembreAssociation(compte, ROLE_PAR_DEFAUT));
+        membreRepo.save(new MembreAssociation(compte, rolesChoisis));
         personneProvisioningService.provisionner(email, nom, prenom);
 
         envoyerVerificationEmail(compte);
@@ -112,12 +113,13 @@ public class RegisterService {
     }
 
     /**
-     * Finalise un compte Google qui n'a pas encore de role : beneficiaire par
-     * defaut, ou le role de l'invitation fournie. L'utilisateur peut corriger
-     * le nom et le prenom transmis par Google.
+     * Finalise un compte Google qui n'a pas encore de role : les roles choisis, ou
+     * celui de l'invitation fournie. L'utilisateur peut corriger le nom et le prenom
+     * transmis par Google.
      */
     @Transactional
-    public Compte finaliserCompteGoogle(String email, String nom, String prenom, String tokenInvitationStr) {
+    public Compte finaliserCompteGoogle(String email, String nom, String prenom, String tokenInvitationStr,
+                                        Collection<String> roles, boolean attestationEtudiant) {
         Compte compte = compteRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("Compte introuvable"));
 
@@ -138,7 +140,7 @@ public class RegisterService {
         if (tokenInvitationStr != null && !tokenInvitationStr.isBlank()) {
             accepterInvitation(compte, invitationValide(UUID.fromString(tokenInvitationStr), email));
         } else {
-            membreRepo.save(new MembreAssociation(compte, ROLE_PAR_DEFAUT));
+            membreRepo.save(new MembreAssociation(compte, RolesMembre.choisisSeul(roles, attestationEtudiant)));
         }
         personneProvisioningService.provisionner(email, compte.getNom(), compte.getPrenom());
 

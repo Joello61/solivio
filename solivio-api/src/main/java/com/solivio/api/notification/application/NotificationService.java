@@ -174,7 +174,7 @@ public class NotificationService {
         String sujet = "Désistement tardif bénévole - " + distribution.titre();
         TypeEvenementNotification type = TypeEvenementNotification.DESISTEMENT_TARDIF_BENEVOLE;
         int echecs = 0;
-        for (PersonneContactInfo coord : personneQueryPort.trouverContactsParRole("coordinateur")) {
+        for (PersonneContactInfo coord : personneQueryPort.trouverContactsParRoles("coordinateur")) {
             if (!envoyer(cle(type, occurrenceId), coord.id(), distributionId, type, sujet,
                 () -> emailService.envoyerDesistementTardifBenevole(
                     coord.email(), coord.prenom(), benevole.prenom(), benevole.nom(), distribution))) {
@@ -257,7 +257,7 @@ public class NotificationService {
         String sujet = "Nouvelle mission de collecte - " + mission.titre();
         TypeEvenementNotification type = TypeEvenementNotification.CREATION_MISSION_COLLECTE;
         int echecs = 0;
-        for (PersonneContactInfo benevole : personneQueryPort.trouverContactsParRole("benevole")) {
+        for (PersonneContactInfo benevole : personneQueryPort.trouverContactsParRoles("benevole")) {
             ContexteCollecteEmail contexte = new ContexteCollecteEmail(
                 benevole.prenom(), mission.titre(), mission.dateHeure(),
                 mission.lieuCollecteAdresse(), mission.lieuDepotAdresse(), null);
@@ -294,17 +294,15 @@ public class NotificationService {
             null, emailService::envoyerPublicationEvenement);
 
         if (evenement.aBesoiNStaff()) {
-            diffusion.envoyerA(personneQueryPort.trouverContactsParRole("benevole"));
+            diffusion.envoyerA(personneQueryPort.trouverContactsParRoles("benevole"));
         }
         if (evenement.ouvertParticipants() && evenement.publicParticipants() != null) {
             switch (evenement.publicParticipants()) {
-                case "BENEVOLES" -> diffusion.envoyerA(personneQueryPort.trouverContactsParRole("benevole"));
+                case "BENEVOLES" -> diffusion.envoyerA(personneQueryPort.trouverContactsParRoles("benevole"));
                 case "BENEFICIAIRES" ->
-                    diffusion.envoyerA(personneQueryPort.trouverContactsParRole("beneficiaire"));
-                case "TOUS" -> {
-                    diffusion.envoyerA(personneQueryPort.trouverContactsParRole("benevole"));
-                    diffusion.envoyerA(personneQueryPort.trouverContactsParRole("beneficiaire"));
-                }
+                    diffusion.envoyerA(personneQueryPort.trouverContactsParRoles("beneficiaire"));
+                case "TOUS" ->
+                    diffusion.envoyerA(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire"));
                 default -> log.warn("publicParticipants inconnu : {}", evenement.publicParticipants());
             }
         }
@@ -327,10 +325,8 @@ public class NotificationService {
                     notifierEmailGeneral(evenementId, evenement);
                 }
             }
-            case "SANS_INSCRIPTION" -> {
-                diffusion.envoyerA(personneQueryPort.trouverContactsParRole("benevole"));
-                diffusion.envoyerA(personneQueryPort.trouverContactsParRole("beneficiaire"));
-            }
+            case "SANS_INSCRIPTION" ->
+                diffusion.envoyerA(personneQueryPort.trouverContactsParRoles("benevole", "beneficiaire"));
             default -> log.warn("modeInscription inconnu : {}", evenement.modeInscription());
         }
         exigerSucces(diffusion.echecs, TypeEvenementNotification.ANNULATION_EVENEMENT, evenementId);

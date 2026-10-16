@@ -97,7 +97,7 @@ export function ReservationDistribution({ distributionId, creneaux, modeCreneau,
                 >
                   <input
                     type="radio"
-                    name="creneau"
+                    name={`creneau-${type}`}
                     value={c.id}
                     checked={creneauId === c.id}
                     onChange={() => {

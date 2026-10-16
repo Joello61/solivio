@@ -39,7 +39,7 @@ Autrement dit, aucun écran n'est réservé à un seul type d'appareil. Le mobil
 
 **Dignité du bénéficiaire.** Le public est en situation de précarité. Le ton, le vocabulaire et le design évitent toute stigmatisation. S'inscrire à une distribution doit être aussi neutre et digne que réserver un créneau quelconque. Aucune mention superflue de la situation sociale n'apparaît dans les parcours visibles par d'autres.
 
-**Confidentialité visible.** La confidentialité n'est pas qu'une protection technique : elle se voit dans l'expérience. Un bénévole qui pointe ne voit qu'un nom et un statut, jamais les données sensibles. Cette retenue est un signal de confiance, autant qu'une exigence.
+**Confidentialité visible.** La confidentialité n'est pas qu'une protection technique : elle se voit dans l'expérience. Celui qui pointe ne voit qu'un nom et un statut, jamais les données sensibles. Cette retenue est un signal de confiance, autant qu'une exigence.
 
 **Clarté immédiate.** À chaque étape, l'utilisateur sait où il en est, ce qu'il vient de faire, et ce qui se passe ensuite. Une inscription confirmée le dit clairement ; une mise en liste d'attente l'explique sans inquiéter.
 
@@ -50,7 +50,7 @@ Autrement dit, aucun écran n'est réservé à un seul type d'appareil. Le mobil
 | Utilisateur | Son moment clé | Ce qui compte le plus pour lui |
 |---|---|---|
 | Bénéficiaire | S'inscrire à une distribution et y être servi | Simplicité, rapidité, dignité |
-| Bénévole | S'inscrire à un créneau et aider le jour J | Clarté de ses missions, pointage facile |
+| Bénévole | S'inscrire à un créneau et aider le jour J | Clarté de ses missions et de son rôle sur place |
 | Coordinateur | Organiser une distribution de bout en bout | Vision d'ensemble, calcul de répartition, gestion des imprévus |
 | Responsable | Piloter et configurer l'association | Vue globale, statistiques fiables, maîtrise des données |
 
@@ -84,7 +84,7 @@ flowchart TD
 
 ### 4.2 Les étapes en détail
 
-**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, au nom et au logo de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association. Il se connecte par email et mot de passe, ou avec son compte Google. Un bénéficiaire peut aussi avoir été inscrit par un coordinateur, auquel cas il reçoit ses accès.
+**Étape 1 - Accès et compte.** Le bénéficiaire arrive sur Solivio, au nom et au logo de Linkee Toulouse. S'il n'a pas de compte, il en crée un en quelques champs essentiels seulement (identité, contact), sans code ni choix d'association, et indique s'il vient comme bénéficiaire, bénévole, ou les deux. Être bénéficiaire suppose d'être étudiant inscrit et de présenter sa carte étudiante : c'est affiché, et il l'atteste d'une case (RG9). Il se connecte par email et mot de passe, ou avec son compte Google. Plus tard, il peut devenir aussi bénévole depuis son compte, en un geste.
 
 **Étape 2 - Voir les distributions.** Une fois connecté, il voit immédiatement les prochaines distributions auxquelles il peut s'inscrire : date, lieu, et s'il reste de la place. Pas de menu à explorer : l'information utile est en premier.
 
@@ -96,7 +96,7 @@ flowchart TD
 
 **Étape 5 - Le rappel.** La veille, il reçoit un email de rappel : date, lieu, et son horaire le cas échéant.
 
-**Étape 6 - Le jour J.** Il se présente. En mode unique, il est servi dans l'ordre d'arrivée ; en mode découpé, à son horaire. Un bénévole ou un coordinateur le pointe comme présent. Pour lui, c'est invisible et instantané.
+**Étape 6 - Le jour J.** Il se présente. En mode unique, il est servi dans l'ordre d'arrivée ; en mode découpé, à son horaire. Un coordinateur ou un responsable le pointe comme présent. Pour lui, c'est invisible et instantané.
 
 **Étape 7 - Empêchement.** S'il ne peut pas venir, il annule son inscription en un geste, ce qui libère sa place pour la liste d'attente. L'annulation est encouragée et facile, précisément pour réduire les absences.
 
@@ -108,13 +108,15 @@ Il ne voit pas les données des autres bénéficiaires, ni les statistiques, ni 
 
 ### 5.1 S'engager sur un créneau
 
-Le bénévole, une fois connecté, voit les distributions à venir et les besoins en bénévoles. Il s'inscrit sur un créneau, en indiquant éventuellement un rôle (accueil, logistique). Il reçoit une confirmation, puis un rappel la veille.
+Le bénévole a choisi ce rôle en créant son compte, ou l'a pris depuis son compte s'il était d'abord bénéficiaire : on peut être les deux, et tenir les deux places à une même distribution (RG9). Une fois connecté, il voit les distributions à venir et les besoins en bénévoles. Il s'inscrit sur un créneau, en indiquant éventuellement un rôle (accueil, logistique). Il reçoit une confirmation, puis un rappel la veille.
 
-### 5.2 Le jour J : participer au pointage
+### 5.2 Le jour J : aider sur place
 
-C'est le moment fort du bénévole, et un moment de confidentialité. Sur son mobile, il dispose de la liste des bénéficiaires attendus, qu'il peut rechercher par nom. Quand un bénéficiaire se présente, il le marque présent en un geste.
+C'est le moment fort du bénévole. Il arrive à l'heure de rendez-vous, et le coordinateur lui confie son rôle (accueil, colis, réassort). Il ne pointe pas : depuis octobre 2026, le pointage est réservé aux coordinateurs et aux responsables (RG9), qui tiennent la liste des présences.
 
-**Ce qu'il voit : le nom et le statut d'inscription. Rien d'autre.** Pas l'âge, pas la situation sociale, pas le reste à vivre. La confidentialité est ici concrète et visible : le bénévole a juste ce qu'il faut pour faire son travail, pas davantage.
+**Ce que voit celui qui pointe : le nom et le statut d'inscription. Rien d'autre.** Pas l'âge, pas la situation sociale, pas le reste à vivre. La confidentialité est ici concrète et visible : on a juste ce qu'il faut pour faire son travail, pas davantage.
+
+Un visiteur venu aider sans compte est ajouté à l'équipe du jour. S'il laisse son email, le coordinateur peut lui envoyer le lien pour créer son compte ; ce n'est pas obligatoire.
 
 ### 5.3 Se désister
 
@@ -154,7 +156,7 @@ Son accueil tient une liste "À faire" : une distribution restée en cours aprè
 
 ### 6.4 Le jour J
 
-Le coordinateur supervise le pointage (qu'il fait lui-même ou délègue aux bénévoles), suit en direct qui est présent, et dispose de la répartition à jour. Tout est sur un seul écran, pensé pour l'action sous pression.
+Le coordinateur pointe les présences, avec les responsables présents, suit en direct qui est présent, et dispose de la répartition à jour. Tout est sur un seul écran, pensé pour l'action sous pression.
 
 ### 6.5 Gérer les imprévus
 
@@ -173,7 +175,7 @@ Après la distribution, le coordinateur la clôt. Il dispose alors d'un bilan : 
 
 ### 7.2 Gérer les membres et les rôles
 
-Le responsable ajoute des membres et leur attribue des rôles (coordinateur, bénévole, etc.). Il contrôle ainsi qui peut faire quoi. L'attribution d'un rôle est simple et lisible.
+Chacun choisit seul d'être bénévole, bénéficiaire ou les deux. Le responsable ajoute ou retire ces rôles et celui de coordinateur depuis la fiche d'un membre, qui peut les cumuler (un coordinateur peut aussi être bénévole et bénéficiaire). Il peut nommer un membre responsable : ce rôle ne se cumule avec aucun autre, et ne se donne qu'une fois les inscriptions à venir de la personne passées ou annulées. Il n'invite plus qu'une personne sans compte appelée à devenir responsable (RG9).
 
 ### 7.3 Suivre l'activité
 
@@ -222,7 +224,7 @@ Ces absences sont des choix, pas des oublis.
 
 **Le bénéficiaire.** Un parcours mobile, digne et minimal : voir les distributions, s'inscrire en moins d'une minute, recevoir confirmation et rappel, être pointé sans friction le jour J, annuler facilement. Il ne voit que ses propres inscriptions.
 
-**Le bénévole.** S'inscrire à un créneau, aider au pointage le jour J - en ne voyant qu'un nom et un statut, jamais les données sensibles. La confidentialité rendue visible.
+**Le bénévole.** S'inscrire à un créneau et aider le jour J, à son rôle ; il peut aussi être bénéficiaire. Le pointage revient aux coordinateurs et responsables, qui ne voient qu'un nom et un statut, jamais les données sensibles. La confidentialité rendue visible.
 
 **Le coordinateur.** Le parcours le plus riche : créer une distribution avec son mode de créneau, saisir les denrées en conditionnement et voir la répartition calculée (avec le cas de pénurie affiché clairement), suivre les inscriptions, superviser le jour J, gérer les imprévus, clôturer.
 
@@ -237,10 +239,10 @@ La navigation compte quatre entrées au plus sur téléphone (barre basse) et se
 | Rôle | Écrans | Adresses |
 |---|---|---|
 | Visiteur | Accueil de Linkee Toulouse avec les prochaines distributions, création de compte, connexion, mot de passe oublié | `/`, `/register`, `/login`, `/forgot-password` |
-| Bénéficiaire | Accueil (billet du prochain rendez-vous), Agenda par semaine, fiche d'une distribution avec choix du créneau, Mes inscriptions, Compte et dossier social | `/dashboard`, `/distributions`, `/distributions/{id}`, `/mes-inscriptions`, `/mon-compte` |
-| Bénévole | Les mêmes, plus "On a besoin de vous", Mes engagements (distributions, missions, événements, sessions), missions de collecte, événements et reconditionnement | `/missions-collecte`, `/evenements`, `/reconditionnement` |
+| Bénéficiaire | Accueil (billet du prochain rendez-vous), Agenda par semaine, fiche d'une distribution avec choix du créneau, Mes inscriptions, Compte (mes rôles, devenir aussi bénévole) et dossier social | `/dashboard`, `/distributions`, `/distributions/{id}`, `/mes-inscriptions`, `/mon-compte` |
+| Bénévole | Les mêmes (une personne bénévole et bénéficiaire réserve les deux places depuis la fiche), plus "On a besoin de vous", Mes engagements (distributions, missions, événements, sessions), missions de collecte, événements et reconditionnement | `/missions-collecte`, `/evenements`, `/reconditionnement` |
 | Coordinateur | Aujourd'hui et sa liste "À faire", Planning, feuille d'une distribution (vue d'ensemble, inscrits, équipe, denrées, bilan), création et duplication, Jour J en plein écran, répartition et fiche stand, statistiques, rôles bénévoles | `/distributions/nouvelle`, `/distributions/{id}/pointage`, `/distributions/{id}/repartition`, `/statistiques`, `/association/roles-benevoles` |
-| Responsable | Les mêmes, plus membres, réglages et export, catalogue des denrées, message aux membres, création des activités | `/association/membres`, `/association/configuration`, `/association/catalogue-denrees`, `/notifications/email-libre` |
+| Responsable | Les mêmes, plus membres (rôles cumulables, nommer responsable, inviter un futur responsable), réglages et export, catalogue des denrées, message aux membres, création des activités | `/association/membres`, `/association/configuration`, `/association/catalogue-denrees`, `/notifications/email-libre` |
 | Super admin | Administration des comptes | `/admin/utilisateurs` |
 
 Seuils de la liste "À faire" : voir la section 6.3.

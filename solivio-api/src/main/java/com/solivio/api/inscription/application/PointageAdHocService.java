@@ -13,7 +13,7 @@ import com.solivio.api.inscription.infrastructure.web.dto.PointageInfoResponse;
 import com.solivio.api.shared.distribution.DistributionQueryPort;
 import com.solivio.api.shared.exception.ConflictException;
 import com.solivio.api.shared.exception.NotFoundException;
-import com.solivio.api.shared.identity.InvitationPort;
+import com.solivio.api.shared.identity.LienInscriptionPort;
 import com.solivio.api.shared.identity.PersonneQueryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public class PointageAdHocService {
     private final InscriptionRepository inscriptionRepository;
     private final PersonneQueryPort personneQueryPort;
     private final DistributionQueryPort distributionQueryPort;
-    private final InvitationPort invitationPort;
+    private final LienInscriptionPort lienInscriptionPort;
     private final AuditService auditService;
 
     public PointageAdHocService(
@@ -40,14 +40,14 @@ public class PointageAdHocService {
         InscriptionRepository inscriptionRepository,
         PersonneQueryPort personneQueryPort,
         DistributionQueryPort distributionQueryPort,
-        InvitationPort invitationPort,
+        LienInscriptionPort lienInscriptionPort,
         AuditService auditService
     ) {
         this.adHocRepository = adHocRepository;
         this.inscriptionRepository = inscriptionRepository;
         this.personneQueryPort = personneQueryPort;
         this.distributionQueryPort = distributionQueryPort;
-        this.invitationPort = invitationPort;
+        this.lienInscriptionPort = lienInscriptionPort;
         this.auditService = auditService;
     }
 
@@ -131,7 +131,7 @@ public class PointageAdHocService {
             .toList();
     }
 
-    public void envoyerInvitation(UUID adHocId, UUID compteIdInvitant) {
+    public void envoyerLienInscription(UUID adHocId, UUID compteIdInvitant) {
         PointageAdHoc adHoc = adHocRepository.findById(adHocId)
             .orElseThrow(() -> new NotFoundException("Visiteur introuvable : " + adHocId));
 
@@ -139,10 +139,10 @@ public class PointageAdHocService {
             throw new IllegalArgumentException("Aucun email renseigné pour ce visiteur.");
         }
         if (adHoc.isInvitationEnvoyee()) {
-            throw new ConflictException("Une invitation a déjà été envoyée à ce visiteur.");
+            throw new ConflictException("Le lien d'inscription a déjà été envoyé à ce visiteur.");
         }
 
-        invitationPort.inviterBenevole(adHoc.getEmail(), compteIdInvitant);
+        lienInscriptionPort.envoyerLienInscription(adHoc.getEmail());
 
         adHoc.setInvitationEnvoyee(true);
         adHocRepository.save(adHoc);

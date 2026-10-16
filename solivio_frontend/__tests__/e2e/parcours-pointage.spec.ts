@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 import { aujourdhuiAParis, exigerBackend, seConnecter, sessionApi } from "./backend";
 
 // Parcours critique de bout en bout, sur le vrai backend et un telephone (projet
-// "mobile") : distribution du jour, inscription d'un beneficiaire, demarrage,
-// puis pointage par un benevole inscrit.
+// "mobile") : distribution du jour, inscription d'un beneficiaire et d'un benevole,
+// demarrage, puis pointage par le coordinateur, seul a pointer avec le
+// responsable (ADR-012).
 const COORDINATEUR = "coordo1@solivio.app";
 const BENEFICIAIRE = "benef7@solivio.app";
 const NOM_BENEFICIAIRE = "Benef7";
@@ -14,7 +15,7 @@ test.describe("Parcours pointage", () => {
     await exigerBackend(test);
   });
 
-  test("un benevole inscrit pointe un beneficiaire depuis son telephone", async ({ browser }) => {
+  test("le coordinateur pointe un beneficiaire depuis son telephone", async ({ browser }) => {
     const coordo = await sessionApi(COORDINATEUR);
     const creation = await coordo.post("/api/distributions", {
       data: {
@@ -48,17 +49,21 @@ test.describe("Parcours pointage", () => {
       expect(inscriptionBenevole.ok(), await inscriptionBenevole.text()).toBeTruthy();
       expect((await coordo.post(`/api/distributions/${id}/demarrer`)).ok()).toBeTruthy();
 
-      // Le benevole pointe le beneficiaire depuis la page de la distribution.
-      const contexteBenevole = await browser.newContext();
-      const page = await contexteBenevole.newPage();
-      await seConnecter(page, BENEVOLE);
+      // Le benevole n'a pas acces au pointage.
+      const pointageBenevole = await benevole.get(`/api/distributions/${id}/pointage`);
+      expect(pointageBenevole.status()).toBe(403);
+
+      // Le coordinateur pointe le beneficiaire depuis la feuille de la distribution.
+      const contexteCoordinateur = await browser.newContext();
+      const page = await contexteCoordinateur.newPage();
+      await seConnecter(page, COORDINATEUR);
       await page.goto(`/distributions/${id}`);
-      await page.getByRole("link", { name: /ouvrir le pointage/i }).click();
+      await page.getByRole("link", { name: /ouvrir le jour j/i }).first().click();
       // La liste complete est chargee d'emblee : le filtre est local.
       await page.getByLabel("Rechercher un inscrit").fill(NOM_BENEFICIAIRE);
       await page.getByRole("button", { name: `Marquer Linkee ${NOM_BENEFICIAIRE} présent` }).click();
       await expect(page.getByRole("button", { name: /Pointés/ })).toContainText("1");
-      await contexteBenevole.close();
+      await contexteCoordinateur.close();
 
       await expect
         .poll(async () => {

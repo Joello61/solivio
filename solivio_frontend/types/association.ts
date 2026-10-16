@@ -24,21 +24,20 @@ export interface MembreResponse {
   nom: string;
   prenom: string;
   email: string;
-  role: string;
+  roles: string[];
   coordoType: string | null;
   statut: string;
   dateDebut: string;
 }
 
+/** Invitation d'une personne sans compte a devenir responsable (ADR-012). */
 export interface InviterMembrePayload {
   email: string;
-  role: "responsable" | "coordinateur" | "benevole";
-  coordoType?: string;
 }
 
-export interface UpdateRoleMembrePayload {
-  role: string;
-  coordoType?: string;
+export interface UpdateRolesMembrePayload {
+  roles: string[];
+  coordoType?: string | null;
 }
 
 export interface StatistiqueDistributionResponse {

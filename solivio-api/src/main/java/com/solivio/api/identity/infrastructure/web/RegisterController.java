@@ -31,8 +31,9 @@ public class RegisterController {
                 request.email(), request.motDePasse(), request.nom(), request.prenom(),
                 UUID.fromString(request.tokenInvitation()));
         } else {
-            registerService.inscrireBeneficiaire(
-                request.email(), request.motDePasse(), request.nom(), request.prenom());
+            registerService.inscrire(
+                request.email(), request.motDePasse(), request.nom(), request.prenom(),
+                request.roles(), request.attestationEtudiant());
         }
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
+import { ChoixRoles, erreurChoixRoles, type ChoixRolesValeur } from "@/components/shared/ChoixRoles";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -23,19 +24,24 @@ function CompleteGoogleRegistrationForm() {
 
   const [nom, setNom] = useState(searchParams.get("nom") ?? "");
   const [prenom, setPrenom] = useState(searchParams.get("prenom") ?? "");
+  const [choix, setChoix] = useState<ChoixRolesValeur>({ roles: [], attestationEtudiant: false });
+  const [erreurRoles, setErreurRoles] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const erreurChoix = isInvitation ? null : erreurChoixRoles(choix);
+    setErreurRoles(erreurChoix);
+    if (erreurChoix) return;
     setPending(true);
     try {
       await completerInscriptionGoogle({
         email,
         nom,
         prenom,
-        tokenInvitation: isInvitation ? tokenInvitation : undefined,
+        ...(isInvitation ? { tokenInvitation } : choix),
       });
       router.push("/dashboard");
       router.refresh();
@@ -78,6 +84,17 @@ function CompleteGoogleRegistrationForm() {
             onChange={(e) => setNom(e.target.value)}
           />
         </FormField>
+
+        {!isInvitation && (
+          <ChoixRoles
+            valeur={choix}
+            onChange={(v) => {
+              setChoix(v);
+              setErreurRoles(null);
+            }}
+            erreur={erreurRoles}
+          />
+        )}
 
         <FormError message={error} />
 

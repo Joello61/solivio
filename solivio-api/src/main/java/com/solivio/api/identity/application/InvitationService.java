@@ -2,9 +2,11 @@ package com.solivio.api.identity.application;
 
 import com.solivio.api.identity.domain.Compte;
 import com.solivio.api.identity.domain.Invitation;
+import com.solivio.api.identity.domain.RolesMembre;
 import com.solivio.api.identity.infrastructure.persistence.CompteRepository;
 import com.solivio.api.identity.infrastructure.persistence.InvitationRepository;
 import com.solivio.api.identity.SolivioUserDetails;
+import com.solivio.api.shared.exception.ConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +14,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Gestion des invitations a rejoindre l'association.
- * Les admins et responsables peuvent inviter des membres via email.
+ * Invitations a rejoindre l'association comme responsable (ADR-012). Les autres
+ * roles se choisissent a l'inscription ou s'attribuent depuis la gestion des membres.
  */
 @Service
 public class InvitationService {
@@ -34,23 +36,21 @@ public class InvitationService {
     }
 
     @Transactional
-    public Invitation inviter(SolivioUserDetails invitant, String email, String role, String coordoType) {
-        return inviterParCompteId(invitant.getCompteId(), email, role, coordoType);
-    }
-
-    @Transactional
-    public Invitation inviterParCompteId(UUID compteId, String email, String role, String coordoType) {
+    public Invitation inviterResponsable(SolivioUserDetails invitant, String email) {
+        if (compteRepository.existsByEmail(email)) {
+            throw new ConflictException(
+                "Cette personne a déjà un compte : nommez-la responsable depuis la liste des membres.");
+        }
         if (invitationRepository.existsByEmailAndStatut(email, "pending")) {
             throw new IllegalArgumentException("Une invitation est déjà en attente pour cet email");
         }
 
-        Compte inviteur = compteRepository.findById(compteId).orElseThrow();
+        Compte inviteur = compteRepository.findById(invitant.getCompteId()).orElseThrow();
 
         Invitation invitation = new Invitation(
-            email, role, inviteur,
+            email, RolesMembre.RESPONSABLE, inviteur,
             Instant.now().plusSeconds(INVITATION_EXPIRATION_DAYS * 24L * 3600)
         );
-        invitation.setCoordoType(coordoType);
         invitationRepository.save(invitation);
 
         emailService.envoyerInvitation(invitation);

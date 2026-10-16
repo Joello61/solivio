@@ -42,9 +42,9 @@ public class PersonneQueryAdapter implements PersonneQueryPort {
     }
 
     @Override
-    public List<PersonneContactInfo> trouverContactsParRole(String nomRole) {
-        // Le role est porte par le membre (compte) ; le contact par la personne liee.
-        List<String> emails = membreRepository.findActifsByRole(nomRole).stream()
+    public List<PersonneContactInfo> trouverContactsParRoles(String... nomsRoles) {
+        // Les roles sont portes par le membre (compte) ; le contact par la personne liee.
+        List<String> emails = membreRepository.findActifsByRoles(List.of(nomsRoles)).stream()
             .map(m -> m.getCompte().getEmail())
             .toList();
         if (emails.isEmpty()) {

@@ -67,26 +67,27 @@ public class DataSeeder implements CommandLineRunner {
         String hash = passwordEncoder.encode(MDP_DEFAULT);
         List<String> rapport = new ArrayList<>();
 
-        creerCompte("superadmin", hash, "Admin", "Super", null, null, true);
+        creerCompte("superadmin", hash, "Admin", "Super", List.of(), null, true);
         rapport.add("Super admin   : superadmin" + DOMAINE);
 
         for (int i = 1; i <= 3; i++) {
-            creerCompte("resp" + i, hash, "Resp" + i, "Linkee", "responsable", null, false);
+            creerCompte("resp" + i, hash, "Resp" + i, "Linkee", List.of("responsable"), null, false);
         }
         rapport.add("Responsables  : resp1" + DOMAINE + " .. resp3" + DOMAINE);
 
         for (int i = 0; i < COORDO_TYPES.length; i++) {
-            creerCompte("coordo" + (i + 1), hash, "Coordo" + (i + 1), "Linkee", "coordinateur", COORDO_TYPES[i], false);
+            creerCompte("coordo" + (i + 1), hash, "Coordo" + (i + 1), "Linkee",
+                List.of("coordinateur", "benevole"), COORDO_TYPES[i], false);
         }
         rapport.add("Coordinateurs : coordo1" + DOMAINE + " .. coordo" + COORDO_TYPES.length + DOMAINE);
 
         for (int i = 1; i <= 5; i++) {
-            creerCompte("benevole" + i, hash, "Benevole" + i, "Linkee", "benevole", null, false);
+            creerCompte("benevole" + i, hash, "Benevole" + i, "Linkee", List.of("benevole"), null, false);
         }
         rapport.add("Benevoles     : benevole1" + DOMAINE + " .. benevole5" + DOMAINE);
 
         for (int i = 1; i <= 10; i++) {
-            creerCompte("benef" + i, hash, "Benef" + i, "Linkee", "beneficiaire", null, false);
+            creerCompte("benef" + i, hash, "Benef" + i, "Linkee", List.of("beneficiaire"), null, false);
         }
         rapport.add("Beneficiaires : benef1" + DOMAINE + " .. benef10" + DOMAINE);
 
@@ -95,15 +96,15 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void creerCompte(String identifiant, String passwordHash, String nom, String prenom,
-                             String role, String coordoType, boolean superAdmin) {
+                             List<String> roles, String coordoType, boolean superAdmin) {
         String email = identifiant + DOMAINE;
         Compte compte = new Compte(email, passwordHash, nom, prenom);
         compte.setEmailVerifie(true);
         compte.setSuperAdmin(superAdmin);
         compteRepo.save(compte);
 
-        if (role != null) {
-            MembreAssociation membre = new MembreAssociation(compte, role);
+        if (!roles.isEmpty()) {
+            MembreAssociation membre = new MembreAssociation(compte, roles);
             membre.setCoordoType(coordoType);
             membreRepo.save(membre);
         }

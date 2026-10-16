@@ -122,7 +122,9 @@ class EffacementIntegrationTest {
         UUID compteId = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO compte (id, email, password_hash, nom, prenom, email_verifie) "
             + "VALUES (?, ?, 'hash', 'Dupont', 'Marie', true)", compteId, email);
-        jdbcTemplate.update("INSERT INTO membre (compte_id, role) VALUES (?, ?)", compteId, role);
+        UUID membreId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO membre (id, compte_id) VALUES (?, ?)", membreId, compteId);
+        jdbcTemplate.update("INSERT INTO membre_role (membre_id, role) VALUES (?, ?)", membreId, role);
         jdbcTemplate.update("INSERT INTO personne (id, compte_email, nom, prenom, email, telephone) "
             + "VALUES (?, ?, 'Dupont', 'Marie', ?, '0600000000')", UUID.randomUUID(), email, email);
         return compteId;

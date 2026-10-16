@@ -8,17 +8,17 @@ import type { MembreResponse } from "@/types/association";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
 vi.mock("@/lib/api/association", () => ({
-  mettreAJourRoleMembre: vi.fn().mockResolvedValue({}),
+  mettreAJourRolesMembre: vi.fn().mockResolvedValue({}),
   supprimerMembre: vi.fn().mockResolvedValue(undefined),
   changerStatutMembre: vi.fn().mockResolvedValue({}),
 }));
 
-const membre = (compteId: string, nom: string, prenom: string, role: string, statut = "actif"): MembreResponse => ({
+const membre = (compteId: string, nom: string, prenom: string, role: string | string[], statut = "actif"): MembreResponse => ({
   compteId,
   nom,
   prenom,
   email: `${prenom.toLowerCase()}@example.com`,
-  role,
+  roles: Array.isArray(role) ? role : [role],
   coordoType: null,
   statut,
   dateDebut: "2026-01-01",
@@ -27,7 +27,7 @@ const membre = (compteId: string, nom: string, prenom: string, role: string, sta
 const membres = [
   membre("u1", "Dupont", "Alice", "benevole"),
   membre("u2", "Martin", "Bob", "coordinateur"),
-  membre("u3", "Petit", "Chloé", "beneficiaire"),
+  membre("u3", "Petit", "Chloé", ["beneficiaire", "benevole"]),
   membre("u4", "Roux", "Dan", "benevole", "suspendu"),
 ];
 
@@ -58,13 +58,27 @@ describe("GestionMembres", () => {
     expect(within(table()).queryByText("Dupont Alice")).not.toBeInTheDocument();
   });
 
-  it("change le role depuis la fiche du membre", async () => {
+  it("cumule des roles depuis la fiche du membre (ADR-012)", async () => {
     render(<GestionMembres membres={membres} currentUserId="autre" />);
     await ouvrir("Alice Dupont");
     const fiche = screen.getByRole("dialog");
-    await userEvent.click(within(fiche).getByRole("combobox", { name: "Rôle" }));
-    await userEvent.click(await screen.findByRole("option", { name: "Coordinateur" }));
-    await waitFor(() => expect(api.mettreAJourRoleMembre).toHaveBeenCalledWith("u1", { role: "coordinateur" }));
+    const enregistrer = within(fiche).getByRole("button", { name: "Enregistrer les rôles" });
+    expect(enregistrer).toBeDisabled();
+    await userEvent.click(within(fiche).getByRole("checkbox", { name: "Bénéficiaire" }));
+    await userEvent.click(enregistrer);
+    await waitFor(() =>
+      expect(api.mettreAJourRolesMembre).toHaveBeenCalledWith("u1", { roles: ["benevole", "beneficiaire"], coordoType: null }),
+    );
+  });
+
+  it("nomme responsable apres confirmation", async () => {
+    render(<GestionMembres membres={membres} currentUserId="autre" />);
+    await ouvrir("Alice Dupont");
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Nommer responsable" }));
+    expect(api.mettreAJourRolesMembre).not.toHaveBeenCalled();
+    const confirmation = await screen.findByRole("alertdialog");
+    await userEvent.click(within(confirmation).getByRole("button", { name: "Nommer responsable" }));
+    await waitFor(() => expect(api.mettreAJourRolesMembre).toHaveBeenCalledWith("u1", { roles: ["responsable"] }));
   });
 
   it("suspend un membre depuis sa fiche", async () => {
@@ -87,7 +101,7 @@ describe("GestionMembres", () => {
     render(<GestionMembres membres={membres} currentUserId="u1" />);
     await ouvrir("Alice Dupont");
     const fiche = screen.getByRole("dialog");
-    expect(within(fiche).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(fiche).queryByRole("checkbox")).not.toBeInTheDocument();
     expect(within(fiche).queryByRole("button", { name: /Retirer|Suspendre/ })).not.toBeInTheDocument();
   });
 

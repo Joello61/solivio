@@ -3,7 +3,7 @@ import { AgendaMembre } from "@/components/agenda/AgendaMembre";
 import { PlanningGestion } from "@/components/distributions/PlanningGestion";
 import { lireMoi, lireServeur } from "@/lib/api/serveur";
 import { jourAssociation } from "@/lib/distribution-du-jour";
-import { estGestionnaireDistribution, typeInscriptionPossible } from "@/lib/droits-distribution";
+import { estGestionnaireDistribution, typesInscriptionPossibles } from "@/lib/droits-distribution";
 import type { DistributionResponse } from "@/types/distribution";
 
 export const metadata: Metadata = { title: "Agenda" };
@@ -15,7 +15,7 @@ export default async function DistributionsPage({ searchParams }: { searchParams
     lireServeur<DistributionResponse[]>("/api/distributions"),
   ]);
   const roles = me?.roles ?? [];
-  const type = typeInscriptionPossible(roles);
+  const [type] = typesInscriptionPossibles(roles);
   if (!estGestionnaireDistribution(roles) && type) {
     return <AgendaMembre distributions={distributions ?? []} type={type} roles={roles} filtre={filtre} />;
   }

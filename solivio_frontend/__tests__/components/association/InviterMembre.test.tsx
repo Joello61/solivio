@@ -13,16 +13,17 @@ describe("InviterMembre", () => {
     inviterMembre.mockReset();
   });
 
-  it("envoie l'email et le role, puis confirme l'envoi", async () => {
+  // ADR-012 : on n'invite plus que des responsables, sans choix de role.
+  it("envoie l'email, puis confirme l'envoi", async () => {
     inviterMembre.mockResolvedValue(undefined);
     render(<InviterMembre />);
 
-    await userEvent.click(screen.getByRole("button", { name: /Inviter un membre/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Inviter un responsable/i }));
     await userEvent.type(screen.getByLabelText("Email"), "nouveau@exemple.fr");
     await userEvent.click(screen.getByRole("button", { name: /Envoyer l'invitation/i }));
 
     await waitFor(() =>
-      expect(inviterMembre).toHaveBeenCalledWith({ email: "nouveau@exemple.fr", role: "benevole", coordoType: undefined }),
+      expect(inviterMembre).toHaveBeenCalledWith({ email: "nouveau@exemple.fr" }),
     );
     expect(await screen.findByText(/Invitation envoyée à nouveau@exemple.fr/)).toBeInTheDocument();
   });
@@ -33,7 +34,7 @@ describe("InviterMembre", () => {
     });
     render(<InviterMembre />);
 
-    await userEvent.click(screen.getByRole("button", { name: /Inviter un membre/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Inviter un responsable/i }));
     await userEvent.type(screen.getByLabelText("Email"), "deja@exemple.fr");
     await userEvent.click(screen.getByRole("button", { name: /Envoyer l'invitation/i }));
 

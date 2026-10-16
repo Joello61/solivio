@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -105,7 +104,7 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
         String accessToken = jwtService.genererAccessToken(
             compte.getId(), compte.getEmail(), compte.getNom(), compte.getPrenom(),
-            List.of(membre.get().getRole()), membre.get().getCoordoType(), compte.isSuperAdmin()
+            membre.get().rolesTries(), membre.get().getCoordoType(), compte.isSuperAdmin()
         );
 
         // JIT : couvre les comptes Google anterieurs a la creation systematique de la Personne.

@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,30 +48,62 @@ class RegisterServiceTest {
     }
 
     @Test
-    void inscrireBeneficiaire_lanceExceptionSiEmailDejaPris() {
+    void inscrire_lanceExceptionSiEmailDejaPris() {
         when(compteRepository.existsByEmail("alice@example.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.inscrireBeneficiaire("alice@example.com", "pass", "Dupont", "Alice"))
+        assertThatThrownBy(() -> service.inscrire(
+                "alice@example.com", "pass", "Dupont", "Alice", List.of("benevole"), false))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Un compte existe déjà");
         verify(membreRepo, never()).save(any());
     }
 
     @Test
-    void inscrireBeneficiaire_creeCompteMembreBeneficiaireEtPersonne() {
+    void inscrire_creeCompteMembreBeneficiaireEtPersonne() {
         Compte compte = new Compte("bob@example.com", "hashed", "Martin", "Bob");
         when(compteRepository.existsByEmail("bob@example.com")).thenReturn(false);
         when(passwordEncoder.encode("pass")).thenReturn("hashed");
         when(compteRepository.save(any())).thenReturn(compte);
         when(verificationCodeService.generer(any(), any())).thenReturn(codeVerification(compte));
 
-        service.inscrireBeneficiaire("bob@example.com", "pass", "Martin", "Bob");
+        service.inscrire("bob@example.com", "pass", "Martin", "Bob", List.of("beneficiaire"), true);
 
         MembreAssociation membre = membreEnregistre();
-        assertThat(membre.getRole()).isEqualTo("beneficiaire");
+        assertThat(membre.getRoles()).containsExactly("beneficiaire");
         assertThat(membre.getCompte()).isSameAs(compte);
         verify(personneProvisioningService).provisionner("bob@example.com", "Martin", "Bob");
         verify(emailService).envoyerVerificationEmail(compte, "123456");
+    }
+
+    @Test
+    void inscrire_benevoleEtBeneficiaireALaFois() {
+        Compte compte = new Compte("mixte@example.com", "hashed", "Martin", "Lea");
+        when(compteRepository.save(any())).thenReturn(compte);
+        when(verificationCodeService.generer(any(), any())).thenReturn(codeVerification(compte));
+
+        service.inscrire("mixte@example.com", "pass", "Martin", "Lea", List.of("benevole", "beneficiaire"), true);
+
+        assertThat(membreEnregistre().getRoles()).containsExactlyInAnyOrder("benevole", "beneficiaire");
+    }
+
+    @Test
+    void inscrire_refuseBeneficiaireSansAttestationEtudiant() {
+        assertThatThrownBy(() -> service.inscrire(
+                "bob@example.com", "pass", "Martin", "Bob", List.of("beneficiaire"), false))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("étudiant inscrit");
+        verify(compteRepository, never()).save(any());
+    }
+
+    @Test
+    void inscrire_refuseSansRoleOuAvecUnRoleDeGestion() {
+        assertThatThrownBy(() -> service.inscrire("bob@example.com", "pass", "M", "B", List.of(), false))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.inscrire("bob@example.com", "pass", "M", "B", List.of("coordinateur"), false))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.inscrire("bob@example.com", "pass", "M", "B", List.of("responsable"), false))
+            .isInstanceOf(IllegalArgumentException.class);
+        verify(compteRepository, never()).save(any());
     }
 
     @Test
@@ -162,7 +195,7 @@ class RegisterServiceTest {
     @Test
     void inscrireViaInvitation_attribueLeRoleDeLInvitationEtLAccepte() {
         UUID token = UUID.randomUUID();
-        Invitation invitation = invitation("coord@example.com", "coordinateur", "coordo_sec");
+        Invitation invitation = invitation("coord@example.com", "responsable", null);
         Compte compte = new Compte("coord@example.com", "hashed", "Coord", "C");
         when(invitationRepository.findByTokenWithDetails(token)).thenReturn(Optional.of(invitation));
         when(compteRepository.existsByEmail("coord@example.com")).thenReturn(false);
@@ -173,8 +206,7 @@ class RegisterServiceTest {
         service.inscrireViaInvitation("coord@example.com", "pass", "Coord", "C", token);
 
         MembreAssociation membre = membreEnregistre();
-        assertThat(membre.getRole()).isEqualTo("coordinateur");
-        assertThat(membre.getCoordoType()).isEqualTo("coordo_sec");
+        assertThat(membre.getRoles()).containsExactly("responsable");
         assertThat(membre.getInvitePar()).isSameAs(inviteur);
         assertThat(invitation.getStatut()).isEqualTo("accepted");
         verify(personneProvisioningService).provisionner("coord@example.com", "Coord", "C");
@@ -185,7 +217,7 @@ class RegisterServiceTest {
         Compte compte = new Compte("alice@example.com", "hash", "Dupont", "Alice");
         when(compteRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(compte));
 
-        assertThatThrownBy(() -> service.finaliserCompteGoogle("alice@example.com", null, null, null))
+        assertThatThrownBy(() -> service.finaliserCompteGoogle("alice@example.com", null, null, null, List.of("benevole"), false))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("pas un compte Google");
     }
@@ -197,21 +229,21 @@ class RegisterServiceTest {
         when(membreRepo.findByCompteId(compte.getId()))
             .thenReturn(Optional.of(new MembreAssociation(compte, "beneficiaire")));
 
-        assertThatThrownBy(() -> service.finaliserCompteGoogle("g@example.com", null, null, null))
+        assertThatThrownBy(() -> service.finaliserCompteGoogle("g@example.com", null, null, null, List.of("benevole"), false))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("déjà membre");
     }
 
     @Test
-    void finaliserCompteGoogle_creeUnBeneficiaireEtCorrigeLeNom() {
+    void finaliserCompteGoogle_creeLesRolesChoisisEtCorrigeLeNom() {
         Compte compte = compteGoogle();
         when(compteRepository.findByEmail("g@example.com")).thenReturn(Optional.of(compte));
         when(membreRepo.findByCompteId(compte.getId())).thenReturn(Optional.empty());
         when(compteRepository.save(compte)).thenReturn(compte);
 
-        service.finaliserCompteGoogle("g@example.com", "Nouveau", "Prenom", null);
+        service.finaliserCompteGoogle("g@example.com", "Nouveau", "Prenom", null, List.of("beneficiaire"), true);
 
-        assertThat(membreEnregistre().getRole()).isEqualTo("beneficiaire");
+        assertThat(membreEnregistre().getRoles()).containsExactly("beneficiaire");
         assertThat(compte.getNom()).isEqualTo("Nouveau");
         assertThat(compte.getPrenom()).isEqualTo("Prenom");
         verify(personneProvisioningService).provisionner("g@example.com", "Nouveau", "Prenom");
@@ -224,12 +256,12 @@ class RegisterServiceTest {
         when(compteRepository.findByEmail("g@example.com")).thenReturn(Optional.of(compte));
         when(membreRepo.findByCompteId(compte.getId())).thenReturn(Optional.empty());
         when(invitationRepository.findByTokenWithDetails(token))
-            .thenReturn(Optional.of(invitation("g@example.com", "benevole", null)));
+            .thenReturn(Optional.of(invitation("g@example.com", "responsable", null)));
         when(compteRepository.save(compte)).thenReturn(compte);
 
-        service.finaliserCompteGoogle("g@example.com", null, null, token.toString());
+        service.finaliserCompteGoogle("g@example.com", null, null, token.toString(), null, false);
 
-        assertThat(membreEnregistre().getRole()).isEqualTo("benevole");
+        assertThat(membreEnregistre().getRoles()).containsExactly("responsable");
     }
 
     private MembreAssociation membreEnregistre() {

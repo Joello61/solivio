@@ -46,8 +46,8 @@ export interface CompteAdminResponse {
   actif: boolean;
   superAdmin: boolean;
   dateCreation: string;
-  // Role et statut du membre dans l'association ; null si le compte n'a pas de role.
-  role: string | null;
+  // Roles et statut du membre dans l'association ; vides ou null si le compte n'en a pas.
+  roles: string[];
   statutMembre: string | null;
 }
 
