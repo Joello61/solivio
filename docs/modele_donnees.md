@@ -83,19 +83,25 @@ L'ancien découpage entre un registre global et des données par association est
 
 > Un compte a au moins un moyen de connexion (mot de passe ou Google), garanti par une contrainte. Les jetons de rafraîchissement (`refresh_token`, empreinte seulement), les codes de vérification (`verification_code`) et les invitations (`invitation`) sont rattachés au compte.
 
-**`membre`** - le rôle d'un compte dans l'association (au plus un par compte).
+**`membre`** - l'appartenance d'un compte à l'association (au plus une par compte) ; ses rôles sont dans `membre_role`.
 
 | Attribut | Type logique | Description |
 |---|---|---|
 | identifiant | identifiant | Clé unique |
 | compte | référence | Le compte, unique |
-| role | énumération | responsable, coordinateur, benevole, beneficiaire (hiérarchie : responsable > coordinateur > benevole, ADR-011) |
-| coordo_type | texte | Sous-type libre d'un coordinateur (ex : coordo_sec) |
+| coordo_type | texte | Sous-type libre d'un coordinateur (ex : coordo_sec) ; effacé quand le membre n'est plus coordinateur |
 | statut | énumération | actif, suspendu, invite_en_attente |
 | invite_par | référence | Compte qui a invité, optionnel |
 | date_debut, date_fin | date | Période d'appartenance |
 
-> Le rôle est porté dans le jeton d'accès et vérifié côté backend. L'inscription libre crée un membre `beneficiaire` ; les autres rôles passent par une invitation.
+**`membre_role`** - les rôles d'un membre (ADR-012, migration V16).
+
+| Attribut | Type logique | Description |
+|---|---|---|
+| membre | référence | Le membre ; clé avec le rôle |
+| role | énumération | responsable, coordinateur, benevole, beneficiaire |
+
+> Invariants (RG9) : au moins un rôle par membre ; benevole, beneficiaire et coordinateur se cumulent, responsable est seul ; au moins un responsable actif. Hiérarchie : responsable > coordinateur (ADR-012, qui remplace celle de l'ADR-011). Les rôles sont portés dans le jeton d'accès et vérifiés côté backend. À l'inscription libre, la personne choisit benevole, beneficiaire ou les deux ; une invitation ne crée qu'un responsable. L'ancienne colonne `membre.role` n'est plus lue et sera supprimée après la bascule (ADR-010).
 
 **`personne`** - le profil de contact métier, quel que soit le rôle.
 
@@ -313,7 +319,8 @@ Vue d'ensemble des relations entre les entités de la V1. Les entités anticipé
 
 ```mermaid
 erDiagram
-    COMPTE ||--o| MEMBRE : "porte le role"
+    COMPTE ||--o| MEMBRE : "appartient"
+    MEMBRE ||--|{ MEMBRE_ROLE : "porte les roles"
     COMPTE ||--o| PERSONNE : "correspond a"
     COMPTE ||--o{ REFRESH_TOKEN : "possede"
     PERSONNE ||--o| PROFIL_BENEFICIAIRE : "peut avoir"
@@ -326,7 +333,7 @@ erDiagram
     PERSONNE ||--o{ JOURNAL_AUDIT : "declenche"
 ```
 
-Lecture : le compte porte la connexion et le rôle (membre) ; la personne porte le profil métier et, pour un bénéficiaire, le profil social sensible. La configuration de l'association est un enregistrement unique, hors du diagramme. Une distribution contient des créneaux, reçoit des inscriptions, et dispose de denrées. La présence est portée par l'inscription, et la dotation est calculée à partir des denrées et du nombre de bénéficiaires.
+Lecture : le compte porte la connexion et les rôles (membre) ; la personne porte le profil métier et, pour un bénéficiaire, le profil social sensible. La configuration de l'association est un enregistrement unique, hors du diagramme. Une distribution contient des créneaux, reçoit des inscriptions, et dispose de denrées. La présence est portée par l'inscription, et la dotation est calculée à partir des denrées et du nombre de bénéficiaires.
 
 ## 7. Règles d'intégrité et choix transverses
 

@@ -18,13 +18,13 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Association.** L'organisation cliente de Solivio. Dans le produit, c'est l'entité racine à laquelle tout est rattaché. Une association possède ses membres, ses distributions, ses données, et sa configuration propre.
 
-**Bénéficiaire.** Une personne qui reçoit l'aide distribuée par l'association. C'est la personne centrale du produit, et celle dont les données sont les plus sensibles. Le terme est employé sans connotation négative : s'inscrire comme bénéficiaire doit rester un acte digne et neutre.
+**Bénéficiaire.** Une personne qui reçoit l'aide distribuée par l'association. C'est la personne centrale du produit, et celle dont les données sont les plus sensibles. Le terme est employé sans connotation négative : s'inscrire comme bénéficiaire doit rester un acte digne et neutre. Chez Linkee, être bénéficiaire suppose d'être étudiant inscrit et de présenter sa carte étudiante (RG9).
 
-**Bénévole.** Une personne qui donne de son temps à l'association : aide à la distribution, à l'accueil, à la logistique. Un bénévole peut aussi être bénéficiaire, et inversement.
+**Bénévole.** Une personne qui donne de son temps à l'association : aide à la distribution, à l'accueil, à la logistique. Un bénévole peut aussi être bénéficiaire, et inversement ; on choisit l'un, l'autre ou les deux en créant son compte, et on prend le second plus tard depuis son compte (RG9).
 
-**Coordinateur.** Le membre qui organise les distributions et coordonne les équipes sur son périmètre. Il crée les distributions, suit les inscriptions, supervise le pointage et la répartition.
+**Coordinateur.** Le membre qui organise les distributions et coordonne les équipes sur son périmètre. Il crée les distributions, suit les inscriptions, pointe les présences et suit la répartition. Il peut aussi être bénévole et bénéficiaire.
 
-**Responsable.** Le membre qui pilote l'association : configuration, gestion des membres et des rôles, vue d'ensemble et statistiques. C'est le rôle le plus large.
+**Responsable.** Le membre qui pilote l'association : configuration, gestion des membres et des rôles, vue d'ensemble et statistiques. C'est le rôle le plus large, et le seul qui ne se cumule avec aucun autre (RG9).
 
 **Distribution.** L'événement central de Solivio : un moment où l'association distribue son aide, à une date et un lieu donnés. Une distribution a un cycle de vie (brouillon, publiée, en cours, terminée, annulée), des créneaux, des inscriptions, et des denrées.
 
@@ -36,7 +36,7 @@ Les définitions sont volontairement accessibles : un membre de bureau non techn
 
 **Liste d'attente.** La file des personnes inscrites au-delà de la capacité d'une distribution. Quand une place se libère, la personne suivante est promue automatiquement.
 
-**Pointage.** L'action d'enregistrer, le jour de la distribution, qui est réellement présent. Il fiabilise les statistiques et limite le gaspillage. Lors du pointage, on ne voit que le nom et le statut, jamais les données sensibles.
+**Pointage.** L'action d'enregistrer, le jour de la distribution, qui est réellement présent. Elle revient aux coordinateurs et aux responsables. Il fiabilise les statistiques et limite le gaspillage. Lors du pointage, on ne voit que le nom et le statut, jamais les données sensibles.
 
 **Présence.** Le résultat du pointage pour une inscription : présent, absent, ou non encore pointé.
 
