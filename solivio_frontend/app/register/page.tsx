@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ConnexionGoogle } from "@/components/auth/ConnexionGoogle";
 import { FormError } from "@/components/auth/FormError";
+import { ChoixRoles, erreurChoixRoles, type ChoixRolesValeur } from "@/components/shared/ChoixRoles";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ function RegisterForm() {
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  const [choix, setChoix] = useState<ChoixRolesValeur>({ roles: [], attestationEtudiant: false });
+  const [erreurRoles, setErreurRoles] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +37,10 @@ function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    // L'invitation fixe le role (responsable) : rien a choisir.
+    const erreurChoix = isInvitation ? null : erreurChoixRoles(choix);
+    setErreurRoles(erreurChoix);
+    if (erreurChoix) return;
     setPending(true);
     try {
       await register({
@@ -41,7 +48,7 @@ function RegisterForm() {
         motDePasse,
         nom,
         prenom,
-        tokenInvitation,
+        ...(isInvitation ? { tokenInvitation } : choix),
       });
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
@@ -56,8 +63,8 @@ function RegisterForm() {
       title={isInvitation ? "Rejoindre l'équipe" : "Créer un compte"}
       description={
         isInvitation
-          ? `Complétez votre profil pour accepter l'invitation de ${NOM_ASSOCIATION}.`
-          : "Pour vous inscrire aux distributions. Vous recevrez un code par email pour confirmer votre adresse."
+          ? `Complétez votre profil pour devenir responsable de ${NOM_ASSOCIATION}.`
+          : "Bénévole, bénéficiaire ou les deux. Vous recevrez un code par email pour confirmer votre adresse."
       }
       photo={PHOTOS.equipeBanderole}
       accroche={isInvitation ? "Bienvenue dans l'équipe." : "Une place vous attend à la prochaine distribution."}
@@ -103,6 +110,17 @@ function RegisterForm() {
             onChange={(e) => setMotDePasse(e.target.value)}
           />
         </FormField>
+
+        {!isInvitation && (
+          <ChoixRoles
+            valeur={choix}
+            onChange={(v) => {
+              setChoix(v);
+              setErreurRoles(null);
+            }}
+            erreur={erreurRoles}
+          />
+        )}
 
         <FormError message={error} />
 
