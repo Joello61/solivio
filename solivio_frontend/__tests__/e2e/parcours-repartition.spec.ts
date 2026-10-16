@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, listeChargee, sauterHorsCi } from "./backend";
 
 // Sur la feuille d'une distribution, la repartition est rangee dans l'onglet Denrees.
 async function ouvrirOngletDenrees(page: Page): Promise<void> {
@@ -41,7 +41,7 @@ test.describe("Parcours repartition coordinateur", () => {
     }
 
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasDistributions = await listeChargee(page);
 
     if (!hasDistributions) {
       sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
@@ -75,7 +75,7 @@ test.describe("Parcours repartition coordinateur", () => {
     }
 
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasDistributions = await listeChargee(page);
 
     if (!hasDistributions) {
       sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
@@ -115,7 +115,7 @@ test.describe("Parcours repartition coordinateur", () => {
     }
 
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasDistributions = await listeChargee(page);
 
     if (!hasDistributions) {
       sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
