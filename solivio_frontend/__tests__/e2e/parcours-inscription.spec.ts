@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, sauterHorsCi } from "./backend";
+import { CARTE_DISTRIBUTION, assurerDistributionPubliee, backendDisponible, listeChargee, sauterHorsCi } from "./backend";
+
 
 // Tests E2E du parcours inscription beneficiaire.
 // Execute par le projet Playwright "chromium" avec storageState (cookies d'auth).
@@ -42,16 +43,9 @@ test.describe("Parcours inscription beneficiaire", () => {
       return;
     }
 
-    // Si aucune distribution, le message "Aucune distribution" est affiche
-    const aucuneDistrib = page.getByText(/aucune distribution/i);
+    // Sans distribution, la liste affiche "Aucune distribution..." (listeChargee l'attend).
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
-
-    if (!hasDistributions) {
-      await expect(aucuneDistrib).toBeVisible();
-      return;
-    }
+    if (!(await listeChargee(page))) return;
 
     await premiereDistribCard.click();
     await expect(page).toHaveURL(/\/distributions\/.+/);
@@ -68,7 +62,7 @@ test.describe("Parcours inscription beneficiaire", () => {
     }
 
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasDistributions = await listeChargee(page);
 
     if (!hasDistributions) {
       sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
@@ -108,7 +102,7 @@ test.describe("Parcours inscription beneficiaire", () => {
     }
 
     const premiereDistribCard = page.locator(CARTE_DISTRIBUTION).first();
-    const hasDistributions = await premiereDistribCard.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasDistributions = await listeChargee(page);
 
     if (!hasDistributions) {
       sauterHorsCi(test, "Aucune distribution disponible dans la base de test");
