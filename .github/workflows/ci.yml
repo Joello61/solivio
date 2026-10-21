@@ -65,7 +65,7 @@ jobs:
       # Equivalent Maven de npm audit : OSV-Scanner resout les dependances
       # transitives du pom et echoue des qu'une vulnerabilite connue est trouvee.
       - name: OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
+        uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:
           scan-args: |-
             --recursive
