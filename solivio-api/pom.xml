@@ -41,7 +41,7 @@
 		<java.version>25</java.version>
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<bouncycastle.version>1.86</bouncycastle.version>
-		<spring-modulith.version>2.1.1</spring-modulith.version>
+		<spring-modulith.version>2.1.2</spring-modulith.version>
 		<!-- Correctifs de securite en avance sur Spring Boot 4.1.1 (OSV-Scanner) : Tomcat
 		     (GHSA-9xv2-5v5q-p794 et deux autres, critiques) et Jackson 2 et 3 (eleve).
 		     A retirer quand une version de Spring Boot les embarque. -->
